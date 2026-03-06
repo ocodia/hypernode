@@ -9,6 +9,7 @@ const elements = {
   nodesLayer: document.getElementById('nodes-layer'),
   edgesLayer: document.getElementById('edges-layer'),
   edgesGroup: document.getElementById('edges-group'),
+  edgeDraftGroup: document.getElementById('edge-draft-group'),
   inspectorContent: document.getElementById('inspector-content'),
   emptyHint: document.getElementById('empty-hint'),
   edgeHint: document.getElementById('edge-hint'),

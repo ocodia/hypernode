@@ -55,7 +55,7 @@ button,
   color: var(--text);
   padding: 8px 10px;
   border-radius: 10px;
-  cursor: pointer;
+  cursor: default;
   text-align: left;
 }
 
@@ -76,13 +76,6 @@ textarea:focus-visible {
   display: none;
 }
 
-.status {
-  min-height: 1.2rem;
-  margin: 8px 0 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
 .workspace {
   overflow: hidden;
   position: relative;
@@ -97,11 +90,7 @@ textarea:focus-visible {
   overflow: hidden;
   background-image: radial-gradient(circle at 1px 1px, #d6deea 1px, transparent 0);
   background-size: 24px 24px;
-  cursor: grab;
-}
-
-.canvas.is-panning {
-  cursor: grabbing;
+  cursor: default;
 }
 
 .edges,
@@ -119,22 +108,74 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
-.edges path {
+.edges .edge {
+  pointer-events: none;
+}
+
+.edges .edge__line {
   fill: none;
   stroke: var(--edge);
   stroke-width: 2;
-  marker-end: url(#edge-arrow);
   pointer-events: stroke;
+  cursor: default;
 }
 
-.edges path.is-selected {
+.edges path.is-draft {
+  fill: none;
+  stroke: #6b7f99;
+  stroke-width: 2.4;
+  stroke-dasharray: 7 5;
+  pointer-events: none;
+}
+
+.edges .edge__line:hover,
+.edges .edge:hover .edge__line {
   stroke: var(--edge-selected);
   stroke-width: 3;
 }
 
-.edges defs path {
-  fill: var(--edge);
-  stroke: none;
+.edges .edge.is-selected .edge__line {
+  stroke: var(--edge-selected);
+  stroke-width: 3;
+}
+
+.edges .edge__delete {
+  opacity: 0.38;
+  pointer-events: all;
+  transition: opacity 120ms ease;
+  cursor: default;
+}
+
+.edges .edge:hover .edge__delete,
+.edges .edge.is-selected .edge__delete {
+  opacity: 0.9;
+}
+
+.edges .edge__delete:hover,
+.edges .edge__delete:focus-visible {
+  opacity: 1;
+}
+
+.edges .edge__delete circle {
+  fill: #ffffff;
+  stroke: #cbd5e1;
+  stroke-width: 1.5;
+}
+
+.edges .edge__delete text {
+  fill: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  user-select: none;
+}
+
+.edges .edge__delete:hover circle {
+  fill: #fee2e2;
+  stroke: #ef4444;
+}
+
+.edges .edge__delete:hover text {
+  fill: #b91c1c;
 }
 
 .nodes {
@@ -178,6 +219,7 @@ textarea:focus-visible {
   padding: 12px;
   pointer-events: auto;
   user-select: none;
+  cursor: default;
 }
 
 .node.is-selected {
@@ -191,6 +233,10 @@ textarea:focus-visible {
 
 .node.is-connect-target {
   border-color: #9ab4d8;
+}
+
+.node.is-connect-candidate {
+  border-color: #c6d4e7;
 }
 
 .node.is-connect-target:hover {
@@ -210,22 +256,57 @@ textarea:focus-visible {
   white-space: pre-wrap;
 }
 
-.node__handle {
-  border: 1px solid var(--accent);
-  background: #eff6ff;
-  margin-top: 10px;
-  cursor: crosshair;
-  padding: 4px 10px;
-  min-height: 28px;
+.node__anchor {
+  position: absolute;
+  width: 10px;
+  height: 10px;
   border-radius: 999px;
-  text-align: center;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #1d4ed8;
+  border: 1.5px solid #8ea3c1;
+  background: #f8fbff;
+  box-shadow: 0 0 0 1px rgba(159, 178, 204, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+  cursor: default;
+  z-index: 2;
 }
 
-.node__handle:hover {
-  background: #dbeafe;
+.node__anchor:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.node:hover .node__anchor,
+.node.is-connect-source .node__anchor,
+.node.is-connect-candidate .node__anchor,
+.node.is-connect-target .node__anchor {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.node__anchor--top {
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+}
+
+.node__anchor--right {
+  top: 50%;
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+.node__anchor--bottom {
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+}
+
+.node__anchor--left {
+  top: 50%;
+  left: 0;
+  transform: translate(-50%, -50%);
 }
 
 .empty-hint {
@@ -251,6 +332,30 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 0.86rem;
   max-width: 520px;
+}
+
+.toast {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  z-index: 40;
+  min-height: 1px;
+  max-width: min(560px, calc(100vw - 24px));
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  color: var(--text);
+  font-size: 0.86rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.toast.is-visible {
+  opacity: 1;
 }
 
 .inspector-fields {

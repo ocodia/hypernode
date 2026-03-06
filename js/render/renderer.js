@@ -1,7 +1,17 @@
 import { NODE_DEFAULTS } from '../utils/constants.js';
 
 export function createRenderer(elements, store) {
-  const { canvas, nodesLayer, edgesGroup, edgesLayer, inspectorContent, emptyHint, edgeHint, importStatus } = elements;
+  const {
+    canvas,
+    nodesLayer,
+    edgesGroup,
+    edgeDraftGroup,
+    edgesLayer,
+    inspectorContent,
+    emptyHint,
+    edgeHint,
+    importStatus,
+  } = elements;
 
   function applyViewport(viewport) {
     const transform = `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`;
@@ -11,20 +21,23 @@ export function createRenderer(elements, store) {
 
   function renderNodes(state) {
     const selectedNodeId = state.selection?.type === 'node' ? state.selection.id : null;
-    const draftSourceId = state.ui.edgeDraftFrom;
+    const draft = state.ui.edgeDraft;
     nodesLayer.innerHTML = state.nodes
       .map((node) => {
         const selectedClass = selectedNodeId === node.id ? 'is-selected' : '';
-        const edgeClass = draftSourceId
-          ? (draftSourceId === node.id ? 'is-connect-source' : 'is-connect-target')
-          : '';
-        const edgeDraft = state.ui.edgeDraftFrom === node.id ? 'Connecting… choose target' : 'Connect edge';
-        const edgeLabel = state.ui.edgeDraftFrom === node.id ? 'Source' : 'Connect';
+        const connectClass = draft?.fromNodeId === node.id
+          ? 'is-connect-source'
+          : draft
+            ? (draft.hoverNodeId === node.id ? 'is-connect-target' : 'is-connect-candidate')
+            : '';
         return `
-          <article class="node ${selectedClass} ${edgeClass}" data-node-id="${node.id}" style="transform: translate(${node.x}px, ${node.y}px)">
+          <article class="node ${selectedClass} ${connectClass}" data-node-id="${node.id}" style="transform: translate(${node.x}px, ${node.y}px)">
             <h3 class="node__title">${escapeHTML(node.title)}</h3>
             ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ''}
-            <button class="node__handle" type="button" title="Create edge" data-edge-handle="${node.id}" aria-label="${edgeDraft}">${edgeLabel}</button>
+            <button class="node__anchor node__anchor--top" type="button" data-node-anchor="${node.id}:top" aria-label="Connect from top anchor"></button>
+            <button class="node__anchor node__anchor--right" type="button" data-node-anchor="${node.id}:right" aria-label="Connect from right anchor"></button>
+            <button class="node__anchor node__anchor--bottom" type="button" data-node-anchor="${node.id}:bottom" aria-label="Connect from bottom anchor"></button>
+            <button class="node__anchor node__anchor--left" type="button" data-node-anchor="${node.id}:left" aria-label="Connect from left anchor"></button>
           </article>
         `;
       })
@@ -33,6 +46,7 @@ export function createRenderer(elements, store) {
 
   function renderEdges(state) {
     const byId = new Map(state.nodes.map((node) => [node.id, node]));
+    const bySize = measureNodeSizes();
     const selectedEdgeId = state.selection?.type === 'edge' ? state.selection.id : null;
 
     edgesGroup.innerHTML = state.edges
@@ -43,17 +57,60 @@ export function createRenderer(elements, store) {
           return '';
         }
 
-        const startX = fromNode.x + NODE_DEFAULTS.width;
-        const startY = fromNode.y + 32;
-        const endX = toNode.x;
-        const endY = toNode.y + 32;
-        const midX = (startX + endX) / 2;
-        const d = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+        const fromSize = bySize.get(fromNode.id) || defaultNodeSize();
+        const toSize = bySize.get(toNode.id) || defaultNodeSize();
+        const fromAnchor = resolveAnchor(edge.fromAnchor, fromNode, toNode);
+        const toAnchor = resolveAnchor(edge.toAnchor, toNode, fromNode);
+        const start = getAnchorPoint(fromNode, fromSize, fromAnchor);
+        const end = getAnchorPoint(toNode, toSize, toAnchor);
+        const controls = getTautControls(start, end, fromAnchor, toAnchor);
+        const d = buildTautPath(start, end, fromAnchor, toAnchor);
+        const midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
         const selected = selectedEdgeId === edge.id ? 'is-selected' : '';
 
-        return `<path class="${selected}" data-edge-id="${edge.id}" d="${d}"></path>`;
+        return `
+          <g class="edge ${selected}" data-edge-id="${edge.id}">
+            <path class="edge__line" d="${d}"></path>
+            <g class="edge__delete" data-edge-delete="${edge.id}" transform="translate(${midpoint.x}, ${midpoint.y})" aria-label="Delete edge">
+              <circle r="9"></circle>
+              <text text-anchor="middle" dominant-baseline="central">×</text>
+            </g>
+          </g>
+        `;
       })
       .join('');
+  }
+
+  function renderDraftEdge(state) {
+    const draft = state.ui.edgeDraft;
+    if (!draft) {
+      edgeDraftGroup.innerHTML = '';
+      return;
+    }
+
+    const bySize = measureNodeSizes();
+    const sourceNode = state.nodes.find((node) => node.id === draft.fromNodeId);
+    if (!sourceNode) {
+      edgeDraftGroup.innerHTML = '';
+      return;
+    }
+
+    const sourceSize = bySize.get(sourceNode.id) || defaultNodeSize();
+    const start = getAnchorPoint(sourceNode, sourceSize, draft.fromAnchor);
+    let end = { x: draft.pointerX, y: draft.pointerY };
+    let toAnchor = null;
+
+    if (draft.hoverNodeId && draft.hoverAnchor) {
+      const targetNode = state.nodes.find((node) => node.id === draft.hoverNodeId);
+      if (targetNode) {
+        const targetSize = bySize.get(targetNode.id) || defaultNodeSize();
+        end = getAnchorPoint(targetNode, targetSize, draft.hoverAnchor);
+        toAnchor = draft.hoverAnchor;
+      }
+    }
+
+    const d = buildLoosePath(start, end, draft.fromAnchor, toAnchor);
+    edgeDraftGroup.innerHTML = `<path class="is-draft" d="${d}"></path>`;
   }
 
   function renderInspector(state) {
@@ -75,9 +132,14 @@ export function createRenderer(elements, store) {
 
     if (state.selection?.type === 'edge') {
       const edge = state.edges.find((item) => item.id === state.selection.id);
+      const fromAnchor = edge ? formatAnchorLabel(edge.fromAnchor) : '';
+      const toAnchor = edge ? formatAnchorLabel(edge.toAnchor) : '';
       inspectorContent.innerHTML = edge
         ? `
-        <p class="inspector-meta">Edge from <strong>${escapeHTML(edge.from)}</strong> to <strong>${escapeHTML(edge.to)}</strong>.</p>
+        <p class="inspector-meta">
+          Edge from <strong>${escapeHTML(edge.from)}</strong> (${fromAnchor})
+          to <strong>${escapeHTML(edge.to)}</strong> (${toAnchor}).
+        </p>
         <div class="inspector-fields">
           <button id="delete-edge-btn" type="button">Delete Edge</button>
         </div>
@@ -94,21 +156,25 @@ export function createRenderer(elements, store) {
   }
 
   function renderImportStatus(state) {
-    importStatus.textContent = state.ui.importStatus;
+    const message = String(state.ui.importStatus || '').trim();
+    importStatus.textContent = message;
+    importStatus.hidden = !message;
+    importStatus.classList.toggle('is-visible', Boolean(message));
   }
 
   function renderEdgeHint(state) {
-    if (!state.ui.edgeDraftFrom) {
-      edgeHint.textContent = 'Tip: click Connect on node A, then Connect on node B to create an edge.';
+    if (state.ui.edgeDraft) {
+      edgeHint.textContent = 'Connecting: drag to another node anchor, then release. Press Esc to cancel.';
       return;
     }
-    edgeHint.textContent = 'Edge mode: click Connect on a target node (or click the target node body). Press Esc to cancel.';
+    edgeHint.textContent = 'Tip: hover a node to reveal anchors, then drag from one anchor to another to create an edge.';
   }
 
   function render(state) {
     applyViewport(state.viewport);
     renderNodes(state);
     renderEdges(state);
+    renderDraftEdge(state);
     renderInspector(state);
     renderEmptyHint(state);
     renderEdgeHint(state);
@@ -117,6 +183,116 @@ export function createRenderer(elements, store) {
   }
 
   return { render };
+}
+
+function measureNodeSizes() {
+  const sizes = new Map();
+  document.querySelectorAll('[data-node-id]').forEach((nodeEl) => {
+    const nodeId = nodeEl.dataset.nodeId;
+    sizes.set(nodeId, {
+      width: nodeEl.offsetWidth || NODE_DEFAULTS.width,
+      height: nodeEl.offsetHeight || 80,
+    });
+  });
+  return sizes;
+}
+
+function defaultNodeSize() {
+  return { width: NODE_DEFAULTS.width, height: 80 };
+}
+
+function getAnchorPoint(node, size, anchor) {
+  const halfWidth = size.width / 2;
+  const halfHeight = size.height / 2;
+  switch (anchor) {
+    case 'top':
+      return { x: node.x + halfWidth, y: node.y };
+    case 'right':
+      return { x: node.x + size.width, y: node.y + halfHeight };
+    case 'bottom':
+      return { x: node.x + halfWidth, y: node.y + size.height };
+    case 'left':
+    default:
+      return { x: node.x, y: node.y + halfHeight };
+  }
+}
+
+function resolveAnchor(anchor, fromNode, toNode) {
+  if (anchor === 'top' || anchor === 'right' || anchor === 'bottom' || anchor === 'left') {
+    return anchor;
+  }
+  const dx = toNode.x - fromNode.x;
+  const dy = toNode.y - fromNode.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? 'right' : 'left';
+  }
+  return dy >= 0 ? 'bottom' : 'top';
+}
+
+function buildTautPath(start, end, fromAnchor, toAnchor) {
+  const controls = getTautControls(start, end, fromAnchor, toAnchor);
+  return `M ${start.x} ${start.y} C ${controls.start.x} ${controls.start.y}, ${controls.end.x} ${controls.end.y}, ${end.x} ${end.y}`;
+}
+
+function getTautControls(start, end, fromAnchor, toAnchor) {
+  const distance = Math.hypot(end.x - start.x, end.y - start.y);
+  const strength = Math.max(32, distance * 0.32);
+  const startControl = moveByAnchor(start, fromAnchor, strength);
+  const endControl = moveByAnchor(end, toAnchor, strength);
+  return { start: startControl, end: endControl };
+}
+
+function buildLoosePath(start, end, fromAnchor, toAnchor) {
+  const distance = Math.hypot(end.x - start.x, end.y - start.y);
+  const ropeSlack = clamp(distance * 0.2, 14, 80);
+  const startStrength = Math.max(18, distance * 0.18);
+  const endStrength = Math.max(18, distance * 0.12);
+  const startControl = moveByAnchor(start, fromAnchor, startStrength);
+  const fallbackToAnchor = toAnchor || inferIncomingAnchor(start, end);
+  const endControl = moveByAnchor(end, fallbackToAnchor, endStrength);
+  return `M ${start.x} ${start.y} C ${startControl.x} ${startControl.y + ropeSlack}, ${endControl.x} ${endControl.y + ropeSlack}, ${end.x} ${end.y}`;
+}
+
+function inferIncomingAnchor(start, end) {
+  const dx = start.x - end.x;
+  const dy = start.y - end.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? 'right' : 'left';
+  }
+  return dy >= 0 ? 'bottom' : 'top';
+}
+
+function moveByAnchor(point, anchor, distance) {
+  switch (anchor) {
+    case 'top':
+      return { x: point.x, y: point.y - distance };
+    case 'right':
+      return { x: point.x + distance, y: point.y };
+    case 'bottom':
+      return { x: point.x, y: point.y + distance };
+    case 'left':
+      return { x: point.x - distance, y: point.y };
+    default:
+      return { x: point.x, y: point.y };
+  }
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function cubicPointAt(p0, p1, p2, p3, t) {
+  const mt = 1 - t;
+  const mt2 = mt * mt;
+  const t2 = t * t;
+  const a = mt2 * mt;
+  const b = 3 * mt2 * t;
+  const c = 3 * mt * t2;
+  const d = t2 * t;
+  return {
+    x: a * p0.x + b * p1.x + c * p2.x + d * p3.x,
+    y: a * p0.y + b * p1.y + c * p2.y + d * p3.y,
+  };
 }
 
 function escapeHTML(value) {
@@ -130,4 +306,11 @@ function escapeHTML(value) {
 
 function escapeAttr(value) {
   return escapeHTML(value).replaceAll('`', '&#096;');
+}
+
+function formatAnchorLabel(anchor) {
+  if (anchor === 'top' || anchor === 'right' || anchor === 'bottom' || anchor === 'left') {
+    return anchor;
+  }
+  return 'auto';
 }

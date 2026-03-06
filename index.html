@@ -8,7 +8,7 @@
   </head>
   <body>
     <main class="workspace" id="workspace" aria-label="Graph workspace">
-      <div class="toolbar panel" aria-label="Graph controls">
+      <div class="toolbar" aria-label="Graph controls">
         <h1 class="toolbar__title">Hypernode</h1>
         <div class="actions toolbar__actions">
           <button id="add-node-btn" type="button">Add Node</button>
@@ -19,7 +19,6 @@
           <label class="file-input-label" for="import-input">Import JSON</label>
           <input id="import-input" type="file" accept="application/json" />
         </div>
-        <p id="import-status" class="status" aria-live="polite"></p>
       </div>
 
       <section class="inspector panel panel--inspector" aria-label="Inspector">
@@ -29,26 +28,16 @@
 
       <div class="canvas" id="canvas">
         <svg class="edges" id="edges-layer" aria-hidden="true">
-          <defs>
-            <marker
-              id="edge-arrow"
-              markerWidth="10"
-              markerHeight="10"
-              refX="8"
-              refY="3"
-              orient="auto"
-            >
-              <path d="M0,0 L0,6 L9,3 z"></path>
-            </marker>
-          </defs>
           <g id="edges-group"></g>
+          <g id="edge-draft-group"></g>
         </svg>
         <div class="nodes" id="nodes-layer"></div>
         <div id="edge-hint" class="edge-hint" aria-live="polite"></div>
         <div id="empty-hint" class="empty-hint">
-          Double-click to create nodes. Click Connect on node A, then Connect on node B.
+          Double-click to create nodes. Drag from one anchor point to another to connect nodes.
         </div>
       </div>
+      <div id="import-status" class="toast" aria-live="polite" hidden></div>
     </main>
 
     <script type="module" src="./js/main.js"></script>

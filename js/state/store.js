@@ -47,6 +47,17 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setEdgeDraft(draft) {
+    state.ui.edgeDraft = draft;
+    notify();
+  }
+
+  function clearEdgeDraft() {
+    if (!state.ui.edgeDraft) return;
+    state.ui.edgeDraft = null;
+    notify();
+  }
+
   function setPanning(isPanning) {
     state.ui.isPanning = Boolean(isPanning);
     notify();
@@ -59,7 +70,6 @@ export function createStore(initialGraph = null) {
 
   function clearSelection() {
     state.selection = null;
-    state.ui.edgeDraftFrom = null;
     notify();
   }
 
@@ -117,14 +127,31 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
-  function addEdge(from, to) {
+  function addEdge(from, to, options = {}) {
     if (!from || !to || from === to) return;
-    const exists = state.edges.some((edge) => edge.from === from && edge.to === to);
-    if (exists) return;
+    const fromAnchor = normalizeAnchor(options.fromAnchor);
+    const toAnchor = normalizeAnchor(options.toAnchor);
+    const existingEdge = state.edges.find((edge) => edge.from === from && edge.to === to);
+    if (existingEdge) {
+      const sameAnchors = existingEdge.fromAnchor === fromAnchor && existingEdge.toAnchor === toAnchor;
+      if (sameAnchors) return;
+      pushHistory('update-edge-anchors');
+      existingEdge.fromAnchor = fromAnchor;
+      existingEdge.toAnchor = toAnchor;
+      state.selection = { type: 'edge', id: existingEdge.id };
+      notify();
+      return;
+    }
     const hasNodes = state.nodes.some((node) => node.id === from) && state.nodes.some((node) => node.id === to);
     if (!hasNodes) return;
     pushHistory('add-edge');
-    const edge = { id: createId('edge'), from, to };
+    const edge = {
+      id: createId('edge'),
+      from,
+      to,
+      fromAnchor,
+      toAnchor,
+    };
     state.edges.push(edge);
     state.selection = { type: 'edge', id: edge.id };
     notify();
@@ -146,7 +173,7 @@ export function createStore(initialGraph = null) {
     state.nodes = graph.nodes.map(sanitizeNode);
     state.edges = graph.edges.map((edge) => ({ ...edge }));
     state.selection = null;
-    state.ui.edgeDraftFrom = null;
+    state.ui.edgeDraft = null;
     notify();
   }
 
@@ -168,11 +195,6 @@ export function createStore(initialGraph = null) {
     });
   }
 
-  function setEdgeDraftFrom(nodeId) {
-    state.ui.edgeDraftFrom = nodeId;
-    notify();
-  }
-
   function undo() {
     const entry = state.history.past.pop();
     if (!entry) return;
@@ -180,7 +202,7 @@ export function createStore(initialGraph = null) {
     state.nodes = entry.data.nodes;
     state.edges = entry.data.edges;
     state.selection = entry.data.selection;
-    state.ui.edgeDraftFrom = null;
+    state.ui.edgeDraft = null;
     notify();
   }
 
@@ -191,7 +213,7 @@ export function createStore(initialGraph = null) {
     state.nodes = entry.data.nodes;
     state.edges = entry.data.edges;
     state.selection = entry.data.selection;
-    state.ui.edgeDraftFrom = null;
+    state.ui.edgeDraft = null;
     notify();
   }
 
@@ -199,6 +221,8 @@ export function createStore(initialGraph = null) {
     getState,
     subscribe,
     setImportStatus,
+    setEdgeDraft,
+    clearEdgeDraft,
     setPanning,
     setSelection,
     clearSelection,
@@ -212,8 +236,14 @@ export function createStore(initialGraph = null) {
     replaceGraph,
     setViewport,
     resetView,
-    setEdgeDraftFrom,
     undo,
     redo,
   };
+}
+
+function normalizeAnchor(anchor) {
+  if (anchor === 'top' || anchor === 'right' || anchor === 'bottom' || anchor === 'left') {
+    return anchor;
+  }
+  return null;
 }

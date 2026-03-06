@@ -201,5 +201,3 @@ Potential future improvements include:
 # License
 
 License to be determined.
-
-# Project Structure
