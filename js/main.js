@@ -11,6 +11,7 @@ const elements = {
   edgesGroup: document.getElementById('edges-group'),
   inspectorContent: document.getElementById('inspector-content'),
   emptyHint: document.getElementById('empty-hint'),
+  edgeHint: document.getElementById('edge-hint'),
   importStatus: document.getElementById('import-status'),
   importInput: document.getElementById('import-input'),
 };

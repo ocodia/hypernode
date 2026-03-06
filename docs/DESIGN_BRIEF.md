@@ -28,14 +28,15 @@ The design should resemble modern productivity tools rather than diagramming sof
 
 ## Layout
 
-The application layout consists of two primary areas:
+The application layout consists of the following:
 
-Sidebar  
+Floating Toolbar  
 Graph Workspace
+Floating Inspector
 
 The workspace should occupy most of the screen.
 
-The sidebar should contain controls and inspection panels.
+The Toolbar should contain controls and the Inspection panel contains details about the selected item.
 
 ---
 

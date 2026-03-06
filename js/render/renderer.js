@@ -1,7 +1,7 @@
 import { NODE_DEFAULTS } from '../utils/constants.js';
 
 export function createRenderer(elements, store) {
-  const { canvas, nodesLayer, edgesGroup, edgesLayer, inspectorContent, emptyHint, importStatus } = elements;
+  const { canvas, nodesLayer, edgesGroup, edgesLayer, inspectorContent, emptyHint, edgeHint, importStatus } = elements;
 
   function applyViewport(viewport) {
     const transform = `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`;
@@ -11,15 +11,20 @@ export function createRenderer(elements, store) {
 
   function renderNodes(state) {
     const selectedNodeId = state.selection?.type === 'node' ? state.selection.id : null;
+    const draftSourceId = state.ui.edgeDraftFrom;
     nodesLayer.innerHTML = state.nodes
       .map((node) => {
         const selectedClass = selectedNodeId === node.id ? 'is-selected' : '';
+        const edgeClass = draftSourceId
+          ? (draftSourceId === node.id ? 'is-connect-source' : 'is-connect-target')
+          : '';
         const edgeDraft = state.ui.edgeDraftFrom === node.id ? 'Connecting… choose target' : 'Connect edge';
+        const edgeLabel = state.ui.edgeDraftFrom === node.id ? 'Source' : 'Connect';
         return `
-          <article class="node ${selectedClass}" data-node-id="${node.id}" style="transform: translate(${node.x}px, ${node.y}px)">
+          <article class="node ${selectedClass} ${edgeClass}" data-node-id="${node.id}" style="transform: translate(${node.x}px, ${node.y}px)">
             <h3 class="node__title">${escapeHTML(node.title)}</h3>
             ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ''}
-            <button class="node__handle" type="button" title="Create edge" data-edge-handle="${node.id}" aria-label="${edgeDraft}"></button>
+            <button class="node__handle" type="button" title="Create edge" data-edge-handle="${node.id}" aria-label="${edgeDraft}">${edgeLabel}</button>
           </article>
         `;
       })
@@ -92,12 +97,21 @@ export function createRenderer(elements, store) {
     importStatus.textContent = state.ui.importStatus;
   }
 
+  function renderEdgeHint(state) {
+    if (!state.ui.edgeDraftFrom) {
+      edgeHint.textContent = 'Tip: click Connect on node A, then Connect on node B to create an edge.';
+      return;
+    }
+    edgeHint.textContent = 'Edge mode: click Connect on a target node (or click the target node body). Press Esc to cancel.';
+  }
+
   function render(state) {
     applyViewport(state.viewport);
     renderNodes(state);
     renderEdges(state);
     renderInspector(state);
     renderEmptyHint(state);
+    renderEdgeHint(state);
     renderImportStatus(state);
     canvas.classList.toggle('is-panning', Boolean(state.ui.isPanning));
   }

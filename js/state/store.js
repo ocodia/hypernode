@@ -47,6 +47,11 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setPanning(isPanning) {
+    state.ui.isPanning = Boolean(isPanning);
+    notify();
+  }
+
   function setSelection(selection) {
     state.selection = selection;
     notify();
@@ -194,6 +199,7 @@ export function createStore(initialGraph = null) {
     getState,
     subscribe,
     setImportStatus,
+    setPanning,
     setSelection,
     clearSelection,
     addNode,

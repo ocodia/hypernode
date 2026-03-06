@@ -7,6 +7,33 @@ export function bindInteractions(elements, store) {
   let panSession = null;
   let dragSession = null;
 
+  function endPanSession(pointerId = null) {
+    if (!panSession) return;
+    const activePointerId = panSession.pointerId;
+    panSession = null;
+    store.setPanning(false);
+    if (pointerId === null || pointerId === activePointerId) {
+      try {
+        canvas.releasePointerCapture(activePointerId);
+      } catch {
+        // Pointer may already be released.
+      }
+    }
+  }
+
+  function endDragSession(pointerId = null) {
+    if (!dragSession) return;
+    const activePointerId = dragSession.pointerId;
+    dragSession = null;
+    if (pointerId === null || pointerId === activePointerId) {
+      try {
+        nodesLayer.releasePointerCapture(activePointerId);
+      } catch {
+        // Pointer may already be released.
+      }
+    }
+  }
+
   canvas.addEventListener('dblclick', (event) => {
     if (event.target.closest('[data-node-id]')) return;
     const point = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
@@ -17,6 +44,7 @@ export function bindInteractions(elements, store) {
     if (event.button !== 0) return;
     if (event.target.closest('[data-node-id], [data-edge-id], .panel, button, input, textarea, label')) return;
 
+    endPanSession();
     store.clearSelection();
     panSession = {
       pointerId: event.pointerId,
@@ -25,6 +53,7 @@ export function bindInteractions(elements, store) {
       startPanX: store.getState().viewport.panX,
       startPanY: store.getState().viewport.panY,
     };
+    store.setPanning(true);
     canvas.setPointerCapture(event.pointerId);
   });
 
@@ -39,10 +68,18 @@ export function bindInteractions(elements, store) {
   });
 
   canvas.addEventListener('pointerup', (event) => {
-    if (panSession && event.pointerId === panSession.pointerId) {
-      panSession = null;
-      canvas.releasePointerCapture(event.pointerId);
-    }
+    if (!panSession || event.pointerId !== panSession.pointerId) return;
+    endPanSession(event.pointerId);
+  });
+
+  canvas.addEventListener('pointercancel', (event) => {
+    if (!panSession || event.pointerId !== panSession.pointerId) return;
+    endPanSession(event.pointerId);
+  });
+
+  canvas.addEventListener('lostpointercapture', (event) => {
+    if (!panSession || event.pointerId !== panSession.pointerId) return;
+    endPanSession();
   });
 
   workspace.addEventListener('wheel', (event) => {
@@ -69,28 +106,39 @@ export function bindInteractions(elements, store) {
   }, { passive: false });
 
   nodesLayer.addEventListener('pointerdown', (event) => {
+    const handleEl = event.target.closest('[data-edge-handle]');
+    if (handleEl && event.button === 0) {
+      event.stopPropagation();
+      return;
+    }
+
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl || event.button !== 0) return;
 
+    endDragSession();
     const nodeId = nodeEl.dataset.nodeId;
     store.setSelection({ type: 'node', id: nodeId });
+    store.setPanning(false);
+    endPanSession();
+    const node = getNode(nodeId, store.getState());
+    if (!node) return;
 
     dragSession = {
       pointerId: event.pointerId,
       nodeId,
       startX: event.clientX,
       startY: event.clientY,
-      nodeStart: getNode(nodeId, store.getState()),
+      nodeStartX: node.x,
+      nodeStartY: node.y,
       moved: false,
     };
 
-    nodeEl.setPointerCapture(event.pointerId);
+    nodesLayer.setPointerCapture(event.pointerId);
     event.stopPropagation();
   });
 
   nodesLayer.addEventListener('pointermove', (event) => {
     if (!dragSession || dragSession.pointerId !== event.pointerId) return;
-    if (!dragSession.nodeStart) return;
     const viewport = store.getState().viewport;
     const dx = (event.clientX - dragSession.startX) / viewport.zoom;
     const dy = (event.clientY - dragSession.startY) / viewport.zoom;
@@ -100,12 +148,22 @@ export function bindInteractions(elements, store) {
       dragSession.moved = true;
     }
 
-    store.moveNode(dragSession.nodeId, dragSession.nodeStart.x + dx, dragSession.nodeStart.y + dy, { skipHistory: true });
+    store.moveNode(dragSession.nodeId, dragSession.nodeStartX + dx, dragSession.nodeStartY + dy, { skipHistory: true });
   });
 
   nodesLayer.addEventListener('pointerup', (event) => {
     if (!dragSession || event.pointerId !== dragSession.pointerId) return;
-    dragSession = null;
+    endDragSession(event.pointerId);
+  });
+
+  nodesLayer.addEventListener('pointercancel', (event) => {
+    if (!dragSession || event.pointerId !== dragSession.pointerId) return;
+    endDragSession(event.pointerId);
+  });
+
+  nodesLayer.addEventListener('lostpointercapture', (event) => {
+    if (!dragSession || event.pointerId !== dragSession.pointerId) return;
+    endDragSession();
   });
 
   nodesLayer.addEventListener('click', (event) => {
@@ -127,7 +185,15 @@ export function bindInteractions(elements, store) {
 
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl) return;
-    store.setSelection({ type: 'node', id: nodeEl.dataset.nodeId });
+    const targetId = nodeEl.dataset.nodeId;
+    const draft = store.getState().ui.edgeDraftFrom;
+    if (draft && draft !== targetId) {
+      store.addEdge(draft, targetId);
+      store.setEdgeDraftFrom(null);
+      event.stopPropagation();
+      return;
+    }
+    store.setSelection({ type: 'node', id: targetId });
     event.stopPropagation();
   });
 
