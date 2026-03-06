@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hypernode</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Inspector and controls">
+        <header class="sidebar__header">
+          <h1>Hypernode</h1>
+          <p>Offline-first graph editor</p>
+        </header>
+
+        <section class="panel">
+          <h2>Graph</h2>
+          <div class="actions">
+            <button id="add-node-btn" type="button">Add Node</button>
+            <button id="reset-view-btn" type="button">Reset View</button>
+            <button id="undo-btn" type="button">Undo</button>
+            <button id="redo-btn" type="button">Redo</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Import / Export</h2>
+          <div class="actions">
+            <button id="export-btn" type="button">Export JSON</button>
+            <label class="file-input-label" for="import-input">Import JSON</label>
+            <input id="import-input" type="file" accept="application/json" />
+          </div>
+          <p id="import-status" class="status" aria-live="polite"></p>
+        </section>
+
+        <section class="panel panel--inspector">
+          <h2>Inspector</h2>
+          <div id="inspector-content"></div>
+        </section>
+      </aside>
+
+      <main class="workspace" id="workspace" aria-label="Graph workspace">
+        <div class="canvas" id="canvas">
+          <svg class="edges" id="edges-layer" aria-hidden="true">
+            <defs>
+              <marker
+                id="edge-arrow"
+                markerWidth="10"
+                markerHeight="10"
+                refX="8"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L0,6 L9,3 z"></path>
+              </marker>
+            </defs>
+            <g id="edges-group"></g>
+          </svg>
+          <div class="nodes" id="nodes-layer"></div>
+          <div id="empty-hint" class="empty-hint">
+            Double-click anywhere to create your first node.
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
