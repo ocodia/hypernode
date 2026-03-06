@@ -106,6 +106,11 @@ textarea:focus-visible {
 .edges {
   overflow: visible;
   pointer-events: none;
+  z-index: 1;
+}
+
+.edges--overlay {
+  z-index: 4;
 }
 
 .edges .edge {
@@ -124,7 +129,6 @@ textarea:focus-visible {
   fill: none;
   stroke: #6b7f99;
   stroke-width: 2.4;
-  stroke-dasharray: 7 5;
   pointer-events: none;
 }
 
@@ -139,16 +143,28 @@ textarea:focus-visible {
   stroke-width: 3;
 }
 
+.edges .edge.is-twang .edge__line {
+  animation: edge-twang 240ms cubic-bezier(0.18, 1.35, 0.4, 1);
+}
+
+.edges .edge__endpoint {
+  fill: #f8fbff;
+  stroke: #8ea3c1;
+  stroke-width: 1.5;
+  pointer-events: all;
+  transition: stroke 120ms ease, fill 120ms ease;
+}
+
+.edges .edge__endpoint:hover {
+  fill: #eff6ff;
+  stroke: #2563eb;
+}
+
 .edges .edge__delete {
-  opacity: 0.38;
+  opacity: 0.9;
   pointer-events: all;
   transition: opacity 120ms ease;
   cursor: default;
-}
-
-.edges .edge:hover .edge__delete,
-.edges .edge.is-selected .edge__delete {
-  opacity: 0.9;
 }
 
 .edges .edge__delete:hover,
@@ -180,6 +196,7 @@ textarea:focus-visible {
 
 .nodes {
   pointer-events: none;
+  z-index: 2;
 }
 
 .toolbar {
@@ -260,6 +277,10 @@ textarea:focus-visible {
   position: absolute;
   width: 10px;
   height: 10px;
+  appearance: none;
+  padding: 0;
+  line-height: 0;
+  aspect-ratio: 1 / 1;
   border-radius: 999px;
   border: 1.5px solid #8ea3c1;
   background: #f8fbff;
@@ -356,6 +377,18 @@ textarea:focus-visible {
 
 .toast.is-visible {
   opacity: 1;
+}
+
+@keyframes edge-twang {
+  0% {
+    stroke-width: 4.5;
+  }
+  55% {
+    stroke-width: 1.6;
+  }
+  100% {
+    stroke-width: 2;
+  }
 }
 
 .inspector-fields {

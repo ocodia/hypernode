@@ -58,6 +58,17 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setEdgeTwang(edgeId) {
+    state.ui.edgeTwangId = edgeId || null;
+    notify();
+  }
+
+  function clearEdgeTwang() {
+    if (!state.ui.edgeTwangId) return;
+    state.ui.edgeTwangId = null;
+    notify();
+  }
+
   function setPanning(isPanning) {
     state.ui.isPanning = Boolean(isPanning);
     notify();
@@ -140,10 +151,10 @@ export function createStore(initialGraph = null) {
       existingEdge.toAnchor = toAnchor;
       state.selection = { type: 'edge', id: existingEdge.id };
       notify();
-      return;
+      return existingEdge.id;
     }
     const hasNodes = state.nodes.some((node) => node.id === from) && state.nodes.some((node) => node.id === to);
-    if (!hasNodes) return;
+    if (!hasNodes) return null;
     pushHistory('add-edge');
     const edge = {
       id: createId('edge'),
@@ -155,6 +166,52 @@ export function createStore(initialGraph = null) {
     state.edges.push(edge);
     state.selection = { type: 'edge', id: edge.id };
     notify();
+    return edge.id;
+  }
+
+  function reconnectEdge(id, side, nodeId, anchor) {
+    const edge = state.edges.find((item) => item.id === id);
+    if (!edge) return null;
+    const normalizedAnchor = normalizeAnchor(anchor);
+    const hasNode = state.nodes.some((node) => node.id === nodeId);
+    if (!hasNode) return null;
+
+    const next = {
+      from: edge.from,
+      to: edge.to,
+      fromAnchor: edge.fromAnchor,
+      toAnchor: edge.toAnchor,
+    };
+
+    if (side === 'from') {
+      next.from = nodeId;
+      next.fromAnchor = normalizedAnchor;
+    } else if (side === 'to') {
+      next.to = nodeId;
+      next.toAnchor = normalizedAnchor;
+    } else {
+      return null;
+    }
+
+    if (next.from === next.to) return null;
+
+    const duplicate = state.edges.find((item) => item.id !== id && item.from === next.from && item.to === next.to);
+    if (duplicate) return null;
+
+    const changed = edge.from !== next.from
+      || edge.to !== next.to
+      || edge.fromAnchor !== next.fromAnchor
+      || edge.toAnchor !== next.toAnchor;
+    if (!changed) return edge.id;
+
+    pushHistory('reconnect-edge');
+    edge.from = next.from;
+    edge.to = next.to;
+    edge.fromAnchor = next.fromAnchor;
+    edge.toAnchor = next.toAnchor;
+    state.selection = { type: 'edge', id: edge.id };
+    notify();
+    return edge.id;
   }
 
   function deleteEdge(id) {
@@ -174,6 +231,7 @@ export function createStore(initialGraph = null) {
     state.edges = graph.edges.map((edge) => ({ ...edge }));
     state.selection = null;
     state.ui.edgeDraft = null;
+    state.ui.edgeTwangId = null;
     notify();
   }
 
@@ -203,6 +261,7 @@ export function createStore(initialGraph = null) {
     state.edges = entry.data.edges;
     state.selection = entry.data.selection;
     state.ui.edgeDraft = null;
+    state.ui.edgeTwangId = null;
     notify();
   }
 
@@ -214,6 +273,7 @@ export function createStore(initialGraph = null) {
     state.edges = entry.data.edges;
     state.selection = entry.data.selection;
     state.ui.edgeDraft = null;
+    state.ui.edgeTwangId = null;
     notify();
   }
 
@@ -223,6 +283,8 @@ export function createStore(initialGraph = null) {
     setImportStatus,
     setEdgeDraft,
     clearEdgeDraft,
+    setEdgeTwang,
+    clearEdgeTwang,
     setPanning,
     setSelection,
     clearSelection,
@@ -232,6 +294,7 @@ export function createStore(initialGraph = null) {
     beginNodeMove,
     deleteNode,
     addEdge,
+    reconnectEdge,
     deleteEdge,
     replaceGraph,
     setViewport,

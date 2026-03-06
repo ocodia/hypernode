@@ -13,6 +13,7 @@ export function emptyGraphState() {
     ui: {
       importStatus: '',
       edgeDraft: null,
+      edgeTwangId: null,
       isPanning: false,
     },
     history: {

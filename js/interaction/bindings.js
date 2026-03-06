@@ -2,11 +2,12 @@ import { VIEWPORT_LIMITS } from '../utils/constants.js';
 import { exportGraph, importGraphFile } from '../persistence/file.js';
 
 export function bindInteractions(elements, store) {
-  const { workspace, canvas, nodesLayer, edgesGroup, inspectorContent, importInput } = elements;
+  const { workspace, canvas, nodesLayer, edgesGroup, edgeOverlayGroup, inspectorContent, importInput } = elements;
 
   let panSession = null;
   let dragSession = null;
   let edgeSession = null;
+  let edgeTwangTimer = null;
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -53,13 +54,16 @@ export function bindInteractions(elements, store) {
     if (!edgeSession || edgeSession.pointerId !== event.pointerId) return;
     const pointer = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
     const hoverAnchor = getAnchorAtClientPoint(event.clientX, event.clientY);
-    const isValidTarget = hoverAnchor && hoverAnchor.nodeId !== edgeSession.fromNodeId;
+    const isValidTarget = hoverAnchor
+      && hoverAnchor.nodeId !== edgeSession.invalidNodeId;
 
     store.setEdgeDraft({
       fromNodeId: edgeSession.fromNodeId,
       fromAnchor: edgeSession.fromAnchor,
       pointerX: pointer.x,
       pointerY: pointer.y,
+      toNodeId: edgeSession.toNodeId || null,
+      toAnchor: edgeSession.toAnchor || null,
       hoverNodeId: isValidTarget ? hoverAnchor.nodeId : null,
       hoverAnchor: isValidTarget ? hoverAnchor.anchor : null,
     });
@@ -75,8 +79,10 @@ export function bindInteractions(elements, store) {
 
     edgeSession = {
       pointerId: event.pointerId,
+      mode: 'create',
       fromNodeId: parsed.nodeId,
       fromAnchor: parsed.anchor,
+      invalidNodeId: parsed.nodeId,
     };
 
     store.setSelection({ type: 'node', id: parsed.nodeId });
@@ -84,16 +90,79 @@ export function bindInteractions(elements, store) {
     updateEdgeDraft(event);
   }
 
+  function beginReconnectSession(event, endpointToken) {
+    const parsed = parseEdgeEndpointToken(endpointToken);
+    if (!parsed) return;
+
+    const state = store.getState();
+    const edge = state.edges.find((item) => item.id === parsed.edgeId);
+    if (!edge) return;
+    const fromNode = getNode(edge.from, state);
+    const toNode = getNode(edge.to, state);
+    if (!fromNode || !toNode) return;
+
+    const movingFrom = parsed.side === 'from';
+    const fixedNodeId = movingFrom ? edge.to : edge.from;
+    const fixedAnchor = movingFrom
+      ? resolveAnchorName(edge.toAnchor, toNode, fromNode)
+      : resolveAnchorName(edge.fromAnchor, fromNode, toNode);
+
+    endPanSession();
+    endDragSession();
+    cancelEdgeSession();
+
+    edgeSession = {
+      pointerId: event.pointerId,
+      mode: 'reconnect',
+      edgeId: edge.id,
+      movingSide: parsed.side,
+      fromNodeId: fixedNodeId,
+      fromAnchor: fixedAnchor,
+      invalidNodeId: fixedNodeId,
+      toNodeId: null,
+      toAnchor: null,
+    };
+
+    store.setSelection({ type: 'edge', id: edge.id });
+    nodesLayer.setPointerCapture(event.pointerId);
+    updateEdgeDraft(event);
+  }
+
   function finishEdgeSession(event) {
     if (!edgeSession || edgeSession.pointerId !== event.pointerId) return;
     const hoverAnchor = getAnchorAtClientPoint(event.clientX, event.clientY);
-    if (hoverAnchor && hoverAnchor.nodeId !== edgeSession.fromNodeId) {
-      store.addEdge(edgeSession.fromNodeId, hoverAnchor.nodeId, {
-        fromAnchor: edgeSession.fromAnchor,
-        toAnchor: hoverAnchor.anchor,
-      });
+    let anchoredEdgeId = null;
+    if (hoverAnchor && hoverAnchor.nodeId !== edgeSession.invalidNodeId) {
+      if (edgeSession.mode === 'reconnect') {
+        anchoredEdgeId = store.reconnectEdge(
+          edgeSession.edgeId,
+          edgeSession.movingSide,
+          hoverAnchor.nodeId,
+          hoverAnchor.anchor,
+        );
+      } else {
+        anchoredEdgeId = store.addEdge(edgeSession.fromNodeId, hoverAnchor.nodeId, {
+          fromAnchor: edgeSession.fromAnchor,
+          toAnchor: hoverAnchor.anchor,
+        });
+      }
+    }
+
+    if (anchoredEdgeId) {
+      triggerEdgeTwang(anchoredEdgeId);
     }
     cancelEdgeSession(event.pointerId);
+  }
+
+  function triggerEdgeTwang(edgeId) {
+    store.setEdgeTwang(edgeId);
+    if (edgeTwangTimer) {
+      window.clearTimeout(edgeTwangTimer);
+    }
+    edgeTwangTimer = window.setTimeout(() => {
+      edgeTwangTimer = null;
+      store.clearEdgeTwang();
+    }, 260);
   }
 
   canvas.addEventListener('dblclick', (event) => {
@@ -258,7 +327,7 @@ export function bindInteractions(elements, store) {
     event.stopPropagation();
   });
 
-  edgesGroup.addEventListener('click', (event) => {
+  function handleEdgeClick(event) {
     const deleteEl = event.target.closest('[data-edge-delete]');
     if (deleteEl) {
       store.deleteEdge(deleteEl.dataset.edgeDelete);
@@ -270,7 +339,22 @@ export function bindInteractions(elements, store) {
     if (!edgeEl) return;
     store.setSelection({ type: 'edge', id: edgeEl.dataset.edgeId });
     event.stopPropagation();
-  });
+  }
+
+  edgesGroup.addEventListener('click', handleEdgeClick);
+  edgeOverlayGroup.addEventListener('click', handleEdgeClick);
+
+  function handleEdgeEndpointPointerDown(event) {
+    if (event.button !== 0) return;
+    const endpointEl = event.target.closest('[data-edge-endpoint]');
+    if (!endpointEl) return;
+    beginReconnectSession(event, endpointEl.dataset.edgeEndpoint);
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  edgesGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
+  edgeOverlayGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
 
   inspectorContent.addEventListener('input', (event) => {
     const state = store.getState();
@@ -393,6 +477,23 @@ function getAnchorAtClientPoint(clientX, clientY) {
 
 function isAnchorName(anchor) {
   return anchor === 'top' || anchor === 'right' || anchor === 'bottom' || anchor === 'left';
+}
+
+function parseEdgeEndpointToken(value) {
+  if (!value || typeof value !== 'string') return null;
+  const [edgeId, side] = value.split(':');
+  if (!edgeId || (side !== 'from' && side !== 'to')) return null;
+  return { edgeId, side };
+}
+
+function resolveAnchorName(anchor, fromNode, toNode) {
+  if (isAnchorName(anchor)) return anchor;
+  const dx = toNode.x - fromNode.x;
+  const dy = toNode.y - fromNode.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? 'right' : 'left';
+  }
+  return dy >= 0 ? 'bottom' : 'top';
 }
 
 function clamp(value, min, max) {

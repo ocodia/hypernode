@@ -7,6 +7,8 @@ export function createRenderer(elements, store) {
     edgesGroup,
     edgeDraftGroup,
     edgesLayer,
+    edgesOverlayLayer,
+    edgeOverlayGroup,
     inspectorContent,
     emptyHint,
     edgeHint,
@@ -17,6 +19,7 @@ export function createRenderer(elements, store) {
     const transform = `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`;
     nodesLayer.style.transform = transform;
     edgesLayer.style.transform = transform;
+    edgesOverlayLayer.style.transform = transform;
   }
 
   function renderNodes(state) {
@@ -48,6 +51,8 @@ export function createRenderer(elements, store) {
     const byId = new Map(state.nodes.map((node) => [node.id, node]));
     const bySize = measureNodeSizes();
     const selectedEdgeId = state.selection?.type === 'edge' ? state.selection.id : null;
+    const twangEdgeId = state.ui.edgeTwangId;
+    let selectedOverlayMarkup = '';
 
     edgesGroup.innerHTML = state.edges
       .map((edge) => {
@@ -67,18 +72,28 @@ export function createRenderer(elements, store) {
         const d = buildTautPath(start, end, fromAnchor, toAnchor);
         const midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
         const selected = selectedEdgeId === edge.id ? 'is-selected' : '';
+        const twang = twangEdgeId === edge.id ? 'is-twang' : '';
+        if (selectedEdgeId === edge.id) {
+          selectedOverlayMarkup = `
+            <g class="edge-overlay" data-edge-id="${edge.id}">
+              <g class="edge__delete" data-edge-delete="${edge.id}" transform="translate(${midpoint.x}, ${midpoint.y})" aria-label="Delete edge">
+                <circle r="9"></circle>
+                <text text-anchor="middle" dominant-baseline="central">×</text>
+              </g>
+              <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:from" cx="${start.x}" cy="${start.y}" r="5.5"></circle>
+              <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:to" cx="${end.x}" cy="${end.y}" r="5.5"></circle>
+            </g>
+          `;
+        }
 
         return `
-          <g class="edge ${selected}" data-edge-id="${edge.id}">
+          <g class="edge ${selected} ${twang}" data-edge-id="${edge.id}">
             <path class="edge__line" d="${d}"></path>
-            <g class="edge__delete" data-edge-delete="${edge.id}" transform="translate(${midpoint.x}, ${midpoint.y})" aria-label="Delete edge">
-              <circle r="9"></circle>
-              <text text-anchor="middle" dominant-baseline="central">×</text>
-            </g>
           </g>
         `;
       })
       .join('');
+    edgeOverlayGroup.innerHTML = selectedOverlayMarkup;
   }
 
   function renderDraftEdge(state) {
@@ -100,16 +115,19 @@ export function createRenderer(elements, store) {
     let end = { x: draft.pointerX, y: draft.pointerY };
     let toAnchor = null;
 
-    if (draft.hoverNodeId && draft.hoverAnchor) {
-      const targetNode = state.nodes.find((node) => node.id === draft.hoverNodeId);
+    const targetNodeId = draft.hoverNodeId || draft.toNodeId;
+    const targetAnchor = draft.hoverAnchor || draft.toAnchor;
+    if (targetNodeId && targetAnchor) {
+      const targetNode = state.nodes.find((node) => node.id === targetNodeId);
       if (targetNode) {
         const targetSize = bySize.get(targetNode.id) || defaultNodeSize();
-        end = getAnchorPoint(targetNode, targetSize, draft.hoverAnchor);
-        toAnchor = draft.hoverAnchor;
+        end = getAnchorPoint(targetNode, targetSize, targetAnchor);
+        toAnchor = targetAnchor;
       }
     }
 
-    const d = buildLoosePath(start, end, draft.fromAnchor, toAnchor);
+    const resolvedToAnchor = toAnchor || inferIncomingAnchor(start, end);
+    const d = buildTautPath(start, end, draft.fromAnchor, resolvedToAnchor);
     edgeDraftGroup.innerHTML = `<path class="is-draft" d="${d}"></path>`;
   }
 
@@ -167,7 +185,7 @@ export function createRenderer(elements, store) {
       edgeHint.textContent = 'Connecting: drag to another node anchor, then release. Press Esc to cancel.';
       return;
     }
-    edgeHint.textContent = 'Tip: hover a node to reveal anchors, then drag from one anchor to another to create an edge.';
+    edgeHint.textContent = 'Tip: drag between node anchors to create an edge, or drag selected edge endpoints to reconnect.';
   }
 
   function render(state) {
