@@ -1,0 +1,33 @@
+import { createStore } from './state/store.js';
+import { createRenderer } from './render/renderer.js';
+import { bindInteractions } from './interaction/bindings.js';
+import { loadGraphFromStorage, saveGraphToStorage } from './persistence/storage.js';
+
+const elements = {
+  workspace: document.getElementById('workspace'),
+  canvas: document.getElementById('canvas'),
+  nodesLayer: document.getElementById('nodes-layer'),
+  edgesLayer: document.getElementById('edges-layer'),
+  edgesGroup: document.getElementById('edges-group'),
+  inspectorContent: document.getElementById('inspector-content'),
+  emptyHint: document.getElementById('empty-hint'),
+  importStatus: document.getElementById('import-status'),
+  importInput: document.getElementById('import-input'),
+};
+
+const initialGraph = loadGraphFromStorage();
+const store = createStore(initialGraph);
+const renderer = createRenderer(elements, store);
+
+let saveHandle = null;
+store.subscribe((state) => {
+  renderer.render(state);
+
+  if (saveHandle) window.clearTimeout(saveHandle);
+  saveHandle = window.setTimeout(() => {
+    saveGraphToStorage({ nodes: state.nodes, edges: state.edges });
+  }, 120);
+});
+
+bindInteractions(elements, store);
+renderer.render(store.getState());
