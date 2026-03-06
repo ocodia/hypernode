@@ -14,6 +14,7 @@ export function emptyGraphState() {
       importStatus: '',
       edgeDraft: null,
       edgeTwangId: null,
+      editingNodeId: null,
       isPanning: false,
     },
     history: {

@@ -24,19 +24,44 @@ export function createRenderer(elements, store) {
 
   function renderNodes(state) {
     const selectedNodeId = state.selection?.type === 'node' ? state.selection.id : null;
+    const editingNodeId = state.ui.editingNodeId;
     const draft = state.ui.edgeDraft;
     nodesLayer.innerHTML = state.nodes
       .map((node) => {
         const selectedClass = selectedNodeId === node.id ? 'is-selected' : '';
+        const editingClass = editingNodeId === node.id ? 'is-editing' : '';
         const connectClass = draft?.fromNodeId === node.id
           ? 'is-connect-source'
           : draft
             ? (draft.hoverNodeId === node.id ? 'is-connect-target' : 'is-connect-candidate')
             : '';
-        return `
-          <article class="node ${selectedClass} ${connectClass}" data-node-id="${node.id}" style="transform: translate(${node.x}px, ${node.y}px)">
-            <h3 class="node__title">${escapeHTML(node.title)}</h3>
+        const content = editingNodeId === node.id
+          ? `
+            <div class="node__editor" data-node-editor="${node.id}">
+              <label class="node__editor-label">
+                Name
+                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" />
+              </label>
+              <label class="node__editor-label">
+                Description
+                <textarea class="node__editor-textarea" data-node-edit-description="${node.id}">${escapeHTML(node.description)}</textarea>
+              </label>
+              <div class="node__editor-actions">
+                <button type="button" data-node-edit-save="${node.id}">Save</button>
+                <button type="button" data-node-edit-cancel="${node.id}">Cancel</button>
+              </div>
+            </div>
+          `
+          : `
+            <div class="node__head">
+              <h3 class="node__title">${escapeHTML(node.title)}</h3>
+              <button class="node__edit-btn" type="button" data-node-edit-open="${node.id}">Edit</button>
+            </div>
             ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ''}
+          `;
+        return `
+          <article class="node ${selectedClass} ${editingClass} ${connectClass}" data-node-id="${node.id}" style="transform: translate(${node.x}px, ${node.y}px)">
+            ${content}
             <button class="node__anchor node__anchor--top" type="button" data-node-anchor="${node.id}:top" aria-label="Connect from top anchor"></button>
             <button class="node__anchor node__anchor--right" type="button" data-node-anchor="${node.id}:right" aria-label="Connect from right anchor"></button>
             <button class="node__anchor node__anchor--bottom" type="button" data-node-anchor="${node.id}:bottom" aria-label="Connect from bottom anchor"></button>
@@ -139,9 +164,8 @@ export function createRenderer(elements, store) {
         return;
       }
       inspectorContent.innerHTML = `
+        <p class="inspector-meta">Double-click the node to edit name and description.</p>
         <div class="inspector-fields">
-          <label>Title <input id="node-title-input" value="${escapeAttr(node.title)}" maxlength="80" /></label>
-          <label>Description <textarea id="node-description-input">${escapeHTML(node.description)}</textarea></label>
           <button id="delete-node-btn" type="button">Delete Node</button>
         </div>
       `;

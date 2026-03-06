@@ -69,18 +69,43 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setEditingNode(id) {
+    state.ui.editingNodeId = id || null;
+    notify();
+  }
+
+  function clearEditingNode() {
+    if (!state.ui.editingNodeId) return;
+    state.ui.editingNodeId = null;
+    notify();
+  }
+
   function setPanning(isPanning) {
     state.ui.isPanning = Boolean(isPanning);
     notify();
   }
 
   function setSelection(selection) {
+    const current = state.selection;
+    const sameSelection = (!current && !selection)
+      || (current && selection && current.type === selection.type && current.id === selection.id);
+    if (sameSelection) {
+      return;
+    }
+
     state.selection = selection;
+    if (state.ui.editingNodeId) {
+      const keepEditing = selection?.type === 'node' && selection.id === state.ui.editingNodeId;
+      if (!keepEditing) {
+        state.ui.editingNodeId = null;
+      }
+    }
     notify();
   }
 
   function clearSelection() {
     state.selection = null;
+    state.ui.editingNodeId = null;
     notify();
   }
 
@@ -134,6 +159,9 @@ export function createStore(initialGraph = null) {
     state.edges = state.edges.filter((edge) => edge.from !== id && edge.to !== id);
     if (state.selection?.id === id) {
       state.selection = null;
+    }
+    if (state.ui.editingNodeId === id) {
+      state.ui.editingNodeId = null;
     }
     notify();
   }
@@ -232,6 +260,7 @@ export function createStore(initialGraph = null) {
     state.selection = null;
     state.ui.edgeDraft = null;
     state.ui.edgeTwangId = null;
+    state.ui.editingNodeId = null;
     notify();
   }
 
@@ -262,6 +291,7 @@ export function createStore(initialGraph = null) {
     state.selection = entry.data.selection;
     state.ui.edgeDraft = null;
     state.ui.edgeTwangId = null;
+    state.ui.editingNodeId = null;
     notify();
   }
 
@@ -274,6 +304,7 @@ export function createStore(initialGraph = null) {
     state.selection = entry.data.selection;
     state.ui.edgeDraft = null;
     state.ui.edgeTwangId = null;
+    state.ui.editingNodeId = null;
     notify();
   }
 
@@ -285,6 +316,8 @@ export function createStore(initialGraph = null) {
     clearEdgeDraft,
     setEdgeTwang,
     clearEdgeTwang,
+    setEditingNode,
+    clearEditingNode,
     setPanning,
     setSelection,
     clearSelection,

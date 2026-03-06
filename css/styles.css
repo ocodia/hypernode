@@ -265,12 +265,74 @@ textarea:focus-visible {
   font-size: 0.95rem;
 }
 
+.node__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.node__edit-btn {
+  padding: 4px 8px;
+  font-size: 0.74rem;
+  border-radius: 8px;
+  color: #475569;
+  background: #f8fafc;
+}
+
 .node__description {
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 0.85rem;
   line-height: 1.4;
   white-space: pre-wrap;
+}
+
+.node.is-editing {
+  border-color: var(--accent);
+}
+
+.node__editor {
+  display: grid;
+  gap: 8px;
+}
+
+.node__editor-label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.node__editor-input,
+.node__editor-textarea {
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 7px 8px;
+  color: var(--text);
+  width: 100%;
+  background: #fff;
+}
+
+.node__editor-textarea {
+  min-height: 68px;
+  resize: vertical;
+}
+
+.node__editor-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.node__editor-actions button {
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  border-radius: 8px;
+}
+
+.node.is-editing .node__anchor {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .node__anchor {

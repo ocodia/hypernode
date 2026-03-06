@@ -246,6 +246,11 @@ export function bindInteractions(elements, store) {
       return;
     }
 
+    if (event.target.closest('[data-node-editor], [data-node-edit-save], [data-node-edit-cancel], [data-node-edit-open]')) {
+      event.stopPropagation();
+      return;
+    }
+
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl || event.button !== 0) return;
 
@@ -272,6 +277,16 @@ export function bindInteractions(elements, store) {
 
     nodesLayer.setPointerCapture(event.pointerId);
     event.stopPropagation();
+  });
+
+  nodesLayer.addEventListener('dblclick', (event) => {
+    const nodeEl = event.target.closest('[data-node-id]');
+    if (!nodeEl) return;
+    const nodeId = nodeEl.dataset.nodeId;
+    store.setSelection({ type: 'node', id: nodeId });
+    store.setEditingNode(nodeId);
+    event.stopPropagation();
+    event.preventDefault();
   });
 
   nodesLayer.addEventListener('pointermove', (event) => {
@@ -321,6 +336,42 @@ export function bindInteractions(elements, store) {
   });
 
   nodesLayer.addEventListener('click', (event) => {
+    const openEl = event.target.closest('[data-node-edit-open]');
+    if (openEl) {
+      const nodeId = openEl.dataset.nodeEditOpen;
+      store.setSelection({ type: 'node', id: nodeId });
+      store.setEditingNode(nodeId);
+      event.stopPropagation();
+      return;
+    }
+
+    const saveEl = event.target.closest('[data-node-edit-save]');
+    if (saveEl) {
+      const nodeId = saveEl.dataset.nodeEditSave;
+      const nodeEl = saveEl.closest('[data-node-id]');
+      const titleInput = nodeEl?.querySelector(`[data-node-edit-title="${nodeId}"]`);
+      const descriptionInput = nodeEl?.querySelector(`[data-node-edit-description="${nodeId}"]`);
+      store.updateNode(nodeId, {
+        title: titleInput?.value || '',
+        description: descriptionInput?.value || '',
+      });
+      store.clearEditingNode();
+      event.stopPropagation();
+      return;
+    }
+
+    const cancelEl = event.target.closest('[data-node-edit-cancel]');
+    if (cancelEl) {
+      store.clearEditingNode();
+      event.stopPropagation();
+      return;
+    }
+
+    if (event.target.closest('[data-node-editor]')) {
+      event.stopPropagation();
+      return;
+    }
+
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl) return;
     store.setSelection({ type: 'node', id: nodeEl.dataset.nodeId });
@@ -355,17 +406,6 @@ export function bindInteractions(elements, store) {
 
   edgesGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
   edgeOverlayGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
-
-  inspectorContent.addEventListener('input', (event) => {
-    const state = store.getState();
-    if (state.selection?.type !== 'node') return;
-    if (event.target.id === 'node-title-input') {
-      store.updateNode(state.selection.id, { title: event.target.value });
-    }
-    if (event.target.id === 'node-description-input') {
-      store.updateNode(state.selection.id, { description: event.target.value });
-    }
-  });
 
   inspectorContent.addEventListener('click', (event) => {
     if (event.target.id === 'delete-node-btn') {
@@ -439,6 +479,10 @@ export function bindInteractions(elements, store) {
     }
 
     if (event.key === 'Escape') {
+      if (store.getState().ui.editingNodeId) {
+        store.clearEditingNode();
+        return;
+      }
       if (edgeSession) {
         cancelEdgeSession();
         return;
