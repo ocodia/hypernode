@@ -176,10 +176,41 @@ export function bindInteractions(elements, store) {
     }, 260);
   }
 
+  function focusNodeTitleInput(nodeId, retries = 2) {
+    const titleInput = nodesLayer.querySelector(`[data-node-edit-title="${nodeId}"]`);
+    if (!titleInput) {
+      if (retries > 0) {
+        window.requestAnimationFrame(() => focusNodeTitleInput(nodeId, retries - 1));
+      }
+      return;
+    }
+
+    titleInput.focus({ preventScroll: true });
+    titleInput.select();
+  }
+
+  function createNodeInEditMode(point) {
+    const node = store.addNode(point);
+    if (!node) return;
+    store.setEditingNode(node.id);
+    focusNodeTitleInput(node.id);
+  }
+
+  function saveNodeEditor(nodeId, nodeEl) {
+    if (!nodeId || !nodeEl) return;
+    const titleInput = nodeEl.querySelector(`[data-node-edit-title="${nodeId}"]`);
+    const descriptionInput = nodeEl.querySelector(`[data-node-edit-description="${nodeId}"]`);
+    store.updateNode(nodeId, {
+      title: titleInput?.value || '',
+      description: descriptionInput?.value || '',
+    });
+    store.clearEditingNode();
+  }
+
   canvas.addEventListener('dblclick', (event) => {
     if (event.target.closest('[data-node-id]')) return;
     const point = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
-    store.addNode(point);
+    createNodeInEditMode(point);
   });
 
   canvas.addEventListener('pointerdown', (event) => {
@@ -361,13 +392,7 @@ export function bindInteractions(elements, store) {
     if (saveEl) {
       const nodeId = saveEl.dataset.nodeEditSave;
       const nodeEl = saveEl.closest('[data-node-id]');
-      const titleInput = nodeEl?.querySelector(`[data-node-edit-title="${nodeId}"]`);
-      const descriptionInput = nodeEl?.querySelector(`[data-node-edit-description="${nodeId}"]`);
-      store.updateNode(nodeId, {
-        title: titleInput?.value || '',
-        description: descriptionInput?.value || '',
-      });
-      store.clearEditingNode();
+      saveNodeEditor(nodeId, nodeEl);
       event.stopPropagation();
       return;
     }
@@ -396,6 +421,24 @@ export function bindInteractions(elements, store) {
     if (!nodeEl) return;
     store.setSelection({ type: 'node', id: nodeEl.dataset.nodeId });
     event.stopPropagation();
+  });
+
+  nodesLayer.addEventListener('keydown', (event) => {
+    const ctrlOrCmd = event.ctrlKey || event.metaKey;
+    if (!ctrlOrCmd || event.key !== 'Enter') return;
+
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const nodeEl = target.closest('[data-node-id]');
+    const editorEl = target.closest('[data-node-editor]');
+    if (!nodeEl || !editorEl) return;
+
+    const nodeId = nodeEl.dataset.nodeId;
+    if (!nodeId) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    saveNodeEditor(nodeId, nodeEl);
   });
 
   function handleEdgeClick(event) {
@@ -468,7 +511,7 @@ export function bindInteractions(elements, store) {
 
   document.getElementById('add-node-btn').addEventListener('click', () => {
     const { viewport } = store.getState();
-    store.addNode({ x: (120 - viewport.panX) / viewport.zoom, y: (120 - viewport.panY) / viewport.zoom });
+    createNodeInEditMode({ x: (120 - viewport.panX) / viewport.zoom, y: (120 - viewport.panY) / viewport.zoom });
   });
 
   document.getElementById('reset-view-btn').addEventListener('click', () => store.resetView());

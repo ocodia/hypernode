@@ -6,7 +6,7 @@ It runs fully client-side with no backend and no account system. Graph data is s
 
 ## Current Features
 
-- Create nodes by double-clicking the canvas or using the toolbar button.
+- Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
 - Edit node title/description inline on each node.
 - Delete nodes from the inline editor or with `Delete`/`Backspace`.
 - Create edges from node anchor points (top/right/bottom/left).
@@ -28,6 +28,7 @@ It runs fully client-side with no backend and no account system. Graph data is s
 - `Delete` / `Backspace`: delete selected node/edge
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
+- `Ctrl/Cmd + Enter`: save and close active node editor
 - `Escape`: exit node edit mode, cancel edge draft mode, or clear selection
 
 ## Tech Stack

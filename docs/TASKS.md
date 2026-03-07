@@ -28,6 +28,7 @@ Last updated: 2026-03-07
 - [x] Add broader interaction state classes (`is-dragging`, `is-connecting`) for richer cursor/UI feedback.
 - [x] Surface keyboard shortcuts in the About modal.
 - [x] Add ? button to toolbar showing 'About' information and instructions.
+- [x] New nodes open in edit mode with `Untitled Node` title text pre-selected for immediate overwrite.
 
 ### P2 - Validation and Process
 
