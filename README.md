@@ -18,6 +18,9 @@ It runs fully client-side with no backend and no account system. Graph data is s
 - Undo/redo via toolbar and keyboard shortcuts.
 - Auto-save graph to browser storage.
 - Import/export graph JSON with validation and status toast feedback.
+- Interaction-state cursor feedback for drag/connect workflows.
+- About dialog with usage instructions and keyboard shortcuts.
+- Dark mode toggle with persisted theme preference.
 
 ## Keyboard Shortcuts
 
@@ -95,7 +98,6 @@ Version 1 includes the core graph editor loop:
 - grouping/clustering
 - minimap
 - touch interaction polish
-- dark mode
 - IndexedDB support for large graphs
 - multiple graph documents
 

@@ -1,7 +1,7 @@
 import { NODE_DEFAULTS } from "../utils/constants.js";
 
 export function createRenderer(elements, store) {
-  const { canvas, nodesLayer, edgesGroup, edgeDraftGroup, edgesLayer, edgesOverlayLayer, edgeOverlayGroup, importStatus } = elements;
+  const { workspace, canvas, nodesLayer, edgesGroup, edgeDraftGroup, edgesLayer, edgesOverlayLayer, edgeOverlayGroup, importStatus } = elements;
 
   function applyViewport(viewport) {
     const transform = `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`;
@@ -168,6 +168,10 @@ export function createRenderer(elements, store) {
     renderDraftEdge(state);
     renderImportStatus(state);
     canvas.classList.toggle("is-panning", Boolean(state.ui.isPanning));
+    canvas.classList.toggle("is-dragging", Boolean(state.ui.isDragging));
+    canvas.classList.toggle("is-connecting", Boolean(state.ui.isConnecting));
+    workspace.classList.toggle("is-dragging", Boolean(state.ui.isDragging));
+    workspace.classList.toggle("is-connecting", Boolean(state.ui.isConnecting));
   }
 
   return { render };

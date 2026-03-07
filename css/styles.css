@@ -1,13 +1,47 @@
 :root {
   --bg: #eef2f7;
+  --grid-dot: #d6deea;
   --panel: #ffffff;
+  --toolbar-bg: #ffffff7a;
   --panel-border: #dde3ec;
   --text: #1f2a37;
   --muted: #64748b;
   --accent: #3b82f6;
   --edge: #9fb2cc;
   --edge-selected: #2563eb;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --danger-soft: #fff1f2;
+  --danger-border: #fecaca;
+  --danger-text: #b91c1c;
+  --draft-stroke: #6b7f99;
+  --endpoint-stroke: #8ea3c1;
+  --endpoint-fill: #f8fbff;
+  --overlay-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   --node-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --grid-dot: #23324a;
+  --panel: #101826;
+  --toolbar-bg: rgba(16, 24, 38, 0.82);
+  --panel-border: #2b3a52;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #60a5fa;
+  --edge: #5c779a;
+  --edge-selected: #93c5fd;
+  --surface: #131d2e;
+  --surface-soft: #172338;
+  --danger-soft: #3c1a20;
+  --danger-border: #7f1d1d;
+  --danger-text: #fecaca;
+  --draft-stroke: #9fb2cc;
+  --endpoint-stroke: #9fb2cc;
+  --endpoint-fill: #111d2f;
+  --overlay-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  --node-shadow: 0 10px 26px rgba(0, 0, 0, 0.42);
 }
 
 * {
@@ -55,7 +89,7 @@ textarea {
 button,
 .file-input-label {
   border: 1px solid var(--panel-border);
-  background: white;
+  background: var(--surface);
   color: var(--text);
   padding: 8px 10px;
   border-radius: 10px;
@@ -92,9 +126,9 @@ textarea:focus-visible {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-image: radial-gradient(circle at 1px 1px, #d6deea 1px, transparent 0);
+  background-image: radial-gradient(circle at 1px 1px, var(--grid-dot) 1px, transparent 0);
   background-size: 24px 24px;
-  cursor: default;
+  cursor: grab;
 }
 
 .edges,
@@ -131,14 +165,14 @@ textarea:focus-visible {
 
 .edges path.is-draft {
   fill: none;
-  stroke: #6b7f99;
+  stroke: var(--draft-stroke);
   stroke-width: 2.4;
   pointer-events: none;
 }
 
 .edges .edge__draft-end {
-  fill: #f8fbff;
-  stroke: #6b7f99;
+  fill: var(--endpoint-fill);
+  stroke: var(--draft-stroke);
   stroke-width: 1.8;
   pointer-events: none;
 }
@@ -159,8 +193,8 @@ textarea:focus-visible {
 }
 
 .edges .edge__endpoint {
-  fill: #f8fbff;
-  stroke: #8ea3c1;
+  fill: var(--endpoint-fill);
+  stroke: var(--endpoint-stroke);
   stroke-width: 1.5;
   pointer-events: all;
   transition:
@@ -216,10 +250,12 @@ textarea:focus-visible {
   position: absolute;
   top: 12px;
   left: 12px;
-  right: 12px;
+  display: inline-flex;
+  flex-direction: column;
+  width: max-content;
   z-index: 20;
   padding: 12px;
-  background: #ffffff7a;
+  background: var(--toolbar-bg);
   border-radius: 10px;
   backdrop-filter: blur(5px);
 }
@@ -227,10 +263,12 @@ textarea:focus-visible {
 .toolbar__title {
   margin: 0 0 10px;
   font-size: 1rem;
+  display: none;
 }
 
 .toolbar__actions {
-  grid-template-columns: repeat(auto-fit, minmax(42px, max-content));
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
 }
 
@@ -255,7 +293,7 @@ textarea:focus-visible {
   width: 210px;
   border-radius: 12px;
   border: 1px solid var(--panel-border);
-  background: white;
+  background: var(--surface);
   box-shadow: var(--node-shadow);
   padding: 12px;
   pointer-events: auto;
@@ -305,8 +343,8 @@ textarea:focus-visible {
   padding: 4px 8px;
   font-size: 0.74rem;
   border-radius: 8px;
-  color: #475569;
-  background: #f8fafc;
+  color: var(--muted);
+  background: var(--surface-soft);
 }
 
 .node__description {
@@ -340,7 +378,7 @@ textarea:focus-visible {
   padding: 7px 8px;
   color: var(--text);
   width: 100%;
-  background: #fff;
+  background: var(--surface);
 }
 
 .node__editor-textarea {
@@ -360,9 +398,9 @@ textarea:focus-visible {
 }
 
 [data-node-edit-delete] {
-  border-color: #fecaca;
-  color: #b91c1c;
-  background: #fff1f2;
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+  background: var(--danger-soft);
 }
 
 .node.is-editing .node__anchor {
@@ -379,8 +417,8 @@ textarea:focus-visible {
   line-height: 0;
   aspect-ratio: 1 / 1;
   border-radius: 999px;
-  border: 1.5px solid #8ea3c1;
-  background: #f8fbff;
+  border: 1.5px solid var(--endpoint-stroke);
+  background: var(--endpoint-fill);
   box-shadow: 0 0 0 1px rgba(159, 178, 204, 0.22);
   opacity: 0;
   pointer-events: none;
@@ -443,8 +481,8 @@ textarea:focus-visible {
   padding: 10px 14px;
   border-radius: 10px;
   border: 1px solid var(--panel-border);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: var(--overlay-shadow);
   color: var(--text);
   font-size: 0.86rem;
   opacity: 0;
@@ -454,6 +492,81 @@ textarea:focus-visible {
 
 .toast.is-visible {
   opacity: 1;
+}
+
+.canvas.is-panning,
+.canvas.is-dragging {
+  cursor: grabbing;
+}
+
+.workspace.is-dragging .node {
+  cursor: grabbing;
+}
+
+.canvas.is-connecting {
+  cursor: crosshair;
+}
+
+.workspace.is-connecting .node__anchor {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+kbd {
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  padding: 1px 5px;
+}
+
+.about-dialog {
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  width: min(580px, calc(100vw - 24px));
+  padding: 14px;
+  box-shadow: var(--overlay-shadow);
+}
+
+.about-dialog::backdrop {
+  background: rgba(2, 6, 23, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.about-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.about-dialog h2,
+.about-dialog h3 {
+  margin: 0;
+}
+
+.about-dialog p {
+  margin: 10px 0;
+}
+
+.about-dialog ul {
+  margin: 8px 0 0 18px;
+  padding: 0;
+}
+
+#about-close-btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  text-align: center;
 }
 
 @keyframes edge-twang {
@@ -468,9 +581,3 @@ textarea:focus-visible {
   }
 }
 
-@media (max-width: 900px) {
-  .toolbar {
-    right: auto;
-    width: calc(100vw - 24px);
-  }
-}

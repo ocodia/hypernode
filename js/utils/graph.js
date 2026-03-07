@@ -16,6 +16,8 @@ export function emptyGraphState() {
       edgeTwangId: null,
       editingNodeId: null,
       isPanning: false,
+      isDragging: false,
+      isConnecting: false,
     },
     history: {
       past: [],

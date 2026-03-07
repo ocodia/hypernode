@@ -85,6 +85,16 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setDragging(isDragging) {
+    state.ui.isDragging = Boolean(isDragging);
+    notify();
+  }
+
+  function setConnecting(isConnecting) {
+    state.ui.isConnecting = Boolean(isConnecting);
+    notify();
+  }
+
   function setSelection(selection) {
     const current = state.selection;
     const sameSelection = (!current && !selection)
@@ -243,6 +253,9 @@ export function createStore(initialGraph = null) {
     state.ui.edgeDraft = null;
     state.ui.edgeTwangId = null;
     state.ui.editingNodeId = null;
+    state.ui.isPanning = false;
+    state.ui.isDragging = false;
+    state.ui.isConnecting = false;
     notify();
   }
 
@@ -274,6 +287,9 @@ export function createStore(initialGraph = null) {
     state.ui.edgeDraft = null;
     state.ui.edgeTwangId = null;
     state.ui.editingNodeId = null;
+    state.ui.isPanning = false;
+    state.ui.isDragging = false;
+    state.ui.isConnecting = false;
     notify();
   }
 
@@ -287,6 +303,9 @@ export function createStore(initialGraph = null) {
     state.ui.edgeDraft = null;
     state.ui.edgeTwangId = null;
     state.ui.editingNodeId = null;
+    state.ui.isPanning = false;
+    state.ui.isDragging = false;
+    state.ui.isConnecting = false;
     notify();
   }
 
@@ -301,6 +320,8 @@ export function createStore(initialGraph = null) {
     setEditingNode,
     clearEditingNode,
     setPanning,
+    setDragging,
+    setConnecting,
     setSelection,
     clearSelection,
     addNode,

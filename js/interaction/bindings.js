@@ -1,6 +1,8 @@
 import { VIEWPORT_LIMITS } from '../utils/constants.js';
 import { exportGraph, importGraphFile } from '../persistence/file.js';
 
+const THEME_STORAGE_KEY = 'hypernode.theme.v1';
+
 export function bindInteractions(elements, store) {
   const { workspace, canvas, nodesLayer, edgesGroup, edgeOverlayGroup, importInput } = elements;
 
@@ -27,6 +29,7 @@ export function bindInteractions(elements, store) {
     if (!dragSession) return;
     const activePointerId = dragSession.pointerId;
     dragSession = null;
+    store.setDragging(false);
     if (pointerId === null || pointerId === activePointerId) {
       try {
         nodesLayer.releasePointerCapture(activePointerId);
@@ -40,6 +43,7 @@ export function bindInteractions(elements, store) {
     if (!edgeSession) return;
     const activePointerId = edgeSession.pointerId;
     edgeSession = null;
+    store.setConnecting(false);
     store.clearEdgeDraft();
     if (pointerId === null || pointerId === activePointerId) {
       try {
@@ -90,6 +94,7 @@ export function bindInteractions(elements, store) {
       invalidNodeId: parsed.nodeId,
     };
 
+    store.setConnecting(true);
     store.setSelection({ type: 'node', id: parsed.nodeId });
     nodesLayer.setPointerCapture(event.pointerId);
     updateEdgeDraft(event);
@@ -128,6 +133,7 @@ export function bindInteractions(elements, store) {
       toAnchor: null,
     };
 
+    store.setConnecting(true);
     store.setSelection({ type: 'edge', id: edge.id });
     nodesLayer.setPointerCapture(event.pointerId);
     updateEdgeDraft(event);
@@ -280,6 +286,7 @@ export function bindInteractions(elements, store) {
       moved: false,
     };
 
+    store.setDragging(true);
     nodesLayer.setPointerCapture(event.pointerId);
     event.stopPropagation();
   });
@@ -420,6 +427,45 @@ export function bindInteractions(elements, store) {
   edgesGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
   edgeOverlayGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
 
+  const aboutDialog = document.getElementById('about-dialog');
+  const aboutBtn = document.getElementById('about-btn');
+  const aboutCloseBtn = document.getElementById('about-close-btn');
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+
+  if (aboutBtn && aboutDialog) {
+    aboutBtn.addEventListener('click', () => {
+      if (aboutDialog.open) {
+        aboutDialog.close();
+      } else {
+        aboutDialog.showModal();
+      }
+    });
+  }
+
+  if (aboutCloseBtn && aboutDialog) {
+    aboutCloseBtn.addEventListener('click', () => {
+      if (aboutDialog.open) {
+        aboutDialog.close();
+      }
+    });
+  }
+
+  const preferredDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  const initialTheme = storedTheme === 'dark' || storedTheme === 'light'
+    ? storedTheme
+    : (preferredDark ? 'dark' : 'light');
+  applyTheme(initialTheme, themeToggleBtn);
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(nextTheme, themeToggleBtn);
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    });
+  }
+
   document.getElementById('add-node-btn').addEventListener('click', () => {
     const { viewport } = store.getState();
     store.addNode({ x: (120 - viewport.panX) / viewport.zoom, y: (120 - viewport.panY) / viewport.zoom });
@@ -451,6 +497,7 @@ export function bindInteractions(elements, store) {
   });
 
   document.addEventListener('keydown', (event) => {
+    if (aboutDialog?.open) return;
     if (isTypingTarget(event.target)) return;
 
     const ctrlOrCmd = event.ctrlKey || event.metaKey;
@@ -548,4 +595,16 @@ function clamp(value, min, max) {
 function isTypingTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
   return target.matches('input, textarea, [contenteditable="true"]');
+}
+
+function applyTheme(theme, toggleButton) {
+  const isDark = theme === 'dark';
+  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+  if (toggleButton) {
+    toggleButton.innerHTML = isDark
+      ? '<i class="bi bi-sun"></i>'
+      : '<i class="bi bi-moon-stars"></i>';
+    toggleButton.setAttribute('aria-label', isDark ? 'Enable light mode' : 'Enable dark mode');
+    toggleButton.setAttribute('title', isDark ? 'Enable Light Mode' : 'Enable Dark Mode');
+  }
 }

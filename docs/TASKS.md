@@ -25,9 +25,9 @@ Last updated: 2026-03-07
 
 ### P1 - Interaction Quality
 
-- [ ] Add broader interaction state classes (`is-dragging`, `is-connecting`) for richer cursor/UI feedback.
-- [ ] Add optional keyboard shortcut hints in UI (discoverability polish).
-- [ ] Add ? button to toolbar showing 'About' information and instructions.
+- [x] Add broader interaction state classes (`is-dragging`, `is-connecting`) for richer cursor/UI feedback.
+- [x] Surface keyboard shortcuts in the About modal.
+- [x] Add ? button to toolbar showing 'About' information and instructions.
 
 ### P2 - Validation and Process
 
@@ -35,11 +35,11 @@ Last updated: 2026-03-07
   - node drag at zoom levels `0.35`, `1.0`, and `2.5`
   - panning on empty canvas after node/edge selection
   - edge create/reconnect flows under rapid pointer sequences
-- [ ] Add a lightweight regression checklist document for interaction safety.
+- [x] Add a lightweight regression checklist document for interaction safety.
 
 ### P3 - Theme and Visual Options
 
-- [ ] Dark mode
+- [x] Dark mode
 
 ## Suggested Implementation Order
 
