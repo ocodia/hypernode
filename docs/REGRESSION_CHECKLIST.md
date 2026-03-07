@@ -33,6 +33,12 @@ Use this checklist before shipping interaction changes.
 - [ ] During reconnect/create, press `Escape` and confirm draft state fully clears.
 - [ ] Verify no stuck `is-connecting` or `is-dragging` UI class states after cancel/release.
 
+### Anchors modes
+
+- [ ] Set `Anchors` to `Auto-anchor` and verify create/reconnect/edge render use nearest anchor between nodes.
+- [ ] Set `Anchors` to `Exact anchor` and verify created/reconnected edge endpoints stay on committed anchors when nodes move.
+- [ ] Switch between `Auto-anchor` and `Exact anchor` and confirm edge paths update immediately with no stuck draft/selection state.
+
 ## UI/Polish Checks
 
 - [ ] Toggle keyboard hints on/off.

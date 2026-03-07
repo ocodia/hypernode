@@ -652,6 +652,13 @@ kbd {
   margin: 6px 0;
 }
 
+.settings-dialog__hint {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 @keyframes edge-twang {
   0% {
     stroke-width: 4.5;

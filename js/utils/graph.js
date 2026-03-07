@@ -2,14 +2,14 @@ import { GRAPH_DEFAULTS, NODE_DEFAULTS, VIEWPORT_LIMITS } from './constants.js';
 
 const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
 const BACKGROUND_STYLES = new Set(['dots', 'graph-paper']);
-const EDGE_ANCHOR_MODES = new Set(['auto', 'fixed']);
+const ANCHORS_MODES = new Set(['auto', 'exact']);
 
 export function emptyGraphState() {
   return {
     name: GRAPH_DEFAULTS.name,
     settings: {
       backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
-      edgeAnchorMode: GRAPH_DEFAULTS.edgeAnchorMode,
+      anchorsMode: GRAPH_DEFAULTS.anchorsMode,
     },
     nodes: [],
     edges: [],
@@ -60,7 +60,10 @@ export function validateGraphPayload(payload) {
     return false;
   }
 
-  if (!isValidBackgroundStyle(payload.settings.backgroundStyle) || !isValidEdgeAnchorMode(payload.settings.edgeAnchorMode)) {
+  const hasValidCoreSettings = isValidBackgroundStyle(payload.settings.backgroundStyle);
+  const hasValidAnchorsMode = payload.settings.anchorsMode === undefined
+    || isValidAnchorsMode(payload.settings.anchorsMode);
+  if (!hasValidCoreSettings || !hasValidAnchorsMode) {
     return false;
   }
 
@@ -89,9 +92,9 @@ export function sanitizeGraphSettings(settings) {
     backgroundStyle: isValidBackgroundStyle(settings?.backgroundStyle)
       ? settings.backgroundStyle
       : GRAPH_DEFAULTS.backgroundStyle,
-    edgeAnchorMode: isValidEdgeAnchorMode(settings?.edgeAnchorMode)
-      ? settings.edgeAnchorMode
-      : GRAPH_DEFAULTS.edgeAnchorMode,
+    anchorsMode: isValidAnchorsMode(settings?.anchorsMode)
+      ? settings.anchorsMode
+      : GRAPH_DEFAULTS.anchorsMode,
   };
 }
 
@@ -107,6 +110,6 @@ function isValidBackgroundStyle(value) {
   return typeof value === 'string' && BACKGROUND_STYLES.has(value);
 }
 
-function isValidEdgeAnchorMode(value) {
-  return typeof value === 'string' && EDGE_ANCHOR_MODES.has(value);
+function isValidAnchorsMode(value) {
+  return typeof value === 'string' && ANCHORS_MODES.has(value);
 }

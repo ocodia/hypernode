@@ -86,14 +86,15 @@
           </label>
         </fieldset>
         <fieldset class="settings-dialog__section">
-          <legend>Edge anchor behavior</legend>
+          <legend>Anchors</legend>
+          <p class="settings-dialog__hint">Controls how edge endpoints are chosen and whether they stay fixed as nodes move.</p>
           <label class="settings-dialog__option">
-            <input type="radio" name="edge-anchor-mode" value="auto" />
-            Auto-snap to nearest anchor
+            <input type="radio" name="anchors-mode" value="auto" />
+            Auto-anchor
           </label>
           <label class="settings-dialog__option">
-            <input type="radio" name="edge-anchor-mode" value="fixed" />
-            Keep original anchor
+            <input type="radio" name="anchors-mode" value="exact" />
+            Exact anchor
           </label>
         </fieldset>
       </article>

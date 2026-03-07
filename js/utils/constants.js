@@ -15,5 +15,5 @@ export const NODE_DEFAULTS = {
 export const GRAPH_DEFAULTS = {
   name: "Untitled Graph",
   backgroundStyle: "dots",
-  edgeAnchorMode: "auto",
+  anchorsMode: "auto",
 };

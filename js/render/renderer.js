@@ -96,7 +96,7 @@ export function createRenderer(elements, store) {
   function renderEdges(state) {
     const byId = new Map(state.nodes.map((node) => [node.id, node]));
     const bySize = measureNodeSizes();
-    const isFixedAnchorMode = state.settings.edgeAnchorMode === 'fixed';
+    const useExactAnchors = state.settings.anchorsMode === 'exact';
     const selectedEdgeId = state.selection?.type === "edge" ? state.selection.id : null;
     const twangEdgeId = state.ui.edgeTwangId;
     let selectedOverlayMarkup = "";
@@ -111,8 +111,8 @@ export function createRenderer(elements, store) {
 
         const fromSize = bySize.get(fromNode.id) || defaultNodeSize();
         const toSize = bySize.get(toNode.id) || defaultNodeSize();
-        const fromAnchor = resolveEdgeAnchor(edge.fromAnchor, fromNode, toNode, isFixedAnchorMode);
-        const toAnchor = resolveEdgeAnchor(edge.toAnchor, toNode, fromNode, isFixedAnchorMode);
+        const fromAnchor = resolveEdgeAnchor(edge.fromAnchor, fromNode, toNode, useExactAnchors);
+        const toAnchor = resolveEdgeAnchor(edge.toAnchor, toNode, fromNode, useExactAnchors);
         const start = getAnchorPoint(fromNode, fromSize, fromAnchor);
         const end = getAnchorPoint(toNode, toSize, toAnchor);
         const controls = getTautControls(start, end, fromAnchor, toAnchor);
@@ -287,8 +287,8 @@ function resolveAutoAnchor(fromNode, toNode) {
   return dy >= 0 ? "bottom" : "top";
 }
 
-function resolveEdgeAnchor(preferredAnchor, fromNode, toNode, useFixedAnchor) {
-  if (useFixedAnchor && isAnchorName(preferredAnchor)) {
+function resolveEdgeAnchor(preferredAnchor, fromNode, toNode, useExactAnchors) {
+  if (useExactAnchors && isAnchorName(preferredAnchor)) {
     return preferredAnchor;
   }
   return resolveAutoAnchor(fromNode, toNode);

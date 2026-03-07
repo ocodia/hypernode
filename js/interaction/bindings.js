@@ -65,7 +65,14 @@ export function bindInteractions(elements, store) {
     const targetNode = hoverNodeId ? getNode(hoverNodeId, state) : null;
     const isValidTarget = sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
     const hoverAnchor = isValidTarget
-      ? resolveAnchorName(null, targetNode, sourceNode)
+      ? resolveSessionTargetAnchor({
+        sourceNode,
+        targetNode,
+        pointer,
+        viewport: state.viewport,
+        canvasEl: canvas,
+        anchorsMode: state.settings.anchorsMode,
+      })
       : null;
 
     store.setEdgeDraft({
@@ -118,7 +125,7 @@ export function bindInteractions(elements, store) {
     const fixedNode = movingFrom ? toNode : fromNode;
     const movingNode = movingFrom ? fromNode : toNode;
     const fixedStoredAnchor = movingFrom ? edge.toAnchor : edge.fromAnchor;
-    const fixedAnchor = resolveEffectiveAnchorForSession(fixedStoredAnchor, fixedNode, movingNode, store.getState().settings.edgeAnchorMode);
+    const fixedAnchor = resolveEffectiveAnchorForSession(fixedStoredAnchor, fixedNode, movingNode, store.getState().settings.anchorsMode);
 
     endPanSession();
     endDragSession();
@@ -145,13 +152,21 @@ export function bindInteractions(elements, store) {
   function finishEdgeSession(event) {
     if (!edgeSession || edgeSession.pointerId !== event.pointerId) return;
     const state = store.getState();
+    const pointer = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
     const hoverNodeId = getNodeIdAtClientPoint(event.clientX, event.clientY);
     const sourceNode = getNode(edgeSession.fromNodeId, state);
     const targetNode = hoverNodeId ? getNode(hoverNodeId, state) : null;
     const isValidTarget = sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
     let anchoredEdgeId = null;
     if (isValidTarget) {
-      const targetAnchor = resolveAnchorName(null, targetNode, sourceNode);
+      const targetAnchor = resolveSessionTargetAnchor({
+        sourceNode,
+        targetNode,
+        pointer,
+        viewport: state.viewport,
+        canvasEl: canvas,
+        anchorsMode: state.settings.anchorsMode,
+      });
       if (edgeSession.mode === 'reconnect') {
         anchoredEdgeId = store.reconnectEdge(
           edgeSession.edgeId,
@@ -547,11 +562,11 @@ export function bindInteractions(elements, store) {
     });
   });
 
-  settingsDialog?.querySelectorAll('input[name="edge-anchor-mode"]').forEach((input) => {
+  settingsDialog?.querySelectorAll('input[name="anchors-mode"]').forEach((input) => {
     input.addEventListener('change', (event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || !target.checked) return;
-      store.setEdgeAnchorMode(target.value);
+      store.setAnchorsMode(target.value);
     });
   });
 
@@ -644,7 +659,7 @@ export function bindInteractions(elements, store) {
       name: GRAPH_DEFAULTS.name,
       settings: {
         backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
-        edgeAnchorMode: GRAPH_DEFAULTS.edgeAnchorMode,
+        anchorsMode: GRAPH_DEFAULTS.anchorsMode,
       },
       nodes: [],
       edges: [],
@@ -773,6 +788,23 @@ function resolveAnchorName(anchor, fromNode, toNode) {
   return dy >= 0 ? 'bottom' : 'top';
 }
 
+function resolveSessionTargetAnchor({
+  sourceNode,
+  targetNode,
+  pointer,
+  viewport,
+  canvasEl,
+  anchorsMode,
+}) {
+  if (anchorsMode === 'exact') {
+    const nearestAnchor = resolveNearestNodeAnchorToPointer(targetNode.id, pointer, canvasEl, viewport);
+    if (nearestAnchor) {
+      return nearestAnchor;
+    }
+  }
+  return resolveAnchorName(null, targetNode, sourceNode);
+}
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
@@ -782,11 +814,47 @@ function isTypingTarget(target) {
   return target.matches('input, textarea, [contenteditable="true"]');
 }
 
-function resolveEffectiveAnchorForSession(storedAnchor, fromNode, toNode, edgeAnchorMode) {
-  if (edgeAnchorMode === 'fixed' && isAnchorName(storedAnchor)) {
+function resolveEffectiveAnchorForSession(storedAnchor, fromNode, toNode, anchorsMode) {
+  if (anchorsMode === 'exact' && isAnchorName(storedAnchor)) {
     return storedAnchor;
   }
   return resolveAnchorName(null, fromNode, toNode);
+}
+
+function resolveNearestNodeAnchorToPointer(nodeId, pointer, canvasEl, viewport) {
+  if (!nodeId || !pointer || !canvasEl || !viewport) return null;
+  const nodeEl = getNodeElementById(nodeId);
+  if (!nodeEl) return null;
+
+  const rect = nodeEl.getBoundingClientRect();
+  const anchors = {
+    top: toGraphPoint(rect.left + rect.width / 2, rect.top, canvasEl, viewport),
+    right: toGraphPoint(rect.right, rect.top + rect.height / 2, canvasEl, viewport),
+    bottom: toGraphPoint(rect.left + rect.width / 2, rect.bottom, canvasEl, viewport),
+    left: toGraphPoint(rect.left, rect.top + rect.height / 2, canvasEl, viewport),
+  };
+
+  let nearest = null;
+  let nearestDistanceSq = Infinity;
+  for (const [anchor, point] of Object.entries(anchors)) {
+    const dx = pointer.x - point.x;
+    const dy = pointer.y - point.y;
+    const distanceSq = (dx * dx) + (dy * dy);
+    if (distanceSq < nearestDistanceSq) {
+      nearestDistanceSq = distanceSq;
+      nearest = anchor;
+    }
+  }
+
+  return isAnchorName(nearest) ? nearest : null;
+}
+
+function getNodeElementById(nodeId) {
+  const escapedId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+    ? CSS.escape(nodeId)
+    : nodeId;
+  const nodeEl = document.querySelector(`[data-node-id="${escapedId}"]`);
+  return nodeEl instanceof HTMLElement ? nodeEl : null;
 }
 
 function isAbortError(error) {
@@ -817,9 +885,9 @@ function syncSettingsDialogFromState(state, settingsDialog, graphNameInput) {
     }
   });
 
-  settingsDialog.querySelectorAll('input[name="edge-anchor-mode"]').forEach((input) => {
+  settingsDialog.querySelectorAll('input[name="anchors-mode"]').forEach((input) => {
     if (input instanceof HTMLInputElement) {
-      input.checked = input.value === state.settings.edgeAnchorMode;
+      input.checked = input.value === state.settings.anchorsMode;
     }
   });
 }

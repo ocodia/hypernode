@@ -20,7 +20,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Open/save graph JSON files with validation and status toast feedback.
 - Settings menu for:
   - graph background style (`dots` or `graph paper`)
-  - edge anchor mode (`auto-snap` or `fixed original anchor`)
+  - anchors mode (`auto-anchor` or `exact anchor`)
   - graph name
 - Graph name shown in toolbar title and browser tab title.
 - First-time Save suggests a filename based on the graph name.

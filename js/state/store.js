@@ -310,11 +310,11 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
-  function setEdgeAnchorMode(edgeAnchorMode) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, edgeAnchorMode }).edgeAnchorMode;
-    if (state.settings.edgeAnchorMode === nextValue) return;
-    pushHistory('set-edge-anchor-mode');
-    state.settings.edgeAnchorMode = nextValue;
+  function setAnchorsMode(anchorsMode) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, anchorsMode }).anchorsMode;
+    if (state.settings.anchorsMode === nextValue) return;
+    pushHistory('set-anchors-mode');
+    state.settings.anchorsMode = nextValue;
     notify();
   }
 
@@ -425,7 +425,7 @@ export function createStore(initialGraph = null) {
     deleteEdge,
     setGraphName,
     setBackgroundStyle,
-    setEdgeAnchorMode,
+    setAnchorsMode,
     replaceGraph,
     setViewport,
     resetView,

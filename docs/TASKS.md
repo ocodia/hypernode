@@ -68,10 +68,11 @@ Last updated: 2026-03-07
   - graph paper minor grid lines fade with zoom-out while major lines stay orientation-stable
   - dots use smooth linear visibility changes from low zoom (`0.35`) to high zoom (`2.5`)
   - behavior updates continuously as zoom changes without breaking world-locked alignment
-- [x] Add edge anchor behavior setting:
-  - auto-snap reconnects endpoint to nearest anchor
-  - fixed-anchor keeps endpoint on the originally connected anchor
-  - apply setting consistently for edge create and endpoint reconnect flows
+- [x] Consolidate anchor behavior into a single `Anchors` setting:
+  - `auto-anchor` uses nearest anchor between nodes for create/reconnect/render
+  - `exact anchor` keeps the committed start/destination anchors fixed as nodes move
+  - applies consistently across create and reconnect flows
+  - persists in graph payload and survives reload/open/save/new + undo/redo (`FR-11`, `FR-15`, `NFR-1`)
 - [x] Add graph naming:
   - editable graph name field in Settings
   - show graph name in the app title/header so users can confirm active graph
@@ -99,6 +100,6 @@ Last updated: 2026-03-07
 6. Add Settings button and settings panel shell.
 7. Implement background style options (graph paper/dots) with persistence.
 8. Implement zoom-aware, world-locked background pattern scaling (grid/dots) and run targeted regression checks.
-9. Implement edge anchor behavior mode (auto-snap vs fixed original anchor).
+9. Implement consolidated Anchors mode (auto-anchor vs exact anchor).
 10. Implement graph naming and surface it in app title/header.
 11. Run settings-focused regression pass across persistence and file workflows.
