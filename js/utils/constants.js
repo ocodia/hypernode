@@ -9,6 +9,9 @@ export const VIEWPORT_LIMITS = {
 
 export const NODE_DEFAULTS = {
   width: 210,
+  height: 80,
+  minWidth: 160,
+  minHeight: 96,
   title: "Untitled Node",
 };
 

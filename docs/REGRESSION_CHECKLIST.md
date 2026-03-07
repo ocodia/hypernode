@@ -19,6 +19,17 @@ Use this checklist before shipping interaction changes.
 - [ ] Zoom to `2.5`, repeat node drag check.
 - [ ] Undo/redo after each zoom-level drag behaves correctly.
 
+### Node corner resize
+
+- [ ] Select a node and verify all four corner handles are visible.
+- [ ] Deselect node and verify handles are hidden.
+- [ ] Enter node edit mode and verify handles are hidden.
+- [ ] Drag each corner handle and verify resize occurs from that corner.
+- [ ] Verify minimum node size clamp at `160x96`.
+- [ ] Verify node resize remains pointer-aligned at zoom levels `0.35`, `1.0`, and `2.5`.
+- [ ] Verify one undo step reverts a full resize gesture; redo reapplies it.
+- [ ] Verify resized node dimensions persist across reload and open/save/new flows.
+
 ### Panning after selection
 
 - [ ] Select a node, then pan from empty canvas area.

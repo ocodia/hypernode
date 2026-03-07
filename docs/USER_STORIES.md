@@ -80,6 +80,18 @@ Acceptance criteria:
 - Connected edges are removed automatically.
 - Deletion is undoable.
 
+### US-18: Resize nodes from corners
+
+As a user, I want to resize selected nodes so I can fit content and tune layout density.
+
+Acceptance criteria:
+
+- Selected nodes show four corner resize handles.
+- Handles are hidden when node is not selected or is in edit mode.
+- Dragging a corner resizes from that corner and is zoom-aware.
+- Node size is clamped to minimum readable dimensions.
+- Resize operations are undoable and redoable.
+
 ## Epic 3 - Edges
 
 ### US-8: Create edges between nodes
@@ -175,6 +187,7 @@ Acceptance criteria:
 
 - Escape exits inline node edit mode.
 - Escape cancels active edge draft/reconnect mode.
+- Escape cancels active node resize mode.
 - Escape clears selection when no mode is active.
 
 ### US-17: Keyboard delete behavior

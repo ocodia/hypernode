@@ -54,6 +54,8 @@ export function createRenderer(elements, store) {
                 ? "is-connect-target"
                 : "is-connect-candidate"
               : "";
+        const inlineSizeStyle = buildNodeInlineSizeStyle(node);
+        const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}`;
         const content =
           editingNodeId === node.id
             ? `
@@ -81,8 +83,12 @@ export function createRenderer(elements, store) {
             ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ""}
           `;
         return `
-          <article class="node ${selectedClass} ${editingClass} ${connectClass}" data-node-id="${node.id}" style="transform: translate(${node.x}px, ${node.y}px)">
+          <article class="node ${selectedClass} ${editingClass} ${connectClass}" data-node-id="${node.id}" style="${nodeStyle}">
             ${content}
+            <button class="node__resize node__resize--top-left" type="button" data-node-resize="${node.id}:top-left" aria-label="Resize from top left corner"></button>
+            <button class="node__resize node__resize--top-right" type="button" data-node-resize="${node.id}:top-right" aria-label="Resize from top right corner"></button>
+            <button class="node__resize node__resize--bottom-right" type="button" data-node-resize="${node.id}:bottom-right" aria-label="Resize from bottom right corner"></button>
+            <button class="node__resize node__resize--bottom-left" type="button" data-node-resize="${node.id}:bottom-left" aria-label="Resize from bottom left corner"></button>
             <button class="node__anchor node__anchor--top" type="button" data-node-anchor="${node.id}:top" aria-label="Connect from top anchor"></button>
             <button class="node__anchor node__anchor--right" type="button" data-node-anchor="${node.id}:right" aria-label="Connect from right anchor"></button>
             <button class="node__anchor node__anchor--bottom" type="button" data-node-anchor="${node.id}:bottom" aria-label="Connect from bottom anchor"></button>
@@ -214,8 +220,10 @@ export function createRenderer(elements, store) {
     renderGraphMetadata(state);
     canvas.classList.toggle("is-panning", Boolean(state.ui.isPanning));
     canvas.classList.toggle("is-dragging", Boolean(state.ui.isDragging));
+    canvas.classList.toggle("is-resizing", Boolean(state.ui.isResizing));
     canvas.classList.toggle("is-connecting", Boolean(state.ui.isConnecting));
     workspace.classList.toggle("is-dragging", Boolean(state.ui.isDragging));
+    workspace.classList.toggle("is-resizing", Boolean(state.ui.isResizing));
     workspace.classList.toggle("is-connecting", Boolean(state.ui.isConnecting));
   }
 
@@ -251,14 +259,32 @@ function measureNodeSizes() {
     const nodeId = nodeEl.dataset.nodeId;
     sizes.set(nodeId, {
       width: nodeEl.offsetWidth || NODE_DEFAULTS.width,
-      height: nodeEl.offsetHeight || 80,
+      height: nodeEl.offsetHeight || NODE_DEFAULTS.height,
     });
   });
   return sizes;
 }
 
 function defaultNodeSize() {
-  return { width: NODE_DEFAULTS.width, height: 80 };
+  return { width: NODE_DEFAULTS.width, height: NODE_DEFAULTS.height };
+}
+
+function buildNodeInlineSizeStyle(node) {
+  const width = Number(node.width);
+  const height = Number(node.height);
+  const hasWidth = Number.isFinite(width) && width > 0;
+  const hasHeight = Number.isFinite(height) && height > 0;
+  if (!hasWidth && !hasHeight) {
+    return '';
+  }
+  let style = '';
+  if (hasWidth) {
+    style += `width: ${width}px;`;
+  }
+  if (hasHeight) {
+    style += `height: ${height}px;`;
+  }
+  return style;
 }
 
 function getNodeCenter(node, size) {

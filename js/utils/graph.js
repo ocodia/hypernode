@@ -31,6 +31,7 @@ export function emptyGraphState() {
       editingNodeId: null,
       isPanning: false,
       isDragging: false,
+      isResizing: false,
       isConnecting: false,
     },
     history: {
@@ -41,12 +42,16 @@ export function emptyGraphState() {
 }
 
 export function sanitizeNode(node) {
+  const width = sanitizeOptionalSize(node.width);
+  const height = sanitizeOptionalSize(node.height);
   return {
     id: String(node.id),
     title: String(node.title || NODE_DEFAULTS.title).trim() || NODE_DEFAULTS.title,
     description: String(node.description || ''),
     x: Number(node.x) || 0,
     y: Number(node.y) || 0,
+    ...(width === null ? {} : { width }),
+    ...(height === null ? {} : { height }),
   };
 }
 
@@ -146,4 +151,12 @@ function sanitizeArrowheadSizeStep(value) {
   if (rounded < ARROWHEAD_SIZE_STEP_MIN) return ARROWHEAD_SIZE_STEP_MIN;
   if (rounded > ARROWHEAD_SIZE_STEP_MAX) return ARROWHEAD_SIZE_STEP_MAX;
   return rounded;
+}
+
+function sanitizeOptionalSize(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return null;
+  }
+  return numeric;
 }

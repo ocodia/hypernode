@@ -30,6 +30,7 @@ Users create nodes, connect them with directed edges, move items spatially, and 
 - create nodes quickly from canvas or toolbar
 - edit title/description inline on node cards
 - drag nodes to organize layout
+- resize selected nodes from corner handles
 - delete selected nodes
 
 ### Edge Workflow

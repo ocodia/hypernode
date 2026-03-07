@@ -10,6 +10,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Edit node title/description inline on each node.
 - Delete nodes from the inline editor or with `Delete`/`Backspace`.
 - Create edges from node anchor points (top/right/bottom/left).
+- Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
 - Render directed edge arrowheads at destination anchors with curved-approach rotation.
 - Reconnect existing edge endpoints by dragging selected edge endpoints.
 - Delete selected edges via inline edge overlay control or keyboard delete.

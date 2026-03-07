@@ -58,6 +58,7 @@ Stores:
 - `selection`
 - `viewport` (`panX`, `panY`, `zoom`)
 - UI state (`edgeDraft`, `edgeTwangId`, `editingNodeId`, `isPanning`, `isDragging`, `isConnecting`, `importStatus`)
+  - includes resize interaction state (`isResizing`)
 - undo/redo history
 
 ### Rendering (`js/render/renderer.js`)
@@ -102,9 +103,13 @@ Responsible for:
   "title": "Node title",
   "description": "",
   "x": 0,
-  "y": 0
+  "y": 0,
+  "width": 210,
+  "height": 96
 }
 ```
+
+`width` and `height` are optional and are present when a node has been explicitly resized.
 
 ### Edge
 

@@ -20,6 +20,7 @@ Last updated: 2026-03-07
 - [x] JSON import/export with validation
 - [x] Import status toast feedback
 - [x] `Escape` cancels edge draft mode and exits edit mode
+- [x] Node corner resize with selected-only handles, min clamp (`160x96`), undo/redo, and persistence
 
 ## Remaining Work
 
@@ -37,6 +38,11 @@ Last updated: 2026-03-07
   - panning on empty canvas after node/edge selection
   - edge create/reconnect flows under rapid pointer sequences
 - [x] Add a lightweight regression checklist document for interaction safety.
+- [ ] Manual regression pass for node corner resize:
+  - handle visibility only on selected nodes
+  - handles hidden during inline edit mode
+  - resize behavior remains zoom-correct at `0.35`, `1.0`, and `2.5`
+  - resize undo/redo and persistence across reload/open/save/new
 
 ### P3 - Theme and Visual Options
 

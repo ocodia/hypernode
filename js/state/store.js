@@ -110,6 +110,11 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setResizing(isResizing) {
+    state.ui.isResizing = Boolean(isResizing);
+    notify();
+  }
+
   function setConnecting(isConnecting) {
     state.ui.isConnecting = Boolean(isConnecting);
     notify();
@@ -177,8 +182,31 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function resizeNode(id, patch, options = {}) {
+    const node = state.nodes.find((item) => item.id === id);
+    if (!node) return;
+    if (!options.skipHistory) pushHistory('resize-node');
+    if (typeof patch.x === 'number') {
+      node.x = patch.x;
+    }
+    if (typeof patch.y === 'number') {
+      node.y = patch.y;
+    }
+    if (typeof patch.width === 'number') {
+      node.width = patch.width;
+    }
+    if (typeof patch.height === 'number') {
+      node.height = patch.height;
+    }
+    notify();
+  }
+
   function beginNodeMove() {
     pushHistory('move-node');
+  }
+
+  function beginNodeResize() {
+    pushHistory('resize-node');
   }
 
   function deleteNode(id) {
@@ -357,6 +385,7 @@ export function createStore(initialGraph = null) {
     state.ui.editingNodeId = null;
     state.ui.isPanning = false;
     state.ui.isDragging = false;
+    state.ui.isResizing = false;
     state.ui.isConnecting = false;
     notify();
   }
@@ -393,6 +422,7 @@ export function createStore(initialGraph = null) {
     state.ui.editingNodeId = null;
     state.ui.isPanning = false;
     state.ui.isDragging = false;
+    state.ui.isResizing = false;
     state.ui.isConnecting = false;
     notify();
   }
@@ -411,6 +441,7 @@ export function createStore(initialGraph = null) {
     state.ui.editingNodeId = null;
     state.ui.isPanning = false;
     state.ui.isDragging = false;
+    state.ui.isResizing = false;
     state.ui.isConnecting = false;
     notify();
   }
@@ -427,13 +458,16 @@ export function createStore(initialGraph = null) {
     clearEditingNode,
     setPanning,
     setDragging,
+    setResizing,
     setConnecting,
     setSelection,
     clearSelection,
     addNode,
     updateNode,
     moveNode,
+    resizeNode,
     beginNodeMove,
+    beginNodeResize,
     deleteNode,
     addEdge,
     connectNodes,

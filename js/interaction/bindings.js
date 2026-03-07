@@ -1,4 +1,4 @@
-import { GRAPH_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
+import { GRAPH_DEFAULTS, NODE_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
 import { openGraphFile, saveGraphFile, supportsFileSystemAccess } from '../persistence/file.js';
 
 const THEME_STORAGE_KEY = 'hypernode.theme.v1';
@@ -10,6 +10,7 @@ export function bindInteractions(elements, store) {
 
   let panSession = null;
   let dragSession = null;
+  let resizeSession = null;
   let edgeSession = null;
   let edgeTwangTimer = null;
 
@@ -32,6 +33,20 @@ export function bindInteractions(elements, store) {
     const activePointerId = dragSession.pointerId;
     dragSession = null;
     store.setDragging(false);
+    if (pointerId === null || pointerId === activePointerId) {
+      try {
+        nodesLayer.releasePointerCapture(activePointerId);
+      } catch {
+        // Pointer may already be released.
+      }
+    }
+  }
+
+  function endResizeSession(pointerId = null) {
+    if (!resizeSession) return;
+    const activePointerId = resizeSession.pointerId;
+    resizeSession = null;
+    store.setResizing(false);
     if (pointerId === null || pointerId === activePointerId) {
       try {
         nodesLayer.releasePointerCapture(activePointerId);
@@ -93,6 +108,7 @@ export function bindInteractions(elements, store) {
 
     endPanSession();
     endDragSession();
+    endResizeSession();
     cancelEdgeSession();
 
     edgeSession = {
@@ -129,6 +145,7 @@ export function bindInteractions(elements, store) {
 
     endPanSession();
     endDragSession();
+    endResizeSession();
     cancelEdgeSession();
 
     edgeSession = {
@@ -147,6 +164,45 @@ export function bindInteractions(elements, store) {
     store.setSelection({ type: 'edge', id: edge.id });
     nodesLayer.setPointerCapture(event.pointerId);
     updateEdgeDraft(event);
+  }
+
+  function beginResizeSession(event, resizeToken) {
+    const parsed = parseNodeResizeToken(resizeToken);
+    if (!parsed) return;
+
+    const state = store.getState();
+    const node = getNode(parsed.nodeId, state);
+    if (!node) return;
+
+    const nodeEl = event.target.closest('[data-node-id]');
+    const initialWidth = Number(node.width) > 0
+      ? Number(node.width)
+      : (nodeEl?.offsetWidth || NODE_DEFAULTS.width);
+    const initialHeight = Number(node.height) > 0
+      ? Number(node.height)
+      : (nodeEl?.offsetHeight || NODE_DEFAULTS.height);
+
+    endPanSession();
+    endDragSession();
+    cancelEdgeSession();
+    endResizeSession();
+
+    resizeSession = {
+      pointerId: event.pointerId,
+      nodeId: parsed.nodeId,
+      corner: parsed.corner,
+      startX: event.clientX,
+      startY: event.clientY,
+      startLeft: node.x,
+      startTop: node.y,
+      startRight: node.x + initialWidth,
+      startBottom: node.y + initialHeight,
+      moved: false,
+    };
+
+    store.setSelection({ type: 'node', id: parsed.nodeId });
+    store.setResizing(true);
+    nodesLayer.setPointerCapture(event.pointerId);
   }
 
   function finishEdgeSession(event) {
@@ -244,6 +300,7 @@ export function bindInteractions(elements, store) {
 
     cancelEdgeSession();
     endPanSession();
+    endResizeSession();
     store.clearSelection();
     panSession = {
       pointerId: event.pointerId,
@@ -305,6 +362,14 @@ export function bindInteractions(elements, store) {
   }, { passive: false });
 
   nodesLayer.addEventListener('pointerdown', (event) => {
+    const resizeEl = event.target.closest('[data-node-resize]');
+    if (resizeEl && event.button === 0) {
+      beginResizeSession(event, resizeEl.dataset.nodeResize);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
     const anchorEl = event.target.closest('[data-node-anchor]');
     if (anchorEl && event.button === 0) {
       beginEdgeSession(event, anchorEl.dataset.nodeAnchor);
@@ -322,6 +387,7 @@ export function bindInteractions(elements, store) {
     if (!nodeEl || event.button !== 0) return;
 
     endDragSession();
+    endResizeSession();
     cancelEdgeSession();
 
     const nodeId = nodeEl.dataset.nodeId;
@@ -363,6 +429,24 @@ export function bindInteractions(elements, store) {
       return;
     }
 
+    if (resizeSession && resizeSession.pointerId === event.pointerId) {
+      const viewport = store.getState().viewport;
+      const dx = (event.clientX - resizeSession.startX) / viewport.zoom;
+      const dy = (event.clientY - resizeSession.startY) / viewport.zoom;
+
+      if (!resizeSession.moved) {
+        if (Math.abs(dx) <= 0.5 && Math.abs(dy) <= 0.5) {
+          return;
+        }
+        store.beginNodeResize();
+        resizeSession.moved = true;
+      }
+
+      const next = computeResizedRect(resizeSession, dx, dy);
+      store.resizeNode(resizeSession.nodeId, next, { skipHistory: true });
+      return;
+    }
+
     if (!dragSession || dragSession.pointerId !== event.pointerId) return;
     const viewport = store.getState().viewport;
     const dx = (event.clientX - dragSession.startX) / viewport.zoom;
@@ -377,6 +461,10 @@ export function bindInteractions(elements, store) {
   });
 
   nodesLayer.addEventListener('pointerup', (event) => {
+    if (resizeSession && event.pointerId === resizeSession.pointerId) {
+      endResizeSession(event.pointerId);
+      return;
+    }
     if (edgeSession && event.pointerId === edgeSession.pointerId) {
       finishEdgeSession(event);
       return;
@@ -386,6 +474,10 @@ export function bindInteractions(elements, store) {
   });
 
   nodesLayer.addEventListener('pointercancel', (event) => {
+    if (resizeSession && event.pointerId === resizeSession.pointerId) {
+      endResizeSession(event.pointerId);
+      return;
+    }
     if (edgeSession && event.pointerId === edgeSession.pointerId) {
       cancelEdgeSession(event.pointerId);
       return;
@@ -395,6 +487,10 @@ export function bindInteractions(elements, store) {
   });
 
   nodesLayer.addEventListener('lostpointercapture', (event) => {
+    if (resizeSession && event.pointerId === resizeSession.pointerId) {
+      endResizeSession();
+      return;
+    }
     if (edgeSession && event.pointerId === edgeSession.pointerId) {
       cancelEdgeSession();
       return;
@@ -742,6 +838,10 @@ export function bindInteractions(elements, store) {
     }
 
     if (event.key === 'Escape') {
+      if (resizeSession) {
+        endResizeSession();
+        return;
+      }
       if (store.getState().ui.editingNodeId) {
         store.clearEditingNode();
         return;
@@ -796,6 +896,13 @@ function parseEdgeEndpointToken(value) {
   return { edgeId, side };
 }
 
+function parseNodeResizeToken(value) {
+  if (!value || typeof value !== 'string') return null;
+  const [nodeId, corner] = value.split(':');
+  if (!nodeId || !isResizeCorner(corner)) return null;
+  return { nodeId, corner };
+}
+
 function resolveAnchorName(anchor, fromNode, toNode) {
   if (isAnchorName(anchor)) return anchor;
   const dx = toNode.x - fromNode.x;
@@ -825,6 +932,53 @@ function resolveSessionTargetAnchor({
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function isResizeCorner(corner) {
+  return corner === 'top-left'
+    || corner === 'top-right'
+    || corner === 'bottom-right'
+    || corner === 'bottom-left';
+}
+
+function computeResizedRect(session, deltaX, deltaY) {
+  let left = session.startLeft;
+  let right = session.startRight;
+  let top = session.startTop;
+  let bottom = session.startBottom;
+
+  if (session.corner.includes('left')) {
+    left = session.startLeft + deltaX;
+  }
+  if (session.corner.includes('right')) {
+    right = session.startRight + deltaX;
+  }
+  if (session.corner.includes('top')) {
+    top = session.startTop + deltaY;
+  }
+  if (session.corner.includes('bottom')) {
+    bottom = session.startBottom + deltaY;
+  }
+
+  if (session.corner.includes('left')) {
+    left = Math.min(left, right - NODE_DEFAULTS.minWidth);
+  }
+  if (session.corner.includes('right')) {
+    right = Math.max(right, left + NODE_DEFAULTS.minWidth);
+  }
+  if (session.corner.includes('top')) {
+    top = Math.min(top, bottom - NODE_DEFAULTS.minHeight);
+  }
+  if (session.corner.includes('bottom')) {
+    bottom = Math.max(bottom, top + NODE_DEFAULTS.minHeight);
+  }
+
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  };
 }
 
 function isTypingTarget(target) {

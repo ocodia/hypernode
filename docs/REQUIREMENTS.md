@@ -32,6 +32,8 @@ Each node must contain:
 - optional description
 - x coordinate
 - y coordinate
+- optional width
+- optional height
 
 FR-8  
 Users must be able to drag nodes.
@@ -91,7 +93,10 @@ FR-24
 Delete keyboard shortcuts must remove selected node/edge.
 
 FR-25  
-Escape must exit current lightweight interaction states (edge draft or inline edit) and otherwise clear selection.
+Escape must exit current lightweight interaction states (edge draft, node resize, or inline edit) and otherwise clear selection.
+
+FR-26  
+Users must be able to resize selected nodes from corner handles.
 
 ## Non Functional Requirements
 

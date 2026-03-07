@@ -468,6 +468,65 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
+.node__resize {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  appearance: none;
+  padding: 0;
+  border-radius: 999px;
+  border: 1.5px solid var(--endpoint-stroke);
+  background: var(--endpoint-fill);
+  box-shadow: 0 0 0 1px rgba(159, 178, 204, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+  transition:
+    opacity 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+.node__resize:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.node.is-selected:not(.is-editing) .node__resize {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.node__resize--top-left {
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+
+.node__resize--top-right {
+  right: 0;
+  top: 0;
+  transform: translate(50%, -50%);
+  cursor: nesw-resize;
+}
+
+.node__resize--bottom-right {
+  right: 0;
+  bottom: 0;
+  transform: translate(50%, 50%);
+  cursor: nwse-resize;
+}
+
+.node__resize--bottom-left {
+  left: 0;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+  cursor: nesw-resize;
+}
+
 .node__anchor {
   position: absolute;
   width: 10px;
@@ -559,8 +618,16 @@ textarea:focus-visible {
   cursor: grabbing;
 }
 
+.canvas.is-resizing {
+  cursor: default;
+}
+
 .workspace.is-dragging .node {
   cursor: grabbing;
+}
+
+.workspace.is-resizing .node {
+  cursor: default;
 }
 
 .canvas.is-connecting {
