@@ -10,6 +10,7 @@ export function createStore(initialGraph = null) {
   }
 
   const listeners = new Set();
+  let importStatusTimeoutHandle = null;
 
   function notify() {
     for (const listener of listeners) {
@@ -43,8 +44,23 @@ export function createStore(initialGraph = null) {
   }
 
   function setImportStatus(message) {
-    state.ui.importStatus = message;
+    state.ui.importStatus = String(message ?? '');
     notify();
+
+    if (importStatusTimeoutHandle) {
+      clearTimeout(importStatusTimeoutHandle);
+      importStatusTimeoutHandle = null;
+    }
+
+    const currentMessage = state.ui.importStatus.trim();
+    if (!currentMessage) return;
+
+    importStatusTimeoutHandle = setTimeout(() => {
+      importStatusTimeoutHandle = null;
+      if (!state.ui.importStatus.trim()) return;
+      state.ui.importStatus = '';
+      notify();
+    }, 5000);
   }
 
   function setEdgeDraft(draft) {

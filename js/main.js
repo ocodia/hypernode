@@ -32,3 +32,13 @@ store.subscribe((state) => {
 
 bindInteractions(elements, store);
 renderer.render(store.getState());
+registerServiceWorker();
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {
+      // Ignore registration errors in unsupported/private contexts.
+    });
+  });
+}
