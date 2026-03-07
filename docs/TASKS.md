@@ -77,10 +77,21 @@ Last updated: 2026-03-07
   - editable graph name field in Settings
   - show graph name in the app title/header so users can confirm active graph
   - persist graph name in `localStorage` and graph file payload
+- [x] Add edge arrowheads setting:
+  - `Arrowheads` toggle (`show` / `hide`) in Settings
+  - renders on committed edges only (not draft preview)
+  - arrowheads point toward destination anchors and rotate with edge approach angle
+  - persists in graph payload and survives reload/open/save/new + undo/redo
+- [x] Add arrowhead size control:
+  - range slider with `10` levels
+  - level `1` keeps current baseline size (`100%`)
+  - each level increases size by `20%` (up to `280%`)
+  - persists in graph payload and survives reload/open/save/new + undo/redo
 - [ ] Add regression checks for settings persistence across:
   - reload
   - open/save/new graph flows
   - undo/redo interactions involving edge reconnection behavior
+  - undo/redo interactions involving arrowheads toggle and size slider
 - [ ] Add regression checks for zoom-aware background behavior:
   - verify both background styles at zoom levels `0.35`, `1.0`, and `2.5`
   - verify style switching while zoomed/panned preserves alignment

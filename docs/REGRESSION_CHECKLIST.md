@@ -39,6 +39,17 @@ Use this checklist before shipping interaction changes.
 - [ ] Set `Anchors` to `Exact anchor` and verify created/reconnected edge endpoints stay on committed anchors when nodes move.
 - [ ] Switch between `Auto-anchor` and `Exact anchor` and confirm edge paths update immediately with no stuck draft/selection state.
 
+### Arrowheads settings
+
+- [ ] Set `Arrowheads` to `Show` and verify committed edges render destination arrowheads; set `Hide` and verify they disappear.
+- [ ] Verify draft edges never render arrowheads during create/reconnect preview.
+- [ ] Verify arrowheads rotate with the curved edge approach angle at destination anchors (not fixed to axis directions).
+- [ ] Verify arrowhead tips are slightly tucked under node boundaries at destination anchors.
+- [ ] Move `Arrowhead size` from level `1` to level `10` and confirm each step increases size by about `20%` (range `100%` to `280%`).
+- [ ] Reload page and verify `Arrowheads` and `Arrowhead size` settings persist.
+- [ ] Verify `Arrowheads` and `Arrowhead size` persist across open/save/new graph flows.
+- [ ] Verify undo/redo restores `Arrowheads` visibility and `Arrowhead size` changes.
+
 ## UI/Polish Checks
 
 - [ ] Toggle keyboard hints on/off.

@@ -381,11 +381,15 @@ function cubicPointAt(p0, p1, p2, p3, t) {
 }
 
 function buildArrowheadPath(start, controlStart, controlEnd, end, toAnchor, sizeScale = 1) {
-  const approach = cubicPointAt(start, controlStart, controlEnd, end, 0.92);
-  const vx = end.x - approach.x;
-  const vy = end.y - approach.y;
+  // Use near-end curve approach for natural rotation on curved edges.
+  const tangentT = 0.96;
+  const approach = cubicPointAt(start, controlStart, controlEnd, end, tangentT);
+  const tangent = cubicDerivativeAt(start, controlStart, controlEnd, end, tangentT);
+  let vx = tangent.x;
+  let vy = tangent.y;
   const length = 12.5 * sizeScale;
   const halfWidth = 5 * sizeScale;
+  const inset = 2 + (sizeScale * 0.8);
   const magnitude = Math.hypot(vx, vy);
 
   let ux = 0;
@@ -393,6 +397,13 @@ function buildArrowheadPath(start, controlStart, controlEnd, end, toAnchor, size
   if (magnitude > 0.0001) {
     ux = vx / magnitude;
     uy = vy / magnitude;
+    const toEndX = end.x - approach.x;
+    const toEndY = end.y - approach.y;
+    const dot = (ux * toEndX) + (uy * toEndY);
+    if (dot < 0) {
+      ux = -ux;
+      uy = -uy;
+    }
   } else {
     const fallback = unitVectorByAnchor(toAnchor);
     ux = fallback.x;
@@ -401,13 +412,26 @@ function buildArrowheadPath(start, controlStart, controlEnd, end, toAnchor, size
 
   const px = -uy;
   const py = ux;
-  const baseX = end.x - (ux * length);
-  const baseY = end.y - (uy * length);
+  const tipX = end.x + (ux * inset);
+  const tipY = end.y + (uy * inset);
+  const baseX = tipX - (ux * length);
+  const baseY = tipY - (uy * length);
   const leftX = baseX + (px * halfWidth);
   const leftY = baseY + (py * halfWidth);
   const rightX = baseX - (px * halfWidth);
   const rightY = baseY - (py * halfWidth);
-  return `M ${end.x} ${end.y} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`;
+  return `M ${tipX} ${tipY} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`;
+}
+
+function cubicDerivativeAt(p0, p1, p2, p3, t) {
+  const mt = 1 - t;
+  const a = 3 * mt * mt;
+  const b = 6 * mt * t;
+  const c = 3 * t * t;
+  return {
+    x: (a * (p1.x - p0.x)) + (b * (p2.x - p1.x)) + (c * (p3.x - p2.x)),
+    y: (a * (p1.y - p0.y)) + (b * (p2.y - p1.y)) + (c * (p3.y - p2.y)),
+  };
 }
 
 function getArrowheadSizeScale(step) {

@@ -10,6 +10,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Edit node title/description inline on each node.
 - Delete nodes from the inline editor or with `Delete`/`Backspace`.
 - Create edges from node anchor points (top/right/bottom/left).
+- Render directed edge arrowheads at destination anchors with curved-approach rotation.
 - Reconnect existing edge endpoints by dragging selected edge endpoints.
 - Delete selected edges via inline edge overlay control or keyboard delete.
 - Pan canvas with pointer drag on empty space.
@@ -21,6 +22,8 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Settings menu for:
   - graph background style (`dots` or `graph paper`)
   - anchors mode (`auto-anchor` or `exact anchor`)
+  - arrowheads visibility (`show` or `hide`)
+  - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
   - graph name
 - Graph name shown in toolbar title and browser tab title.
 - First-time Save suggests a filename based on the graph name.

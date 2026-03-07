@@ -54,9 +54,10 @@ index.html
 Stores:
 
 - `nodes`, `edges`
+- graph metadata (`name`, `settings`)
 - `selection`
 - `viewport` (`panX`, `panY`, `zoom`)
-- UI state (`edgeDraft`, `edgeTwangId`, `editingNodeId`, `isPanning`, `importStatus`)
+- UI state (`edgeDraft`, `edgeTwangId`, `editingNodeId`, `isPanning`, `isDragging`, `isConnecting`, `importStatus`)
 - undo/redo history
 
 ### Rendering (`js/render/renderer.js`)
@@ -111,7 +112,25 @@ Responsible for:
 {
   "id": "edge_id",
   "from": "node_id",
-  "to": "node_id"
+  "to": "node_id",
+  "fromAnchor": "left|right|top|bottom|null",
+  "toAnchor": "left|right|top|bottom|null"
+}
+```
+
+### Graph
+
+```json
+{
+  "name": "Graph name",
+  "settings": {
+    "backgroundStyle": "dots|graph-paper",
+    "anchorsMode": "auto|exact",
+    "arrowheads": "shown|hidden",
+    "arrowheadSizeStep": 0
+  },
+  "nodes": [],
+  "edges": []
 }
 ```
 
@@ -123,7 +142,7 @@ History snapshots are bounded (past stack capped at 100).
 
 ## Import/Export and Storage
 
-- Autosave writes `{ nodes, edges }` to `localStorage`.
+- Autosave writes `{ name, settings, nodes, edges }` to `localStorage`.
 - Startup loads saved graph if valid.
 - Import validates payload before replace.
 - Export writes formatted JSON file.
