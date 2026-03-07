@@ -159,8 +159,15 @@ textarea:focus-visible {
   fill: none;
   stroke: var(--edge);
   stroke-width: 2;
-  pointer-events: stroke;
+  pointer-events: none;
   cursor: default;
+}
+
+.edges .edge__hit {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.001);
+  stroke-width: 12;
+  pointer-events: stroke;
 }
 
 .edges path.is-draft {
@@ -225,11 +232,8 @@ textarea:focus-visible {
   stroke-width: 1.5;
 }
 
-.edges .edge__delete text {
+.edges .edge__delete-icon {
   fill: #64748b;
-  font-size: 12px;
-  font-weight: 700;
-  user-select: none;
 }
 
 .edges .edge__delete:hover circle {
@@ -237,7 +241,7 @@ textarea:focus-visible {
   stroke: #ef4444;
 }
 
-.edges .edge__delete:hover text {
+.edges .edge__delete:hover .edge__delete-icon {
   fill: #b91c1c;
 }
 

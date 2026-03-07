@@ -96,7 +96,7 @@ export function createRenderer(elements, store) {
             <g class="edge-overlay" data-edge-id="${edge.id}">
               <g class="edge__delete" data-edge-delete="${edge.id}" transform="translate(${midpoint.x}, ${midpoint.y})" aria-label="Delete edge">
                 <circle r="9"></circle>
-                <text text-anchor="middle" dominant-baseline="central">x</text>
+                <path class="edge__delete-icon" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" transform="translate(-8, -8)"></path>
               </g>
               <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:from" cx="${start.x}" cy="${start.y}" r="5.5"></circle>
               <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:to" cx="${end.x}" cy="${end.y}" r="5.5"></circle>
@@ -106,6 +106,7 @@ export function createRenderer(elements, store) {
 
         return `
           <g class="edge ${selected} ${twang}" data-edge-id="${edge.id}">
+            <path class="edge__hit" d="${d}"></path>
             <path class="edge__line" d="${d}"></path>
           </g>
         `;
