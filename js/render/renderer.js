@@ -1,16 +1,7 @@
-import { NODE_DEFAULTS } from '../utils/constants.js';
+import { NODE_DEFAULTS } from "../utils/constants.js";
 
 export function createRenderer(elements, store) {
-  const {
-    canvas,
-    nodesLayer,
-    edgesGroup,
-    edgeDraftGroup,
-    edgesLayer,
-    edgesOverlayLayer,
-    edgeOverlayGroup,
-    importStatus,
-  } = elements;
+  const { canvas, nodesLayer, edgesGroup, edgeDraftGroup, edgesLayer, edgesOverlayLayer, edgeOverlayGroup, importStatus } = elements;
 
   function applyViewport(viewport) {
     const transform = `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`;
@@ -20,20 +11,24 @@ export function createRenderer(elements, store) {
   }
 
   function renderNodes(state) {
-    const selectedNodeId = state.selection?.type === 'node' ? state.selection.id : null;
+    const selectedNodeId = state.selection?.type === "node" ? state.selection.id : null;
     const editingNodeId = state.ui.editingNodeId;
     const draft = state.ui.edgeDraft;
     nodesLayer.innerHTML = state.nodes
       .map((node) => {
-        const selectedClass = selectedNodeId === node.id ? 'is-selected' : '';
-        const editingClass = editingNodeId === node.id ? 'is-editing' : '';
-        const connectClass = draft?.fromNodeId === node.id
-          ? 'is-connect-source'
-          : draft
-            ? (draft.hoverNodeId === node.id ? 'is-connect-target' : 'is-connect-candidate')
-            : '';
-        const content = editingNodeId === node.id
-          ? `
+        const selectedClass = selectedNodeId === node.id ? "is-selected" : "";
+        const editingClass = editingNodeId === node.id ? "is-editing" : "";
+        const connectClass =
+          draft?.fromNodeId === node.id
+            ? "is-connect-source"
+            : draft
+              ? draft.hoverNodeId === node.id
+                ? "is-connect-target"
+                : "is-connect-candidate"
+              : "";
+        const content =
+          editingNodeId === node.id
+            ? `
             <div class="node__editor" data-node-editor="${node.id}">
               <label class="node__editor-label">
                 Name
@@ -46,16 +41,16 @@ export function createRenderer(elements, store) {
               <div class="node__editor-actions">
                 <button type="button" data-node-edit-save="${node.id}">Save</button>
                 <button type="button" data-node-edit-cancel="${node.id}">Cancel</button>
-                <button type="button" data-node-edit-delete="${node.id}">Delete</button>
+                <button type="button" data-node-edit-delete="${node.id}"><i class="bi bi-trash"></i></button>
               </div>
             </div>
           `
-          : `
+            : `
             <div class="node__head">
               <h3 class="node__title">${escapeHTML(node.title)}</h3>
-              <button class="node__edit-btn" type="button" data-node-edit-open="${node.id}">Edit</button>
+              <button class="node__edit-btn" type="button" data-node-edit-open="${node.id}"><i class="bi bi-pencil-fill"></i></button>
             </div>
-            ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ''}
+            ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ""}
           `;
         return `
           <article class="node ${selectedClass} ${editingClass} ${connectClass}" data-node-id="${node.id}" style="transform: translate(${node.x}px, ${node.y}px)">
@@ -67,22 +62,22 @@ export function createRenderer(elements, store) {
           </article>
         `;
       })
-      .join('');
+      .join("");
   }
 
   function renderEdges(state) {
     const byId = new Map(state.nodes.map((node) => [node.id, node]));
     const bySize = measureNodeSizes();
-    const selectedEdgeId = state.selection?.type === 'edge' ? state.selection.id : null;
+    const selectedEdgeId = state.selection?.type === "edge" ? state.selection.id : null;
     const twangEdgeId = state.ui.edgeTwangId;
-    let selectedOverlayMarkup = '';
+    let selectedOverlayMarkup = "";
 
     edgesGroup.innerHTML = state.edges
       .map((edge) => {
         const fromNode = byId.get(edge.from);
         const toNode = byId.get(edge.to);
         if (!fromNode || !toNode) {
-          return '';
+          return "";
         }
 
         const fromSize = bySize.get(fromNode.id) || defaultNodeSize();
@@ -94,14 +89,14 @@ export function createRenderer(elements, store) {
         const controls = getTautControls(start, end, fromAnchor, toAnchor);
         const d = buildTautPath(start, end, fromAnchor, toAnchor);
         const midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
-        const selected = selectedEdgeId === edge.id ? 'is-selected' : '';
-        const twang = twangEdgeId === edge.id ? 'is-twang' : '';
+        const selected = selectedEdgeId === edge.id ? "is-selected" : "";
+        const twang = twangEdgeId === edge.id ? "is-twang" : "";
         if (selectedEdgeId === edge.id) {
           selectedOverlayMarkup = `
             <g class="edge-overlay" data-edge-id="${edge.id}">
               <g class="edge__delete" data-edge-delete="${edge.id}" transform="translate(${midpoint.x}, ${midpoint.y})" aria-label="Delete edge">
                 <circle r="9"></circle>
-                <text text-anchor="middle" dominant-baseline="central">×</text>
+                <text text-anchor="middle" dominant-baseline="central">x</text>
               </g>
               <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:from" cx="${start.x}" cy="${start.y}" r="5.5"></circle>
               <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:to" cx="${end.x}" cy="${end.y}" r="5.5"></circle>
@@ -115,21 +110,21 @@ export function createRenderer(elements, store) {
           </g>
         `;
       })
-      .join('');
+      .join("");
     edgeOverlayGroup.innerHTML = selectedOverlayMarkup;
   }
 
   function renderDraftEdge(state) {
     const draft = state.ui.edgeDraft;
     if (!draft) {
-      edgeDraftGroup.innerHTML = '';
+      edgeDraftGroup.innerHTML = "";
       return;
     }
 
     const bySize = measureNodeSizes();
     const sourceNode = state.nodes.find((node) => node.id === draft.fromNodeId);
     if (!sourceNode) {
-      edgeDraftGroup.innerHTML = '';
+      edgeDraftGroup.innerHTML = "";
       return;
     }
 
@@ -160,10 +155,10 @@ export function createRenderer(elements, store) {
   }
 
   function renderImportStatus(state) {
-    const message = String(state.ui.importStatus || '').trim();
+    const message = String(state.ui.importStatus || "").trim();
     importStatus.textContent = message;
     importStatus.hidden = !message;
-    importStatus.classList.toggle('is-visible', Boolean(message));
+    importStatus.classList.toggle("is-visible", Boolean(message));
   }
 
   function render(state) {
@@ -172,7 +167,7 @@ export function createRenderer(elements, store) {
     renderEdges(state);
     renderDraftEdge(state);
     renderImportStatus(state);
-    canvas.classList.toggle('is-panning', Boolean(state.ui.isPanning));
+    canvas.classList.toggle("is-panning", Boolean(state.ui.isPanning));
   }
 
   return { render };
@@ -180,7 +175,7 @@ export function createRenderer(elements, store) {
 
 function measureNodeSizes() {
   const sizes = new Map();
-  document.querySelectorAll('[data-node-id]').forEach((nodeEl) => {
+  document.querySelectorAll("[data-node-id]").forEach((nodeEl) => {
     const nodeId = nodeEl.dataset.nodeId;
     sizes.set(nodeId, {
       width: nodeEl.offsetWidth || NODE_DEFAULTS.width,
@@ -205,13 +200,13 @@ function getAnchorPoint(node, size, anchor) {
   const halfWidth = size.width / 2;
   const halfHeight = size.height / 2;
   switch (anchor) {
-    case 'top':
+    case "top":
       return { x: node.x + halfWidth, y: node.y };
-    case 'right':
+    case "right":
       return { x: node.x + size.width, y: node.y + halfHeight };
-    case 'bottom':
+    case "bottom":
       return { x: node.x + halfWidth, y: node.y + size.height };
-    case 'left':
+    case "left":
     default:
       return { x: node.x, y: node.y + halfHeight };
   }
@@ -221,9 +216,9 @@ function resolveAutoAnchor(fromNode, toNode) {
   const dx = toNode.x - fromNode.x;
   const dy = toNode.y - fromNode.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
-    return dx >= 0 ? 'right' : 'left';
+    return dx >= 0 ? "right" : "left";
   }
-  return dy >= 0 ? 'bottom' : 'top';
+  return dy >= 0 ? "bottom" : "top";
 }
 
 function resolveAnchorToPoint(node, size, targetPoint) {
@@ -231,9 +226,9 @@ function resolveAnchorToPoint(node, size, targetPoint) {
   const dx = targetPoint.x - center.x;
   const dy = targetPoint.y - center.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
-    return dx >= 0 ? 'right' : 'left';
+    return dx >= 0 ? "right" : "left";
   }
-  return dy >= 0 ? 'bottom' : 'top';
+  return dy >= 0 ? "bottom" : "top";
 }
 
 function buildTautPath(start, end, fromAnchor, toAnchor) {
@@ -264,20 +259,20 @@ function inferIncomingAnchor(start, end) {
   const dx = start.x - end.x;
   const dy = start.y - end.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
-    return dx >= 0 ? 'right' : 'left';
+    return dx >= 0 ? "right" : "left";
   }
-  return dy >= 0 ? 'bottom' : 'top';
+  return dy >= 0 ? "bottom" : "top";
 }
 
 function moveByAnchor(point, anchor, distance) {
   switch (anchor) {
-    case 'top':
+    case "top":
       return { x: point.x, y: point.y - distance };
-    case 'right':
+    case "right":
       return { x: point.x + distance, y: point.y };
-    case 'bottom':
+    case "bottom":
       return { x: point.x, y: point.y + distance };
-    case 'left':
+    case "left":
       return { x: point.x - distance, y: point.y };
     default:
       return { x: point.x, y: point.y };
@@ -303,14 +298,9 @@ function cubicPointAt(p0, p1, p2, p3, t) {
 }
 
 function escapeHTML(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+  return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
 function escapeAttr(value) {
-  return escapeHTML(value).replaceAll('`', '&#096;');
+  return escapeHTML(value).replaceAll("`", "&#096;");
 }
