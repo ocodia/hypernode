@@ -1,120 +1,96 @@
-# Hypernode – Product Specification
+# Hypernode - Product Specification
 
 ## Overview
 
-Hypernode is a lightweight browser-based node graph editor designed to run locally and offline.
+Hypernode is a lightweight browser-based node graph editor for local, offline use.
 
-Users create nodes, connect them with edges, and organize ideas spatially on a canvas. The application focuses on speed, clarity, and simplicity rather than large feature sets.
-
-The tool is intended to support visual thinking, system mapping, knowledge graphs, and workflow diagrams.
-
-The application runs entirely in the browser and does not require a backend service.
-
----
+Users create nodes, connect them with directed edges, move items spatially, and persist their graph locally. The app prioritizes speed, simplicity, and clarity over large feature sets.
 
 ## Product Goals
 
-The primary goals are:
-
-- Fast visual thinking tool
-- Offline-capable
-- Simple interaction model
-- Lightweight architecture
-- No user accounts or cloud dependency
-- Local data ownership
-
-The application should open quickly and allow the user to start creating nodes immediately.
-
----
+- fast visual thinking workflow
+- offline-capable by default
+- simple interaction model
+- lightweight modular architecture
+- no user accounts or cloud dependency
+- user-owned local data
 
 ## Target Users
 
-Typical users include:
-
-- developers mapping system architectures
-- designers planning flows
+- developers mapping system relationships
+- designers modelling flows
 - researchers building concept maps
-- writers outlining ideas
-- analysts modelling relationships
-- anyone using spatial thinking
-
----
+- writers exploring idea structures
+- analysts mapping connected entities
 
 ## Core Capabilities
 
-### Node Creation
-Users can create nodes anywhere on the canvas.
+### Node Workflow
 
-### Node Editing
-Users can edit node titles and descriptions.
+- create nodes quickly from canvas or toolbar
+- edit title/description inline on node cards
+- drag nodes to organize layout
+- delete selected nodes
 
-### Edge Connections
-Nodes can be connected using edges.
+### Edge Workflow
 
-### Graph Navigation
-Users can pan and zoom across the graph.
+- create edges from node anchors
+- preview draft edge while choosing target
+- reconnect selected edge endpoints
+- delete selected edges
 
-### Graph Persistence
-Graphs automatically persist locally.
+### Canvas Navigation
 
-### Import and Export
-Graphs can be exported to and imported from JSON files.
+- pan on empty canvas drag
+- zoom around cursor with bounded levels
+- reset view to default
 
----
+### Data and Reliability
 
-## Example Use Cases
+- automatic local persistence
+- startup restore from valid saved graph
+- import/export JSON with payload validation
+- visible import/export status feedback
 
-### Architecture Mapping
-A developer maps services and system relationships.
+### Productivity
 
-### Knowledge Graph
-A researcher links concepts and references.
-
-### Idea Exploration
-A writer explores relationships between ideas.
-
-### Workflow Planning
-A designer models process flows.
-
----
+- undo/redo for core actions
+- keyboard shortcuts for delete, undo, redo, and escape flows
 
 ## Product Principles
 
 ### Offline First
-The application must function without internet connectivity.
 
-### Simple Interaction
-Users should be able to start using the app within seconds.
+No network service required for core usage.
+
+### Fast Start
+
+Users should be able to create first node within seconds.
 
 ### Visual Thinking First
-The canvas is the primary interface.
+
+Canvas is the primary interface and interaction surface.
 
 ### Calm Interface
-The UI should reduce cognitive load and visual noise.
 
-### Lightweight
-The app should remain small and maintainable.
+UI should remain focused and low-noise.
 
----
+### Lightweight Implementation
+
+Keep the codebase small, modular, and browser-native.
 
 ## Non Goals (Version 1)
-
-The following features are explicitly out of scope:
 
 - multi-user collaboration
 - cloud sync
 - authentication
-- plugins
-- complex diagramming libraries
+- plugin ecosystem
 - enterprise workflow features
-
----
 
 ## Success Criteria
 
-The product is successful if:
-
-- users can create a node within seconds of opening the app
-- graphs persist between sessions
-- the UI feels responsive and smooth
-- the tool remains simple and lightweight
+- first-node creation is immediate
+- node and edge interactions are stable and predictable
+- data persists between sessions
+- import failures do not destroy current graph
+- app remains simple, responsive, and offline-capable

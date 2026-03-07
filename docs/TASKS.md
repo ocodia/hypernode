@@ -1,55 +1,49 @@
 # TASKS
 
-Last updated: 2026-03-06
+Last updated: 2026-03-07
 
 ## Completed So Far
 
-- [x] Core app shell and canvas layout implemented (`index.html`, `css/styles.css`)
-- [x] Modular JavaScript architecture in place (`state`, `render`, `interaction`, `persistence`, `utils`)
-- [x] Node creation implemented (double-click canvas, Add Node button)
-- [x] Node editing implemented (title/description via inspector)
-- [x] Node deletion implemented (button + Delete/Backspace shortcuts)
-- [x] Edge creation implemented (handle-based source/target workflow)
-- [x] Edge deletion implemented (inspector + Delete/Backspace shortcuts)
-- [x] Canvas zoom implemented (wheel zoom around cursor with limits)
-- [x] View reset implemented
-- [x] Undo/redo implemented with bounded history
-- [x] Local persistence implemented (`localStorage` save/load)
-- [x] JSON import/export implemented with validation
+- [x] Core app shell and canvas layout (`index.html`, `css/styles.css`)
+- [x] Modular JavaScript architecture (`state`, `render`, `interaction`, `persistence`, `utils`)
+- [x] Node creation (double-click canvas, Add Node button)
+- [x] Inline node editing (title/description on node cards)
+- [x] Node deletion (inline action + `Delete`/`Backspace`)
+- [x] Edge creation (anchor-driven workflow with visual draft preview)
+- [x] Edge endpoint reconnection (drag selected edge endpoints)
+- [x] Edge deletion (overlay action + `Delete`/`Backspace`)
+- [x] Canvas zoom (wheel zoom around cursor with limits)
+- [x] Canvas pan (robust pointer lifecycle handling)
+- [x] View reset
+- [x] Undo/redo with bounded history
+- [x] Local persistence (`localStorage`)
+- [x] JSON import/export with validation
+- [x] Import status toast feedback
+- [x] `Escape` cancels edge draft mode and exits edit mode
 
 ## Remaining Work
 
-### P0 - Fix Broken Core Interactions
+### P1 - Interaction Quality
 
-- [x] Fix node drag runaway bug (nodes can "fly off" screen)
-  - Implemented immutable drag start coordinates (`nodeStartX`, `nodeStartY`) so movement is always computed from pointer origin.
+- [ ] Add broader interaction state classes (`is-dragging`, `is-connecting`) for richer cursor/UI feedback.
+- [ ] Add optional keyboard shortcut hints in UI (discoverability polish).
+- [ ] Add ? button to toolbar showing 'About' information and instructions.
 
-- [x] Stabilize panning behavior
-  - Added robust pointer lifecycle handling (`pointerup`, `pointercancel`, `lostpointercapture`) with defensive capture cleanup.
-  - Added explicit panning UI state (`ui.isPanning`) for consistent cursor behavior.
+### P2 - Validation and Process
 
-- [x] Improve edge creation usability
-  - Increased edge handle hit target size.
-  - Added node-body click targeting while edge draft mode is active (no longer handle-to-handle only).
-  - Added connection-mode node highlighting.
+- [ ] Manual regression pass for:
+  - node drag at zoom levels `0.35`, `1.0`, and `2.5`
+  - panning on empty canvas after node/edge selection
+  - edge create/reconnect flows under rapid pointer sequences
+- [ ] Add a lightweight regression checklist document for interaction safety.
 
-### P1 - Interaction Quality Improvements
+### P3 - Theme and Visual Options
 
-- [x] Add visual edge-draft preview while selecting a target node.
-- [ ] Allow `Escape` to always cancel edge-draft mode.
-- [x] Prevent accidental pan start while beginning a node interaction.
-- [ ] Add interaction state classes (dragging/panning/connecting) for cursor and UI feedback.
-
-### P2 - Testing and Validation
-
-- [ ] Manual test pass for:
-  - node drag at zoom levels 0.35, 1.0, and 2.5
-  - panning on empty canvas and after selecting nodes
-  - edge creation under normal and rapid click sequences
-- [ ] Add lightweight regression checklist in docs to prevent interaction regressions.
+- [ ] Dark mode
 
 ## Suggested Implementation Order
 
-1. Validate interaction fixes with a manual regression pass.
-2. Add dedicated interaction state classes for dragging/connecting polish.
-3. Run full manual interaction regression pass again after polish.
+1. Finish interaction-state class polish (`is-dragging`, `is-connecting`).
+2. Run a manual interaction regression pass.
+3. Add regression checklist doc.
+4. Implement dark mode.

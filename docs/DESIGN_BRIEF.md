@@ -1,4 +1,4 @@
-# Hypernode – Design Brief
+# Hypernode - Design Brief
 
 ## Design Goals
 
@@ -9,132 +9,74 @@ The interface should feel:
 - minimal
 - practical
 
-The UI should support long periods of focused thinking.
-
----
-
-## Visual Style
-
-The visual language should use:
-
-- soft minimalism
-- rounded surfaces
-- subtle shadows
-- restrained color palette
-
-The design should resemble modern productivity tools rather than diagramming software.
-
----
+The UI should support extended focused use without clutter.
 
 ## Layout
 
-The application layout consists of the following:
+Current layout:
 
-Floating Toolbar  
-Graph Workspace
-Floating Inspector
+- floating top toolbar
+- full-screen graph workspace
+- inline node editing on node cards
+- transient toast for import/export feedback
 
-The workspace should occupy most of the screen.
+The canvas should remain the dominant visual surface.
 
-The Toolbar should contain controls and the Inspection panel contains details about the selected item.
+## Visual Style
 
----
+- soft minimalism
+- rounded cards and controls
+- subtle borders/shadows
+- restrained neutral palette with blue accent
 
 ## Canvas
 
-The canvas is the main working surface.
-
-It should feel spacious and visually quiet.
-
-Optional subtle grid or dot patterns may be used.
-
----
+- spacious working area
+- subtle dot-grid background
+- pan/zoom should feel stable and predictable
 
 ## Nodes
 
-Nodes should appear as card-like elements.
+Node cards should provide:
 
-Characteristics:
-
-- rounded corners
-- subtle border
-- light shadow
-- readable title
-- optional description
-
-Nodes should be easy to drag and visually clear.
-
----
+- clear title hierarchy
+- optional description text
+- compact inline edit actions
+- distinct selected/connection target states
 
 ## Edges
 
-Edges should be simple lines connecting nodes.
-
-They must update dynamically as nodes move.
-
-Edges should remain visually secondary to nodes.
-
----
+- smooth curved connections
+- selected edge emphasis
+- selected edge overlay controls (delete + reconnect endpoints)
+- edge draft preview during connect/reconnect flows
 
 ## Typography
 
-Use a clean sans-serif system font.
+Use a readable sans-serif system stack.
 
-Example stack:
-
-system-ui, -apple-system, Segoe UI, sans-serif
-
-Typography should prioritize readability.
-
----
-
-## Spacing
-
-Use generous spacing between UI elements.
-
-Spacing scale example:
-
-4px  
-8px  
-12px  
-16px  
-24px  
-32px  
-
----
-
-## Color System
-
-Use a neutral palette with a single accent color.
-
-Example:
-
-background: pale slate  
-panels: white  
-text: dark slate  
-accent: blue
-
-The accent color should indicate active or selected states.
-
----
+Prioritize legibility over decorative styling.
 
 ## Interaction Feedback
 
-The interface should provide subtle feedback for:
+Provide clear visual states for:
 
 - hover
-- focus
 - selection
-- dragging
+- editing
+- connecting
+- panning
 
-Animations should be minimal and quick.
-
----
+Animation should be subtle and short.
 
 ## Accessibility
 
 Ensure:
 
-- visible focus states
-- readable contrast
-- keyboard shortcuts where possible
+- visible keyboard focus outlines
+- adequate contrast for key UI states
+- keyboard support for delete, undo, redo, escape behavior
+
+## Future Visual Enhancement
+
+- dark mode

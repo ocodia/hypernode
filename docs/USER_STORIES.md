@@ -1,400 +1,196 @@
-# Hypernode – User Stories
+# Hypernode - User Stories
 
 ## Purpose
 
-This document defines the core user stories for Version 1 of Hypernode.
+This document captures version-1 user behavior slices with clear acceptance criteria.
 
-These stories are intended to help coding agents and developers implement the product in clear, testable slices of behaviour.
-
-Each story includes acceptance criteria to reduce ambiguity.
-
----
-
-## Epic 1 – Canvas Navigation
+## Epic 1 - Canvas Navigation
 
 ### US-1: Pan the canvas
 
-As a user, I want to pan around the canvas so that I can navigate large graphs.
+As a user, I want to pan so I can navigate larger graphs.
 
-#### Acceptance Criteria
+Acceptance criteria:
 
-- The user can pan the canvas using a pointer interaction.
-- Panning moves the visible viewport without changing node coordinates.
-- Panning feels smooth and responsive.
-- Existing nodes and edges remain visually aligned during pan.
-
----
+- Panning is available on empty canvas drag.
+- Panning updates viewport only, not node coordinates.
+- Panning feels smooth and keeps nodes/edges aligned.
 
 ### US-2: Zoom the canvas
 
-As a user, I want to zoom in and out so that I can work comfortably on both small and large graphs.
+As a user, I want to zoom in/out for comfortable editing at different scales.
 
-#### Acceptance Criteria
+Acceptance criteria:
 
-- The user can zoom in and out using mouse wheel or trackpad gesture.
-- Zoom affects the viewport, not stored node coordinates.
-- Nodes and edges remain aligned during zoom.
-- Zoom level is constrained to a sensible minimum and maximum.
-- Zooming feels smooth and predictable.
+- Wheel/trackpad zoom is supported.
+- Zoom level is bounded by configured min/max.
+- Zooming keeps node/edge alignment.
 
----
+### US-3: Reset view
 
-### US-3: Reset the view
+As a user, I want a reset action to return to a known viewport.
 
-As a user, I want to reset the view so that I can quickly return to a usable canvas position.
+Acceptance criteria:
 
-#### Acceptance Criteria
+- Reset restores default pan/zoom.
+- Graph data remains unchanged.
 
-- The user can trigger a reset view action.
-- Reset view returns pan and zoom to default values.
-- Resetting the view does not modify the graph data.
+## Epic 2 - Nodes
 
----
+### US-4: Create nodes quickly
 
-## Epic 2 – Node Creation and Editing
+As a user, I want to create nodes fast from canvas or toolbar.
 
-### US-4: Create a node
+Acceptance criteria:
 
-As a user, I want to create a node on the canvas so that I can start building a graph quickly.
+- Double-click canvas creates a node at pointer graph position.
+- Toolbar action creates a node at default graph position.
+- New node is immediately visible and selected.
 
-#### Acceptance Criteria
+### US-5: Drag nodes
 
-- The user can create a node from the canvas.
-- The node appears at or near the intended location.
-- A new node has a unique id.
-- A new node has a default title.
-- A new node is visible immediately after creation.
-- Node creation is added to undo history.
+As a user, I want to drag nodes to organize layout.
 
----
+Acceptance criteria:
 
-### US-5: Drag a node
+- Drag updates node position smoothly.
+- Connected edges stay attached visually.
+- Move operations are undoable.
+- Dragging does not unintentionally trigger panning.
 
-As a user, I want to drag a node so that I can arrange my graph spatially.
+### US-6: Edit node content inline
 
-#### Acceptance Criteria
+As a user, I want to edit title/description without leaving the canvas.
 
-- The user can drag a node using pointer input.
-- The node moves smoothly during drag.
-- The final node position is stored in graph state.
-- Connected edges update while the node moves or immediately after movement.
-- Node movement is undoable.
-- Dragging a node does not unintentionally pan the canvas.
+Acceptance criteria:
 
----
+- Node can enter inline edit mode.
+- Save updates node card content.
+- Empty title resolves to default title.
+- Edit mode can be canceled with Escape.
 
-### US-6: Select a node
+### US-7: Delete nodes
 
-As a user, I want to select a node so that I can inspect or edit it.
+As a user, I want to remove unwanted nodes.
 
-#### Acceptance Criteria
+Acceptance criteria:
 
-- Clicking a node selects it.
-- The selected node is visually distinct.
-- Selecting a node updates the inspector panel.
-- Clicking empty canvas clears selection.
-- Only one selected node is required in v1.
+- Selected node can be deleted via keyboard.
+- Inline node delete action is available in edit mode.
+- Connected edges are removed automatically.
+- Deletion is undoable.
 
----
+## Epic 3 - Edges
 
-### US-7: Edit node title
+### US-8: Create edges between nodes
 
-As a user, I want to change a node title so that the graph reflects my own labels.
+As a user, I want to connect nodes to represent relationships.
 
-#### Acceptance Criteria
+Acceptance criteria:
 
-- The user can edit the title of the selected node.
-- Title changes are reflected in the node UI.
-- Title changes are persisted.
-- Title editing is undoable if practical, or at minimum is saved correctly.
-- Empty titles are either prevented or replaced with a sensible fallback.
+- Edge creation starts from node anchor points.
+- Draft edge preview appears during target selection.
+- Valid completion creates edge immediately.
+- Invalid states (self-edge, missing node, duplicate direction) are prevented.
+- Creation is undoable.
 
----
+### US-9: Select and delete edges
 
-### US-8: Edit node description
+As a user, I want to manage existing edges.
 
-As a user, I want to add notes to a node so that I can store more context.
-
-#### Acceptance Criteria
-
-- The user can edit the description of the selected node.
-- Description changes are reflected in the UI where applicable.
-- Description changes are persisted.
-- The description field supports empty values.
-
----
-
-### US-9: Delete a node
-
-As a user, I want to delete a node so that I can remove unwanted items from the graph.
-
-#### Acceptance Criteria
-
-- The user can delete the selected node.
-- Deleting a node removes it from the graph state.
-- Any connected edges are also removed.
-- The deletion updates the UI immediately.
-- Node deletion is undoable.
-
----
-
-## Epic 3 – Edge Creation and Management
-
-### US-10: Create an edge between two nodes
-
-As a user, I want to connect nodes so that I can represent relationships.
-
-#### Acceptance Criteria
-
-- The user can initiate edge creation from a source node.
-- The user can complete edge creation on a target node.
-- A valid edge is created only when both nodes exist.
-- The edge appears immediately in the graph.
-- Edge creation is undoable.
-- The app prevents invalid self-contradictory states such as missing node references.
-
----
-
-### US-11: View connected edges while moving nodes
-
-As a user, I want edges to stay attached to nodes while I move them so that the graph remains understandable.
-
-#### Acceptance Criteria
-
-- Edge positions update when connected nodes move.
-- Edge endpoints align with the visual node positions.
-- Edge rendering remains performant for medium-sized graphs.
-
----
-
-### US-12: Select an edge
-
-As a user, I want to select an edge so that I can inspect or delete it.
-
-#### Acceptance Criteria
+Acceptance criteria:
 
 - Clicking an edge selects it.
-- The selected edge is visually distinct.
-- Selecting an edge updates the inspector state or available actions.
-- Clicking empty canvas clears edge selection.
+- Selected edge has clear visual emphasis.
+- Selected edge can be deleted via keyboard or overlay delete control.
+- Deletion is undoable.
 
----
+### US-10: Reconnect edge endpoints
 
-### US-13: Delete an edge
+As a user, I want to retarget an existing edge endpoint.
 
-As a user, I want to remove an edge so that I can correct or simplify my graph.
+Acceptance criteria:
 
-#### Acceptance Criteria
+- Selected edge shows draggable endpoints.
+- Dragging endpoint to valid node reconnects edge.
+- Invalid reconnects are rejected safely.
+- Reconnect is undoable.
 
-- The user can delete a selected edge.
-- The edge is removed from graph state.
-- The UI updates immediately.
-- Edge deletion is undoable.
+## Epic 4 - Persistence and Files
 
----
+### US-11: Autosave graph
 
-## Epic 4 – Persistence
+As a user, I want work saved automatically.
 
-### US-14: Automatically save my graph
+Acceptance criteria:
 
-As a user, I want my graph to save automatically so that I do not lose work.
+- Graph changes autosave locally.
+- Autosave does not require internet.
 
-#### Acceptance Criteria
+### US-12: Restore graph on reopen
 
-- Graph changes are persisted to browser storage automatically.
-- The user is not required to manually save after each change.
-- Autosave does not require an internet connection.
-- Temporary interaction state is not required to be persisted.
+As a user, I want previous work restored when I return.
 
----
+Acceptance criteria:
 
-### US-15: Reload my graph on next open
+- Startup loads valid saved graph.
+- Invalid/corrupted saved data falls back to empty graph without crash.
 
-As a user, I want my previous graph to appear when I reopen the app so that I can continue where I left off.
+### US-13: Export graph JSON
 
-#### Acceptance Criteria
+As a user, I want to back up/share graph data.
 
-- On startup, the app attempts to load the saved graph.
-- If valid saved data exists, the graph is restored.
-- If saved data is invalid or absent, a safe empty graph is loaded instead.
-- A broken saved state does not crash the app.
+Acceptance criteria:
 
----
+- Export action downloads valid JSON with nodes and edges.
+- Export occurs fully client-side.
 
-## Epic 5 – Import and Export
+### US-14: Import graph JSON safely
 
-### US-16: Export my graph to a JSON file
+As a user, I want to restore/import prior graph files.
 
-As a user, I want to export my graph so that I can back it up or move it elsewhere.
+Acceptance criteria:
 
-#### Acceptance Criteria
+- Import validates payload before apply.
+- Valid import replaces current graph.
+- Invalid import preserves current graph.
+- User receives visible success/failure feedback.
 
-- The user can trigger export from the UI.
-- Export generates a JSON file.
-- The exported file includes nodes and edges.
-- The export works entirely client-side.
-- The exported file is valid JSON.
+## Epic 5 - Productivity and Safety
 
----
+### US-15: Undo and redo
 
-### US-17: Import a previously exported graph
+As a user, I want to recover from mistakes quickly.
 
-As a user, I want to import a graph file so that I can restore or open saved work.
+Acceptance criteria:
 
-#### Acceptance Criteria
+- Undo/redo available via toolbar and keyboard.
+- Core actions are covered (node create/move/edit/delete, edge create/reconnect/delete, import replace).
 
-- The user can select a JSON file from their device.
-- The file is parsed client-side.
-- The imported graph is validated before being applied.
-- A valid import replaces the current graph.
-- An invalid import does not overwrite the current graph.
-- The user receives clear feedback if import fails.
+### US-16: Escape behavior
 
----
+As a user, I want Escape to back out of temporary interaction states.
 
-## Epic 6 – Undo and Redo
+Acceptance criteria:
 
-### US-18: Undo my last action
+- Escape exits inline node edit mode.
+- Escape cancels active edge draft/reconnect mode.
+- Escape clears selection when no mode is active.
 
-As a user, I want to undo mistakes so that I can work confidently.
+### US-17: Keyboard delete behavior
 
-#### Acceptance Criteria
+As a user, I want keyboard delete to remove selected items.
 
-- The user can trigger undo from UI or keyboard shortcut.
-- Undo reverses the last supported graph action.
-- Supported actions include at least:
-  - create node
-  - delete node
-  - move node
-  - create edge
-  - delete edge
-- Undo updates the rendered graph immediately.
+Acceptance criteria:
 
----
+- Delete/Backspace removes selected node or selected edge.
+- Shortcuts do not hijack active text-input editing.
 
-### US-19: Redo an undone action
-
-As a user, I want to redo an action so that I can restore something I reversed accidentally.
-
-#### Acceptance Criteria
-
-- The user can trigger redo from UI or keyboard shortcut.
-- Redo restores the previously undone supported action.
-- Redo updates the rendered graph immediately.
-
----
-
-## Epic 7 – Selection and Inspector
-
-### US-20: See details for the selected item
-
-As a user, I want the sidebar to reflect my current selection so that editing feels clear and structured.
-
-#### Acceptance Criteria
-
-- Selecting a node shows node details in the inspector.
-- Selecting an edge shows edge-related actions or details.
-- No selection shows a helpful empty state.
-- The inspector updates immediately when selection changes.
-
----
-
-### US-21: Clear selection
-
-As a user, I want to clear selection so that I can return to a neutral editing state.
-
-#### Acceptance Criteria
-
-- Clicking empty canvas clears the current selection.
-- The inspector returns to its no-selection state.
-- No graph data is changed when selection is cleared.
-
----
-
-## Epic 8 – Keyboard Support
-
-### US-22: Use keyboard shortcuts for common actions
-
-As a user, I want keyboard shortcuts so that I can work faster.
-
-#### Acceptance Criteria
-
-- Delete removes the selected node or edge where appropriate.
-- Undo shortcut works on supported platforms.
-- Redo shortcut works on supported platforms.
-- Escape cancels current interaction modes where implemented.
-- Keyboard shortcuts do not break text input editing.
-
----
-
-## Epic 9 – Empty State and First Use
-
-### US-23: Understand what to do when the app is empty
-
-As a first-time user, I want the empty app to guide me lightly so that I can begin without confusion.
-
-#### Acceptance Criteria
-
-- The app shows a minimal helpful hint when no nodes exist.
-- The hint does not obstruct normal use.
-- The hint explains at least one way to create a node.
-
----
-
-## Epic 10 – Reliability and Safety
-
-### US-24: Avoid losing my current graph due to bad import data
-
-As a user, I want imports to be safe so that invalid files do not destroy my current work.
-
-#### Acceptance Criteria
-
-- Invalid import data is rejected.
-- The current graph remains unchanged after a failed import.
-- The app provides visible feedback on failure.
-
----
-
-### US-25: Recover safely from missing or corrupted saved data
-
-As a user, I want the app to recover safely so that storage issues do not prevent usage.
-
-#### Acceptance Criteria
-
-- If saved data cannot be parsed, the app loads a fresh empty graph.
-- The app remains usable.
-- Failure to load saved data does not break rendering or interaction.
-
----
-
-## Suggested Build Order
-
-Recommended implementation sequence:
-
-1. App shell and layout
-2. State store
-3. Canvas pan and zoom
-4. Node creation
-5. Node rendering
-6. Node dragging
-7. Node selection and inspector
-8. Edge creation and rendering
-9. Node and edge deletion
-10. Persistence
-11. Import and export
-12. Undo and redo
-13. Keyboard shortcuts
-14. UI polish and empty states
-
----
-
-## Definition of Done
+## Definition of Done (v1)
 
 Version 1 is complete when:
 
-- core node graph interactions work end-to-end
-- graph data persists locally
-- import and export work safely
-- undo and redo cover core actions
-- the UI reflects the design brief
-- the app remains lightweight, modular, and offline-capable
+- core node and edge workflows operate end-to-end
+- persistence and file flows are safe
+- undo/redo are reliable for core actions
+- UI remains lightweight and canvas-first

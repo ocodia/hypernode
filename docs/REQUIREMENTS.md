@@ -1,33 +1,31 @@
-# Hypernode – Requirements
+# Hypernode - Requirements
 
 ## Functional Requirements
 
-### Canvas
+### Canvas and Viewport
 
 FR-1  
-The system must provide an interactive canvas for graph editing.
+The system must provide an interactive graph canvas.
 
 FR-2  
-Users must be able to pan the canvas.
+Users must be able to pan the canvas on empty-space drag.
 
 FR-3  
-Users must be able to zoom the canvas.
+Users must be able to zoom the canvas with bounded min/max levels.
 
 FR-4  
-The canvas must support graphs containing at least 500 nodes.
+Users must be able to reset the viewport to default pan/zoom.
 
----
-
-### Node Creation
+### Node Management
 
 FR-5  
-Users must be able to create nodes on the canvas.
+Users must be able to create nodes.
 
 FR-6  
-New nodes appear at the clicked location.
+New nodes must appear at the intended canvas location (or fixed toolbar spawn point in graph space).
 
 FR-7  
-Nodes contain:
+Each node must contain:
 
 - id
 - title
@@ -36,160 +34,100 @@ Nodes contain:
 - y coordinate
 
 FR-8  
-Nodes must be draggable.
-
----
-
-### Node Editing
+Users must be able to drag nodes.
 
 FR-9  
-Users must be able to edit the node title.
+Users must be able to edit node title and description inline.
 
 FR-10  
-Users must be able to edit the node description.
+Deleting a node must remove connected edges.
+
+### Edge Management
 
 FR-11  
-Node editing must not require leaving the canvas context.
-
----
-
-### Edge Creation
-
-FR-12  
 Users must be able to create edges between nodes.
 
+FR-12  
+Edges must remain attached visually when nodes move.
+
 FR-13  
-Edges must visually connect nodes.
+Users must be able to select and delete edges.
 
 FR-14  
-Edges must update when nodes move.
+Users must be able to reconnect edge endpoints to a different node.
 
 FR-15  
-Edges may be directional.
+Invalid edge states must be prevented (missing nodes, self-edges, duplicate directed edges).
 
----
-
-### Node Deletion
+### Persistence and Files
 
 FR-16  
-Users must be able to delete nodes.
+Graphs must autosave to browser storage.
 
 FR-17  
-Deleting a node removes connected edges.
-
----
-
-### Edge Deletion
+Saved graphs must load on app startup when valid.
 
 FR-18  
-Users must be able to delete edges.
-
----
-
-### Persistence
+Users must be able to export graph JSON.
 
 FR-19  
-Graphs must persist automatically using local browser storage.
+Users must be able to import graph JSON.
 
 FR-20  
-Saved graphs must reload when reopening the application.
-
----
-
-### Import and Export
+Import must validate payload before replacing current graph.
 
 FR-21  
-Users must be able to export the graph as a JSON file.
+Import/export operations should provide visible status feedback.
+
+### Undo/Redo and Keyboard
 
 FR-22  
-Users must be able to import graph JSON files.
-
-FR-23  
-Importing a graph replaces the current graph.
-
----
-
-### Undo and Redo
-
-FR-24  
 Users must be able to undo actions.
 
-FR-25  
+FR-23  
 Users must be able to redo actions.
 
-Actions that must support undo:
+FR-24  
+Delete keyboard shortcuts must remove selected node/edge.
 
-- node creation
-- node deletion
-- node movement
-- edge creation
-- edge deletion
-
----
+FR-25  
+Escape must exit current lightweight interaction states (edge draft or inline edit) and otherwise clear selection.
 
 ## Non Functional Requirements
 
 ### Performance
 
 NFR-1  
-The system must support graphs containing at least:
-
-- 500 nodes
-- 1000 edges
+Common interactions (pan/zoom/drag) must feel smooth on modern hardware.
 
 NFR-2  
-Dragging nodes must update edges smoothly.
-
----
+Edge updates during node movement must remain visually stable.
 
 ### Offline Operation
 
 NFR-3  
-The application must function without internet connectivity.
+Core editing features must function without internet access.
 
 NFR-4  
-No external APIs may be required.
-
----
+No external API dependency is allowed for core operation.
 
 ### Browser Support
 
 NFR-5  
-The application must support modern browsers including:
+The application must target modern Chromium, Firefox, and Safari-class browsers.
 
-- Chrome
-- Edge
-- Firefox
-- Safari
-
----
-
-### Data Format
+### Data Format and Safety
 
 NFR-6  
-Graph data must be stored as JSON.
-
-Example:
-
-{
-  "nodes": [],
-  "edges": []
-}
-
----
-
-### Security
+Graph persistence and import/export formats must use JSON with `{ nodes, edges }`.
 
 NFR-7  
-All data processing must occur client-side.
-
----
+All graph data processing must occur client-side.
 
 ### Accessibility
 
 NFR-8  
-Keyboard shortcuts should support common actions such as:
+Interactive controls must provide visible focus states.
 
-- undo
-- redo
-- delete
+NFR-9  
+Core editing actions should be keyboard-accessible where practical.

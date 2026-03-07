@@ -1,203 +1,104 @@
 # hypernode
 
-hypernode is a lightweight browser-based node graph editor designed for fast visual thinking.
+hypernode is a lightweight browser-based node graph editor for fast visual thinking.
 
-It allows users to create nodes, connect them with edges, and organize ideas spatially on an interactive canvas. The application runs entirely in the browser and stores data locally, requiring no backend services or user accounts.
+It runs fully client-side with no backend and no account system. Graph data is saved in `localStorage`, and can be imported/exported as JSON.
 
-hypernode is intentionally simple. The goal is a fast, focused tool for mapping relationships, exploring ideas, and modelling systems without the complexity of large diagramming software.
+## Current Features
 
----
+- Create nodes by double-clicking the canvas or using the toolbar button.
+- Edit node title/description inline on each node.
+- Delete nodes from the inline editor or with `Delete`/`Backspace`.
+- Create edges from node anchor points (top/right/bottom/left).
+- Reconnect existing edge endpoints by dragging selected edge endpoints.
+- Delete selected edges via inline edge overlay control or keyboard delete.
+- Pan canvas with pointer drag on empty space.
+- Zoom with mouse wheel/trackpad (bounded: `0.35` to `2.5`).
+- Reset view to default pan/zoom.
+- Undo/redo via toolbar and keyboard shortcuts.
+- Auto-save graph to browser storage.
+- Import/export graph JSON with validation and status toast feedback.
 
-# Key Features
+## Keyboard Shortcuts
 
-### Node-Based Graph Editing
-Create nodes and connect them with edges to represent relationships between ideas, systems, or concepts.
+- `Delete` / `Backspace`: delete selected node/edge
+- `Ctrl/Cmd + Z`: undo
+- `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
+- `Escape`: exit node edit mode, cancel edge draft mode, or clear selection
 
-### Interactive Canvas
-Pan and zoom across an infinite workspace designed for spatial thinking.
-
-### Drag-and-Drop Layout
-Move nodes freely to organize and restructure your graph.
-
-### Local Data Persistence
-Graphs automatically save to browser storage. No internet connection is required.
-
-### Import and Export
-Graphs can be exported to JSON files and later restored through import.
-
-### Undo and Redo
-Common editing actions can be undone and redone.
-
----
-
-# Design Philosophy
-
-hypernode follows a few guiding principles:
-
-**Offline-first**  
-The application works entirely in the browser without requiring any network services.
-
-**Simple interaction**  
-Users should be able to begin creating nodes within seconds.
-
-**Visual thinking first**  
-The canvas is the primary interface.
-
-**Calm interface**  
-The UI avoids unnecessary complexity and visual noise.
-
-**Lightweight architecture**  
-The codebase favors simple modular JavaScript and browser-native technologies.
-
----
-
-# Example Use Cases
-
-hypernode can be used for many kinds of visual mapping:
-
-- software architecture diagrams
-- knowledge graphs
-- concept maps
-- workflow planning
-- research notes
-- brainstorming and idea exploration
-
----
-
-# Technology
-
-hypernode is built using browser-native technologies:
+## Tech Stack
 
 - HTML
 - CSS
-- JavaScript (ES Modules)
-- SVG for edge rendering
-- localStorage for persistence
+- JavaScript (ES modules)
+- SVG (edge rendering + edge overlay controls)
+- `localStorage` (persistence)
 
-No frameworks or backend services are required.
+No frameworks or backend services are used.
 
----
-/docs
-/css
-/js
+## Project Structure
 
-
-### Docs
-
-Project documentation and specifications.
-
-
+```text
 docs/
-PRODUCT_SPEC.md
-REQUIREMENTS.md
-ARCHITECTURE.md
-DESIGN_BRIEF.md
-USER_STORIES.md
-TASKS.md
-
-
-### CSS
-
-Stylesheets for layout and UI.
-
-
 css/
-tokens.css
-layout.css
-components.css
-canvas.css
-
-
-### JavaScript
-
-Application logic.
-
-
+  styles.css
 js/
-main.js
+  main.js
+  interaction/
+  persistence/
+  render/
+  state/
+  utils/
+icons/
+index.html
+```
 
-state/
-render/
-interaction/
-persistence/
-utils/
+## Run Locally
 
+Serve the folder with any static server.
 
-Modules are organized by responsibility to keep the codebase modular and easy to maintain.
-
----
-
-# Running the Project
-
-The application runs entirely in the browser.
-
-You can start the project using a simple static server.
-
-Example using Node:
-
-
+```bash
 npx serve .
+```
 
+or
 
-Or Python:
-
-
+```bash
 python -m http.server
+```
 
+Then open the URL shown by your server (commonly `http://localhost:3000` or `http://localhost:8000`).
 
-Then open:
+## Version 1 Scope
 
+Version 1 includes the core graph editor loop:
 
-http://localhost:3000
+- node create/edit/move/delete
+- edge create/reconnect/delete
+- pan/zoom/reset view
+- selection and inline controls
+- undo/redo
+- local persistence
+- JSON import/export
 
-
----
-
-# Version 1 Scope
-
-Version 1 includes:
-
-- node creation
-- node dragging
-- node editing
-- edge creation
-- edge deletion
-- canvas pan and zoom
-- graph persistence
-- import and export
-- undo and redo
-
-The goal of version 1 is to provide a reliable core graph editor without unnecessary complexity.
-
----
-
-# Out of Scope
-
-Version 1 intentionally excludes:
+## Out of Scope (v1)
 
 - collaboration
 - cloud sync
 - authentication
 - plugins
-- advanced diagramming features
+- advanced diagramming feature sets
 
-These may be explored in future versions.
-
----
-
-# Future Possibilities
-
-Potential future improvements include:
+## Future Work
 
 - graph search
-- grouping and clustering
-- minimap navigation
-- touch interaction improvements
-- IndexedDB storage for large graphs
+- grouping/clustering
+- minimap
+- touch interaction polish
+- dark mode
+- IndexedDB support for large graphs
 - multiple graph documents
 
----
-
-# License
+## License
 
 License to be determined.

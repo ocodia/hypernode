@@ -1,120 +1,101 @@
-# Hypernode – Architecture
+# Hypernode - Architecture
 
 ## Architecture Goals
 
-The system architecture should prioritize:
-
-- simplicity
-- modular code
-- offline capability
-- maintainability
-- browser-native technologies
-
----
+- simple modules
+- maintainable code
+- offline operation
+- browser-native stack
 
 ## Technology Stack
 
-The application should use:
-
 - HTML
 - CSS
-- JavaScript ES Modules
-- SVG for edge rendering
-- localStorage for persistence
+- JavaScript ES modules
+- SVG (edge rendering and edge controls)
+- `localStorage` for persistence
 
 No backend services are used.
 
----
-
 ## Rendering Model
 
-The application uses a hybrid rendering model:
+Hybrid rendering:
 
-Nodes: HTML DOM elements  
-Edges: SVG paths
+- Nodes: HTML elements in `#nodes-layer`
+- Edges: SVG paths in `#edges-group`
+- Edge controls (selected edge endpoints/delete control): SVG overlay in `#edge-overlay-group`
+- Edge draft preview: SVG in `#edge-draft-group`
 
-Both layers share the same coordinate system.
-
----
+All layers share the same viewport transform.
 
 ## Project Structure
 
-Recommended directory layout:
-
-/css
-/js
-/docs
-
-Example structure:
-
+```text
+css/
+  styles.css
+docs/
 js/
   main.js
-  state/
-  render/
-  interaction/
-  persistence/
-  utils/
-
----
+  interaction/bindings.js
+  persistence/file.js
+  persistence/storage.js
+  render/renderer.js
+  state/store.js
+  utils/constants.js
+  utils/graph.js
+  utils/id.js
+index.html
+```
 
 ## Core Modules
 
-### State Store
+### State (`js/state/store.js`)
 
-Responsible for storing application state including:
+Stores:
 
-- nodes
-- edges
-- selection
-- viewport
-- history
+- `nodes`, `edges`
+- `selection`
+- `viewport` (`panX`, `panY`, `zoom`)
+- UI state (`edgeDraft`, `edgeTwangId`, `editingNodeId`, `isPanning`, `importStatus`)
+- undo/redo history
 
----
+### Rendering (`js/render/renderer.js`)
 
-### Rendering
+Responsible for:
 
-Responsible for rendering:
+- applying viewport transform
+- rendering node cards and inline node editor UI
+- rendering edges and selected-edge overlay controls
+- rendering edge draft preview
+- rendering import status toast
 
-- nodes
-- edges
-- sidebar
-- viewport transform
+### Interaction (`js/interaction/bindings.js`)
 
----
+Responsible for:
 
-### Interaction
+- pan and zoom interactions
+- node selection/drag/edit lifecycle
+- edge creation from node anchors
+- edge endpoint reconnect workflow
+- keyboard shortcuts
+- toolbar actions
 
-Responsible for user interaction including:
+### Persistence (`js/persistence`)
 
-- canvas pan
-- zoom
-- node dragging
-- node selection
-- edge creation
+- `storage.js`: load/save graph in `localStorage`
+- `file.js`: import/export validated graph JSON files
 
----
+### Utilities (`js/utils`)
 
-### Persistence
-
-Handles:
-
-- saving graphs
-- loading graphs
-- importing JSON
-- exporting JSON
-
----
-
-### History
-
-Tracks undo and redo operations.
-
----
+- constants
+- graph sanitization/validation
+- id generation
 
 ## Data Model
 
 ### Node
 
+```json
 {
   "id": "node_id",
   "title": "Node title",
@@ -122,47 +103,33 @@ Tracks undo and redo operations.
   "x": 0,
   "y": 0
 }
+```
 
 ### Edge
 
+```json
 {
   "id": "edge_id",
   "from": "node_id",
   "to": "node_id"
 }
-
----
+```
 
 ## State Management
 
-The application maintains a single central state object.
+The app uses a single central store with explicit mutation methods and subscriber-based rendering.
 
-Rendering updates occur after state changes.
+History snapshots are bounded (past stack capped at 100).
 
----
+## Import/Export and Storage
 
-## Storage Strategy
+- Autosave writes `{ nodes, edges }` to `localStorage`.
+- Startup loads saved graph if valid.
+- Import validates payload before replace.
+- Export writes formatted JSON file.
 
-Version 1 uses browser localStorage.
+## Constraints
 
-Future versions may migrate to IndexedDB if needed.
-
----
-
-## Import and Export
-
-Graphs are serialized as JSON.
-
-Import replaces the current graph after validation.
-
----
-
-## Design Constraints
-
-Do not introduce frameworks unless necessary.
-
-Prefer simple readable JavaScript modules.
-
-Avoid unnecessary abstraction layers.
-
-Keep files focused and small.
+- No framework dependency.
+- Keep modules focused.
+- Prefer clear direct logic over abstraction-heavy patterns.
