@@ -2,7 +2,7 @@ import { VIEWPORT_LIMITS } from '../utils/constants.js';
 import { exportGraph, importGraphFile } from '../persistence/file.js';
 
 export function bindInteractions(elements, store) {
-  const { workspace, canvas, nodesLayer, edgesGroup, edgeOverlayGroup, inspectorContent, importInput } = elements;
+  const { workspace, canvas, nodesLayer, edgesGroup, edgeOverlayGroup, importInput } = elements;
 
   let panSession = null;
   let dragSession = null;
@@ -372,6 +372,14 @@ export function bindInteractions(elements, store) {
       return;
     }
 
+    const deleteEl = event.target.closest('[data-node-edit-delete]');
+    if (deleteEl) {
+      const nodeId = deleteEl.dataset.nodeEditDelete;
+      store.deleteNode(nodeId);
+      event.stopPropagation();
+      return;
+    }
+
     if (event.target.closest('[data-node-editor]')) {
       event.stopPropagation();
       return;
@@ -411,21 +419,6 @@ export function bindInteractions(elements, store) {
 
   edgesGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
   edgeOverlayGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
-
-  inspectorContent.addEventListener('click', (event) => {
-    if (event.target.id === 'delete-node-btn') {
-      const state = store.getState();
-      if (state.selection?.type === 'node') {
-        store.deleteNode(state.selection.id);
-      }
-    }
-    if (event.target.id === 'delete-edge-btn') {
-      const state = store.getState();
-      if (state.selection?.type === 'edge') {
-        store.deleteEdge(state.selection.id);
-      }
-    }
-  });
 
   document.getElementById('add-node-btn').addEventListener('click', () => {
     const { viewport } = store.getState();

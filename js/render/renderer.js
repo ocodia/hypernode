@@ -9,9 +9,6 @@ export function createRenderer(elements, store) {
     edgesLayer,
     edgesOverlayLayer,
     edgeOverlayGroup,
-    inspectorContent,
-    emptyHint,
-    edgeHint,
     importStatus,
   } = elements;
 
@@ -49,6 +46,7 @@ export function createRenderer(elements, store) {
               <div class="node__editor-actions">
                 <button type="button" data-node-edit-save="${node.id}">Save</button>
                 <button type="button" data-node-edit-cancel="${node.id}">Cancel</button>
+                <button type="button" data-node-edit-delete="${node.id}">Delete</button>
               </div>
             </div>
           `
@@ -161,45 +159,6 @@ export function createRenderer(elements, store) {
     `;
   }
 
-  function renderInspector(state) {
-    if (state.selection?.type === 'node') {
-      const node = state.nodes.find((item) => item.id === state.selection.id);
-      if (!node) {
-        inspectorContent.innerHTML = '<p class="inspector-meta">Node no longer exists.</p>';
-        return;
-      }
-      inspectorContent.innerHTML = `
-        <p class="inspector-meta">Double-click the node to edit name and description.</p>
-        <div class="inspector-fields">
-          <button id="delete-node-btn" type="button">Delete Node</button>
-        </div>
-      `;
-      return;
-    }
-
-    if (state.selection?.type === 'edge') {
-      const edge = state.edges.find((item) => item.id === state.selection.id);
-      inspectorContent.innerHTML = edge
-        ? `
-        <p class="inspector-meta">
-          Edge from <strong>${escapeHTML(edge.from)}</strong>
-          to <strong>${escapeHTML(edge.to)}</strong>.
-        </p>
-        <div class="inspector-fields">
-          <button id="delete-edge-btn" type="button">Delete Edge</button>
-        </div>
-      `
-        : '<p class="inspector-meta">Edge no longer exists.</p>';
-      return;
-    }
-
-    inspectorContent.innerHTML = '<p class="inspector-meta">Select a node or edge to edit its details.</p>';
-  }
-
-  function renderEmptyHint(state) {
-    emptyHint.hidden = state.nodes.length > 0;
-  }
-
   function renderImportStatus(state) {
     const message = String(state.ui.importStatus || '').trim();
     importStatus.textContent = message;
@@ -207,22 +166,11 @@ export function createRenderer(elements, store) {
     importStatus.classList.toggle('is-visible', Boolean(message));
   }
 
-  function renderEdgeHint(state) {
-    if (state.ui.edgeDraft) {
-      edgeHint.textContent = 'Connecting: drag to another node anchor, then release. Press Esc to cancel.';
-      return;
-    }
-    edgeHint.textContent = 'Tip: drag between node anchors to create an edge, or drag selected edge endpoints to reconnect.';
-  }
-
   function render(state) {
     applyViewport(state.viewport);
     renderNodes(state);
     renderEdges(state);
     renderDraftEdge(state);
-    renderInspector(state);
-    renderEmptyHint(state);
-    renderEdgeHint(state);
     renderImportStatus(state);
     canvas.classList.toggle('is-panning', Boolean(state.ui.isPanning));
   }

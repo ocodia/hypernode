@@ -221,16 +221,24 @@ textarea:focus-visible {
 }
 
 .toolbar__actions {
-  grid-template-columns: repeat(auto-fit, minmax(110px, max-content));
+  grid-template-columns: repeat(auto-fit, minmax(42px, max-content));
   align-items: center;
 }
 
-.inspector {
-  position: absolute;
-  right: 12px;
-  top: 120px;
-  width: min(320px, calc(100vw - 24px));
-  z-index: 20;
+.toolbar__icon-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  text-align: center;
+}
+
+.toolbar__icon-btn .bi {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .node {
@@ -338,6 +346,12 @@ textarea:focus-visible {
   border-radius: 8px;
 }
 
+[data-node-edit-delete] {
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fff1f2;
+}
+
 .node.is-editing .node__anchor {
   opacity: 0;
   pointer-events: none;
@@ -400,31 +414,6 @@ textarea:focus-visible {
   transform: translate(-50%, -50%);
 }
 
-.empty-hint {
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid var(--panel-border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.edge-hint {
-  position: absolute;
-  left: 20px;
-  bottom: 20px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid var(--panel-border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  color: var(--muted);
-  font-size: 0.86rem;
-  max-width: 520px;
-}
-
 .toast {
   position: absolute;
   left: 50%;
@@ -461,63 +450,9 @@ textarea:focus-visible {
   }
 }
 
-.inspector-fields {
-  display: grid;
-  gap: 10px;
-}
-
-.inspector-fields label {
-  display: grid;
-  gap: 6px;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.inspector-fields input,
-.inspector-fields textarea {
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
-  padding: 8px;
-  color: var(--text);
-  width: 100%;
-}
-
-.inspector-fields textarea {
-  min-height: 90px;
-  resize: vertical;
-}
-
-.inspector-meta {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
 @media (max-width: 900px) {
   .toolbar {
     right: auto;
     width: calc(100vw - 24px);
-  }
-
-  .inspector {
-    left: 12px;
-    right: 12px;
-    top: auto;
-    bottom: 84px;
-    width: auto;
-    max-height: 36vh;
-    overflow: auto;
-  }
-
-  .empty-hint {
-    right: 12px;
-    bottom: 12px;
-  }
-
-  .edge-hint {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    max-width: none;
   }
 }

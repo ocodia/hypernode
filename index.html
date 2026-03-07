@@ -3,28 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hypernode</title>
+    <title>hypernode</title>
+    <link rel="stylesheet" href="./icons/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
   <body>
     <main class="workspace" id="workspace" aria-label="Graph workspace">
       <div class="toolbar" aria-label="Graph controls">
-        <h1 class="toolbar__title">Hypernode</h1>
+        <h1 class="toolbar__title">hypernode</h1>
         <div class="actions toolbar__actions">
-          <button id="add-node-btn" type="button">Add Node</button>
-          <button id="reset-view-btn" type="button">Reset View</button>
-          <button id="undo-btn" type="button">Undo</button>
-          <button id="redo-btn" type="button">Redo</button>
-          <button id="export-btn" type="button">Export JSON</button>
-          <label class="file-input-label" for="import-input">Import JSON</label>
+          <button id="add-node-btn" class="toolbar__icon-btn" type="button" aria-label="Add Node" title="Add Node"><i class="bi bi-plus-square"></i></button>
+          <button id="reset-view-btn" class="toolbar__icon-btn" type="button" aria-label="Reset View" title="Reset View"><i class="bi bi-aspect-ratio"></i></button>
+          <button id="undo-btn" class="toolbar__icon-btn" type="button" aria-label="Undo" title="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>
+          <button id="redo-btn" class="toolbar__icon-btn" type="button" aria-label="Redo" title="Redo"><i class="bi bi-arrow-clockwise"></i></button>
+          <button id="export-btn" class="toolbar__icon-btn" type="button" aria-label="Export JSON" title="Export JSON"><i class="bi bi-download"></i></button>
+          <label class="file-input-label toolbar__icon-btn" for="import-input" aria-label="Import JSON" title="Import JSON"><i class="bi bi-upload"></i></label>
           <input id="import-input" type="file" accept="application/json" />
         </div>
       </div>
-
-      <section class="inspector panel panel--inspector" aria-label="Inspector">
-        <h2>Inspector</h2>
-        <div id="inspector-content"></div>
-      </section>
 
       <div class="canvas" id="canvas">
         <svg class="edges" id="edges-layer" aria-hidden="true">
@@ -35,10 +31,6 @@
         <svg class="edges edges--overlay" id="edges-overlay-layer" aria-hidden="true">
           <g id="edge-overlay-group"></g>
         </svg>
-        <div id="edge-hint" class="edge-hint" aria-live="polite"></div>
-        <div id="empty-hint" class="empty-hint">
-          Double-click to create nodes. Drag from one anchor point to another to connect nodes.
-        </div>
       </div>
       <div id="import-status" class="toast" aria-live="polite" hidden></div>
     </main>
