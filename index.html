@@ -19,11 +19,11 @@
           <button id="reset-view-btn" class="toolbar__icon-btn" type="button" aria-label="Reset View" title="Reset View"><i class="bi bi-aspect-ratio"></i></button>
           <button id="undo-btn" class="toolbar__icon-btn" type="button" aria-label="Undo" title="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>
           <button id="redo-btn" class="toolbar__icon-btn" type="button" aria-label="Redo" title="Redo"><i class="bi bi-arrow-clockwise"></i></button>
-          <button id="export-btn" class="toolbar__icon-btn" type="button" aria-label="Export JSON" title="Export JSON"><i class="bi bi-download"></i></button>
-          <label class="file-input-label toolbar__icon-btn" for="import-input" aria-label="Import JSON" title="Import JSON"><i class="bi bi-upload"></i></label>
+          <button id="new-graph-btn" class="toolbar__icon-btn" type="button" aria-label="New Graph" title="New Graph"><i class="bi bi-file-earmark-plus"></i></button>
+          <button id="open-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Open Graph" title="Open Graph"><i class="bi bi-folder2-open"></i></button>
+          <button id="save-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Save Graph" title="Save Graph"><i class="bi bi-floppy"></i></button>
           <button id="theme-toggle-btn" class="toolbar__icon-btn" type="button" aria-label="Enable dark mode" title="Enable Dark Mode"><i class="bi bi-moon-stars"></i></button>
           <button id="about-btn" class="toolbar__icon-btn" type="button" aria-label="About and instructions" title="About"><i class="bi bi-question-circle"></i></button>
-          <input id="import-input" type="file" accept="application/json" />
         </div>
       </div>
 
@@ -45,7 +45,7 @@
           <h2>About hypernode</h2>
           <button id="about-close-btn" type="button" aria-label="Close about dialog"><i class="bi bi-x-lg"></i></button>
         </header>
-        <p>hypernode is a local-first graph editor for visual thinking. Data is saved in your browser and can be imported or exported as JSON.</p>
+        <p>hypernode is a local-first graph editor for visual thinking. Data autosaves in your browser and can be opened/saved as JSON files.</p>
         <h3>How to use</h3>
         <ul>
           <li>Double-click empty canvas or use + to create a node.</li>
@@ -57,6 +57,7 @@
           <li><kbd>Del</kbd> or <kbd>Backspace</kbd>: delete selected node/edge.</li>
           <li><kbd>Ctrl/Cmd + Z</kbd>: undo.</li>
           <li><kbd>Ctrl/Cmd + Y</kbd> or <kbd>Ctrl/Cmd + Shift + Z</kbd>: redo.</li>
+          <li><kbd>Ctrl/Cmd + S</kbd>: save graph file.</li>
           <li><kbd>Ctrl/Cmd + Enter</kbd>: save and close node editor.</li>
           <li><kbd>Esc</kbd>: exit edit mode, cancel connect, or clear selection.</li>
         </ul>

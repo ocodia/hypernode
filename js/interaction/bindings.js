@@ -1,10 +1,12 @@
 import { VIEWPORT_LIMITS } from '../utils/constants.js';
-import { exportGraph, importGraphFile } from '../persistence/file.js';
+import { openGraphFile, saveGraphFile, supportsFileSystemAccess } from '../persistence/file.js';
 
 const THEME_STORAGE_KEY = 'hypernode.theme.v1';
 
 export function bindInteractions(elements, store) {
-  const { workspace, canvas, nodesLayer, edgesGroup, edgeOverlayGroup, importInput } = elements;
+  const { workspace, canvas, nodesLayer, edgesGroup, edgeOverlayGroup } = elements;
+  const canUseFileSystemAccess = supportsFileSystemAccess();
+  let currentFileHandle = null;
 
   let panSession = null;
   let dragSession = null;
@@ -474,6 +476,9 @@ export function bindInteractions(elements, store) {
   const aboutBtn = document.getElementById('about-btn');
   const aboutCloseBtn = document.getElementById('about-close-btn');
   const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  const newGraphBtn = document.getElementById('new-graph-btn');
+  const openGraphBtn = document.getElementById('open-graph-btn');
+  const saveGraphBtn = document.getElementById('save-graph-btn');
 
   if (aboutBtn && aboutDialog) {
     aboutBtn.addEventListener('click', () => {
@@ -509,35 +514,94 @@ export function bindInteractions(elements, store) {
     });
   }
 
-  document.getElementById('add-node-btn').addEventListener('click', () => {
+  document.getElementById('add-node-btn')?.addEventListener('click', () => {
     const { viewport } = store.getState();
     createNodeInEditMode({ x: (120 - viewport.panX) / viewport.zoom, y: (120 - viewport.panY) / viewport.zoom });
   });
 
-  document.getElementById('reset-view-btn').addEventListener('click', () => store.resetView());
-  document.getElementById('undo-btn').addEventListener('click', () => store.undo());
-  document.getElementById('redo-btn').addEventListener('click', () => store.redo());
+  document.getElementById('reset-view-btn')?.addEventListener('click', () => store.resetView());
+  document.getElementById('undo-btn')?.addEventListener('click', () => store.undo());
+  document.getElementById('redo-btn')?.addEventListener('click', () => store.redo());
 
-  document.getElementById('export-btn').addEventListener('click', () => {
+  function hasGraphData() {
     const state = store.getState();
-    exportGraph({ nodes: state.nodes, edges: state.edges });
-    store.setImportStatus('Exported graph JSON.');
-  });
+    return state.nodes.length > 0 || state.edges.length > 0;
+  }
 
-  importInput.addEventListener('change', async () => {
-    const file = importInput.files?.[0];
-    if (!file) return;
+  function confirmDiscardIfNeeded(action) {
+    if (!hasGraphData()) return true;
+    return window.confirm(`Discard current graph and ${action}?`);
+  }
+
+  async function handleOpenGraph() {
+    if (!canUseFileSystemAccess) {
+      store.setImportStatus('Open is unavailable in this browser.');
+      return;
+    }
+
+    if (!confirmDiscardIfNeeded('open another graph')) {
+      return;
+    }
 
     try {
-      const graph = await importGraphFile(file);
+      const { handle, graph } = await openGraphFile();
+      currentFileHandle = handle;
       store.replaceGraph(graph);
-      store.setImportStatus('Graph imported successfully.');
-    } catch {
-      store.setImportStatus('Import failed: invalid JSON graph file.');
-    } finally {
-      importInput.value = '';
+      store.resetView();
+      store.setImportStatus('Graph opened successfully.');
+    } catch (error) {
+      if (isAbortError(error)) return;
+      store.setImportStatus('Open failed: invalid JSON graph file.');
     }
+  }
+
+  async function handleSaveGraph() {
+    if (!canUseFileSystemAccess) {
+      store.setImportStatus('Save is unavailable in this browser.');
+      return;
+    }
+
+    try {
+      const state = store.getState();
+      currentFileHandle = await saveGraphFile({ nodes: state.nodes, edges: state.edges }, currentFileHandle);
+      store.setImportStatus('Graph saved.');
+    } catch (error) {
+      if (isAbortError(error)) return;
+      store.setImportStatus('Save failed. Check file permissions and try again.');
+    }
+  }
+
+  function handleNewGraph() {
+    if (!confirmDiscardIfNeeded('create a new graph')) {
+      return;
+    }
+
+    currentFileHandle = null;
+    store.replaceGraph({ nodes: [], edges: [] });
+    store.resetView();
+    store.setImportStatus('New graph created.');
+  }
+
+  newGraphBtn?.addEventListener('click', handleNewGraph);
+  openGraphBtn?.addEventListener('click', () => {
+    void handleOpenGraph();
   });
+  saveGraphBtn?.addEventListener('click', () => {
+    void handleSaveGraph();
+  });
+
+  if (!canUseFileSystemAccess) {
+    if (openGraphBtn) {
+      openGraphBtn.disabled = true;
+      openGraphBtn.title = 'Open is unavailable in this browser';
+      openGraphBtn.setAttribute('aria-label', 'Open unavailable in this browser');
+    }
+    if (saveGraphBtn) {
+      saveGraphBtn.disabled = true;
+      saveGraphBtn.title = 'Save is unavailable in this browser';
+      saveGraphBtn.setAttribute('aria-label', 'Save unavailable in this browser');
+    }
+  }
 
   document.addEventListener('keydown', (event) => {
     if (aboutDialog?.open) return;
@@ -554,6 +618,12 @@ export function bindInteractions(elements, store) {
     if (ctrlOrCmd && (event.key.toLowerCase() === 'y' || (event.shiftKey && event.key.toLowerCase() === 'z'))) {
       event.preventDefault();
       store.redo();
+      return;
+    }
+
+    if (ctrlOrCmd && event.key.toLowerCase() === 's') {
+      event.preventDefault();
+      void handleSaveGraph();
       return;
     }
 
@@ -638,6 +708,10 @@ function clamp(value, min, max) {
 function isTypingTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
   return target.matches('input, textarea, [contenteditable="true"]');
+}
+
+function isAbortError(error) {
+  return error instanceof DOMException && error.name === 'AbortError';
 }
 
 function applyTheme(theme, toggleButton) {

@@ -42,9 +42,18 @@ Last updated: 2026-03-07
 
 - [x] Dark mode
 
+### P4 - File Workflow
+
+- [x] Implement File System Access API support for graph documents:
+  - open existing graph files
+  - edit in-place and save back to the same file
+  - create new graph documents
+- [x] Replace toolbar `Import` / `Export` buttons with `Open` / `Save` actions aligned to the new file workflow.
+
 ## Suggested Implementation Order
 
 1. Finish interaction-state class polish (`is-dragging`, `is-connecting`).
 2. Run a manual interaction regression pass.
 3. Add regression checklist doc.
 4. Implement dark mode.
+5. Implement File System Access API open/save/new graph workflow and replace import/export UI actions.

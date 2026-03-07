@@ -13,7 +13,6 @@ const elements = {
   edgeDraftGroup: document.getElementById('edge-draft-group'),
   edgeOverlayGroup: document.getElementById('edge-overlay-group'),
   importStatus: document.getElementById('import-status'),
-  importInput: document.getElementById('import-input'),
 };
 
 const initialGraph = loadGraphFromStorage();

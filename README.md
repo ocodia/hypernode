@@ -2,7 +2,7 @@
 
 hypernode is a lightweight browser-based node graph editor for fast visual thinking.
 
-It runs fully client-side with no backend and no account system. Graph data is saved in `localStorage`, and can be imported/exported as JSON.
+It runs fully client-side with no backend and no account system. Graph data autosaves in `localStorage`, and can be opened/saved as JSON files.
 
 ## Current Features
 
@@ -17,7 +17,7 @@ It runs fully client-side with no backend and no account system. Graph data is s
 - Reset view to default pan/zoom.
 - Undo/redo via toolbar and keyboard shortcuts.
 - Auto-save graph to browser storage.
-- Import/export graph JSON with validation and status toast feedback.
+- Open/save graph JSON files with validation and status toast feedback.
 - Installable PWA with offline app-shell caching.
 - Interaction-state cursor feedback for drag/connect workflows.
 - About dialog with usage instructions and keyboard shortcuts.
@@ -28,6 +28,7 @@ It runs fully client-side with no backend and no account system. Graph data is s
 - `Delete` / `Backspace`: delete selected node/edge
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
+- `Ctrl/Cmd + S`: save graph file
 - `Ctrl/Cmd + Enter`: save and close active node editor
 - `Escape`: exit node edit mode, cancel edge draft mode, or clear selection
 
@@ -84,7 +85,7 @@ Version 1 includes the core graph editor loop:
 - selection and inline controls
 - undo/redo
 - local persistence
-- JSON import/export
+- JSON file open/save
 
 ## Out of Scope (v1)
 
