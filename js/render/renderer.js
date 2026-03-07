@@ -54,6 +54,7 @@ export function createRenderer(elements, store) {
                 ? "is-connect-target"
                 : "is-connect-candidate"
               : "";
+        const fixedSizeClass = hasExplicitNodeSize(node) ? "has-fixed-size" : "";
         const inlineSizeStyle = buildNodeInlineSizeStyle(node);
         const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}`;
         const content =
@@ -83,8 +84,10 @@ export function createRenderer(elements, store) {
             ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ""}
           `;
         return `
-          <article class="node ${selectedClass} ${editingClass} ${connectClass}" data-node-id="${node.id}" style="${nodeStyle}">
-            ${content}
+          <article class="node ${selectedClass} ${editingClass} ${connectClass} ${fixedSizeClass}" data-node-id="${node.id}" style="${nodeStyle}">
+            <div class="node__content">
+              ${content}
+            </div>
             <button class="node__resize node__resize--top-left" type="button" data-node-resize="${node.id}:top-left" aria-label="Resize from top left corner"></button>
             <button class="node__resize node__resize--top-right" type="button" data-node-resize="${node.id}:top-right" aria-label="Resize from top right corner"></button>
             <button class="node__resize node__resize--bottom-right" type="button" data-node-resize="${node.id}:bottom-right" aria-label="Resize from bottom right corner"></button>
@@ -283,8 +286,21 @@ function buildNodeInlineSizeStyle(node) {
   }
   if (hasHeight) {
     style += `height: ${height}px;`;
+    style += `--node-description-lines: ${computeDescriptionLineClamp(height)};`;
   }
   return style;
+}
+
+function hasExplicitNodeSize(node) {
+  const width = Number(node.width);
+  const height = Number(node.height);
+  return (Number.isFinite(width) && width > 0) || (Number.isFinite(height) && height > 0);
+}
+
+function computeDescriptionLineClamp(height) {
+  const availableHeight = Math.max(0, height - 58);
+  const lineHeightPx = 19;
+  return Math.max(1, Math.floor(availableHeight / lineHeightPx));
 }
 
 function getNodeCenter(node, size) {

@@ -361,6 +361,14 @@ textarea:focus-visible {
   cursor: default;
 }
 
+.node__content {
+  height: 100%;
+}
+
+.node.has-fixed-size:not(.is-editing) .node__content {
+  overflow: hidden;
+}
+
 .node.is-selected {
   border-color: var(--accent);
   box-shadow:
@@ -390,6 +398,11 @@ textarea:focus-visible {
 .node__title {
   margin: 0;
   font-size: 0.95rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .node__head {
@@ -397,6 +410,7 @@ textarea:focus-visible {
   align-items: start;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
 }
 
 .node__edit-btn {
@@ -412,7 +426,12 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 0.85rem;
   line-height: 1.4;
-  white-space: pre-wrap;
+  white-space: pre-line;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--node-description-lines, 1000);
 }
 
 .node.is-editing {
