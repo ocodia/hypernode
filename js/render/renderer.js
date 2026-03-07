@@ -1,7 +1,7 @@
 import { NODE_DEFAULTS } from "../utils/constants.js";
 
 export function createRenderer(elements, store) {
-  const { workspace, canvas, nodesLayer, edgesGroup, edgeDraftGroup, edgesLayer, edgesOverlayLayer, edgeOverlayGroup, importStatus } = elements;
+  const { workspace, canvas, nodesLayer, edgesGroup, edgeDraftGroup, edgesLayer, edgesOverlayLayer, edgeOverlayGroup, importStatus, graphTitle } = elements;
 
   function applyViewport(viewport) {
     const transform = `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`;
@@ -68,6 +68,7 @@ export function createRenderer(elements, store) {
   function renderEdges(state) {
     const byId = new Map(state.nodes.map((node) => [node.id, node]));
     const bySize = measureNodeSizes();
+    const isFixedAnchorMode = state.settings.edgeAnchorMode === 'fixed';
     const selectedEdgeId = state.selection?.type === "edge" ? state.selection.id : null;
     const twangEdgeId = state.ui.edgeTwangId;
     let selectedOverlayMarkup = "";
@@ -82,8 +83,8 @@ export function createRenderer(elements, store) {
 
         const fromSize = bySize.get(fromNode.id) || defaultNodeSize();
         const toSize = bySize.get(toNode.id) || defaultNodeSize();
-        const fromAnchor = resolveAutoAnchor(fromNode, toNode);
-        const toAnchor = resolveAutoAnchor(toNode, fromNode);
+        const fromAnchor = resolveEdgeAnchor(edge.fromAnchor, fromNode, toNode, isFixedAnchorMode);
+        const toAnchor = resolveEdgeAnchor(edge.toAnchor, toNode, fromNode, isFixedAnchorMode);
         const start = getAnchorPoint(fromNode, fromSize, fromAnchor);
         const end = getAnchorPoint(toNode, toSize, toAnchor);
         const controls = getTautControls(start, end, fromAnchor, toAnchor);
@@ -131,7 +132,7 @@ export function createRenderer(elements, store) {
 
     const sourceSize = bySize.get(sourceNode.id) || defaultNodeSize();
     let end = { x: draft.pointerX, y: draft.pointerY };
-    let fromAnchor = resolveAnchorToPoint(sourceNode, sourceSize, end);
+    let fromAnchor = draft.fromAnchor || resolveAnchorToPoint(sourceNode, sourceSize, end);
     let toAnchor = null;
 
     const targetNodeId = draft.hoverNodeId || draft.toNodeId;
@@ -140,7 +141,7 @@ export function createRenderer(elements, store) {
       const targetNode = state.nodes.find((node) => node.id === targetNodeId);
       if (targetNode) {
         const targetSize = bySize.get(targetNode.id) || defaultNodeSize();
-        fromAnchor = resolveAutoAnchor(sourceNode, targetNode);
+        fromAnchor = draft.fromAnchor || resolveAutoAnchor(sourceNode, targetNode);
         end = getAnchorPoint(targetNode, targetSize, targetAnchor);
         toAnchor = targetAnchor;
       }
@@ -162,12 +163,21 @@ export function createRenderer(elements, store) {
     importStatus.classList.toggle("is-visible", Boolean(message));
   }
 
+  function renderGraphMetadata(state) {
+    if (graphTitle) {
+      graphTitle.textContent = state.name;
+    }
+    document.title = `${state.name} - hypernode`;
+  }
+
   function render(state) {
     applyViewport(state.viewport);
+    canvas.dataset.backgroundStyle = state.settings.backgroundStyle;
     renderNodes(state);
     renderEdges(state);
     renderDraftEdge(state);
     renderImportStatus(state);
+    renderGraphMetadata(state);
     canvas.classList.toggle("is-panning", Boolean(state.ui.isPanning));
     canvas.classList.toggle("is-dragging", Boolean(state.ui.isDragging));
     canvas.classList.toggle("is-connecting", Boolean(state.ui.isConnecting));
@@ -226,6 +236,13 @@ function resolveAutoAnchor(fromNode, toNode) {
   return dy >= 0 ? "bottom" : "top";
 }
 
+function resolveEdgeAnchor(preferredAnchor, fromNode, toNode, useFixedAnchor) {
+  if (useFixedAnchor && isAnchorName(preferredAnchor)) {
+    return preferredAnchor;
+  }
+  return resolveAutoAnchor(fromNode, toNode);
+}
+
 function resolveAnchorToPoint(node, size, targetPoint) {
   const center = getNodeCenter(node, size);
   const dx = targetPoint.x - center.x;
@@ -282,6 +299,10 @@ function moveByAnchor(point, anchor, distance) {
     default:
       return { x: point.x, y: point.y };
   }
+}
+
+function isAnchorName(anchor) {
+  return anchor === "top" || anchor === "right" || anchor === "bottom" || anchor === "left";
 }
 
 function clamp(value, min, max) {

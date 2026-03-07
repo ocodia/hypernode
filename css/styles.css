@@ -124,6 +124,20 @@ textarea:focus-visible {
   cursor: grab;
 }
 
+.canvas[data-background-style="graph-paper"] {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--grid-dot) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--grid-dot) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to right, color-mix(in srgb, var(--grid-dot) 90%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--grid-dot) 90%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+}
+
+.canvas[data-background-style="dots"] {
+  background-image: radial-gradient(circle at 1px 1px, var(--grid-dot) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
 .edges,
 .nodes {
   position: absolute;
@@ -260,7 +274,11 @@ textarea:focus-visible {
 .toolbar__title {
   margin: 0 0 10px;
   font-size: 1rem;
-  display: none;
+  display: block;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .toolbar__actions {
@@ -555,7 +573,8 @@ kbd {
   padding: 0;
 }
 
-#about-close-btn {
+#about-close-btn,
+#settings-close-btn {
   width: 34px;
   height: 34px;
   min-width: 34px;
@@ -564,6 +583,41 @@ kbd {
   place-items: center;
   padding: 0;
   text-align: center;
+}
+
+.settings-dialog__section {
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  margin: 10px 0 0;
+  padding: 10px;
+}
+
+.settings-dialog__section legend {
+  padding: 0 6px;
+  color: var(--muted);
+}
+
+.settings-dialog__label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.settings-dialog__input {
+  width: 100%;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.settings-dialog__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
 }
 
 @keyframes edge-twang {

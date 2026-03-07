@@ -18,6 +18,12 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Undo/redo via toolbar and keyboard shortcuts.
 - Auto-save graph to browser storage.
 - Open/save graph JSON files with validation and status toast feedback.
+- Settings menu for:
+  - graph background style (`dots` or `graph paper`)
+  - edge anchor mode (`auto-snap` or `fixed original anchor`)
+  - graph name
+- Graph name shown in toolbar title and browser tab title.
+- First-time Save suggests a filename based on the graph name.
 - Installable PWA with offline app-shell caching.
 - Interaction-state cursor feedback for drag/connect workflows.
 - About dialog with usage instructions and keyboard shortcuts.

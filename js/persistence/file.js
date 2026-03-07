@@ -26,17 +26,35 @@ export async function openGraphFile() {
 }
 
 export async function saveGraphFile(graph, handle = null) {
+  const defaultFileName = buildSuggestedGraphFilename(graph?.name);
   const targetHandle = handle || await window.showSaveFilePicker({
-    suggestedName: `hypernode-${new Date().toISOString().slice(0, 10)}.json`,
+    suggestedName: defaultFileName,
     excludeAcceptAllOption: true,
     types: GRAPH_FILE_PICKER_TYPES,
   });
 
-  const payload = JSON.stringify({ nodes: graph.nodes, edges: graph.edges }, null, 2);
+  const payload = JSON.stringify({
+    name: graph.name,
+    settings: graph.settings,
+    nodes: graph.nodes,
+    edges: graph.edges,
+  }, null, 2);
   const writable = await targetHandle.createWritable();
   await writable.write(payload);
   await writable.close();
   return targetHandle;
+}
+
+function buildSuggestedGraphFilename(graphName) {
+  const safeBase = String(graphName ?? 'untitled-graph')
+    .trim()
+    .toLowerCase()
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return `${safeBase || 'untitled-graph'}.json`;
 }
 
 async function parseGraphFile(file) {

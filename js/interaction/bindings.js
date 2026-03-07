@@ -1,4 +1,4 @@
-import { VIEWPORT_LIMITS } from '../utils/constants.js';
+import { GRAPH_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
 import { openGraphFile, saveGraphFile, supportsFileSystemAccess } from '../persistence/file.js';
 
 const THEME_STORAGE_KEY = 'hypernode.theme.v1';
@@ -115,9 +115,10 @@ export function bindInteractions(elements, store) {
 
     const movingFrom = parsed.side === 'from';
     const fixedNodeId = movingFrom ? edge.to : edge.from;
-    const fixedAnchor = movingFrom
-      ? resolveAnchorName(null, toNode, fromNode)
-      : resolveAnchorName(null, fromNode, toNode);
+    const fixedNode = movingFrom ? toNode : fromNode;
+    const movingNode = movingFrom ? fromNode : toNode;
+    const fixedStoredAnchor = movingFrom ? edge.toAnchor : edge.fromAnchor;
+    const fixedAnchor = resolveEffectiveAnchorForSession(fixedStoredAnchor, fixedNode, movingNode, store.getState().settings.edgeAnchorMode);
 
     endPanSession();
     endDragSession();
@@ -150,14 +151,21 @@ export function bindInteractions(elements, store) {
     const isValidTarget = sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
     let anchoredEdgeId = null;
     if (isValidTarget) {
+      const targetAnchor = resolveAnchorName(null, targetNode, sourceNode);
       if (edgeSession.mode === 'reconnect') {
         anchoredEdgeId = store.reconnectEdge(
           edgeSession.edgeId,
           edgeSession.movingSide,
           targetNode.id,
+          targetAnchor,
         );
       } else {
-        anchoredEdgeId = store.addEdge(edgeSession.fromNodeId, targetNode.id);
+        anchoredEdgeId = store.connectNodes(
+          edgeSession.fromNodeId,
+          edgeSession.fromAnchor,
+          targetNode.id,
+          targetAnchor,
+        );
       }
     }
 
@@ -475,6 +483,10 @@ export function bindInteractions(elements, store) {
   const aboutDialog = document.getElementById('about-dialog');
   const aboutBtn = document.getElementById('about-btn');
   const aboutCloseBtn = document.getElementById('about-close-btn');
+  const settingsDialog = document.getElementById('settings-dialog');
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsCloseBtn = document.getElementById('settings-close-btn');
+  const graphNameInput = document.getElementById('graph-name-input');
   const themeToggleBtn = document.getElementById('theme-toggle-btn');
   const newGraphBtn = document.getElementById('new-graph-btn');
   const openGraphBtn = document.getElementById('open-graph-btn');
@@ -497,6 +509,51 @@ export function bindInteractions(elements, store) {
       }
     });
   }
+
+  if (settingsBtn && settingsDialog) {
+    settingsBtn.addEventListener('click', () => {
+      if (settingsDialog.open) {
+        settingsDialog.close();
+      } else {
+        syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
+        settingsDialog.showModal();
+      }
+    });
+  }
+
+  if (settingsCloseBtn && settingsDialog) {
+    settingsCloseBtn.addEventListener('click', () => {
+      if (settingsDialog.open) {
+        settingsDialog.close();
+      }
+    });
+  }
+
+  graphNameInput?.addEventListener('change', () => {
+    store.setGraphName(graphNameInput.value);
+  });
+
+  graphNameInput?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    graphNameInput.blur();
+  });
+
+  settingsDialog?.querySelectorAll('input[name="background-style"]').forEach((input) => {
+    input.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || !target.checked) return;
+      store.setBackgroundStyle(target.value);
+    });
+  });
+
+  settingsDialog?.querySelectorAll('input[name="edge-anchor-mode"]').forEach((input) => {
+    input.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || !target.checked) return;
+      store.setEdgeAnchorMode(target.value);
+    });
+  });
 
   const preferredDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -548,6 +605,7 @@ export function bindInteractions(elements, store) {
       currentFileHandle = handle;
       store.replaceGraph(graph);
       store.resetView();
+      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
       store.setImportStatus('Graph opened successfully.');
     } catch (error) {
       if (isAbortError(error)) return;
@@ -563,7 +621,12 @@ export function bindInteractions(elements, store) {
 
     try {
       const state = store.getState();
-      currentFileHandle = await saveGraphFile({ nodes: state.nodes, edges: state.edges }, currentFileHandle);
+      currentFileHandle = await saveGraphFile({
+        name: state.name,
+        settings: state.settings,
+        nodes: state.nodes,
+        edges: state.edges,
+      }, currentFileHandle);
       store.setImportStatus('Graph saved.');
     } catch (error) {
       if (isAbortError(error)) return;
@@ -577,8 +640,17 @@ export function bindInteractions(elements, store) {
     }
 
     currentFileHandle = null;
-    store.replaceGraph({ nodes: [], edges: [] });
+    store.replaceGraph({
+      name: GRAPH_DEFAULTS.name,
+      settings: {
+        backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
+        edgeAnchorMode: GRAPH_DEFAULTS.edgeAnchorMode,
+      },
+      nodes: [],
+      edges: [],
+    });
     store.resetView();
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
     store.setImportStatus('New graph created.');
   }
 
@@ -604,7 +676,7 @@ export function bindInteractions(elements, store) {
   }
 
   document.addEventListener('keydown', (event) => {
-    if (aboutDialog?.open) return;
+    if (aboutDialog?.open || settingsDialog?.open) return;
     if (isTypingTarget(event.target)) return;
 
     const ctrlOrCmd = event.ctrlKey || event.metaKey;
@@ -710,6 +782,13 @@ function isTypingTarget(target) {
   return target.matches('input, textarea, [contenteditable="true"]');
 }
 
+function resolveEffectiveAnchorForSession(storedAnchor, fromNode, toNode, edgeAnchorMode) {
+  if (edgeAnchorMode === 'fixed' && isAnchorName(storedAnchor)) {
+    return storedAnchor;
+  }
+  return resolveAnchorName(null, fromNode, toNode);
+}
+
 function isAbortError(error) {
   return error instanceof DOMException && error.name === 'AbortError';
 }
@@ -724,4 +803,23 @@ function applyTheme(theme, toggleButton) {
     toggleButton.setAttribute('aria-label', isDark ? 'Enable light mode' : 'Enable dark mode');
     toggleButton.setAttribute('title', isDark ? 'Enable Light Mode' : 'Enable Dark Mode');
   }
+}
+
+function syncSettingsDialogFromState(state, settingsDialog, graphNameInput) {
+  if (!settingsDialog) return;
+  if (graphNameInput) {
+    graphNameInput.value = state.name;
+  }
+
+  settingsDialog.querySelectorAll('input[name="background-style"]').forEach((input) => {
+    if (input instanceof HTMLInputElement) {
+      input.checked = input.value === state.settings.backgroundStyle;
+    }
+  });
+
+  settingsDialog.querySelectorAll('input[name="edge-anchor-mode"]').forEach((input) => {
+    if (input instanceof HTMLInputElement) {
+      input.checked = input.value === state.settings.edgeAnchorMode;
+    }
+  });
 }

@@ -1,4 +1,4 @@
-export const STORAGE_KEY = "hypernode.graph.v1";
+export const STORAGE_KEY = "hypernode.graph.v2";
 export const VIEWPORT_LIMITS = {
   minZoom: 0.35,
   maxZoom: 2.5,
@@ -10,4 +10,10 @@ export const VIEWPORT_LIMITS = {
 export const NODE_DEFAULTS = {
   width: 210,
   title: "Untitled Node",
+};
+
+export const GRAPH_DEFAULTS = {
+  name: "Untitled Graph",
+  backgroundStyle: "dots",
+  edgeAnchorMode: "auto",
 };

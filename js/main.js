@@ -13,6 +13,7 @@ const elements = {
   edgeDraftGroup: document.getElementById('edge-draft-group'),
   edgeOverlayGroup: document.getElementById('edge-overlay-group'),
   importStatus: document.getElementById('import-status'),
+  graphTitle: document.getElementById('graph-title'),
 };
 
 const initialGraph = loadGraphFromStorage();
@@ -25,7 +26,12 @@ store.subscribe((state) => {
 
   if (saveHandle) window.clearTimeout(saveHandle);
   saveHandle = window.setTimeout(() => {
-    saveGraphToStorage({ nodes: state.nodes, edges: state.edges });
+    saveGraphToStorage({
+      name: state.name,
+      settings: state.settings,
+      nodes: state.nodes,
+      edges: state.edges,
+    });
   }, 120);
 });
 

@@ -1,10 +1,12 @@
 import { createId } from '../utils/id.js';
-import { emptyGraphState, sanitizeEdge, sanitizeNode } from '../utils/graph.js';
+import { emptyGraphState, sanitizeEdge, sanitizeGraphName, sanitizeGraphSettings, sanitizeNode } from '../utils/graph.js';
 import { NODE_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
 
 export function createStore(initialGraph = null) {
   let state = emptyGraphState();
   if (initialGraph) {
+    state.name = sanitizeGraphName(initialGraph.name);
+    state.settings = sanitizeGraphSettings(initialGraph.settings);
     state.nodes = initialGraph.nodes.map(sanitizeNode);
     state.edges = initialGraph.edges.map(sanitizeEdge);
   }
@@ -20,6 +22,8 @@ export function createStore(initialGraph = null) {
 
   function snapshot() {
     return {
+      name: state.name,
+      settings: structuredClone(state.settings),
       nodes: structuredClone(state.nodes),
       edges: structuredClone(state.edges),
       selection: state.selection ? { ...state.selection } : null,
@@ -202,19 +206,51 @@ export function createStore(initialGraph = null) {
     }
     const hasNodes = state.nodes.some((node) => node.id === from) && state.nodes.some((node) => node.id === to);
     if (!hasNodes) return null;
+    const fromNode = state.nodes.find((node) => node.id === from);
+    const toNode = state.nodes.find((node) => node.id === to);
+    if (!fromNode || !toNode) return null;
+
     pushHistory('add-edge');
-    const edge = {
+    const edge = sanitizeEdge({
       id: createId('edge'),
       from,
       to,
-    };
+      fromAnchor: resolveAutoAnchor(fromNode, toNode),
+      toAnchor: resolveAutoAnchor(toNode, fromNode),
+    });
     state.edges.push(edge);
     state.selection = { type: 'edge', id: edge.id };
     notify();
     return edge.id;
   }
 
-  function reconnectEdge(id, side, nodeId) {
+  function connectNodes(fromNodeId, fromAnchor, toNodeId, toAnchor) {
+    if (!fromNodeId || !toNodeId || fromNodeId === toNodeId) return null;
+    const existingEdge = state.edges.find((edge) => edge.from === fromNodeId && edge.to === toNodeId);
+    if (existingEdge) {
+      state.selection = { type: 'edge', id: existingEdge.id };
+      notify();
+      return existingEdge.id;
+    }
+
+    const hasNodes = state.nodes.some((node) => node.id === fromNodeId) && state.nodes.some((node) => node.id === toNodeId);
+    if (!hasNodes) return null;
+
+    pushHistory('add-edge');
+    const edge = sanitizeEdge({
+      id: createId('edge'),
+      from: fromNodeId,
+      to: toNodeId,
+      fromAnchor,
+      toAnchor,
+    });
+    state.edges.push(edge);
+    state.selection = { type: 'edge', id: edge.id };
+    notify();
+    return edge.id;
+  }
+
+  function reconnectEdge(id, side, nodeId, anchor = null) {
     const edge = state.edges.find((item) => item.id === id);
     if (!edge) return null;
     const hasNode = state.nodes.some((node) => node.id === nodeId);
@@ -223,12 +259,16 @@ export function createStore(initialGraph = null) {
     const next = {
       from: edge.from,
       to: edge.to,
+      fromAnchor: edge.fromAnchor,
+      toAnchor: edge.toAnchor,
     };
 
     if (side === 'from') {
       next.from = nodeId;
+      next.fromAnchor = anchor;
     } else if (side === 'to') {
       next.to = nodeId;
+      next.toAnchor = anchor;
     } else {
       return null;
     }
@@ -239,15 +279,43 @@ export function createStore(initialGraph = null) {
     if (duplicate) return null;
 
     const changed = edge.from !== next.from
-      || edge.to !== next.to;
+      || edge.to !== next.to
+      || edge.fromAnchor !== next.fromAnchor
+      || edge.toAnchor !== next.toAnchor;
     if (!changed) return edge.id;
 
     pushHistory('reconnect-edge');
     edge.from = next.from;
     edge.to = next.to;
+    edge.fromAnchor = next.fromAnchor;
+    edge.toAnchor = next.toAnchor;
     state.selection = { type: 'edge', id: edge.id };
     notify();
     return edge.id;
+  }
+
+  function setGraphName(name) {
+    const nextName = sanitizeGraphName(name);
+    if (state.name === nextName) return;
+    pushHistory('set-graph-name');
+    state.name = nextName;
+    notify();
+  }
+
+  function setBackgroundStyle(backgroundStyle) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, backgroundStyle }).backgroundStyle;
+    if (state.settings.backgroundStyle === nextValue) return;
+    pushHistory('set-background-style');
+    state.settings.backgroundStyle = nextValue;
+    notify();
+  }
+
+  function setEdgeAnchorMode(edgeAnchorMode) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, edgeAnchorMode }).edgeAnchorMode;
+    if (state.settings.edgeAnchorMode === nextValue) return;
+    pushHistory('set-edge-anchor-mode');
+    state.settings.edgeAnchorMode = nextValue;
+    notify();
   }
 
   function deleteEdge(id) {
@@ -263,6 +331,8 @@ export function createStore(initialGraph = null) {
 
   function replaceGraph(graph) {
     pushHistory('import-graph');
+    state.name = sanitizeGraphName(graph.name);
+    state.settings = sanitizeGraphSettings(graph.settings);
     state.nodes = graph.nodes.map(sanitizeNode);
     state.edges = graph.edges.map(sanitizeEdge);
     state.selection = null;
@@ -297,6 +367,8 @@ export function createStore(initialGraph = null) {
     const entry = state.history.past.pop();
     if (!entry) return;
     state.history.future.push({ label: 'undo', data: snapshot() });
+    state.name = entry.data.name;
+    state.settings = entry.data.settings;
     state.nodes = entry.data.nodes;
     state.edges = entry.data.edges;
     state.selection = entry.data.selection;
@@ -313,6 +385,8 @@ export function createStore(initialGraph = null) {
     const entry = state.history.future.pop();
     if (!entry) return;
     state.history.past.push({ label: 'redo', data: snapshot() });
+    state.name = entry.data.name;
+    state.settings = entry.data.settings;
     state.nodes = entry.data.nodes;
     state.edges = entry.data.edges;
     state.selection = entry.data.selection;
@@ -346,12 +420,25 @@ export function createStore(initialGraph = null) {
     beginNodeMove,
     deleteNode,
     addEdge,
+    connectNodes,
     reconnectEdge,
     deleteEdge,
+    setGraphName,
+    setBackgroundStyle,
+    setEdgeAnchorMode,
     replaceGraph,
     setViewport,
     resetView,
     undo,
     redo,
   };
+}
+
+function resolveAutoAnchor(fromNode, toNode) {
+  const dx = toNode.x - fromNode.x;
+  const dy = toNode.y - fromNode.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? 'right' : 'left';
+  }
+  return dy >= 0 ? 'bottom' : 'top';
 }

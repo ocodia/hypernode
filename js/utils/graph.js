@@ -1,7 +1,16 @@
-import { NODE_DEFAULTS, VIEWPORT_LIMITS } from './constants.js';
+import { GRAPH_DEFAULTS, NODE_DEFAULTS, VIEWPORT_LIMITS } from './constants.js';
+
+const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
+const BACKGROUND_STYLES = new Set(['dots', 'graph-paper']);
+const EDGE_ANCHOR_MODES = new Set(['auto', 'fixed']);
 
 export function emptyGraphState() {
   return {
+    name: GRAPH_DEFAULTS.name,
+    settings: {
+      backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
+      edgeAnchorMode: GRAPH_DEFAULTS.edgeAnchorMode,
+    },
     nodes: [],
     edges: [],
     selection: null,
@@ -41,11 +50,17 @@ export function sanitizeEdge(edge) {
     id: String(edge.id),
     from: String(edge.from),
     to: String(edge.to),
+    fromAnchor: sanitizeAnchor(edge.fromAnchor),
+    toAnchor: sanitizeAnchor(edge.toAnchor),
   };
 }
 
 export function validateGraphPayload(payload) {
-  if (!payload || !Array.isArray(payload.nodes) || !Array.isArray(payload.edges)) {
+  if (!payload || typeof payload.name !== 'string' || !payload.settings || !Array.isArray(payload.nodes) || !Array.isArray(payload.edges)) {
+    return false;
+  }
+
+  if (!isValidBackgroundStyle(payload.settings.backgroundStyle) || !isValidEdgeAnchorMode(payload.settings.edgeAnchorMode)) {
     return false;
   }
 
@@ -55,6 +70,43 @@ export function validateGraphPayload(payload) {
   }
 
   return payload.edges.every((edge) => {
-    return edge && typeof edge.id === 'string' && nodeIds.has(edge.from) && nodeIds.has(edge.to);
+    return edge
+      && typeof edge.id === 'string'
+      && nodeIds.has(edge.from)
+      && nodeIds.has(edge.to)
+      && isValidAnchor(edge.fromAnchor)
+      && isValidAnchor(edge.toAnchor);
   });
+}
+
+export function sanitizeGraphName(name) {
+  const text = String(name ?? '').trim();
+  return text || GRAPH_DEFAULTS.name;
+}
+
+export function sanitizeGraphSettings(settings) {
+  return {
+    backgroundStyle: isValidBackgroundStyle(settings?.backgroundStyle)
+      ? settings.backgroundStyle
+      : GRAPH_DEFAULTS.backgroundStyle,
+    edgeAnchorMode: isValidEdgeAnchorMode(settings?.edgeAnchorMode)
+      ? settings.edgeAnchorMode
+      : GRAPH_DEFAULTS.edgeAnchorMode,
+  };
+}
+
+export function isValidAnchor(anchor) {
+  return typeof anchor === 'string' && ANCHORS.has(anchor);
+}
+
+function sanitizeAnchor(anchor) {
+  return isValidAnchor(anchor) ? anchor : null;
+}
+
+function isValidBackgroundStyle(value) {
+  return typeof value === 'string' && BACKGROUND_STYLES.has(value);
+}
+
+function isValidEdgeAnchorMode(value) {
+  return typeof value === 'string' && EDGE_ANCHOR_MODES.has(value);
 }

@@ -14,6 +14,11 @@ export function loadGraphFromStorage() {
 }
 
 export function saveGraphToStorage(graph) {
-  const payload = JSON.stringify({ nodes: graph.nodes, edges: graph.edges });
+  const payload = JSON.stringify({
+    name: graph.name,
+    settings: graph.settings,
+    nodes: graph.nodes,
+    edges: graph.edges,
+  });
   localStorage.setItem(STORAGE_KEY, payload);
 }
