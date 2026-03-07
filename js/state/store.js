@@ -1,12 +1,12 @@
 import { createId } from '../utils/id.js';
-import { emptyGraphState, sanitizeNode } from '../utils/graph.js';
+import { emptyGraphState, sanitizeEdge, sanitizeNode } from '../utils/graph.js';
 import { NODE_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
 
 export function createStore(initialGraph = null) {
   let state = emptyGraphState();
   if (initialGraph) {
     state.nodes = initialGraph.nodes.map(sanitizeNode);
-    state.edges = initialGraph.edges.map((edge) => ({ ...edge }));
+    state.edges = initialGraph.edges.map(sanitizeEdge);
   }
 
   const listeners = new Set();
@@ -166,17 +166,10 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
-  function addEdge(from, to, options = {}) {
+  function addEdge(from, to) {
     if (!from || !to || from === to) return;
-    const fromAnchor = normalizeAnchor(options.fromAnchor);
-    const toAnchor = normalizeAnchor(options.toAnchor);
     const existingEdge = state.edges.find((edge) => edge.from === from && edge.to === to);
     if (existingEdge) {
-      const sameAnchors = existingEdge.fromAnchor === fromAnchor && existingEdge.toAnchor === toAnchor;
-      if (sameAnchors) return;
-      pushHistory('update-edge-anchors');
-      existingEdge.fromAnchor = fromAnchor;
-      existingEdge.toAnchor = toAnchor;
       state.selection = { type: 'edge', id: existingEdge.id };
       notify();
       return existingEdge.id;
@@ -188,8 +181,6 @@ export function createStore(initialGraph = null) {
       id: createId('edge'),
       from,
       to,
-      fromAnchor,
-      toAnchor,
     };
     state.edges.push(edge);
     state.selection = { type: 'edge', id: edge.id };
@@ -197,26 +188,21 @@ export function createStore(initialGraph = null) {
     return edge.id;
   }
 
-  function reconnectEdge(id, side, nodeId, anchor) {
+  function reconnectEdge(id, side, nodeId) {
     const edge = state.edges.find((item) => item.id === id);
     if (!edge) return null;
-    const normalizedAnchor = normalizeAnchor(anchor);
     const hasNode = state.nodes.some((node) => node.id === nodeId);
     if (!hasNode) return null;
 
     const next = {
       from: edge.from,
       to: edge.to,
-      fromAnchor: edge.fromAnchor,
-      toAnchor: edge.toAnchor,
     };
 
     if (side === 'from') {
       next.from = nodeId;
-      next.fromAnchor = normalizedAnchor;
     } else if (side === 'to') {
       next.to = nodeId;
-      next.toAnchor = normalizedAnchor;
     } else {
       return null;
     }
@@ -227,16 +213,12 @@ export function createStore(initialGraph = null) {
     if (duplicate) return null;
 
     const changed = edge.from !== next.from
-      || edge.to !== next.to
-      || edge.fromAnchor !== next.fromAnchor
-      || edge.toAnchor !== next.toAnchor;
+      || edge.to !== next.to;
     if (!changed) return edge.id;
 
     pushHistory('reconnect-edge');
     edge.from = next.from;
     edge.to = next.to;
-    edge.fromAnchor = next.fromAnchor;
-    edge.toAnchor = next.toAnchor;
     state.selection = { type: 'edge', id: edge.id };
     notify();
     return edge.id;
@@ -256,7 +238,7 @@ export function createStore(initialGraph = null) {
   function replaceGraph(graph) {
     pushHistory('import-graph');
     state.nodes = graph.nodes.map(sanitizeNode);
-    state.edges = graph.edges.map((edge) => ({ ...edge }));
+    state.edges = graph.edges.map(sanitizeEdge);
     state.selection = null;
     state.ui.edgeDraft = null;
     state.ui.edgeTwangId = null;
@@ -335,11 +317,4 @@ export function createStore(initialGraph = null) {
     undo,
     redo,
   };
-}
-
-function normalizeAnchor(anchor) {
-  if (anchor === 'top' || anchor === 'right' || anchor === 'bottom' || anchor === 'left') {
-    return anchor;
-  }
-  return null;
 }

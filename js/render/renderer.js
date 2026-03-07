@@ -89,8 +89,8 @@ export function createRenderer(elements, store) {
 
         const fromSize = bySize.get(fromNode.id) || defaultNodeSize();
         const toSize = bySize.get(toNode.id) || defaultNodeSize();
-        const fromAnchor = resolveAnchor(edge.fromAnchor, fromNode, toNode);
-        const toAnchor = resolveAnchor(edge.toAnchor, toNode, fromNode);
+        const fromAnchor = resolveAutoAnchor(fromNode, toNode);
+        const toAnchor = resolveAutoAnchor(toNode, fromNode);
         const start = getAnchorPoint(fromNode, fromSize, fromAnchor);
         const end = getAnchorPoint(toNode, toSize, toAnchor);
         const controls = getTautControls(start, end, fromAnchor, toAnchor);
@@ -136,8 +136,8 @@ export function createRenderer(elements, store) {
     }
 
     const sourceSize = bySize.get(sourceNode.id) || defaultNodeSize();
-    const start = getAnchorPoint(sourceNode, sourceSize, draft.fromAnchor);
     let end = { x: draft.pointerX, y: draft.pointerY };
+    let fromAnchor = resolveAnchorToPoint(sourceNode, sourceSize, end);
     let toAnchor = null;
 
     const targetNodeId = draft.hoverNodeId || draft.toNodeId;
@@ -146,14 +146,19 @@ export function createRenderer(elements, store) {
       const targetNode = state.nodes.find((node) => node.id === targetNodeId);
       if (targetNode) {
         const targetSize = bySize.get(targetNode.id) || defaultNodeSize();
+        fromAnchor = resolveAutoAnchor(sourceNode, targetNode);
         end = getAnchorPoint(targetNode, targetSize, targetAnchor);
         toAnchor = targetAnchor;
       }
     }
 
+    const start = getAnchorPoint(sourceNode, sourceSize, fromAnchor);
     const resolvedToAnchor = toAnchor || inferIncomingAnchor(start, end);
-    const d = buildTautPath(start, end, draft.fromAnchor, resolvedToAnchor);
-    edgeDraftGroup.innerHTML = `<path class="is-draft" d="${d}"></path>`;
+    const d = buildTautPath(start, end, fromAnchor, resolvedToAnchor);
+    edgeDraftGroup.innerHTML = `
+      <path class="is-draft" d="${d}"></path>
+      <circle class="edge__draft-end" cx="${end.x}" cy="${end.y}" r="5.5"></circle>
+    `;
   }
 
   function renderInspector(state) {
@@ -174,13 +179,11 @@ export function createRenderer(elements, store) {
 
     if (state.selection?.type === 'edge') {
       const edge = state.edges.find((item) => item.id === state.selection.id);
-      const fromAnchor = edge ? formatAnchorLabel(edge.fromAnchor) : '';
-      const toAnchor = edge ? formatAnchorLabel(edge.toAnchor) : '';
       inspectorContent.innerHTML = edge
         ? `
         <p class="inspector-meta">
-          Edge from <strong>${escapeHTML(edge.from)}</strong> (${fromAnchor})
-          to <strong>${escapeHTML(edge.to)}</strong> (${toAnchor}).
+          Edge from <strong>${escapeHTML(edge.from)}</strong>
+          to <strong>${escapeHTML(edge.to)}</strong>.
         </p>
         <div class="inspector-fields">
           <button id="delete-edge-btn" type="button">Delete Edge</button>
@@ -243,6 +246,13 @@ function defaultNodeSize() {
   return { width: NODE_DEFAULTS.width, height: 80 };
 }
 
+function getNodeCenter(node, size) {
+  return {
+    x: node.x + size.width / 2,
+    y: node.y + size.height / 2,
+  };
+}
+
 function getAnchorPoint(node, size, anchor) {
   const halfWidth = size.width / 2;
   const halfHeight = size.height / 2;
@@ -259,12 +269,19 @@ function getAnchorPoint(node, size, anchor) {
   }
 }
 
-function resolveAnchor(anchor, fromNode, toNode) {
-  if (anchor === 'top' || anchor === 'right' || anchor === 'bottom' || anchor === 'left') {
-    return anchor;
-  }
+function resolveAutoAnchor(fromNode, toNode) {
   const dx = toNode.x - fromNode.x;
   const dy = toNode.y - fromNode.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? 'right' : 'left';
+  }
+  return dy >= 0 ? 'bottom' : 'top';
+}
+
+function resolveAnchorToPoint(node, size, targetPoint) {
+  const center = getNodeCenter(node, size);
+  const dx = targetPoint.x - center.x;
+  const dy = targetPoint.y - center.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
     return dx >= 0 ? 'right' : 'left';
   }
@@ -348,11 +365,4 @@ function escapeHTML(value) {
 
 function escapeAttr(value) {
   return escapeHTML(value).replaceAll('`', '&#096;');
-}
-
-function formatAnchorLabel(anchor) {
-  if (anchor === 'top' || anchor === 'right' || anchor === 'bottom' || anchor === 'left') {
-    return anchor;
-  }
-  return 'auto';
 }

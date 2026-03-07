@@ -34,6 +34,14 @@ export function sanitizeNode(node) {
   };
 }
 
+export function sanitizeEdge(edge) {
+  return {
+    id: String(edge.id),
+    from: String(edge.from),
+    to: String(edge.to),
+  };
+}
+
 export function validateGraphPayload(payload) {
   if (!payload || !Array.isArray(payload.nodes) || !Array.isArray(payload.edges)) {
     return false;

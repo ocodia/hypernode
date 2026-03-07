@@ -132,6 +132,13 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
+.edges .edge__draft-end {
+  fill: #f8fbff;
+  stroke: #6b7f99;
+  stroke-width: 1.8;
+  pointer-events: none;
+}
+
 .edges .edge__line:hover,
 .edges .edge:hover .edge__line {
   stroke: var(--edge-selected);
@@ -249,7 +256,8 @@ textarea:focus-visible {
 }
 
 .node.is-connect-target {
-  border-color: #9ab4d8;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), var(--node-shadow);
 }
 
 .node.is-connect-candidate {

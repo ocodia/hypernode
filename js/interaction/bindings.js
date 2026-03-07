@@ -52,10 +52,15 @@ export function bindInteractions(elements, store) {
 
   function updateEdgeDraft(event) {
     if (!edgeSession || edgeSession.pointerId !== event.pointerId) return;
-    const pointer = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
-    const hoverAnchor = getAnchorAtClientPoint(event.clientX, event.clientY);
-    const isValidTarget = hoverAnchor
-      && hoverAnchor.nodeId !== edgeSession.invalidNodeId;
+    const state = store.getState();
+    const pointer = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+    const hoverNodeId = getNodeIdAtClientPoint(event.clientX, event.clientY);
+    const sourceNode = getNode(edgeSession.fromNodeId, state);
+    const targetNode = hoverNodeId ? getNode(hoverNodeId, state) : null;
+    const isValidTarget = sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
+    const hoverAnchor = isValidTarget
+      ? resolveAnchorName(null, targetNode, sourceNode)
+      : null;
 
     store.setEdgeDraft({
       fromNodeId: edgeSession.fromNodeId,
@@ -64,8 +69,8 @@ export function bindInteractions(elements, store) {
       pointerY: pointer.y,
       toNodeId: edgeSession.toNodeId || null,
       toAnchor: edgeSession.toAnchor || null,
-      hoverNodeId: isValidTarget ? hoverAnchor.nodeId : null,
-      hoverAnchor: isValidTarget ? hoverAnchor.anchor : null,
+      hoverNodeId: isValidTarget ? targetNode.id : null,
+      hoverAnchor,
     });
   }
 
@@ -104,8 +109,8 @@ export function bindInteractions(elements, store) {
     const movingFrom = parsed.side === 'from';
     const fixedNodeId = movingFrom ? edge.to : edge.from;
     const fixedAnchor = movingFrom
-      ? resolveAnchorName(edge.toAnchor, toNode, fromNode)
-      : resolveAnchorName(edge.fromAnchor, fromNode, toNode);
+      ? resolveAnchorName(null, toNode, fromNode)
+      : resolveAnchorName(null, fromNode, toNode);
 
     endPanSession();
     endDragSession();
@@ -130,21 +135,21 @@ export function bindInteractions(elements, store) {
 
   function finishEdgeSession(event) {
     if (!edgeSession || edgeSession.pointerId !== event.pointerId) return;
-    const hoverAnchor = getAnchorAtClientPoint(event.clientX, event.clientY);
+    const state = store.getState();
+    const hoverNodeId = getNodeIdAtClientPoint(event.clientX, event.clientY);
+    const sourceNode = getNode(edgeSession.fromNodeId, state);
+    const targetNode = hoverNodeId ? getNode(hoverNodeId, state) : null;
+    const isValidTarget = sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
     let anchoredEdgeId = null;
-    if (hoverAnchor && hoverAnchor.nodeId !== edgeSession.invalidNodeId) {
+    if (isValidTarget) {
       if (edgeSession.mode === 'reconnect') {
         anchoredEdgeId = store.reconnectEdge(
           edgeSession.edgeId,
           edgeSession.movingSide,
-          hoverAnchor.nodeId,
-          hoverAnchor.anchor,
+          targetNode.id,
         );
       } else {
-        anchoredEdgeId = store.addEdge(edgeSession.fromNodeId, hoverAnchor.nodeId, {
-          fromAnchor: edgeSession.fromAnchor,
-          toAnchor: hoverAnchor.anchor,
-        });
+        anchoredEdgeId = store.addEdge(edgeSession.fromNodeId, targetNode.id);
       }
     }
 
@@ -511,12 +516,15 @@ function parseAnchorToken(value) {
   return { nodeId, anchor };
 }
 
-function getAnchorAtClientPoint(clientX, clientY) {
-  const el = document.elementFromPoint(clientX, clientY);
-  if (!el) return null;
-  const anchorEl = el.closest('[data-node-anchor]');
-  if (!anchorEl) return null;
-  return parseAnchorToken(anchorEl.dataset.nodeAnchor);
+function getNodeIdAtClientPoint(clientX, clientY) {
+  const hits = document.elementsFromPoint(clientX, clientY);
+  for (const hit of hits) {
+    const nodeEl = hit.closest('[data-node-id]');
+    if (nodeEl?.dataset?.nodeId) {
+      return nodeEl.dataset.nodeId;
+    }
+  }
+  return null;
 }
 
 function isAnchorName(anchor) {
