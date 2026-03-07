@@ -8,6 +8,34 @@ export function createRenderer(elements, store) {
     nodesLayer.style.transform = transform;
     edgesLayer.style.transform = transform;
     edgesOverlayLayer.style.transform = transform;
+    applyBackgroundViewport(viewport);
+  }
+
+  function applyBackgroundViewport(viewport) {
+    const zoom = Math.max(0.01, Number(viewport.zoom) || 1);
+    const minorStep = 24 * zoom;
+    const majorStep = 120 * zoom;
+    const minorOffsetX = positiveModulo(viewport.panX, minorStep);
+    const minorOffsetY = positiveModulo(viewport.panY, minorStep);
+    const majorOffsetX = positiveModulo(viewport.panX, majorStep);
+    const majorOffsetY = positiveModulo(viewport.panY, majorStep);
+    const dotRadius = clamp(zoom, 0.65, 2.2);
+    const dotOrigin = dotRadius;
+    const gridMinorAlpha = mapZoomOpacity(zoom, 0.08, 0.45, 0.62);
+    const gridMajorAlpha = 0.72;
+    const dotAlpha = mapZoomOpacity(zoom, 0.10, 0.52, 0.78);
+
+    canvas.style.setProperty('--bg-step', `${minorStep}px`);
+    canvas.style.setProperty('--bg-major-step', `${majorStep}px`);
+    canvas.style.setProperty('--bg-minor-offset-x', `${minorOffsetX}px`);
+    canvas.style.setProperty('--bg-minor-offset-y', `${minorOffsetY}px`);
+    canvas.style.setProperty('--bg-major-offset-x', `${majorOffsetX}px`);
+    canvas.style.setProperty('--bg-major-offset-y', `${majorOffsetY}px`);
+    canvas.style.setProperty('--bg-dot-radius', `${dotRadius}px`);
+    canvas.style.setProperty('--bg-dot-origin', `${dotOrigin}px`);
+    canvas.style.setProperty('--bg-grid-minor-alpha', String(gridMinorAlpha));
+    canvas.style.setProperty('--bg-grid-major-alpha', String(gridMajorAlpha));
+    canvas.style.setProperty('--bg-dot-alpha', String(dotAlpha));
   }
 
   function renderNodes(state) {
@@ -186,6 +214,29 @@ export function createRenderer(elements, store) {
   }
 
   return { render };
+}
+
+function positiveModulo(value, divisor) {
+  if (!Number.isFinite(value) || !Number.isFinite(divisor) || divisor <= 0) {
+    return 0;
+  }
+  return ((value % divisor) + divisor) % divisor;
+}
+
+function mapZoomOpacity(zoom, minOpacity, midOpacity, maxOpacity) {
+  const minZoom = 0.35;
+  const midZoom = 1.0;
+  const maxZoom = 2.5;
+  if (zoom <= midZoom) {
+    const t = clamp((zoom - minZoom) / (midZoom - minZoom), 0, 1);
+    return lerp(minOpacity, midOpacity, t);
+  }
+  const t = clamp((zoom - midZoom) / (maxZoom - midZoom), 0, 1);
+  return lerp(midOpacity, maxOpacity, t);
+}
+
+function lerp(from, to, t) {
+  return from + (to - from) * t;
 }
 
 function measureNodeSizes() {

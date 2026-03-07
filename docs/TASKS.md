@@ -58,6 +58,16 @@ Last updated: 2026-03-07
   - graph paper grid
   - dotted background
   - persist selected style per graph
+- [x] Make background patterns zoom-aware and world-locked for both `graph paper` and `dots`:
+  - pattern spacing scales with viewport zoom (within current zoom bounds `0.35` to `2.5`)
+  - pattern origin offsets with pan so the background remains graph-space aligned
+  - zoom-in reveals progressively denser detail without visible cutoff/seam artifacts
+  - behavior remains consistent after style switching and persisted settings reload
+  - wheel zoom and pan remain smooth (`NFR-1`)
+- [x] Tune zoom-out visual de-noising for `graph paper` and `dots` via zoom-dependent opacity:
+  - graph paper minor grid lines fade with zoom-out while major lines stay orientation-stable
+  - dots use smooth linear visibility changes from low zoom (`0.35`) to high zoom (`2.5`)
+  - behavior updates continuously as zoom changes without breaking world-locked alignment
 - [x] Add edge anchor behavior setting:
   - auto-snap reconnects endpoint to nearest anchor
   - fixed-anchor keeps endpoint on the originally connected anchor
@@ -70,6 +80,14 @@ Last updated: 2026-03-07
   - reload
   - open/save/new graph flows
   - undo/redo interactions involving edge reconnection behavior
+- [ ] Add regression checks for zoom-aware background behavior:
+  - verify both background styles at zoom levels `0.35`, `1.0`, and `2.5`
+  - verify style switching while zoomed/panned preserves alignment
+  - verify reset view restores expected baseline spacing/alignment behavior
+  - at `0.35`, minor lines/dots are visibly reduced while major grid remains readable
+  - at `1.0`, visibility remains balanced and not too faint
+  - at `2.5`, details are clear without overpowering nodes
+  - verify behavior in both light and dark themes
 
 ## Suggested Implementation Order
 
@@ -80,6 +98,7 @@ Last updated: 2026-03-07
 5. Implement File System Access API open/save/new graph workflow and replace import/export UI actions.
 6. Add Settings button and settings panel shell.
 7. Implement background style options (graph paper/dots) with persistence.
-8. Implement edge anchor behavior mode (auto-snap vs fixed original anchor).
-9. Implement graph naming and surface it in app title/header.
-10. Run settings-focused regression pass across persistence and file workflows.
+8. Implement zoom-aware, world-locked background pattern scaling (grid/dots) and run targeted regression checks.
+9. Implement edge anchor behavior mode (auto-snap vs fixed original anchor).
+10. Implement graph naming and surface it in app title/header.
+11. Run settings-focused regression pass across persistence and file workflows.
