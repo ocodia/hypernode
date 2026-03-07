@@ -97,6 +97,8 @@ export function createRenderer(elements, store) {
     const byId = new Map(state.nodes.map((node) => [node.id, node]));
     const bySize = measureNodeSizes();
     const useExactAnchors = state.settings.anchorsMode === 'exact';
+    const showArrowheads = state.settings.arrowheads === 'shown';
+    const arrowheadScale = getArrowheadSizeScale(state.settings.arrowheadSizeStep);
     const selectedEdgeId = state.selection?.type === "edge" ? state.selection.id : null;
     const twangEdgeId = state.ui.edgeTwangId;
     let selectedOverlayMarkup = "";
@@ -120,6 +122,9 @@ export function createRenderer(elements, store) {
         const midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
         const selected = selectedEdgeId === edge.id ? "is-selected" : "";
         const twang = twangEdgeId === edge.id ? "is-twang" : "";
+        const arrowMarkup = showArrowheads
+          ? `<path class="edge__arrowhead" d="${buildArrowheadPath(start, controls.start, controls.end, end, toAnchor, arrowheadScale)}"></path>`
+          : "";
         if (selectedEdgeId === edge.id) {
           selectedOverlayMarkup = `
             <g class="edge-overlay" data-edge-id="${edge.id}">
@@ -137,6 +142,7 @@ export function createRenderer(elements, store) {
           <g class="edge ${selected} ${twang}" data-edge-id="${edge.id}">
             <path class="edge__hit" d="${d}"></path>
             <path class="edge__line" d="${d}"></path>
+            ${arrowMarkup}
           </g>
         `;
       })
@@ -372,6 +378,56 @@ function cubicPointAt(p0, p1, p2, p3, t) {
     x: a * p0.x + b * p1.x + c * p2.x + d * p3.x,
     y: a * p0.y + b * p1.y + c * p2.y + d * p3.y,
   };
+}
+
+function buildArrowheadPath(start, controlStart, controlEnd, end, toAnchor, sizeScale = 1) {
+  const approach = cubicPointAt(start, controlStart, controlEnd, end, 0.92);
+  const vx = end.x - approach.x;
+  const vy = end.y - approach.y;
+  const length = 12.5 * sizeScale;
+  const halfWidth = 5 * sizeScale;
+  const magnitude = Math.hypot(vx, vy);
+
+  let ux = 0;
+  let uy = 0;
+  if (magnitude > 0.0001) {
+    ux = vx / magnitude;
+    uy = vy / magnitude;
+  } else {
+    const fallback = unitVectorByAnchor(toAnchor);
+    ux = fallback.x;
+    uy = fallback.y;
+  }
+
+  const px = -uy;
+  const py = ux;
+  const baseX = end.x - (ux * length);
+  const baseY = end.y - (uy * length);
+  const leftX = baseX + (px * halfWidth);
+  const leftY = baseY + (py * halfWidth);
+  const rightX = baseX - (px * halfWidth);
+  const rightY = baseY - (py * halfWidth);
+  return `M ${end.x} ${end.y} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`;
+}
+
+function getArrowheadSizeScale(step) {
+  const safeStep = clamp(Math.round(Number(step) || 0), 0, 9);
+  return 1 + (safeStep * 0.2);
+}
+
+function unitVectorByAnchor(anchor) {
+  switch (anchor) {
+    case "top":
+      return { x: 0, y: -1 };
+    case "right":
+      return { x: 1, y: 0 };
+    case "bottom":
+      return { x: 0, y: 1 };
+    case "left":
+      return { x: -1, y: 0 };
+    default:
+      return { x: 1, y: 0 };
+  }
 }
 
 function escapeHTML(value) {

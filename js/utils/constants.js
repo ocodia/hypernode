@@ -16,4 +16,6 @@ export const GRAPH_DEFAULTS = {
   name: "Untitled Graph",
   backgroundStyle: "dots",
   anchorsMode: "auto",
+  arrowheads: "shown",
+  arrowheadSizeStep: 0,
 };

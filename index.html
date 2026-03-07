@@ -97,6 +97,30 @@
             Exact anchor
           </label>
         </fieldset>
+        <fieldset class="settings-dialog__section">
+          <legend>Arrowheads</legend>
+          <p class="settings-dialog__hint">Controls whether committed edges render direction arrowheads.</p>
+          <label class="settings-dialog__option">
+            <input type="radio" name="arrowheads" value="shown" />
+            Show
+          </label>
+          <label class="settings-dialog__option">
+            <input type="radio" name="arrowheads" value="hidden" />
+            Hide
+          </label>
+          <label class="settings-dialog__label" for="arrowhead-size-range">Arrowhead size</label>
+          <input
+            id="arrowhead-size-range"
+            class="settings-dialog__input"
+            type="range"
+            min="0"
+            max="9"
+            step="1"
+            value="0"
+            aria-describedby="arrowhead-size-value"
+          />
+          <p id="arrowhead-size-value" class="settings-dialog__hint">Level 1 (100%)</p>
+        </fieldset>
       </article>
     </dialog>
 

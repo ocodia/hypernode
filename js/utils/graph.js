@@ -3,6 +3,9 @@ import { GRAPH_DEFAULTS, NODE_DEFAULTS, VIEWPORT_LIMITS } from './constants.js';
 const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
 const BACKGROUND_STYLES = new Set(['dots', 'graph-paper']);
 const ANCHORS_MODES = new Set(['auto', 'exact']);
+const ARROWHEADS_MODES = new Set(['shown', 'hidden']);
+const ARROWHEAD_SIZE_STEP_MIN = 0;
+const ARROWHEAD_SIZE_STEP_MAX = 9;
 
 export function emptyGraphState() {
   return {
@@ -10,6 +13,8 @@ export function emptyGraphState() {
     settings: {
       backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
       anchorsMode: GRAPH_DEFAULTS.anchorsMode,
+      arrowheads: GRAPH_DEFAULTS.arrowheads,
+      arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
     },
     nodes: [],
     edges: [],
@@ -63,7 +68,11 @@ export function validateGraphPayload(payload) {
   const hasValidCoreSettings = isValidBackgroundStyle(payload.settings.backgroundStyle);
   const hasValidAnchorsMode = payload.settings.anchorsMode === undefined
     || isValidAnchorsMode(payload.settings.anchorsMode);
-  if (!hasValidCoreSettings || !hasValidAnchorsMode) {
+  const hasValidArrowheadsMode = payload.settings.arrowheads === undefined
+    || isValidArrowheadsMode(payload.settings.arrowheads);
+  const hasValidArrowheadSizeStep = payload.settings.arrowheadSizeStep === undefined
+    || isValidArrowheadSizeStep(payload.settings.arrowheadSizeStep);
+  if (!hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep) {
     return false;
   }
 
@@ -95,6 +104,10 @@ export function sanitizeGraphSettings(settings) {
     anchorsMode: isValidAnchorsMode(settings?.anchorsMode)
       ? settings.anchorsMode
       : GRAPH_DEFAULTS.anchorsMode,
+    arrowheads: isValidArrowheadsMode(settings?.arrowheads)
+      ? settings.arrowheads
+      : GRAPH_DEFAULTS.arrowheads,
+    arrowheadSizeStep: sanitizeArrowheadSizeStep(settings?.arrowheadSizeStep),
   };
 }
 
@@ -112,4 +125,25 @@ function isValidBackgroundStyle(value) {
 
 function isValidAnchorsMode(value) {
   return typeof value === 'string' && ANCHORS_MODES.has(value);
+}
+
+function isValidArrowheadsMode(value) {
+  return typeof value === 'string' && ARROWHEADS_MODES.has(value);
+}
+
+function isValidArrowheadSizeStep(value) {
+  return Number.isInteger(value)
+    && value >= ARROWHEAD_SIZE_STEP_MIN
+    && value <= ARROWHEAD_SIZE_STEP_MAX;
+}
+
+function sanitizeArrowheadSizeStep(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return GRAPH_DEFAULTS.arrowheadSizeStep;
+  }
+  const rounded = Math.round(numeric);
+  if (rounded < ARROWHEAD_SIZE_STEP_MIN) return ARROWHEAD_SIZE_STEP_MIN;
+  if (rounded > ARROWHEAD_SIZE_STEP_MAX) return ARROWHEAD_SIZE_STEP_MAX;
+  return rounded;
 }

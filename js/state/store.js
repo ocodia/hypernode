@@ -318,6 +318,22 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setArrowheads(arrowheads) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, arrowheads }).arrowheads;
+    if (state.settings.arrowheads === nextValue) return;
+    pushHistory('set-arrowheads');
+    state.settings.arrowheads = nextValue;
+    notify();
+  }
+
+  function setArrowheadSizeStep(arrowheadSizeStep) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, arrowheadSizeStep }).arrowheadSizeStep;
+    if (state.settings.arrowheadSizeStep === nextValue) return;
+    pushHistory('set-arrowhead-size-step');
+    state.settings.arrowheadSizeStep = nextValue;
+    notify();
+  }
+
   function deleteEdge(id) {
     const index = state.edges.findIndex((edge) => edge.id === id);
     if (index === -1) return;
@@ -426,6 +442,8 @@ export function createStore(initialGraph = null) {
     setGraphName,
     setBackgroundStyle,
     setAnchorsMode,
+    setArrowheads,
+    setArrowheadSizeStep,
     replaceGraph,
     setViewport,
     resetView,

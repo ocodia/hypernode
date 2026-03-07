@@ -502,6 +502,8 @@ export function bindInteractions(elements, store) {
   const settingsBtn = document.getElementById('settings-btn');
   const settingsCloseBtn = document.getElementById('settings-close-btn');
   const graphNameInput = document.getElementById('graph-name-input');
+  const arrowheadSizeRange = document.getElementById('arrowhead-size-range');
+  const arrowheadSizeValue = document.getElementById('arrowhead-size-value');
   const themeToggleBtn = document.getElementById('theme-toggle-btn');
   const newGraphBtn = document.getElementById('new-graph-btn');
   const openGraphBtn = document.getElementById('open-graph-btn');
@@ -568,6 +570,20 @@ export function bindInteractions(elements, store) {
       if (!(target instanceof HTMLInputElement) || !target.checked) return;
       store.setAnchorsMode(target.value);
     });
+  });
+
+  settingsDialog?.querySelectorAll('input[name="arrowheads"]').forEach((input) => {
+    input.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || !target.checked) return;
+      store.setArrowheads(target.value);
+    });
+  });
+
+  arrowheadSizeRange?.addEventListener('input', () => {
+    const nextStep = Number(arrowheadSizeRange.value);
+    updateArrowheadSizeLabel(arrowheadSizeValue, nextStep);
+    store.setArrowheadSizeStep(nextStep);
   });
 
   const preferredDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
@@ -660,6 +676,8 @@ export function bindInteractions(elements, store) {
       settings: {
         backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
         anchorsMode: GRAPH_DEFAULTS.anchorsMode,
+        arrowheads: GRAPH_DEFAULTS.arrowheads,
+        arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
       },
       nodes: [],
       edges: [],
@@ -890,4 +908,25 @@ function syncSettingsDialogFromState(state, settingsDialog, graphNameInput) {
       input.checked = input.value === state.settings.anchorsMode;
     }
   });
+
+  settingsDialog.querySelectorAll('input[name="arrowheads"]').forEach((input) => {
+    if (input instanceof HTMLInputElement) {
+      input.checked = input.value === state.settings.arrowheads;
+    }
+  });
+
+  const arrowheadSizeRange = document.getElementById('arrowhead-size-range');
+  const arrowheadSizeValue = document.getElementById('arrowhead-size-value');
+  if (arrowheadSizeRange instanceof HTMLInputElement) {
+    const step = Number.isFinite(state.settings.arrowheadSizeStep) ? state.settings.arrowheadSizeStep : 0;
+    arrowheadSizeRange.value = String(step);
+    updateArrowheadSizeLabel(arrowheadSizeValue, step);
+  }
+}
+
+function updateArrowheadSizeLabel(labelEl, step) {
+  if (!(labelEl instanceof HTMLElement)) return;
+  const level = Math.max(1, Math.min(10, Math.round(Number(step)) + 1));
+  const percent = level === 1 ? 100 : (100 + ((level - 1) * 20));
+  labelEl.textContent = `Level ${level} (${percent}%)`;
 }
