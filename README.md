@@ -28,14 +28,17 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Undo/redo via toolbar and keyboard shortcuts.
 - Auto-save graph to browser storage.
 - Open/save graph JSON files with validation and status toast feedback.
+- Start a new graph from the toolbar (with discard confirmation when existing graph data is present).
 - Settings menu for:
   - graph background style (`dots` or `graph paper`)
   - anchors mode (`auto-anchor` or `exact anchor`)
   - arrowheads visibility (`show` or `hide`)
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
   - graph name
+- Node color tool also sets the default color for newly created nodes.
 - Graph name shown in toolbar title and browser tab title.
 - First-time Save suggests a filename based on the graph name.
+- Open/save toolbar actions use the File System Access API and are disabled in browsers that do not support it.
 - Installable PWA with offline app-shell caching.
 - Interaction-state cursor feedback for drag/connect workflows.
 - About dialog with usage instructions and keyboard shortcuts.
@@ -124,6 +127,22 @@ Version 1 includes the core graph editor loop:
 - touch interaction polish
 - IndexedDB support for large graphs
 - multiple graph documents
+
+## Keeping docs in sync when adding features
+
+For each new feature PR, update docs as part of the same change set (do not defer to a later PR):
+
+1. **Update requirements first** (`docs/REQUIREMENTS.md`): add or adjust FR/NFR entries that define behavior and constraints.
+2. **Update user-facing behavior** (`README.md`): update feature list, shortcuts, settings/options, and compatibility notes.
+3. **Cross-check UI copy** against `index.html` labels and dialog text so docs match what users see.
+4. **Verify persistence impact**: if graph shape/settings/storage keys change, document migration/compatibility notes.
+5. **Run a lightweight docs audit before merge**: confirm every new toolbar control, shortcut, setting, and workflow is represented in README and requirements.
+
+Recommended PR checklist item:
+
+- [ ] Requirements updated (if behavior changed)
+- [ ] README updated (if user-visible behavior changed)
+- [ ] Any new shortcut/settings/file-format behavior documented
 
 ## License
 

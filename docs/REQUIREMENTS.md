@@ -98,6 +98,18 @@ Escape must exit current lightweight interaction states (edge draft, node resize
 FR-26  
 Users must be able to resize selected nodes from corner handles.
 
+FR-27
+Users must be able to start a new graph from the toolbar, with a confirmation prompt before discarding an existing non-empty graph.
+
+FR-28
+The node color palette must allow applying a color to selected nodes and setting the default color used for newly created nodes.
+
+FR-29
+Graph settings must include graph name, background style, anchors mode, arrowhead visibility, and arrowhead size.
+
+FR-30
+The app must provide a theme toggle (light/dark) and persist the user theme preference locally.
+
 ## Non Functional Requirements
 
 ### Performance
@@ -121,18 +133,21 @@ No external API dependency is allowed for core operation.
 NFR-5  
 The application must target modern Chromium, Firefox, and Safari-class browsers.
 
+NFR-6
+When file system APIs are unavailable, unsupported actions should degrade gracefully (for example, disabling open/save controls with clear affordance).
+
 ### Data Format and Safety
 
-NFR-6  
-Graph persistence and import/export formats must use JSON with `{ nodes, edges }`.
+NFR-7
+Graph persistence and import/export formats must use JSON with `{ name, settings, nodes, edges }`.
 
-NFR-7  
+NFR-8
 All graph data processing must occur client-side.
 
 ### Accessibility
 
-NFR-8  
+NFR-9
 Interactive controls must provide visible focus states.
 
-NFR-9  
+NFR-10
 Core editing actions should be keyboard-accessible where practical.
