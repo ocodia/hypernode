@@ -33,6 +33,8 @@ export function emptyGraphState() {
       isDragging: false,
       isResizing: false,
       isConnecting: false,
+      isMarqueeSelecting: false,
+      selectionMarquee: null,
     },
     history: {
       past: [],

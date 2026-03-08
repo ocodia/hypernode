@@ -29,6 +29,7 @@
       </div>
 
       <div class="canvas" id="canvas">
+        <div id="selection-marquee" class="selection-marquee" hidden aria-hidden="true"></div>
         <svg class="edges" id="edges-layer" aria-hidden="true">
           <g id="edges-group"></g>
           <g id="edge-draft-group"></g>
@@ -50,8 +51,10 @@
         <h3>How to use</h3>
         <ul>
           <li>Double-click empty canvas or use + to create a node.</li>
-          <li>Select a node to show its mini toolbar with Edit/Delete actions.</li>
-          <li>Drag nodes to move them and drag empty canvas to pan.</li>
+          <li>Select one node to show its mini toolbar with Edit/Delete actions.</li>
+          <li>Use Ctrl/Cmd+Click or Ctrl/Cmd+Drag to multi-select nodes.</li>
+          <li>Drag selected nodes to move them together; click empty space outside selection to clear it.</li>
+          <li>Drag empty canvas to pan.</li>
           <li>Use node anchors or selected edge endpoints to create/reconnect edges.</li>
         </ul>
         <h3>Keyboard shortcuts</h3>
@@ -63,6 +66,7 @@
           <li><kbd>Ctrl/Cmd + Y</kbd> or <kbd>Ctrl/Cmd + Shift + Z</kbd>: redo.</li>
           <li><kbd>Ctrl/Cmd + S</kbd>: save graph file.</li>
           <li><kbd>Ctrl/Cmd + Enter</kbd>: toggle selected node editor.</li>
+          <li><kbd>Ctrl/Cmd + Click</kbd>: add node to current selection.</li>
           <li><kbd>Esc</kbd>: exit edit mode, cancel connect, or clear selection.</li>
         </ul>
       </article>

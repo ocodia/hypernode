@@ -141,6 +141,15 @@ textarea:focus-visible {
   cursor: grab;
 }
 
+.selection-marquee {
+  position: absolute;
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 6;
+}
+
 .canvas[data-background-style="graph-paper"] {
   background-image:
     linear-gradient(to right, color-mix(in srgb, var(--grid-dot) calc(var(--bg-grid-minor-alpha) * 100%), transparent) 1px, transparent 1px),
@@ -382,7 +391,7 @@ textarea:focus-visible {
   z-index: 5;
 }
 
-.node.is-selected:not(.is-editing) .node__toolbar {
+.node.is-single-selected:not(.is-editing) .node__toolbar {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(calc(-100% - 10px));
@@ -564,7 +573,7 @@ textarea:focus-visible {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
-.node.is-selected:not(.is-editing) .node__resize {
+.node.is-single-selected:not(.is-editing) .node__resize {
   opacity: 1;
   pointer-events: auto;
 }
@@ -701,6 +710,10 @@ textarea:focus-visible {
 }
 
 .canvas.is-connecting {
+  cursor: crosshair;
+}
+
+.workspace.is-marquee-selecting .canvas {
   cursor: crosshair;
 }
 

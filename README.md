@@ -11,7 +11,11 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Delete selected nodes with `Delete`/`Backspace`.
 - Create edges from node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
-- Selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
+- Single selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
+- Multi-select nodes with `Ctrl/Cmd + click` (additive).
+- Multi-select nodes with `Ctrl/Cmd + drag` marquee (touch/intersection hit rule).
+- Drag any selected node to move the full selected group together.
+- Clicking empty canvas outside the selected group bounds clears multi-selection.
 - Render directed edge arrowheads at destination anchors with curved-approach rotation.
 - Reconnect existing edge endpoints by dragging selected edge endpoints.
 - Delete selected edges via inline edge overlay control or keyboard delete.
@@ -43,6 +47,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
 - `Ctrl/Cmd + S`: save graph file
 - `Ctrl/Cmd + Enter`: toggle selected node editor
+- `Ctrl/Cmd + Click`: add a node to current node selection
 - `Escape`: exit node edit mode, cancel edge draft mode, or clear selection
 
 ## Tech Stack

@@ -16,6 +16,7 @@ export function bindInteractions(elements, store) {
 
   let panSession = null;
   let dragSession = null;
+  let marqueeSession = null;
   let resizeSession = null;
   let edgeSession = null;
   let edgeTwangTimer = null;
@@ -44,6 +45,20 @@ export function bindInteractions(elements, store) {
     if (pointerId === null || pointerId === activePointerId) {
       try {
         nodesLayer.releasePointerCapture(activePointerId);
+      } catch {
+        // Pointer may already be released.
+      }
+    }
+  }
+
+  function endMarqueeSession(pointerId = null) {
+    if (!marqueeSession) return;
+    const activePointerId = marqueeSession.pointerId;
+    marqueeSession = null;
+    store.setSelectionMarquee(null);
+    if (pointerId === null || pointerId === activePointerId) {
+      try {
+        canvas.releasePointerCapture(activePointerId);
       } catch {
         // Pointer may already be released.
       }
@@ -116,6 +131,7 @@ export function bindInteractions(elements, store) {
 
     endPanSession();
     endDragSession();
+    endMarqueeSession();
     endResizeSession();
     cancelEdgeSession();
 
@@ -153,6 +169,7 @@ export function bindInteractions(elements, store) {
 
     endPanSession();
     endDragSession();
+    endMarqueeSession();
     endResizeSession();
     cancelEdgeSession();
 
@@ -192,6 +209,7 @@ export function bindInteractions(elements, store) {
 
     endPanSession();
     endDragSession();
+    endMarqueeSession();
     cancelEdgeSession();
     endResizeSession();
 
@@ -276,6 +294,57 @@ export function bindInteractions(elements, store) {
 
     titleInput.focus({ preventScroll: true });
     titleInput.select();
+  }
+
+  function beginMarqueeSession(event) {
+    endPanSession();
+    endDragSession();
+    endMarqueeSession();
+    endResizeSession();
+    cancelEdgeSession();
+
+    const state = store.getState();
+    const startGraph = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+    marqueeSession = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startGraphX: startGraph.x,
+      startGraphY: startGraph.y,
+      baseSelectionIds: getSelectedNodeIds(state.selection),
+    };
+
+    const rect = canvas.getBoundingClientRect();
+    store.setSelectionMarquee({
+      left: event.clientX - rect.left,
+      top: event.clientY - rect.top,
+      width: 0,
+      height: 0,
+    });
+    canvas.setPointerCapture(event.pointerId);
+  }
+
+  function updateMarqueeSession(event) {
+    if (!marqueeSession || marqueeSession.pointerId !== event.pointerId) return;
+    const state = store.getState();
+    const currentGraph = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+    const graphRect = toRectFromPoints(
+      marqueeSession.startGraphX,
+      marqueeSession.startGraphY,
+      currentGraph.x,
+      currentGraph.y,
+    );
+    const hitNodeIds = getIntersectingNodeIds(state.nodes, graphRect);
+    const mergedIds = uniqueIds([...marqueeSession.baseSelectionIds, ...hitNodeIds]);
+
+    const rect = canvas.getBoundingClientRect();
+    const startX = marqueeSession.startClientX - rect.left;
+    const startY = marqueeSession.startClientY - rect.top;
+    const currentX = event.clientX - rect.left;
+    const currentY = event.clientY - rect.top;
+    const screenRect = toRectFromPoints(startX, startY, currentX, currentY);
+    store.setSelectionMarquee(screenRect);
+    store.setNodeSelection(mergedIds, { primaryId: hitNodeIds[hitNodeIds.length - 1] || null });
   }
 
   function setEditorFocusLock(nodeId, durationMs = 900) {
@@ -512,23 +581,43 @@ export function bindInteractions(elements, store) {
     if (event.button !== 0) return;
     if (event.target.closest('[data-node-id], [data-edge-id], .panel, button, input, textarea, label')) return;
 
+    if (isAdditiveModifier(event)) {
+      beginMarqueeSession(event);
+      event.preventDefault();
+      return;
+    }
+
     cancelEdgeSession();
     endPanSession();
+    endMarqueeSession();
     endResizeSession();
     activeLiveEditNodeId = null;
-    store.clearSelection();
+    const state = store.getState();
+    const selectedNodeBounds = getSelectedNodesBounds(state.nodes, state.selection);
+    const pointer = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+    if (state.selection?.type === 'nodes') {
+      if (selectedNodeBounds && !rectContainsPoint(selectedNodeBounds, pointer)) {
+        store.clearSelection();
+      }
+    } else if (state.selection) {
+      store.clearSelection();
+    }
     panSession = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      startPanX: store.getState().viewport.panX,
-      startPanY: store.getState().viewport.panY,
+      startPanX: state.viewport.panX,
+      startPanY: state.viewport.panY,
     };
     store.setPanning(true);
     canvas.setPointerCapture(event.pointerId);
   });
 
   canvas.addEventListener('pointermove', (event) => {
+    if (marqueeSession && event.pointerId === marqueeSession.pointerId) {
+      updateMarqueeSession(event);
+      return;
+    }
     if (!panSession || event.pointerId !== panSession.pointerId) return;
     const dx = event.clientX - panSession.startX;
     const dy = event.clientY - panSession.startY;
@@ -539,16 +628,28 @@ export function bindInteractions(elements, store) {
   });
 
   canvas.addEventListener('pointerup', (event) => {
+    if (marqueeSession && event.pointerId === marqueeSession.pointerId) {
+      endMarqueeSession(event.pointerId);
+      return;
+    }
     if (!panSession || event.pointerId !== panSession.pointerId) return;
     endPanSession(event.pointerId);
   });
 
   canvas.addEventListener('pointercancel', (event) => {
+    if (marqueeSession && event.pointerId === marqueeSession.pointerId) {
+      endMarqueeSession(event.pointerId);
+      return;
+    }
     if (!panSession || event.pointerId !== panSession.pointerId) return;
     endPanSession(event.pointerId);
   });
 
   canvas.addEventListener('lostpointercapture', (event) => {
+    if (marqueeSession && event.pointerId === marqueeSession.pointerId) {
+      endMarqueeSession();
+      return;
+    }
     if (!panSession || event.pointerId !== panSession.pointerId) return;
     endPanSession();
   });
@@ -602,27 +703,47 @@ export function bindInteractions(elements, store) {
     if (!nodeEl || event.button !== 0) return;
 
     endDragSession();
+    endMarqueeSession();
     endResizeSession();
     cancelEdgeSession();
 
     const nodeId = nodeEl.dataset.nodeId;
-    if (store.getState().ui.editingNodeId && store.getState().ui.editingNodeId !== nodeId) {
+    const state = store.getState();
+    const selectedNodeIds = getSelectedNodeIds(state.selection);
+    const isNodeAlreadySelected = selectedNodeIds.includes(nodeId);
+    if (state.ui.editingNodeId && state.ui.editingNodeId !== nodeId) {
       activeLiveEditNodeId = null;
     }
-    store.setSelection({ type: 'node', id: nodeId });
+    if (isAdditiveModifier(event)) {
+      store.addNodeToSelection(nodeId);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
+    const dragNodeIds = (selectedNodeIds.length > 1 && isNodeAlreadySelected)
+      ? selectedNodeIds
+      : [nodeId];
+    if (!(selectedNodeIds.length > 1 && isNodeAlreadySelected)) {
+      store.setSelection({ type: 'node', id: nodeId });
+    }
     store.setPanning(false);
     endPanSession();
 
-    const node = getNode(nodeId, store.getState());
-    if (!node) return;
+    const dragNodes = dragNodeIds
+      .map((id) => getNode(id, store.getState()))
+      .filter(Boolean);
+    if (!dragNodes.length) return;
 
     dragSession = {
       pointerId: event.pointerId,
-      nodeId,
       startX: event.clientX,
       startY: event.clientY,
-      nodeStartX: node.x,
-      nodeStartY: node.y,
+      nodes: dragNodes.map((node) => ({
+        id: node.id,
+        nodeStartX: node.x,
+        nodeStartY: node.y,
+      })),
       moved: false,
     };
 
@@ -675,7 +796,17 @@ export function bindInteractions(elements, store) {
       dragSession.moved = true;
     }
 
-    store.moveNode(dragSession.nodeId, dragSession.nodeStartX + dx, dragSession.nodeStartY + dy, { skipHistory: true });
+    if (dragSession.nodes.length === 1) {
+      const single = dragSession.nodes[0];
+      store.moveNode(single.id, single.nodeStartX + dx, single.nodeStartY + dy, { skipHistory: true });
+      return;
+    }
+    const batch = dragSession.nodes.map((entry) => ({
+      id: entry.id,
+      x: entry.nodeStartX + dx,
+      y: entry.nodeStartY + dy,
+    }));
+    store.moveNodes(batch, { skipHistory: true });
   });
 
   nodesLayer.addEventListener('pointerup', (event) => {
@@ -743,6 +874,16 @@ export function bindInteractions(elements, store) {
 
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl) return;
+    if (isAdditiveModifier(event)) {
+      store.addNodeToSelection(nodeEl.dataset.nodeId);
+      event.stopPropagation();
+      return;
+    }
+    const state = store.getState();
+    if (state.selection?.type === 'nodes' && state.selection.ids.includes(nodeEl.dataset.nodeId)) {
+      event.stopPropagation();
+      return;
+    }
     if (store.getState().ui.editingNodeId && store.getState().ui.editingNodeId !== nodeEl.dataset.nodeId) {
       activeLiveEditNodeId = null;
     }
@@ -1126,11 +1267,16 @@ export function bindInteractions(elements, store) {
       if (!selection) return;
       event.preventDefault();
       if (selection.type === 'node') store.deleteNode(selection.id);
+      if (selection.type === 'nodes') store.deleteSelectedNodes();
       if (selection.type === 'edge') store.deleteEdge(selection.id);
       return;
     }
 
     if (event.key === 'Escape') {
+      if (marqueeSession) {
+        endMarqueeSession();
+        return;
+      }
       if (resizeSession) {
         endResizeSession();
         return;
@@ -1146,6 +1292,98 @@ export function bindInteractions(elements, store) {
       store.clearSelection();
     }
   });
+}
+
+function isAdditiveModifier(event) {
+  return Boolean(event?.ctrlKey || event?.metaKey);
+}
+
+function getSelectedNodeIds(selection) {
+  if (!selection) return [];
+  if (selection.type === 'node') return [selection.id];
+  if (selection.type === 'nodes') {
+    return Array.isArray(selection.ids) ? selection.ids : [];
+  }
+  return [];
+}
+
+function getSelectedNodesBounds(nodes, selection) {
+  const selectedIds = getSelectedNodeIds(selection);
+  if (!selectedIds.length) return null;
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  let left = Infinity;
+  let top = Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+
+  for (const nodeId of selectedIds) {
+    const node = byId.get(nodeId);
+    if (!node) continue;
+    left = Math.min(left, node.x);
+    top = Math.min(top, node.y);
+    right = Math.max(right, node.x + getNodeWidth(node));
+    bottom = Math.max(bottom, node.y + getNodeHeight(node));
+  }
+
+  if (!Number.isFinite(left) || !Number.isFinite(top) || !Number.isFinite(right) || !Number.isFinite(bottom)) {
+    return null;
+  }
+  return { left, top, right, bottom };
+}
+
+function rectContainsPoint(rect, point) {
+  if (!rect || !point) return false;
+  return point.x >= rect.left
+    && point.x <= rect.right
+    && point.y >= rect.top
+    && point.y <= rect.bottom;
+}
+
+function toRectFromPoints(x1, y1, x2, y2) {
+  const left = Math.min(x1, x2);
+  const top = Math.min(y1, y2);
+  const right = Math.max(x1, x2);
+  const bottom = Math.max(y1, y2);
+  return {
+    left,
+    top,
+    right,
+    bottom,
+    width: right - left,
+    height: bottom - top,
+  };
+}
+
+function getIntersectingNodeIds(nodes, rect) {
+  if (!rect) return [];
+  const hitIds = [];
+  for (const node of nodes) {
+    const nodeRect = {
+      left: node.x,
+      top: node.y,
+      right: node.x + getNodeWidth(node),
+      bottom: node.y + getNodeHeight(node),
+    };
+    const intersects = rect.left < nodeRect.right
+      && rect.right > nodeRect.left
+      && rect.top < nodeRect.bottom
+      && rect.bottom > nodeRect.top;
+    if (intersects) {
+      hitIds.push(node.id);
+    }
+  }
+  return hitIds;
+}
+
+function uniqueIds(ids) {
+  const seen = new Set();
+  const output = [];
+  for (const id of ids) {
+    if (typeof id !== 'string' || seen.has(id)) continue;
+    seen.add(id);
+    output.push(id);
+  }
+  return output;
 }
 
 function toGraphPoint(clientX, clientY, canvasEl, viewport) {
@@ -1521,3 +1759,4 @@ function updateArrowheadSizeLabel(labelEl, step) {
   const percent = level === 1 ? 100 : (100 + ((level - 1) * 20));
   labelEl.textContent = `Level ${level} (${percent}%)`;
 }
+

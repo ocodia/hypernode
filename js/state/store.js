@@ -26,7 +26,7 @@ export function createStore(initialGraph = null) {
       settings: structuredClone(state.settings),
       nodes: structuredClone(state.nodes),
       edges: structuredClone(state.edges),
-      selection: state.selection ? { ...state.selection } : null,
+      selection: cloneSelection(state.selection),
     };
   }
 
@@ -125,23 +125,55 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setSelectionMarquee(marquee) {
+    if (!marquee) {
+      state.ui.selectionMarquee = null;
+      state.ui.isMarqueeSelecting = false;
+      notify();
+      return;
+    }
+    state.ui.selectionMarquee = {
+      left: Number(marquee.left) || 0,
+      top: Number(marquee.top) || 0,
+      width: Math.max(0, Number(marquee.width) || 0),
+      height: Math.max(0, Number(marquee.height) || 0),
+    };
+    state.ui.isMarqueeSelecting = true;
+    notify();
+  }
+
   function setSelection(selection) {
     const current = state.selection;
-    const sameSelection = (!current && !selection)
-      || (current && selection && current.type === selection.type && current.id === selection.id);
+    const sameSelection = areSelectionsEqual(current, selection);
     if (sameSelection) {
       return;
     }
 
-    state.selection = selection;
+    state.selection = cloneSelection(selection);
     if (state.ui.editingNodeId) {
-      const keepEditing = selection?.type === 'node' && selection.id === state.ui.editingNodeId;
+      const keepEditing = isNodeSelected(state.selection, state.ui.editingNodeId);
       if (!keepEditing) {
         finalizeEditingNodeText(state.ui.editingNodeId);
         state.ui.editingNodeId = null;
       }
     }
     notify();
+  }
+
+  function setNodeSelection(ids, options = {}) {
+    const normalized = normalizeNodeSelection(ids, state.nodes, options.primaryId);
+    setSelection(normalized);
+  }
+
+  function addNodeToSelection(nodeId) {
+    if (!nodeId) return;
+    const nodeExists = state.nodes.some((node) => node.id === nodeId);
+    if (!nodeExists) return;
+    const ids = getSelectedNodeIds(state.selection);
+    if (!ids.includes(nodeId)) {
+      ids.push(nodeId);
+    }
+    setNodeSelection(ids, { primaryId: nodeId });
   }
 
   function clearSelection() {
@@ -193,6 +225,19 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function moveNodes(batch, options = {}) {
+    if (!Array.isArray(batch) || batch.length === 0) return;
+    if (!options.skipHistory) pushHistory('move-node');
+    for (const entry of batch) {
+      if (!entry || typeof entry.id !== 'string') continue;
+      const node = state.nodes.find((item) => item.id === entry.id);
+      if (!node) continue;
+      if (typeof entry.x === 'number') node.x = entry.x;
+      if (typeof entry.y === 'number') node.y = entry.y;
+    }
+    notify();
+  }
+
   function resizeNode(id, patch, options = {}) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
@@ -230,12 +275,29 @@ export function createStore(initialGraph = null) {
     pushHistory('delete-node');
     state.nodes.splice(index, 1);
     state.edges = state.edges.filter((edge) => edge.from !== id && edge.to !== id);
-    if (state.selection?.id === id) {
+    if (state.selection?.type === 'nodes') {
+      const ids = state.selection.ids.filter((selectedId) => selectedId !== id);
+      state.selection = normalizeNodeSelection(ids, state.nodes, state.selection.primaryId);
+    } else if (state.selection?.id === id) {
       state.selection = null;
     }
     if (state.ui.editingNodeId === id) {
       state.ui.editingNodeId = null;
     }
+    notify();
+  }
+
+  function deleteSelectedNodes() {
+    const selectedNodeIds = getSelectedNodeIds(state.selection);
+    if (!selectedNodeIds.length) return;
+    const selected = new Set(selectedNodeIds);
+    pushHistory('delete-node');
+    state.nodes = state.nodes.filter((node) => !selected.has(node.id));
+    state.edges = state.edges.filter((edge) => !selected.has(edge.from) && !selected.has(edge.to));
+    if (state.ui.editingNodeId && selected.has(state.ui.editingNodeId)) {
+      state.ui.editingNodeId = null;
+    }
+    state.selection = null;
     notify();
   }
 
@@ -402,6 +464,8 @@ export function createStore(initialGraph = null) {
     state.ui.isDragging = false;
     state.ui.isResizing = false;
     state.ui.isConnecting = false;
+    state.ui.isMarqueeSelecting = false;
+    state.ui.selectionMarquee = null;
     notify();
   }
 
@@ -439,6 +503,8 @@ export function createStore(initialGraph = null) {
     state.ui.isDragging = false;
     state.ui.isResizing = false;
     state.ui.isConnecting = false;
+    state.ui.isMarqueeSelecting = false;
+    state.ui.selectionMarquee = null;
     notify();
   }
 
@@ -458,6 +524,8 @@ export function createStore(initialGraph = null) {
     state.ui.isDragging = false;
     state.ui.isResizing = false;
     state.ui.isConnecting = false;
+    state.ui.isMarqueeSelecting = false;
+    state.ui.selectionMarquee = null;
     notify();
   }
 
@@ -484,16 +552,21 @@ export function createStore(initialGraph = null) {
     setDragging,
     setResizing,
     setConnecting,
+    setSelectionMarquee,
     setSelection,
+    setNodeSelection,
+    addNodeToSelection,
     clearSelection,
     addNode,
     updateNode,
     moveNode,
+    moveNodes,
     resizeNode,
     beginNodeMove,
     beginNodeEdit,
     beginNodeResize,
     deleteNode,
+    deleteSelectedNodes,
     addEdge,
     connectNodes,
     reconnectEdge,
@@ -518,4 +591,73 @@ function resolveAutoAnchor(fromNode, toNode) {
     return dx >= 0 ? 'right' : 'left';
   }
   return dy >= 0 ? 'bottom' : 'top';
+}
+
+function areSelectionsEqual(left, right) {
+  if (!left && !right) return true;
+  if (!left || !right) return false;
+  if (left.type !== right.type) return false;
+  if (left.type === 'nodes') {
+    const leftIds = Array.isArray(left.ids) ? left.ids : [];
+    const rightIds = Array.isArray(right.ids) ? right.ids : [];
+    if (leftIds.length !== rightIds.length) return false;
+    for (let index = 0; index < leftIds.length; index += 1) {
+      if (leftIds[index] !== rightIds[index]) return false;
+    }
+    return (left.primaryId || null) === (right.primaryId || null);
+  }
+  return left.id === right.id;
+}
+
+function cloneSelection(selection) {
+  if (!selection) return null;
+  if (selection.type === 'nodes') {
+    return {
+      type: 'nodes',
+      ids: Array.isArray(selection.ids) ? [...selection.ids] : [],
+      primaryId: selection.primaryId || null,
+    };
+  }
+  return { ...selection };
+}
+
+function getSelectedNodeIds(selection) {
+  if (!selection) return [];
+  if (selection.type === 'node') return [selection.id];
+  if (selection.type === 'nodes') {
+    return Array.isArray(selection.ids) ? [...selection.ids] : [];
+  }
+  return [];
+}
+
+function isNodeSelected(selection, nodeId) {
+  if (!nodeId || !selection) return false;
+  if (selection.type === 'node') return selection.id === nodeId;
+  if (selection.type === 'nodes') {
+    return Array.isArray(selection.ids) && selection.ids.includes(nodeId);
+  }
+  return false;
+}
+
+function normalizeNodeSelection(ids, nodes, preferredPrimaryId = null) {
+  const validIds = new Set((nodes || []).map((node) => node.id));
+  const deduped = [];
+  for (const id of Array.isArray(ids) ? ids : []) {
+    if (typeof id !== 'string' || !validIds.has(id) || deduped.includes(id)) continue;
+    deduped.push(id);
+  }
+
+  if (deduped.length === 0) return null;
+  if (deduped.length === 1) {
+    return { type: 'node', id: deduped[0] };
+  }
+
+  const primaryId = (preferredPrimaryId && deduped.includes(preferredPrimaryId))
+    ? preferredPrimaryId
+    : deduped[deduped.length - 1];
+  return {
+    type: 'nodes',
+    ids: deduped,
+    primaryId: primaryId || null,
+  };
 }

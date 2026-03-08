@@ -1,7 +1,19 @@
 import { NODE_DEFAULTS } from "../utils/constants.js";
 
 export function createRenderer(elements, store) {
-  const { workspace, canvas, nodesLayer, edgesGroup, edgeDraftGroup, edgesLayer, edgesOverlayLayer, edgeOverlayGroup, importStatus, graphTitle } = elements;
+  const {
+    workspace,
+    canvas,
+    nodesLayer,
+    edgesGroup,
+    edgeDraftGroup,
+    edgesLayer,
+    edgesOverlayLayer,
+    edgeOverlayGroup,
+    importStatus,
+    graphTitle,
+    selectionMarquee,
+  } = elements;
 
   function applyViewport(viewport) {
     const transform = `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`;
@@ -39,12 +51,14 @@ export function createRenderer(elements, store) {
   }
 
   function renderNodes(state) {
-    const selectedNodeId = state.selection?.type === "node" ? state.selection.id : null;
+    const selectedNodeIds = new Set(getSelectedNodeIds(state.selection));
+    const singleSelectedNodeId = getSingleSelectedNodeId(state.selection);
     const editingNodeId = state.ui.editingNodeId;
     const draft = state.ui.edgeDraft;
     nodesLayer.innerHTML = state.nodes
       .map((node) => {
-        const selectedClass = selectedNodeId === node.id ? "is-selected" : "";
+        const selectedClass = selectedNodeIds.has(node.id) ? "is-selected" : "";
+        const singleSelectedClass = singleSelectedNodeId === node.id ? "is-single-selected" : "";
         const editingClass = editingNodeId === node.id ? "is-editing" : "";
         const connectClass =
           draft?.fromNodeId === node.id
@@ -78,7 +92,7 @@ export function createRenderer(elements, store) {
             ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ""}
           `;
         return `
-          <article class="node ${selectedClass} ${editingClass} ${connectClass} ${fixedSizeClass}" data-node-id="${node.id}" style="${nodeStyle}">
+          <article class="node ${selectedClass} ${singleSelectedClass} ${editingClass} ${connectClass} ${fixedSizeClass}" data-node-id="${node.id}" style="${nodeStyle}">
             <div class="node__toolbar">
               <button class="node__tool-btn" type="button" data-node-edit-open="${node.id}" aria-label="Edit node" title="Edit Node">
                 <i class="bi bi-pencil-fill"></i>
@@ -230,6 +244,19 @@ export function createRenderer(elements, store) {
     workspace.classList.toggle("is-dragging", Boolean(state.ui.isDragging));
     workspace.classList.toggle("is-resizing", Boolean(state.ui.isResizing));
     workspace.classList.toggle("is-connecting", Boolean(state.ui.isConnecting));
+    workspace.classList.toggle("is-marquee-selecting", Boolean(state.ui.isMarqueeSelecting));
+
+    if (selectionMarquee instanceof HTMLElement) {
+      const marquee = state.ui.selectionMarquee;
+      const visible = Boolean(state.ui.isMarqueeSelecting && marquee);
+      selectionMarquee.hidden = !visible;
+      if (visible) {
+        selectionMarquee.style.left = `${marquee.left}px`;
+        selectionMarquee.style.top = `${marquee.top}px`;
+        selectionMarquee.style.width = `${marquee.width}px`;
+        selectionMarquee.style.height = `${marquee.height}px`;
+      }
+    }
   }
 
   return { render };
@@ -504,4 +531,22 @@ function escapeHTML(value) {
 
 function escapeAttr(value) {
   return escapeHTML(value).replaceAll("`", "&#096;");
+}
+
+function getSelectedNodeIds(selection) {
+  if (!selection) return [];
+  if (selection.type === 'node') return [selection.id];
+  if (selection.type === 'nodes') {
+    return Array.isArray(selection.ids) ? selection.ids : [];
+  }
+  return [];
+}
+
+function getSingleSelectedNodeId(selection) {
+  if (!selection) return null;
+  if (selection.type === 'node') return selection.id;
+  if (selection.type === 'nodes' && selection.ids?.length === 1) {
+    return selection.ids[0];
+  }
+  return null;
 }
