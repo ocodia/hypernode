@@ -8,7 +8,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
 - Edit node title/description inline from the selected-node mini toolbar.
-- Color selected node backgrounds from a toolbar palette (5 curated colors + reset) with legible text and complementary selected highlights in light/dark themes.
+- Color selected node backgrounds from a toolbar palette (10 curated colors + reset) with legible text and complementary selected highlights in light/dark themes.
 - Delete selected nodes with `Delete`/`Backspace`.
 - Create edges from node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).

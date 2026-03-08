@@ -427,6 +427,26 @@ textarea:focus-visible {
   background: var(--palette-slate-swatch);
 }
 
+.node-color-picker__swatch[data-node-color-value="teal"] {
+  background: var(--palette-teal-swatch);
+}
+
+.node-color-picker__swatch[data-node-color-value="violet"] {
+  background: var(--palette-violet-swatch);
+}
+
+.node-color-picker__swatch[data-node-color-value="peach"] {
+  background: var(--palette-peach-swatch);
+}
+
+.node-color-picker__swatch[data-node-color-value="mint"] {
+  background: var(--palette-mint-swatch);
+}
+
+.node-color-picker__swatch[data-node-color-value="indigo"] {
+  background: var(--palette-indigo-swatch);
+}
+
 .node {
   --node-bg: var(--surface);
   --node-border: var(--panel-border);
@@ -670,6 +690,56 @@ textarea:focus-visible {
   --node-selected-border: #475569;
 }
 
+.node[data-node-color="teal"] {
+  --node-bg: #e5f6f4;
+  --node-border: #b9ded9;
+  --node-text: #173a38;
+  --node-muted: #466868;
+  --node-editor-bg: #eefaf8;
+  --node-editor-border: #a9d3cd;
+  --node-selected-border: #0f766e;
+}
+
+.node[data-node-color="violet"] {
+  --node-bg: #f1ecff;
+  --node-border: #d5caf7;
+  --node-text: #31245f;
+  --node-muted: #62538d;
+  --node-editor-bg: #f7f4ff;
+  --node-editor-border: #c6b6ee;
+  --node-selected-border: #6d28d9;
+}
+
+.node[data-node-color="peach"] {
+  --node-bg: #fff0e8;
+  --node-border: #f3cfbf;
+  --node-text: #4f2b1d;
+  --node-muted: #7c5446;
+  --node-editor-bg: #fff6f1;
+  --node-editor-border: #e8c0ad;
+  --node-selected-border: #c05621;
+}
+
+.node[data-node-color="mint"] {
+  --node-bg: #e7f8ef;
+  --node-border: #bbe3cb;
+  --node-text: #153b27;
+  --node-muted: #456c57;
+  --node-editor-bg: #f0fbf5;
+  --node-editor-border: #abd8be;
+  --node-selected-border: #2f855a;
+}
+
+.node[data-node-color="indigo"] {
+  --node-bg: #eceffd;
+  --node-border: #c6cef5;
+  --node-text: #1f2a5c;
+  --node-muted: #4f5f8d;
+  --node-editor-bg: #f4f6ff;
+  --node-editor-border: #b7c2ef;
+  --node-selected-border: #4338ca;
+}
+
 [data-theme="dark"] .node[data-node-color="sage"] {
   --node-bg: #1e3226;
   --node-border: #365844;
@@ -718,6 +788,56 @@ textarea:focus-visible {
   --node-editor-bg: #2f3f53;
   --node-editor-border: #51667e;
   --node-selected-border: #a0aec0;
+}
+
+[data-theme="dark"] .node[data-node-color="teal"] {
+  --node-bg: #15383a;
+  --node-border: #2d6361;
+  --node-text: #def8f5;
+  --node-muted: #a9ceca;
+  --node-editor-bg: #1c4445;
+  --node-editor-border: #3e7775;
+  --node-selected-border: #5eead4;
+}
+
+[data-theme="dark"] .node[data-node-color="violet"] {
+  --node-bg: #31264d;
+  --node-border: #5a4a83;
+  --node-text: #f1eaff;
+  --node-muted: #c8bcde;
+  --node-editor-bg: #3b2f5a;
+  --node-editor-border: #6d5a99;
+  --node-selected-border: #c4b5fd;
+}
+
+[data-theme="dark"] .node[data-node-color="peach"] {
+  --node-bg: #43281d;
+  --node-border: #734536;
+  --node-text: #ffece2;
+  --node-muted: #d5b5a5;
+  --node-editor-bg: #4f3125;
+  --node-editor-border: #875644;
+  --node-selected-border: #f6ad55;
+}
+
+[data-theme="dark"] .node[data-node-color="mint"] {
+  --node-bg: #1b3b2a;
+  --node-border: #35654a;
+  --node-text: #e4f8ed;
+  --node-muted: #b2d4c0;
+  --node-editor-bg: #234634;
+  --node-editor-border: #477a5d;
+  --node-selected-border: #86efac;
+}
+
+[data-theme="dark"] .node[data-node-color="indigo"] {
+  --node-bg: #232b4e;
+  --node-border: #414e84;
+  --node-text: #e9edff;
+  --node-muted: #b8c1e2;
+  --node-editor-bg: #2d3760;
+  --node-editor-border: #56659d;
+  --node-selected-border: #a5b4fc;
 }
 
 .node.is-editing .node__anchor {
@@ -1019,6 +1139,11 @@ kbd {
   --palette-amber-swatch: #edbf6a;
   --palette-rose-swatch: #e7a5b8;
   --palette-slate-swatch: #95a9c0;
+  --palette-teal-swatch: #7ecac4;
+  --palette-violet-swatch: #baa4ea;
+  --palette-peach-swatch: #f0b79b;
+  --palette-mint-swatch: #98ddb4;
+  --palette-indigo-swatch: #9da8ea;
 }
 
 [data-theme="dark"] {
@@ -1027,6 +1152,11 @@ kbd {
   --palette-amber-swatch: #9a6a25;
   --palette-rose-swatch: #9d4d67;
   --palette-slate-swatch: #5d7189;
+  --palette-teal-swatch: #2e7670;
+  --palette-violet-swatch: #66529f;
+  --palette-peach-swatch: #8d563f;
+  --palette-mint-swatch: #3f7f5b;
+  --palette-indigo-swatch: #4a5ca4;
 }
 
 @keyframes edge-twang {
