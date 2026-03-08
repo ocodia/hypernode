@@ -211,18 +211,17 @@ export function createStore(initialGraph = null) {
     const resolvedColorKey = options.colorKey !== undefined
       ? sanitizeColorKey(options.colorKey)
       : sanitizeColorKey(state.settings.nodeColorDefault);
-    const isImageNode = kind === IMAGE_NODE_DEFAULTS.kind;
     const node = sanitizeNode({
       id: createId('node'),
       title,
       description,
       kind,
-      ...(isImageNode ? { imageData, imageAspectRatio } : {}),
+      ...(kind === IMAGE_NODE_DEFAULTS.kind ? { imageData, imageAspectRatio } : {}),
       x,
       y,
       ...(width === null ? {} : { width }),
       ...(height === null ? {} : { height }),
-      ...(isImageNode ? {} : { colorKey: resolvedColorKey }),
+      colorKey: resolvedColorKey,
     });
     state.nodes.push(node);
     state.selection = { type: 'node', id: node.id };
@@ -336,7 +335,7 @@ export function createStore(initialGraph = null) {
     if (!selectedIds.length) return;
 
     const normalizedColorKey = sanitizeColorKey(colorKey);
-    const targets = state.nodes.filter((node) => selectedIds.includes(node.id) && node.kind !== IMAGE_NODE_DEFAULTS.kind);
+    const targets = state.nodes.filter((node) => selectedIds.includes(node.id));
     const changed = targets.some((node) => (node.colorKey || null) !== normalizedColorKey);
     if (!changed) return;
 

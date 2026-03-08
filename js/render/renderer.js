@@ -73,7 +73,7 @@ export function createRenderer(elements, store) {
         const fixedSizeClass = hasExplicitNodeSize(node) ? "has-fixed-size" : "";
         const inlineSizeStyle = buildNodeInlineSizeStyle(node);
         const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}`;
-        const nodeColorAttr = !imageNode && typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
+        const nodeColorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
         const imageMarkup = imageNode
           ? `
             <div class="node__image-pane" style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
