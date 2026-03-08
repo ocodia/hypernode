@@ -1319,10 +1319,11 @@ function getSelectedNodesBounds(nodes, selection) {
   for (const nodeId of selectedIds) {
     const node = byId.get(nodeId);
     if (!node) continue;
-    left = Math.min(left, node.x);
-    top = Math.min(top, node.y);
-    right = Math.max(right, node.x + getNodeWidth(node));
-    bottom = Math.max(bottom, node.y + getNodeHeight(node));
+    const rect = getNodeInteractionRect(node);
+    left = Math.min(left, rect.left);
+    top = Math.min(top, rect.top);
+    right = Math.max(right, rect.right);
+    bottom = Math.max(bottom, rect.bottom);
   }
 
   if (!Number.isFinite(left) || !Number.isFinite(top) || !Number.isFinite(right) || !Number.isFinite(bottom)) {
@@ -1358,12 +1359,7 @@ function getIntersectingNodeIds(nodes, rect) {
   if (!rect) return [];
   const hitIds = [];
   for (const node of nodes) {
-    const nodeRect = {
-      left: node.x,
-      top: node.y,
-      right: node.x + getNodeWidth(node),
-      bottom: node.y + getNodeHeight(node),
-    };
+    const nodeRect = getNodeInteractionRect(node);
     const intersects = rect.left < nodeRect.right
       && rect.right > nodeRect.left
       && rect.top < nodeRect.bottom
@@ -1384,6 +1380,26 @@ function uniqueIds(ids) {
     output.push(id);
   }
   return output;
+}
+
+function getNodeInteractionRect(node) {
+  const nodeEl = getNodeElementById(node.id);
+  if (nodeEl) {
+    const width = nodeEl.offsetWidth || getNodeWidth(node);
+    const height = nodeEl.offsetHeight || getNodeHeight(node);
+    return {
+      left: node.x,
+      top: node.y,
+      right: node.x + width,
+      bottom: node.y + height,
+    };
+  }
+  return {
+    left: node.x,
+    top: node.y,
+    right: node.x + getNodeWidth(node),
+    bottom: node.y + getNodeHeight(node),
+  };
 }
 
 function toGraphPoint(clientX, clientY, canvasEl, viewport) {
