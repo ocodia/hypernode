@@ -22,3 +22,16 @@ export const GRAPH_DEFAULTS = {
   arrowheads: "shown",
   arrowheadSizeStep: 0,
 };
+
+export const KEYBOARD_LINKED_NODE = {
+  horizontalGap: 56,
+  verticalOffset: 0,
+  overlapPadding: 10,
+  collisionStepY: 96,
+  maxCollisionChecks: 10,
+};
+
+export const KEYBOARD_DIRECTIONAL_SELECTION = {
+  axisEpsilon: 0.01,
+  tieEpsilon: 0.01,
+};

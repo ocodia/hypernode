@@ -1,4 +1,10 @@
-import { GRAPH_DEFAULTS, NODE_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
+import {
+  GRAPH_DEFAULTS,
+  KEYBOARD_DIRECTIONAL_SELECTION,
+  KEYBOARD_LINKED_NODE,
+  NODE_DEFAULTS,
+  VIEWPORT_LIMITS,
+} from '../utils/constants.js';
 import { openGraphFile, saveGraphFile, supportsFileSystemAccess } from '../persistence/file.js';
 
 const THEME_STORAGE_KEY = 'hypernode.theme.v1';
@@ -14,6 +20,7 @@ export function bindInteractions(elements, store) {
   let edgeSession = null;
   let edgeTwangTimer = null;
   let activeLiveEditNodeId = null;
+  let editorFocusLock = null;
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -271,16 +278,204 @@ export function bindInteractions(elements, store) {
     titleInput.select();
   }
 
+  function setEditorFocusLock(nodeId, durationMs = 900) {
+    if (!nodeId) return;
+    const safeDuration = Math.max(0, Number(durationMs) || 0);
+    if (safeDuration <= 0) {
+      editorFocusLock = null;
+      return;
+    }
+    editorFocusLock = {
+      nodeId,
+      expiresAt: Date.now() + safeDuration,
+    };
+  }
+
+  function clearEditorFocusLock(nodeId = null) {
+    if (!editorFocusLock) return;
+    if (nodeId && editorFocusLock.nodeId !== nodeId) return;
+    editorFocusLock = null;
+  }
+
+  function stabilizeNodeEditorFocus(nodeId, frames = 0) {
+    const frameCount = Math.max(0, Number(frames) || 0);
+    if (frameCount <= 0) return;
+    let remaining = frameCount;
+    const run = () => {
+      focusNodeTitleInput(nodeId, 0);
+      remaining -= 1;
+      if (remaining > 0) {
+        window.requestAnimationFrame(run);
+      }
+    };
+    window.requestAnimationFrame(run);
+  }
+
   function createNodeInEditMode(point) {
     const node = store.addNode(point);
     if (!node) return;
     openNodeEditor(node.id);
   }
 
-  function openNodeEditor(nodeId) {
+  function createLinkedNodeFromSelection() {
+    const state = store.getState();
+    const selection = state.selection;
+    if (!selection || selection.type !== 'node') return false;
+    const sourceNode = getNode(selection.id, state);
+    if (!sourceNode) return false;
+
+    if (resizeSession) {
+      endResizeSession();
+    }
+    if (edgeSession) {
+      cancelEdgeSession();
+    }
+
+    const point = computeLinkedNodePosition(sourceNode, state.nodes);
+    const node = store.addNode(point);
+    if (!node) return false;
+
+    const fromAnchor = resolveAnchorName(null, sourceNode, node);
+    const toAnchor = resolveAnchorName(null, node, sourceNode);
+    const edgeId = store.connectNodes(sourceNode.id, fromAnchor, node.id, toAnchor);
+    if (edgeId) {
+      triggerEdgeTwang(edgeId);
+    }
+
+    store.setSelection({ type: 'node', id: node.id });
+    openNodeEditor(node.id, { stabilizeFrames: 3, lockFocusMs: 1200 });
+    return true;
+  }
+
+  function selectDirectionalNode(key) {
+    const state = store.getState();
+    const selection = state.selection;
+    if (!isDirectionalArrowKey(key)) return false;
+
+    if (!selection || selection.type !== 'node') {
+      if (!state.nodes.length) return false;
+      return selectNodeById(state.nodes[0].id);
+    }
+
+    const currentNode = getNode(selection.id, state);
+    if (!currentNode) {
+      if (!state.nodes.length) return false;
+      return selectNodeById(state.nodes[0].id);
+    }
+
+    const edgeFollowNodeId = resolveDirectionalEdgeFollowCandidate(currentNode, key, state);
+    if (edgeFollowNodeId) {
+      return selectNodeById(edgeFollowNodeId);
+    }
+
+    const nearestNodeId = resolveNearestDirectionalNodeCandidate(currentNode, key, state.nodes);
+    if (!nearestNodeId) return false;
+    return selectNodeById(nearestNodeId);
+  }
+
+  function selectNodeById(nodeId) {
+    if (!nodeId) return false;
+    const state = store.getState();
+    if (editorFocusLock && editorFocusLock.nodeId !== nodeId) {
+      clearEditorFocusLock();
+    }
+
+    if (resizeSession) {
+      endResizeSession();
+    }
+    if (edgeSession) {
+      cancelEdgeSession();
+    }
+
+    store.setSelection({ type: 'node', id: nodeId });
+    return true;
+  }
+
+  function resolveNearestDirectionalNodeCandidate(currentNode, key, nodes) {
+    const currentCenter = getNodeCenter(currentNode);
+    let best = null;
+
+    for (const node of nodes) {
+      if (node.id === currentNode.id) continue;
+      const score = buildDirectionalScore(currentCenter, node, key);
+      if (!score) continue;
+      if (!best || compareDirectionalScores(score, best.score) < 0) {
+        best = { nodeId: node.id, score };
+      }
+    }
+
+    return best?.nodeId || null;
+  }
+
+  function resolveDirectionalEdgeFollowCandidate(currentNode, key, state) {
+    const byId = new Map(state.nodes.map((node) => [node.id, node]));
+    const candidates = new Map();
+    const expectedAnchor = getExpectedDirectionalAnchor(key);
+    if (!expectedAnchor) return null;
+
+    for (const edge of state.edges) {
+      let side = null;
+      let otherId = null;
+      if (edge.from === currentNode.id) {
+        side = 'from';
+        otherId = edge.to;
+      } else if (edge.to === currentNode.id) {
+        side = 'to';
+        otherId = edge.from;
+      }
+      if (!side || !otherId) continue;
+
+      const otherNode = byId.get(otherId);
+      if (!otherNode) continue;
+
+      const currentAnchor = resolveDirectionalAnchorForEdgeSide({
+        edge,
+        side,
+        currentNode,
+        otherNode,
+        anchorsMode: state.settings.anchorsMode,
+      });
+      if (currentAnchor !== expectedAnchor) continue;
+
+      const score = buildDirectionalScore(getNodeCenter(currentNode), otherNode, key);
+      if (!score) continue;
+
+      const existing = candidates.get(otherNode.id);
+      if (!existing || compareDirectionalScores(score, existing) < 0) {
+        candidates.set(otherNode.id, score);
+      }
+    }
+
+    let best = null;
+    for (const [nodeId, score] of candidates.entries()) {
+      if (!best || compareDirectionalScores(score, best.score) < 0) {
+        best = { nodeId, score };
+      }
+    }
+
+    return best?.nodeId || null;
+  }
+
+  function toggleSelectedNodeEditor() {
+    const state = store.getState();
+    const selection = state.selection;
+    if (!selection || selection.type !== 'node') return false;
+    if (state.ui.editingNodeId === selection.id) {
+      closeNodeEditor(selection.id);
+      return true;
+    }
+    openNodeEditor(selection.id);
+    return true;
+  }
+
+  function openNodeEditor(nodeId, options = {}) {
+    const stabilizeFrames = Number(options.stabilizeFrames) || 0;
+    const lockFocusMs = Number(options.lockFocusMs) || 0;
     activeLiveEditNodeId = null;
     store.setEditingNode(nodeId);
     focusNodeTitleInput(nodeId);
+    stabilizeNodeEditorFocus(nodeId, stabilizeFrames);
+    setEditorFocusLock(nodeId, lockFocusMs);
   }
 
   function closeNodeEditor(nodeId = null) {
@@ -288,6 +483,7 @@ export function bindInteractions(elements, store) {
     if (resolvedNodeId && activeLiveEditNodeId === resolvedNodeId) {
       activeLiveEditNodeId = null;
     }
+    clearEditorFocusLock(resolvedNodeId || null);
     store.clearEditingNode();
   }
 
@@ -629,6 +825,47 @@ export function bindInteractions(elements, store) {
   edgesGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
   edgeOverlayGroup.addEventListener('pointerdown', handleEdgeEndpointPointerDown);
 
+  store.subscribe((state) => {
+    if (!editorFocusLock) return;
+    const lock = editorFocusLock;
+    if (Date.now() > lock.expiresAt) {
+      clearEditorFocusLock();
+      return;
+    }
+    if (state.ui.editingNodeId !== lock.nodeId) {
+      clearEditorFocusLock();
+      return;
+    }
+    if (state.selection?.type !== 'node' || state.selection.id !== lock.nodeId) {
+      clearEditorFocusLock();
+      return;
+    }
+
+    const titleInput = nodesLayer.querySelector(`[data-node-edit-title="${lock.nodeId}"]`);
+    if (!(titleInput instanceof HTMLInputElement)) return;
+
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && isTypingTarget(active) && active !== titleInput) {
+      clearEditorFocusLock();
+      return;
+    }
+    if (active !== titleInput) {
+      titleInput.focus({ preventScroll: true });
+      titleInput.select();
+    }
+  });
+
+  document.addEventListener('focusin', (event) => {
+    if (!editorFocusLock) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (!isTypingTarget(target)) return;
+    const titleInput = nodesLayer.querySelector(`[data-node-edit-title="${editorFocusLock.nodeId}"]`);
+    if (target !== titleInput) {
+      clearEditorFocusLock();
+    }
+  });
+
   const aboutDialog = document.getElementById('about-dialog');
   const aboutBtn = document.getElementById('about-btn');
   const aboutCloseBtn = document.getElementById('about-close-btn');
@@ -866,6 +1103,24 @@ export function bindInteractions(elements, store) {
       return;
     }
 
+    if (ctrlOrCmd && !event.shiftKey && event.key === 'Enter') {
+      event.preventDefault();
+      toggleSelectedNodeEditor();
+      return;
+    }
+
+    if (ctrlOrCmd && event.shiftKey && event.key === 'Enter') {
+      event.preventDefault();
+      createLinkedNodeFromSelection();
+      return;
+    }
+
+    if (ctrlOrCmd && isDirectionalArrowKey(event.key)) {
+      event.preventDefault();
+      selectDirectionalNode(event.key);
+      return;
+    }
+
     if (event.key === 'Delete' || event.key === 'Backspace') {
       const selection = store.getState().selection;
       if (!selection) return;
@@ -970,6 +1225,150 @@ function resolveSessionTargetAnchor({
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function isDirectionalArrowKey(key) {
+  return key === 'ArrowUp'
+    || key === 'ArrowDown'
+    || key === 'ArrowLeft'
+    || key === 'ArrowRight';
+}
+
+function getNodeCenter(node) {
+  return {
+    x: node.x + (getNodeWidth(node) / 2),
+    y: node.y + (getNodeHeight(node) / 2),
+  };
+}
+
+function getNodeWidth(node) {
+  const width = Number(node?.width);
+  return Number.isFinite(width) && width > 0 ? width : NODE_DEFAULTS.width;
+}
+
+function getNodeHeight(node) {
+  const height = Number(node?.height);
+  return Number.isFinite(height) && height > 0 ? height : NODE_DEFAULTS.height;
+}
+
+function buildDirectionalScore(originCenter, candidateNode, key) {
+  const center = getNodeCenter(candidateNode);
+  const dx = center.x - originCenter.x;
+  const dy = center.y - originCenter.y;
+  if (!isDirectionalCandidate(dx, dy, key)) return null;
+  return {
+    primary: getDirectionalPrimaryDistance(dx, dy, key),
+    secondary: getDirectionalSecondaryOffset(dx, dy, key),
+    distance: Math.hypot(dx, dy),
+    nodeId: candidateNode.id,
+  };
+}
+
+function getExpectedDirectionalAnchor(key) {
+  if (key === 'ArrowUp') return 'top';
+  if (key === 'ArrowDown') return 'bottom';
+  if (key === 'ArrowLeft') return 'left';
+  if (key === 'ArrowRight') return 'right';
+  return null;
+}
+
+function resolveDirectionalAnchorForEdgeSide({
+  edge,
+  side,
+  currentNode,
+  otherNode,
+  anchorsMode,
+}) {
+  if (!edge || !side || !currentNode || !otherNode) return null;
+  if (anchorsMode === 'exact') {
+    const storedAnchor = side === 'from' ? edge.fromAnchor : edge.toAnchor;
+    return isAnchorName(storedAnchor) ? storedAnchor : null;
+  }
+  return resolveAnchorName(null, currentNode, otherNode);
+}
+
+function computeLinkedNodePosition(sourceNode, nodes) {
+  const sourceWidth = getNodeWidth(sourceNode);
+  const sourceHeight = getNodeHeight(sourceNode);
+  const baseX = sourceNode.x + sourceWidth + KEYBOARD_LINKED_NODE.horizontalGap;
+  const centeredBaseY = sourceNode.y
+    + KEYBOARD_LINKED_NODE.verticalOffset
+    + ((sourceHeight - NODE_DEFAULTS.height) / 2);
+
+  for (let attempt = 0; attempt <= KEYBOARD_LINKED_NODE.maxCollisionChecks; attempt += 1) {
+    const candidate = {
+      x: baseX,
+      y: centeredBaseY + (attempt * KEYBOARD_LINKED_NODE.collisionStepY),
+    };
+    if (!doesNodeOverlap(candidate, nodes, KEYBOARD_LINKED_NODE.overlapPadding)) {
+      return candidate;
+    }
+  }
+
+  return {
+    x: baseX,
+    y: centeredBaseY + ((KEYBOARD_LINKED_NODE.maxCollisionChecks + 1) * KEYBOARD_LINKED_NODE.collisionStepY),
+  };
+}
+
+function doesNodeOverlap(candidate, nodes, padding = 0) {
+  const left = candidate.x - padding;
+  const right = candidate.x + NODE_DEFAULTS.width + padding;
+  const top = candidate.y - padding;
+  const bottom = candidate.y + NODE_DEFAULTS.height + padding;
+
+  for (const node of nodes) {
+    const nodeLeft = node.x;
+    const nodeRight = node.x + getNodeWidth(node);
+    const nodeTop = node.y;
+    const nodeBottom = node.y + getNodeHeight(node);
+    const intersects = left < nodeRight
+      && right > nodeLeft
+      && top < nodeBottom
+      && bottom > nodeTop;
+    if (intersects) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function isDirectionalCandidate(dx, dy, key) {
+  const epsilon = KEYBOARD_DIRECTIONAL_SELECTION.axisEpsilon;
+  if (key === 'ArrowUp') return dy < -epsilon;
+  if (key === 'ArrowDown') return dy > epsilon;
+  if (key === 'ArrowLeft') return dx < -epsilon;
+  if (key === 'ArrowRight') return dx > epsilon;
+  return false;
+}
+
+function getDirectionalPrimaryDistance(dx, dy, key) {
+  if (key === 'ArrowUp' || key === 'ArrowDown') {
+    return Math.abs(dx);
+  }
+  return Math.abs(dy);
+}
+
+function getDirectionalSecondaryOffset(dx, dy, key) {
+  if (key === 'ArrowUp' || key === 'ArrowDown') {
+    return Math.abs(dy);
+  }
+  return Math.abs(dx);
+}
+
+function compareDirectionalScores(left, right) {
+  const epsilon = KEYBOARD_DIRECTIONAL_SELECTION.tieEpsilon;
+  if (Math.abs(left.primary - right.primary) > epsilon) {
+    return left.primary - right.primary;
+  }
+  if (Math.abs(left.secondary - right.secondary) > epsilon) {
+    return left.secondary - right.secondary;
+  }
+  if (Math.abs(left.distance - right.distance) > epsilon) {
+    return left.distance - right.distance;
+  }
+  return left.nodeId.localeCompare(right.nodeId);
 }
 
 function isResizeCorner(corner) {

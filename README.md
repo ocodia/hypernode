@@ -37,10 +37,12 @@ It runs fully client-side with no backend and no account system. Graph data auto
 ## Keyboard Shortcuts
 
 - `Delete` / `Backspace`: delete selected node/edge
+- `Ctrl/Cmd + Shift + Enter`: create a new node linked from the selected node
+- `Ctrl/Cmd + Arrow` (`Up`/`Down`/`Left`/`Right`): follow connected node in that direction, otherwise nearest
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
 - `Ctrl/Cmd + S`: save graph file
-- `Ctrl/Cmd + Enter`: close active node editor
+- `Ctrl/Cmd + Enter`: toggle selected node editor
 - `Escape`: exit node edit mode, cancel edge draft mode, or clear selection
 
 ## Tech Stack
