@@ -361,6 +361,59 @@ textarea:focus-visible {
   cursor: default;
 }
 
+.node__toolbar {
+  position: absolute;
+  right: 10px;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--panel-border);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  box-shadow: var(--overlay-shadow);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(-100% - 6px));
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+  z-index: 5;
+}
+
+.node.is-selected:not(.is-editing) .node__toolbar {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(calc(-100% - 10px));
+}
+
+.node__tool-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 7px;
+  text-align: center;
+}
+
+.node__tool-btn .bi {
+  font-size: 0.82rem;
+}
+
+.node__tool-btn--danger {
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+  background: var(--danger-soft);
+}
+
+.node__tool-btn--danger:hover {
+  border-color: #ef4444;
+}
+
 .node__content {
   height: 100%;
 }
@@ -408,17 +461,9 @@ textarea:focus-visible {
 .node__head {
   display: flex;
   align-items: start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
   min-width: 0;
-}
-
-.node__edit-btn {
-  padding: 4px 8px;
-  font-size: 0.74rem;
-  border-radius: 8px;
-  color: var(--muted);
-  background: var(--surface-soft);
 }
 
 .node__description {

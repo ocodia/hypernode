@@ -397,7 +397,7 @@ export function bindInteractions(elements, store) {
       return;
     }
 
-    if (event.target.closest('[data-node-editor], [data-node-edit-open]')) {
+    if (event.target.closest('[data-node-editor], [data-node-edit-open], [data-node-delete]')) {
       event.stopPropagation();
       return;
     }
@@ -527,6 +527,15 @@ export function bindInteractions(elements, store) {
       const nodeId = openEl.dataset.nodeEditOpen;
       store.setSelection({ type: 'node', id: nodeId });
       openNodeEditor(nodeId);
+      event.stopPropagation();
+      return;
+    }
+
+    const deleteEl = event.target.closest('[data-node-delete]');
+    if (deleteEl) {
+      const nodeId = deleteEl.dataset.nodeDelete;
+      activeLiveEditNodeId = null;
+      store.deleteNode(nodeId);
       event.stopPropagation();
       return;
     }

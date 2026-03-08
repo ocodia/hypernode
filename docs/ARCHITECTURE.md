@@ -66,7 +66,7 @@ Stores:
 Responsible for:
 
 - applying viewport transform
-- rendering node cards and inline node editor UI
+- rendering node cards, selected-node mini toolbar actions, and inline node editor UI
 - rendering edges and selected-edge overlay controls
 - rendering edge draft preview
 - rendering import status toast
@@ -77,6 +77,7 @@ Responsible for:
 
 - pan and zoom interactions
 - node selection/drag/edit lifecycle
+- selected-node mini toolbar actions (`Edit`, `Delete`)
 - edge creation from node anchors
 - edge endpoint reconnect workflow
 - keyboard shortcuts

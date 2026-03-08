@@ -22,7 +22,10 @@ Use this checklist before shipping interaction changes.
 ### Node corner resize
 
 - [ ] Select a node and verify all four corner handles are visible.
+- [ ] Select a node and verify mini toolbar appears above node without intersecting node border/anchors.
+- [ ] Verify mini toolbar exposes `Edit` and `Delete` actions.
 - [ ] Deselect node and verify handles are hidden.
+- [ ] Deselect node and verify mini toolbar is hidden.
 - [ ] Enter node edit mode and verify handles are hidden.
 - [ ] Drag each corner handle and verify resize occurs from that corner.
 - [ ] Verify minimum node size clamp at `160x96`.

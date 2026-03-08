@@ -21,6 +21,7 @@ Last updated: 2026-03-07
 - [x] Import status toast feedback
 - [x] `Escape` cancels edge draft mode and exits edit mode
 - [x] Node corner resize with selected-only handles, min clamp (`160x96`), undo/redo, and persistence
+- [x] Selected-node mini toolbar with `Edit` and `Delete` actions
 
 ## Remaining Work
 

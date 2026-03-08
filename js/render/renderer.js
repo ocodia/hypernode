@@ -74,12 +74,19 @@ export function createRenderer(elements, store) {
             : `
             <div class="node__head">
               <h3 class="node__title">${escapeHTML(node.title)}</h3>
-              <button class="node__edit-btn" type="button" data-node-edit-open="${node.id}"><i class="bi bi-pencil-fill"></i></button>
             </div>
             ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ""}
           `;
         return `
           <article class="node ${selectedClass} ${editingClass} ${connectClass} ${fixedSizeClass}" data-node-id="${node.id}" style="${nodeStyle}">
+            <div class="node__toolbar">
+              <button class="node__tool-btn" type="button" data-node-edit-open="${node.id}" aria-label="Edit node" title="Edit Node">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+              <button class="node__tool-btn node__tool-btn--danger" type="button" data-node-delete="${node.id}" aria-label="Delete node" title="Delete Node">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
             <div class="node__content">
               ${content}
             </div>

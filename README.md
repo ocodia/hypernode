@@ -7,10 +7,11 @@ It runs fully client-side with no backend and no account system. Graph data auto
 ## Current Features
 
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
-- Edit node title/description inline on each node.
+- Edit node title/description inline from the selected-node mini toolbar.
 - Delete selected nodes with `Delete`/`Backspace`.
 - Create edges from node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
+- Selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
 - Render directed edge arrowheads at destination anchors with curved-approach rotation.
 - Reconnect existing edge endpoints by dragging selected edge endpoints.
 - Delete selected edges via inline edge overlay control or keyboard delete.
