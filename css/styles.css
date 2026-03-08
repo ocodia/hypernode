@@ -130,12 +130,11 @@ textarea:focus-visible {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-image:
-    radial-gradient(
-      circle at var(--bg-dot-origin) var(--bg-dot-origin),
-      color-mix(in srgb, var(--grid-dot) calc(var(--bg-dot-alpha) * 100%), transparent) var(--bg-dot-radius),
-      transparent calc(var(--bg-dot-radius) + 0.1px)
-    );
+  background-image: radial-gradient(
+    circle at var(--bg-dot-origin) var(--bg-dot-origin),
+    color-mix(in srgb, var(--grid-dot) calc(var(--bg-dot-alpha) * 100%), transparent) var(--bg-dot-radius),
+    transparent calc(var(--bg-dot-radius) + 0.1px)
+  );
   background-size: var(--bg-step) var(--bg-step);
   background-position: var(--bg-minor-offset-x) var(--bg-minor-offset-y);
   cursor: grab;
@@ -169,12 +168,11 @@ textarea:focus-visible {
 }
 
 .canvas[data-background-style="dots"] {
-  background-image:
-    radial-gradient(
-      circle at var(--bg-dot-origin) var(--bg-dot-origin),
-      color-mix(in srgb, var(--grid-dot) calc(var(--bg-dot-alpha) * 100%), transparent) var(--bg-dot-radius),
-      transparent calc(var(--bg-dot-radius) + 0.1px)
-    );
+  background-image: radial-gradient(
+    circle at var(--bg-dot-origin) var(--bg-dot-origin),
+    color-mix(in srgb, var(--grid-dot) calc(var(--bg-dot-alpha) * 100%), transparent) var(--bg-dot-radius),
+    transparent calc(var(--bg-dot-radius) + 0.1px)
+  );
   background-size: var(--bg-step) var(--bg-step);
   background-position: var(--bg-minor-offset-x) var(--bg-minor-offset-y);
 }
@@ -362,6 +360,62 @@ textarea:focus-visible {
   line-height: 1;
 }
 
+.toolbar__icon-btn--has-swatch {
+  position: relative;
+}
+
+.toolbar__icon-btn--has-swatch::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--panel) 65%, #000000 35%);
+  background: var(--active-node-swatch, transparent);
+}
+
+.toolbar__icon-btn[data-node-color-current="sage"] {
+  --active-node-swatch: var(--palette-sage-swatch);
+}
+
+.toolbar__icon-btn[data-node-color-current="sky"] {
+  --active-node-swatch: var(--palette-sky-swatch);
+}
+
+.toolbar__icon-btn[data-node-color-current="amber"] {
+  --active-node-swatch: var(--palette-amber-swatch);
+}
+
+.toolbar__icon-btn[data-node-color-current="rose"] {
+  --active-node-swatch: var(--palette-rose-swatch);
+}
+
+.toolbar__icon-btn[data-node-color-current="slate"] {
+  --active-node-swatch: var(--palette-slate-swatch);
+}
+
+.toolbar__icon-btn[data-node-color-current="teal"] {
+  --active-node-swatch: var(--palette-teal-swatch);
+}
+
+.toolbar__icon-btn[data-node-color-current="violet"] {
+  --active-node-swatch: var(--palette-violet-swatch);
+}
+
+.toolbar__icon-btn[data-node-color-current="peach"] {
+  --active-node-swatch: var(--palette-peach-swatch);
+}
+
+.toolbar__icon-btn[data-node-color-current="mint"] {
+  --active-node-swatch: var(--palette-mint-swatch);
+}
+
+.toolbar__icon-btn[data-node-color-current="indigo"] {
+  --active-node-swatch: var(--palette-indigo-swatch);
+}
+
 .toolbar__popover {
   margin-top: 10px;
   padding: 10px;
@@ -380,7 +434,7 @@ textarea:focus-visible {
 
 .node-color-picker {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(10, 1fr);
   gap: 8px;
 }
 

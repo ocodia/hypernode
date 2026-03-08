@@ -596,11 +596,15 @@ export function bindInteractions(elements, store) {
 
   function syncNodeColorButtonState(state, buttonEl, popoverEl) {
     if (!(buttonEl instanceof HTMLButtonElement)) return;
-    const hasNodeSelection = getSelectedNodeIds(state.selection).length > 0;
-    buttonEl.disabled = !hasNodeSelection;
-    if (!hasNodeSelection) {
-      setNodeColorPopoverOpen(false, buttonEl, popoverEl);
+    const currentColorKey = getNormalizedNodeColorValue(state.settings?.nodeColorDefault);
+    if (currentColorKey) {
+      buttonEl.dataset.nodeColorCurrent = currentColorKey;
+      buttonEl.classList.add('toolbar__icon-btn--has-swatch');
+    } else {
+      delete buttonEl.dataset.nodeColorCurrent;
+      buttonEl.classList.remove('toolbar__icon-btn--has-swatch');
     }
+    buttonEl.disabled = false;
   }
 
   canvas.addEventListener('dblclick', (event) => {
@@ -1154,11 +1158,12 @@ export function bindInteractions(elements, store) {
       const swatchBtn = event.target.closest('[data-node-color-value]');
       if (!(swatchBtn instanceof HTMLButtonElement)) return;
       const selectionIds = getSelectedNodeIds(store.getState().selection);
+      const colorKey = getNormalizedNodeColorValue(swatchBtn.dataset.nodeColorValue);
+      store.setNodeColorDefault(colorKey);
       if (!selectionIds.length) {
         setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
         return;
       }
-      const colorKey = getNormalizedNodeColorValue(swatchBtn.dataset.nodeColorValue);
       store.setNodesColor(selectionIds, colorKey);
       setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
       event.stopPropagation();
@@ -1249,6 +1254,7 @@ export function bindInteractions(elements, store) {
         anchorsMode: GRAPH_DEFAULTS.anchorsMode,
         arrowheads: GRAPH_DEFAULTS.arrowheads,
         arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
+        nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
       },
       nodes: [],
       edges: [],

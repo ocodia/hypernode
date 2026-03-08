@@ -34,6 +34,7 @@ export const GRAPH_DEFAULTS = {
   anchorsMode: "auto",
   arrowheads: "shown",
   arrowheadSizeStep: 0,
+  nodeColorDefault: null,
 };
 
 export const KEYBOARD_LINKED_NODE = {

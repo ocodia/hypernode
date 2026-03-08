@@ -15,6 +15,7 @@ export function emptyGraphState() {
       anchorsMode: GRAPH_DEFAULTS.anchorsMode,
       arrowheads: GRAPH_DEFAULTS.arrowheads,
       arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
+      nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
     },
     nodes: [],
     edges: [],
@@ -81,7 +82,10 @@ export function validateGraphPayload(payload) {
     || isValidArrowheadsMode(payload.settings.arrowheads);
   const hasValidArrowheadSizeStep = payload.settings.arrowheadSizeStep === undefined
     || isValidArrowheadSizeStep(payload.settings.arrowheadSizeStep);
-  if (!hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep) {
+  const hasValidNodeColorDefault = payload.settings.nodeColorDefault === undefined
+    || payload.settings.nodeColorDefault === null
+    || isValidNodeColorKey(payload.settings.nodeColorDefault);
+  if (!hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidNodeColorDefault) {
     return false;
   }
 
@@ -117,6 +121,7 @@ export function sanitizeGraphSettings(settings) {
       ? settings.arrowheads
       : GRAPH_DEFAULTS.arrowheads,
     arrowheadSizeStep: sanitizeArrowheadSizeStep(settings?.arrowheadSizeStep),
+    nodeColorDefault: sanitizeNodeColorKey(settings?.nodeColorDefault),
   };
 }
 
@@ -172,5 +177,9 @@ function sanitizeNodeColorKey(value) {
   if (typeof value !== 'string') {
     return null;
   }
-  return NODE_COLOR_KEYS.includes(value) ? value : null;
+  return isValidNodeColorKey(value) ? value : null;
+}
+
+function isValidNodeColorKey(value) {
+  return typeof value === 'string' && NODE_COLOR_KEYS.includes(value);
 }

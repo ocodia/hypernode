@@ -198,7 +198,17 @@ export function createStore(initialGraph = null) {
 
   function addNode({ x, y, title = NODE_DEFAULTS.title, description = '' }, options = {}) {
     if (!options.skipHistory) pushHistory('add-node');
-    const node = sanitizeNode({ id: createId('node'), title, description, x, y });
+    const resolvedColorKey = options.colorKey !== undefined
+      ? sanitizeColorKey(options.colorKey)
+      : sanitizeColorKey(state.settings.nodeColorDefault);
+    const node = sanitizeNode({
+      id: createId('node'),
+      title,
+      description,
+      x,
+      y,
+      colorKey: resolvedColorKey,
+    });
     state.nodes.push(node);
     state.selection = { type: 'node', id: node.id };
     notify();
@@ -508,6 +518,14 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setNodeColorDefault(colorKey) {
+    const nextValue = sanitizeColorKey(colorKey);
+    if ((state.settings.nodeColorDefault || null) === nextValue) return;
+    pushHistory('set-node-color-default');
+    state.settings.nodeColorDefault = nextValue;
+    notify();
+  }
+
   function setViewport(next) {
     state.viewport.panX = Number.isFinite(next.panX) ? next.panX : state.viewport.panX;
     state.viewport.panY = Number.isFinite(next.panY) ? next.panY : state.viewport.panY;
@@ -617,6 +635,7 @@ export function createStore(initialGraph = null) {
     setAnchorsMode,
     setArrowheads,
     setArrowheadSizeStep,
+    setNodeColorDefault,
     replaceGraph,
     setViewport,
     resetView,
