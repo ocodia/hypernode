@@ -15,7 +15,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Multi-select nodes with `Ctrl/Cmd + click` (additive).
 - Multi-select nodes with `Ctrl/Cmd + drag` marquee (touch/intersection hit rule).
 - Drag any selected node to move the full selected group together.
-- Clicking empty canvas outside the selected group bounds clears multi-selection.
+- Clicking empty canvas clears selection.
 - Render directed edge arrowheads at destination anchors with curved-approach rotation.
 - Reconnect existing edge endpoints by dragging selected edge endpoints.
 - Delete selected edges via inline edge overlay control or keyboard delete.

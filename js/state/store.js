@@ -176,6 +176,17 @@ export function createStore(initialGraph = null) {
     setNodeSelection(ids, { primaryId: nodeId });
   }
 
+  function toggleNodeInSelection(nodeId) {
+    if (!nodeId) return;
+    const nodeExists = state.nodes.some((node) => node.id === nodeId);
+    if (!nodeExists) return;
+    const ids = getSelectedNodeIds(state.selection);
+    const nextIds = ids.includes(nodeId)
+      ? ids.filter((id) => id !== nodeId)
+      : [...ids, nodeId];
+    setNodeSelection(nextIds, { primaryId: nodeId });
+  }
+
   function clearSelection() {
     if (state.ui.editingNodeId) {
       finalizeEditingNodeText(state.ui.editingNodeId);
@@ -556,6 +567,7 @@ export function createStore(initialGraph = null) {
     setSelection,
     setNodeSelection,
     addNodeToSelection,
+    toggleNodeInSelection,
     clearSelection,
     addNode,
     updateNode,

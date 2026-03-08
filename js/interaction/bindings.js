@@ -593,13 +593,7 @@ export function bindInteractions(elements, store) {
     endResizeSession();
     activeLiveEditNodeId = null;
     const state = store.getState();
-    const selectedNodeBounds = getSelectedNodesBounds(state.nodes, state.selection);
-    const pointer = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
-    if (state.selection?.type === 'nodes') {
-      if (selectedNodeBounds && !rectContainsPoint(selectedNodeBounds, pointer)) {
-        store.clearSelection();
-      }
-    } else if (state.selection) {
+    if (state.selection) {
       store.clearSelection();
     }
     panSession = {
@@ -715,7 +709,7 @@ export function bindInteractions(elements, store) {
       activeLiveEditNodeId = null;
     }
     if (isAdditiveModifier(event)) {
-      store.addNodeToSelection(nodeId);
+      store.toggleNodeInSelection(nodeId);
       event.stopPropagation();
       event.preventDefault();
       return;
@@ -875,7 +869,7 @@ export function bindInteractions(elements, store) {
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl) return;
     if (isAdditiveModifier(event)) {
-      store.addNodeToSelection(nodeEl.dataset.nodeId);
+      store.toggleNodeInSelection(nodeEl.dataset.nodeId);
       event.stopPropagation();
       return;
     }
@@ -1305,39 +1299,6 @@ function getSelectedNodeIds(selection) {
     return Array.isArray(selection.ids) ? selection.ids : [];
   }
   return [];
-}
-
-function getSelectedNodesBounds(nodes, selection) {
-  const selectedIds = getSelectedNodeIds(selection);
-  if (!selectedIds.length) return null;
-  const byId = new Map(nodes.map((node) => [node.id, node]));
-  let left = Infinity;
-  let top = Infinity;
-  let right = -Infinity;
-  let bottom = -Infinity;
-
-  for (const nodeId of selectedIds) {
-    const node = byId.get(nodeId);
-    if (!node) continue;
-    const rect = getNodeInteractionRect(node);
-    left = Math.min(left, rect.left);
-    top = Math.min(top, rect.top);
-    right = Math.max(right, rect.right);
-    bottom = Math.max(bottom, rect.bottom);
-  }
-
-  if (!Number.isFinite(left) || !Number.isFinite(top) || !Number.isFinite(right) || !Number.isFinite(bottom)) {
-    return null;
-  }
-  return { left, top, right, bottom };
-}
-
-function rectContainsPoint(rect, point) {
-  if (!rect || !point) return false;
-  return point.x >= rect.left
-    && point.x <= rect.right
-    && point.y >= rect.top
-    && point.y <= rect.bottom;
 }
 
 function toRectFromPoints(x1, y1, x2, y2) {
