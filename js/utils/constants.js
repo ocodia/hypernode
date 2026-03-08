@@ -15,6 +15,8 @@ export const NODE_DEFAULTS = {
   title: "Untitled Node",
 };
 
+export const NODE_COLOR_KEYS = ["sage", "sky", "amber", "rose", "slate"];
+
 export const GRAPH_DEFAULTS = {
   name: "Untitled Graph",
   backgroundStyle: "dots",

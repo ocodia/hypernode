@@ -48,6 +48,7 @@ Last updated: 2026-03-07
 ### P3 - Theme and Visual Options
 
 - [x] Dark mode
+- [x] Node color palette picker in toolbar (5 curated colors + reset) with light/dark-aware legible node styling and complementary selection highlights.
 
 ### P4 - File Workflow
 

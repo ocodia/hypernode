@@ -1,4 +1,4 @@
-import { GRAPH_DEFAULTS, NODE_DEFAULTS, VIEWPORT_LIMITS } from './constants.js';
+import { GRAPH_DEFAULTS, NODE_COLOR_KEYS, NODE_DEFAULTS, VIEWPORT_LIMITS } from './constants.js';
 
 const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
 const BACKGROUND_STYLES = new Set(['dots', 'graph-paper']);
@@ -46,6 +46,7 @@ export function emptyGraphState() {
 export function sanitizeNode(node) {
   const width = sanitizeOptionalSize(node.width);
   const height = sanitizeOptionalSize(node.height);
+  const colorKey = sanitizeNodeColorKey(node.colorKey);
   return {
     id: String(node.id),
     title: String(node.title || NODE_DEFAULTS.title).trim() || NODE_DEFAULTS.title,
@@ -54,6 +55,7 @@ export function sanitizeNode(node) {
     y: Number(node.y) || 0,
     ...(width === null ? {} : { width }),
     ...(height === null ? {} : { height }),
+    ...(colorKey === null ? {} : { colorKey }),
   };
 }
 
@@ -161,4 +163,14 @@ function sanitizeOptionalSize(value) {
     return null;
   }
   return numeric;
+}
+
+function sanitizeNodeColorKey(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  if (typeof value !== 'string') {
+    return null;
+  }
+  return NODE_COLOR_KEYS.includes(value) ? value : null;
 }

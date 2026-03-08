@@ -2,6 +2,7 @@ import {
   GRAPH_DEFAULTS,
   KEYBOARD_DIRECTIONAL_SELECTION,
   KEYBOARD_LINKED_NODE,
+  NODE_COLOR_KEYS,
   NODE_DEFAULTS,
   VIEWPORT_LIMITS,
 } from '../utils/constants.js';
@@ -22,6 +23,7 @@ export function bindInteractions(elements, store) {
   let edgeTwangTimer = null;
   let activeLiveEditNodeId = null;
   let editorFocusLock = null;
+  let isNodeColorPopoverOpen = false;
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -571,6 +573,36 @@ export function bindInteractions(elements, store) {
     }
   }
 
+  function setNodeColorPopoverOpen(nextOpen, buttonEl, popoverEl) {
+    if (!(buttonEl instanceof HTMLButtonElement) || !(popoverEl instanceof HTMLElement)) {
+      return;
+    }
+    const canOpen = !buttonEl.disabled;
+    const open = Boolean(nextOpen && canOpen);
+    isNodeColorPopoverOpen = open;
+    popoverEl.hidden = !open;
+    buttonEl.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  function getNormalizedNodeColorValue(value) {
+    if (value === 'default') {
+      return null;
+    }
+    if (typeof value !== 'string') {
+      return null;
+    }
+    return NODE_COLOR_KEYS.includes(value) ? value : null;
+  }
+
+  function syncNodeColorButtonState(state, buttonEl, popoverEl) {
+    if (!(buttonEl instanceof HTMLButtonElement)) return;
+    const hasNodeSelection = getSelectedNodeIds(state.selection).length > 0;
+    buttonEl.disabled = !hasNodeSelection;
+    if (!hasNodeSelection) {
+      setNodeColorPopoverOpen(false, buttonEl, popoverEl);
+    }
+  }
+
   canvas.addEventListener('dblclick', (event) => {
     if (event.target.closest('[data-node-id]')) return;
     const point = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
@@ -1014,6 +1046,8 @@ export function bindInteractions(elements, store) {
   const newGraphBtn = document.getElementById('new-graph-btn');
   const openGraphBtn = document.getElementById('open-graph-btn');
   const saveGraphBtn = document.getElementById('save-graph-btn');
+  const nodeColorBtn = document.getElementById('node-color-btn');
+  const nodeColorPopover = document.getElementById('node-color-popover');
 
   if (aboutBtn && aboutDialog) {
     aboutBtn.addEventListener('click', () => {
@@ -1105,6 +1139,37 @@ export function bindInteractions(elements, store) {
       const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
       applyTheme(nextTheme, themeToggleBtn);
       window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    });
+  }
+
+  syncNodeColorButtonState(store.getState(), nodeColorBtn, nodeColorPopover);
+
+  if (nodeColorBtn instanceof HTMLButtonElement && nodeColorPopover instanceof HTMLElement) {
+    nodeColorBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      setNodeColorPopoverOpen(!isNodeColorPopoverOpen, nodeColorBtn, nodeColorPopover);
+    });
+
+    nodeColorPopover.addEventListener('click', (event) => {
+      const swatchBtn = event.target.closest('[data-node-color-value]');
+      if (!(swatchBtn instanceof HTMLButtonElement)) return;
+      const selectionIds = getSelectedNodeIds(store.getState().selection);
+      if (!selectionIds.length) {
+        setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
+        return;
+      }
+      const colorKey = getNormalizedNodeColorValue(swatchBtn.dataset.nodeColorValue);
+      store.setNodesColor(selectionIds, colorKey);
+      setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
+      event.stopPropagation();
+    });
+
+    document.addEventListener('pointerdown', (event) => {
+      if (!isNodeColorPopoverOpen) return;
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.closest('#node-color-popover') || target.closest('#node-color-btn')) return;
+      setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
     });
   }
 
@@ -1216,6 +1281,11 @@ export function bindInteractions(elements, store) {
 
   document.addEventListener('keydown', (event) => {
     if (aboutDialog?.open || settingsDialog?.open) return;
+    if (event.key === 'Escape' && isNodeColorPopoverOpen) {
+      event.preventDefault();
+      setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
+      return;
+    }
     if (isTypingTarget(event.target)) return;
 
     const ctrlOrCmd = event.ctrlKey || event.metaKey;
@@ -1285,6 +1355,10 @@ export function bindInteractions(elements, store) {
       }
       store.clearSelection();
     }
+  });
+
+  store.subscribe((state) => {
+    syncNodeColorButtonState(state, nodeColorBtn, nodeColorPopover);
   });
 }
 

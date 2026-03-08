@@ -1,6 +1,6 @@
 import { createId } from '../utils/id.js';
 import { emptyGraphState, sanitizeEdge, sanitizeGraphName, sanitizeGraphSettings, sanitizeNode } from '../utils/graph.js';
-import { NODE_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
+import { NODE_COLOR_KEYS, NODE_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
 
 export function createStore(initialGraph = null) {
   let state = emptyGraphState();
@@ -298,6 +298,34 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setNodesColor(ids, colorKey) {
+    const selectedIds = [];
+    const seen = new Set();
+    for (const id of Array.isArray(ids) ? ids : []) {
+      if (typeof id !== 'string' || seen.has(id)) continue;
+      seen.add(id);
+      if (state.nodes.some((node) => node.id === id)) {
+        selectedIds.push(id);
+      }
+    }
+    if (!selectedIds.length) return;
+
+    const normalizedColorKey = sanitizeColorKey(colorKey);
+    const targets = state.nodes.filter((node) => selectedIds.includes(node.id));
+    const changed = targets.some((node) => (node.colorKey || null) !== normalizedColorKey);
+    if (!changed) return;
+
+    pushHistory('set-node-color');
+    for (const node of targets) {
+      if (normalizedColorKey === null) {
+        delete node.colorKey;
+      } else {
+        node.colorKey = normalizedColorKey;
+      }
+    }
+    notify();
+  }
+
   function deleteSelectedNodes() {
     const selectedNodeIds = getSelectedNodeIds(state.selection);
     if (!selectedNodeIds.length) return;
@@ -577,6 +605,7 @@ export function createStore(initialGraph = null) {
     beginNodeMove,
     beginNodeEdit,
     beginNodeResize,
+    setNodesColor,
     deleteNode,
     deleteSelectedNodes,
     addEdge,
@@ -603,6 +632,16 @@ function resolveAutoAnchor(fromNode, toNode) {
     return dx >= 0 ? 'right' : 'left';
   }
   return dy >= 0 ? 'bottom' : 'top';
+}
+
+function sanitizeColorKey(colorKey) {
+  if (colorKey === null || colorKey === undefined || colorKey === '') {
+    return null;
+  }
+  if (typeof colorKey !== 'string') {
+    return null;
+  }
+  return NODE_COLOR_KEYS.includes(colorKey) ? colorKey : null;
 }
 
 function areSelectionsEqual(left, right) {

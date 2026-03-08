@@ -71,6 +71,7 @@ export function createRenderer(elements, store) {
         const fixedSizeClass = hasExplicitNodeSize(node) ? "has-fixed-size" : "";
         const inlineSizeStyle = buildNodeInlineSizeStyle(node);
         const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}`;
+        const nodeColorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
         const content =
           editingNodeId === node.id
             ? `
@@ -92,7 +93,7 @@ export function createRenderer(elements, store) {
             ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ""}
           `;
         return `
-          <article class="node ${selectedClass} ${singleSelectedClass} ${editingClass} ${connectClass} ${fixedSizeClass}" data-node-id="${node.id}" style="${nodeStyle}">
+          <article class="node ${selectedClass} ${singleSelectedClass} ${editingClass} ${connectClass} ${fixedSizeClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
             <div class="node__toolbar">
               <button class="node__tool-btn" type="button" data-node-edit-open="${node.id}" aria-label="Edit node" title="Edit Node">
                 <i class="bi bi-pencil-fill"></i>

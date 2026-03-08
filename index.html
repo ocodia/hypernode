@@ -22,9 +22,21 @@
           <button id="new-graph-btn" class="toolbar__icon-btn" type="button" aria-label="New Graph" title="New Graph"><i class="bi bi-file-earmark-plus"></i></button>
           <button id="open-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Open Graph" title="Open Graph"><i class="bi bi-folder2-open"></i></button>
           <button id="save-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Save Graph" title="Save Graph"><i class="bi bi-floppy"></i></button>
+          <button id="node-color-btn" class="toolbar__icon-btn" type="button" aria-label="Color selected nodes" title="Color Selected Nodes" aria-haspopup="dialog" aria-expanded="false" aria-controls="node-color-popover" disabled><i class="bi bi-palette"></i></button>
           <button id="settings-btn" class="toolbar__icon-btn" type="button" aria-label="Settings" title="Settings"><i class="bi bi-sliders2"></i></button>
           <button id="theme-toggle-btn" class="toolbar__icon-btn" type="button" aria-label="Enable dark mode" title="Enable Dark Mode"><i class="bi bi-moon-stars"></i></button>
           <button id="about-btn" class="toolbar__icon-btn" type="button" aria-label="About and instructions" title="About"><i class="bi bi-question-circle"></i></button>
+        </div>
+        <div id="node-color-popover" class="toolbar__popover" role="dialog" aria-label="Node color palette" hidden>
+          <p class="toolbar__popover-title">Node Colors</p>
+          <div class="node-color-picker" role="group" aria-label="Apply color to selected nodes">
+            <button class="node-color-picker__swatch" type="button" data-node-color-value="sage" aria-label="Apply sage color" title="Sage"></button>
+            <button class="node-color-picker__swatch" type="button" data-node-color-value="sky" aria-label="Apply sky color" title="Sky"></button>
+            <button class="node-color-picker__swatch" type="button" data-node-color-value="amber" aria-label="Apply amber color" title="Amber"></button>
+            <button class="node-color-picker__swatch" type="button" data-node-color-value="rose" aria-label="Apply rose color" title="Rose"></button>
+            <button class="node-color-picker__swatch" type="button" data-node-color-value="slate" aria-label="Apply slate color" title="Slate"></button>
+            <button class="node-color-picker__reset" type="button" data-node-color-value="default" aria-label="Reset node color to default" title="Reset to default">Reset</button>
+          </div>
         </div>
       </div>
 
