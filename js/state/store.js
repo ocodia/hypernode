@@ -90,12 +90,17 @@ export function createStore(initialGraph = null) {
   }
 
   function setEditingNode(id) {
-    state.ui.editingNodeId = id || null;
+    const nextId = id || null;
+    if (state.ui.editingNodeId && state.ui.editingNodeId !== nextId) {
+      finalizeEditingNodeText(state.ui.editingNodeId);
+    }
+    state.ui.editingNodeId = nextId;
     notify();
   }
 
   function clearEditingNode() {
     if (!state.ui.editingNodeId) return;
+    finalizeEditingNodeText(state.ui.editingNodeId);
     state.ui.editingNodeId = null;
     notify();
   }
@@ -132,6 +137,7 @@ export function createStore(initialGraph = null) {
     if (state.ui.editingNodeId) {
       const keepEditing = selection?.type === 'node' && selection.id === state.ui.editingNodeId;
       if (!keepEditing) {
+        finalizeEditingNodeText(state.ui.editingNodeId);
         state.ui.editingNodeId = null;
       }
     }
@@ -139,6 +145,9 @@ export function createStore(initialGraph = null) {
   }
 
   function clearSelection() {
+    if (state.ui.editingNodeId) {
+      finalizeEditingNodeText(state.ui.editingNodeId);
+    }
     state.selection = null;
     state.ui.editingNodeId = null;
     notify();
@@ -153,10 +162,10 @@ export function createStore(initialGraph = null) {
     return node;
   }
 
-  function updateNode(id, patch) {
+  function updateNode(id, patch, options = {}) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
-    pushHistory('update-node');
+    if (!options.skipHistory) pushHistory('update-node');
     if (typeof patch.title === 'string') {
       const title = patch.title.trim();
       node.title = title || NODE_DEFAULTS.title;
@@ -170,7 +179,9 @@ export function createStore(initialGraph = null) {
     if (typeof patch.y === 'number') {
       node.y = patch.y;
     }
-    notify();
+    if (!options.skipNotify) {
+      notify();
+    }
   }
 
   function moveNode(id, x, y, options = {}) {
@@ -203,6 +214,10 @@ export function createStore(initialGraph = null) {
 
   function beginNodeMove() {
     pushHistory('move-node');
+  }
+
+  function beginNodeEdit() {
+    pushHistory('update-node');
   }
 
   function beginNodeResize() {
@@ -446,6 +461,15 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function finalizeEditingNodeText(nodeId) {
+    if (!nodeId) return;
+    const node = state.nodes.find((item) => item.id === nodeId);
+    if (!node) return;
+    const title = String(node.title ?? '').trim();
+    node.title = title || NODE_DEFAULTS.title;
+    node.description = String(node.description ?? '');
+  }
+
   return {
     getState,
     subscribe,
@@ -467,6 +491,7 @@ export function createStore(initialGraph = null) {
     moveNode,
     resizeNode,
     beginNodeMove,
+    beginNodeEdit,
     beginNodeResize,
     deleteNode,
     addEdge,

@@ -8,7 +8,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
 - Edit node title/description inline on each node.
-- Delete nodes from the inline editor or with `Delete`/`Backspace`.
+- Delete selected nodes with `Delete`/`Backspace`.
 - Create edges from node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
 - Render directed edge arrowheads at destination anchors with curved-approach rotation.
@@ -39,7 +39,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
 - `Ctrl/Cmd + S`: save graph file
-- `Ctrl/Cmd + Enter`: save and close active node editor
+- `Ctrl/Cmd + Enter`: close active node editor
 - `Escape`: exit node edit mode, cancel edge draft mode, or clear selection
 
 ## Tech Stack

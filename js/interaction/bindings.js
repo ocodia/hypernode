@@ -13,6 +13,7 @@ export function bindInteractions(elements, store) {
   let resizeSession = null;
   let edgeSession = null;
   let edgeTwangTimer = null;
+  let activeLiveEditNodeId = null;
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -273,19 +274,36 @@ export function bindInteractions(elements, store) {
   function createNodeInEditMode(point) {
     const node = store.addNode(point);
     if (!node) return;
-    store.setEditingNode(node.id);
-    focusNodeTitleInput(node.id);
+    openNodeEditor(node.id);
   }
 
-  function saveNodeEditor(nodeId, nodeEl) {
-    if (!nodeId || !nodeEl) return;
-    const titleInput = nodeEl.querySelector(`[data-node-edit-title="${nodeId}"]`);
-    const descriptionInput = nodeEl.querySelector(`[data-node-edit-description="${nodeId}"]`);
-    store.updateNode(nodeId, {
-      title: titleInput?.value || '',
-      description: descriptionInput?.value || '',
-    });
+  function openNodeEditor(nodeId) {
+    activeLiveEditNodeId = null;
+    store.setEditingNode(nodeId);
+    focusNodeTitleInput(nodeId);
+  }
+
+  function closeNodeEditor(nodeId = null) {
+    const resolvedNodeId = nodeId || store.getState().ui.editingNodeId;
+    if (resolvedNodeId && activeLiveEditNodeId === resolvedNodeId) {
+      activeLiveEditNodeId = null;
+    }
     store.clearEditingNode();
+  }
+
+  function applyLiveNodeEditorInput(nodeId, patch) {
+    const node = getNode(nodeId, store.getState());
+    if (!node) return;
+    if (activeLiveEditNodeId !== nodeId) {
+      store.beginNodeEdit();
+      activeLiveEditNodeId = nodeId;
+    }
+    if (typeof patch.title === 'string') {
+      node.title = patch.title;
+    }
+    if (typeof patch.description === 'string') {
+      node.description = patch.description;
+    }
   }
 
   canvas.addEventListener('dblclick', (event) => {
@@ -301,6 +319,7 @@ export function bindInteractions(elements, store) {
     cancelEdgeSession();
     endPanSession();
     endResizeSession();
+    activeLiveEditNodeId = null;
     store.clearSelection();
     panSession = {
       pointerId: event.pointerId,
@@ -378,7 +397,7 @@ export function bindInteractions(elements, store) {
       return;
     }
 
-    if (event.target.closest('[data-node-editor], [data-node-edit-save], [data-node-edit-cancel], [data-node-edit-open]')) {
+    if (event.target.closest('[data-node-editor], [data-node-edit-open]')) {
       event.stopPropagation();
       return;
     }
@@ -391,6 +410,9 @@ export function bindInteractions(elements, store) {
     cancelEdgeSession();
 
     const nodeId = nodeEl.dataset.nodeId;
+    if (store.getState().ui.editingNodeId && store.getState().ui.editingNodeId !== nodeId) {
+      activeLiveEditNodeId = null;
+    }
     store.setSelection({ type: 'node', id: nodeId });
     store.setPanning(false);
     endPanSession();
@@ -418,7 +440,7 @@ export function bindInteractions(elements, store) {
     if (!nodeEl) return;
     const nodeId = nodeEl.dataset.nodeId;
     store.setSelection({ type: 'node', id: nodeId });
-    store.setEditingNode(nodeId);
+    openNodeEditor(nodeId);
     event.stopPropagation();
     event.preventDefault();
   });
@@ -504,31 +526,7 @@ export function bindInteractions(elements, store) {
     if (openEl) {
       const nodeId = openEl.dataset.nodeEditOpen;
       store.setSelection({ type: 'node', id: nodeId });
-      store.setEditingNode(nodeId);
-      event.stopPropagation();
-      return;
-    }
-
-    const saveEl = event.target.closest('[data-node-edit-save]');
-    if (saveEl) {
-      const nodeId = saveEl.dataset.nodeEditSave;
-      const nodeEl = saveEl.closest('[data-node-id]');
-      saveNodeEditor(nodeId, nodeEl);
-      event.stopPropagation();
-      return;
-    }
-
-    const cancelEl = event.target.closest('[data-node-edit-cancel]');
-    if (cancelEl) {
-      store.clearEditingNode();
-      event.stopPropagation();
-      return;
-    }
-
-    const deleteEl = event.target.closest('[data-node-edit-delete]');
-    if (deleteEl) {
-      const nodeId = deleteEl.dataset.nodeEditDelete;
-      store.deleteNode(nodeId);
+      openNodeEditor(nodeId);
       event.stopPropagation();
       return;
     }
@@ -540,14 +538,14 @@ export function bindInteractions(elements, store) {
 
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl) return;
+    if (store.getState().ui.editingNodeId && store.getState().ui.editingNodeId !== nodeEl.dataset.nodeId) {
+      activeLiveEditNodeId = null;
+    }
     store.setSelection({ type: 'node', id: nodeEl.dataset.nodeId });
     event.stopPropagation();
   });
 
   nodesLayer.addEventListener('keydown', (event) => {
-    const ctrlOrCmd = event.ctrlKey || event.metaKey;
-    if (!ctrlOrCmd || event.key !== 'Enter') return;
-
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     const nodeEl = target.closest('[data-node-id]');
@@ -557,9 +555,39 @@ export function bindInteractions(elements, store) {
     const nodeId = nodeEl.dataset.nodeId;
     if (!nodeId) return;
 
-    event.preventDefault();
-    event.stopPropagation();
-    saveNodeEditor(nodeId, nodeEl);
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeNodeEditor(nodeId);
+      return;
+    }
+
+    const ctrlOrCmd = event.ctrlKey || event.metaKey;
+    if (ctrlOrCmd && event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeNodeEditor(nodeId);
+    }
+  });
+
+  nodesLayer.addEventListener('input', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+    const nodeEl = target.closest('[data-node-id]');
+    if (!nodeEl) return;
+    const nodeId = nodeEl.dataset.nodeId;
+    if (!nodeId) return;
+
+    if (target.matches('[data-node-edit-title]')) {
+      applyLiveNodeEditorInput(nodeId, { title: target.value });
+      event.stopPropagation();
+      return;
+    }
+
+    if (target.matches('[data-node-edit-description]')) {
+      applyLiveNodeEditorInput(nodeId, { description: target.value });
+      event.stopPropagation();
+    }
   });
 
   function handleEdgeClick(event) {
@@ -572,6 +600,7 @@ export function bindInteractions(elements, store) {
 
     const edgeEl = event.target.closest('[data-edge-id]');
     if (!edgeEl) return;
+    activeLiveEditNodeId = null;
     store.setSelection({ type: 'edge', id: edgeEl.dataset.edgeId });
     event.stopPropagation();
   }
@@ -843,7 +872,7 @@ export function bindInteractions(elements, store) {
         return;
       }
       if (store.getState().ui.editingNodeId) {
-        store.clearEditingNode();
+        closeNodeEditor();
         return;
       }
       if (edgeSession) {

@@ -65,7 +65,7 @@ As a user, I want to edit title/description without leaving the canvas.
 Acceptance criteria:
 
 - Node can enter inline edit mode.
-- Save updates node card content.
+- Node updates in real time as title/description inputs change.
 - Empty title resolves to default title.
 - Edit mode can be canceled with Escape.
 
@@ -76,7 +76,6 @@ As a user, I want to remove unwanted nodes.
 Acceptance criteria:
 
 - Selected node can be deleted via keyboard.
-- Inline node delete action is available in edit mode.
 - Connected edges are removed automatically.
 - Deletion is undoable.
 

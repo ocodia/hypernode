@@ -65,15 +65,10 @@ export function createRenderer(elements, store) {
                 Name
                 <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" />
               </label>
-              <label class="node__editor-label">
+              <label class="node__editor-label node__editor-label--description">
                 Description
                 <textarea class="node__editor-textarea" data-node-edit-description="${node.id}">${escapeHTML(node.description)}</textarea>
               </label>
-              <div class="node__editor-actions">
-                <button type="button" data-node-edit-save="${node.id}">Save</button>
-                <button type="button" data-node-edit-cancel="${node.id}">Cancel</button>
-                <button type="button" data-node-edit-delete="${node.id}"><i class="bi bi-trash"></i></button>
-              </div>
             </div>
           `
             : `
