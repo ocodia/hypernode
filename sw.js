@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hypernode-cache-v10';
+const CACHE_NAME = 'hypernode-cache-v11';
 
 const APP_SHELL = [
   './',
@@ -58,6 +58,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (isAppShellRequest(request)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (!response || response.status !== 200) {
+            return response;
+          }
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request)),
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
@@ -70,3 +86,11 @@ self.addEventListener('fetch', (event) => {
     }),
   );
 });
+
+function isAppShellRequest(request) {
+  return request.destination === 'script'
+    || request.destination === 'style'
+    || request.destination === 'document'
+    || request.destination === 'worker'
+    || request.destination === 'manifest';
+}

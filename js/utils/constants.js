@@ -11,7 +11,7 @@ export const NODE_DEFAULTS = {
   width: 210,
   height: 80,
   minWidth: 160,
-  minHeight: 20,
+  minHeight: 40,
   title: "Untitled Node",
 };
 
