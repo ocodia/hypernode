@@ -1,5 +1,6 @@
 import {
   GRAPH_DEFAULTS,
+  IMAGE_NODE_DEFAULTS,
   KEYBOARD_DIRECTIONAL_SELECTION,
   KEYBOARD_LINKED_NODE,
   NODE_COLOR_KEYS,
@@ -215,6 +216,18 @@ export function bindInteractions(elements, store) {
     cancelEdgeSession();
     endResizeSession();
 
+    const imageAspectRatio = Number(node.imageAspectRatio);
+    const imagePaneEl = nodeEl?.querySelector('.node__image-pane');
+    const isImageNode = node.kind === IMAGE_NODE_DEFAULTS.kind
+      && Number.isFinite(imageAspectRatio)
+      && imageAspectRatio > 0;
+    const imagePaneHeight = isImageNode
+      ? (imagePaneEl?.offsetHeight || (initialWidth / imageAspectRatio))
+      : null;
+    const imageMetaHeight = isImageNode
+      ? Math.max(0, initialHeight - imagePaneHeight)
+      : null;
+
     resizeSession = {
       pointerId: event.pointerId,
       nodeId: parsed.nodeId,
@@ -226,6 +239,9 @@ export function bindInteractions(elements, store) {
       startRight: node.x + initialWidth,
       startBottom: node.y + initialHeight,
       moved: false,
+      isImageNode,
+      imageAspectRatio: isImageNode ? imageAspectRatio : null,
+      imageMetaHeight,
     };
 
     store.setSelection({ type: 'node', id: parsed.nodeId });
@@ -384,6 +400,22 @@ export function bindInteractions(elements, store) {
 
   function createNodeInEditMode(point) {
     const node = store.addNode(point);
+    if (!node) return;
+    openNodeEditor(node.id);
+  }
+
+  function createImageNodeInEditMode(point, imageFileInfo) {
+    const node = store.addNode({
+      x: point.x,
+      y: point.y,
+      title: imageFileInfo.title || NODE_DEFAULTS.title,
+      description: '',
+      kind: IMAGE_NODE_DEFAULTS.kind,
+      imageData: imageFileInfo.dataUrl,
+      imageAspectRatio: imageFileInfo.aspectRatio,
+      width: imageFileInfo.width,
+      height: imageFileInfo.height,
+    });
     if (!node) return;
     openNodeEditor(node.id);
   }
@@ -811,7 +843,9 @@ export function bindInteractions(elements, store) {
         resizeSession.moved = true;
       }
 
-      const next = computeResizedRect(resizeSession, dx, dy);
+      const next = resizeSession.isImageNode
+        ? computeImageResizedRect(resizeSession, dx)
+        : computeResizedRect(resizeSession, dx, dy);
       store.resizeNode(resizeSession.nodeId, next, { skipHistory: true });
       return;
     }
@@ -1183,6 +1217,10 @@ export function bindInteractions(elements, store) {
     createNodeInEditMode({ x: (120 - viewport.panX) / viewport.zoom, y: (120 - viewport.panY) / viewport.zoom });
   });
 
+  document.getElementById('add-image-btn')?.addEventListener('click', () => {
+    void handleAddImageNode();
+  });
+
   document.getElementById('reset-view-btn')?.addEventListener('click', () => store.resetView());
   document.getElementById('undo-btn')?.addEventListener('click', () => store.undo());
   document.getElementById('redo-btn')?.addEventListener('click', () => store.redo());
@@ -1262,6 +1300,32 @@ export function bindInteractions(elements, store) {
     store.resetView();
     syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
     store.setImportStatus('New graph created.');
+  }
+
+  async function handleAddImageNode() {
+    try {
+      const file = await pickImageFile();
+      if (!file) return;
+      const dataUrl = await readFileAsDataUrl(file);
+      const imageMeta = await loadImageMeta(dataUrl);
+      const { viewport } = store.getState();
+      const point = {
+        x: (120 - viewport.panX) / viewport.zoom,
+        y: (120 - viewport.panY) / viewport.zoom,
+      };
+      const defaultWidth = NODE_DEFAULTS.width;
+      const imageHeight = Math.round(defaultWidth / imageMeta.aspectRatio);
+      const nodeTitle = deriveNodeTitleFromFilename(file.name);
+      createImageNodeInEditMode(point, {
+        title: nodeTitle,
+        dataUrl,
+        aspectRatio: imageMeta.aspectRatio,
+        width: defaultWidth,
+        height: imageHeight + IMAGE_NODE_DEFAULTS.metaHeight,
+      });
+    } catch {
+      store.setImportStatus('Image add failed. Try another file.');
+    }
   }
 
   newGraphBtn?.addEventListener('click', handleNewGraph);
@@ -1543,7 +1607,11 @@ function getNodeWidth(node) {
 
 function getNodeHeight(node) {
   const height = Number(node?.height);
-  return Number.isFinite(height) && height > 0 ? height : NODE_DEFAULTS.height;
+  if (Number.isFinite(height) && height > 0) return height;
+  if (node?.kind === IMAGE_NODE_DEFAULTS.kind && Number(node?.imageAspectRatio) > 0) {
+    return (getNodeWidth(node) / Number(node.imageAspectRatio)) + IMAGE_NODE_DEFAULTS.metaHeight;
+  }
+  return NODE_DEFAULTS.height;
 }
 
 function buildDirectionalScore(originCenter, candidateNode, key) {
@@ -1713,6 +1781,41 @@ function computeResizedRect(session, deltaX, deltaY) {
   };
 }
 
+function computeImageResizedRect(session, deltaX) {
+  const startWidth = session.startRight - session.startLeft;
+  const aspectRatio = Number(session.imageAspectRatio) > 0 ? Number(session.imageAspectRatio) : 1;
+  const metaHeight = Math.max(0, Number(session.imageMetaHeight) || 0);
+  const minImageWidth = IMAGE_NODE_DEFAULTS.minImageWidth;
+  const minImageHeight = IMAGE_NODE_DEFAULTS.minImageHeight;
+  const minWidthByHeight = minImageHeight * aspectRatio;
+  const minWidth = Math.max(minImageWidth, minWidthByHeight);
+
+  let nextWidth = startWidth;
+  if (session.corner.includes('left')) {
+    nextWidth = startWidth - deltaX;
+  } else if (session.corner.includes('right')) {
+    nextWidth = startWidth + deltaX;
+  }
+  nextWidth = Math.max(minWidth, nextWidth);
+
+  const nextImageHeight = Math.max(minImageHeight, nextWidth / aspectRatio);
+  const nextHeight = nextImageHeight + metaHeight;
+
+  const left = session.corner.includes('left')
+    ? session.startRight - nextWidth
+    : session.startLeft;
+  const top = session.corner.includes('top')
+    ? session.startBottom - nextHeight
+    : session.startTop;
+
+  return {
+    x: left,
+    y: top,
+    width: nextWidth,
+    height: nextHeight,
+  };
+}
+
 function isTypingTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
   return target.matches('input, textarea, [contenteditable="true"]');
@@ -1759,6 +1862,72 @@ function getNodeElementById(nodeId) {
     : nodeId;
   const nodeEl = document.querySelector(`[data-node-id="${escapedId}"]`);
   return nodeEl instanceof HTMLElement ? nodeEl : null;
+}
+
+function pickImageFile() {
+  return new Promise((resolve) => {
+    const picker = document.createElement('input');
+    picker.type = 'file';
+    picker.accept = 'image/*';
+    picker.multiple = false;
+    picker.style.position = 'fixed';
+    picker.style.left = '-9999px';
+    document.body.appendChild(picker);
+
+    const finalize = (file = null) => {
+      picker.remove();
+      resolve(file);
+    };
+
+    picker.addEventListener('change', () => {
+      finalize(picker.files?.[0] || null);
+    }, { once: true });
+    picker.addEventListener('cancel', () => finalize(null), { once: true });
+    picker.click();
+  });
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      if (typeof reader.result !== 'string' || !reader.result.startsWith('data:image/')) {
+        reject(new Error('Invalid image data'));
+        return;
+      }
+      resolve(reader.result);
+    });
+    reader.addEventListener('error', () => reject(reader.error || new Error('Failed to read image')));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImageMeta(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => {
+      const width = image.naturalWidth;
+      const height = image.naturalHeight;
+      if (!width || !height) {
+        reject(new Error('Unsupported image dimensions'));
+        return;
+      }
+      resolve({
+        width,
+        height,
+        aspectRatio: width / height,
+      });
+    });
+    image.addEventListener('error', () => reject(new Error('Failed to decode image')));
+    image.src = dataUrl;
+  });
+}
+
+function deriveNodeTitleFromFilename(fileName) {
+  const raw = String(fileName || '').trim();
+  if (!raw) return NODE_DEFAULTS.title;
+  const trimmedExtension = raw.replace(/\.[^/.]+$/, '').trim();
+  return trimmedExtension || NODE_DEFAULTS.title;
 }
 
 function isAbortError(error) {

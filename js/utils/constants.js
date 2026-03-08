@@ -15,6 +15,13 @@ export const NODE_DEFAULTS = {
   title: "Untitled Node",
 };
 
+export const IMAGE_NODE_DEFAULTS = {
+  kind: "image",
+  metaHeight: 64,
+  minImageWidth: 120,
+  minImageHeight: 90,
+};
+
 export const NODE_COLOR_KEYS = [
   "sage",
   "sky",

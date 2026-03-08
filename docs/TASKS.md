@@ -22,6 +22,7 @@ Last updated: 2026-03-07
 - [x] `Escape` cancels edge draft mode and exits edit mode
 - [x] Node corner resize with selected-only handles, min clamp (`160x96`), undo/redo, and persistence
 - [x] Selected-node mini toolbar with `Edit` and `Delete` actions
+- [x] Image nodes with base64-backed JSON payloads, anchor connectivity, and aspect-ratio-locked resizing
 
 ## Remaining Work
 

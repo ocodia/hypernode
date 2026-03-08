@@ -57,9 +57,11 @@ export function createRenderer(elements, store) {
     const draft = state.ui.edgeDraft;
     nodesLayer.innerHTML = state.nodes
       .map((node) => {
+        const imageNode = isImageNode(node);
         const selectedClass = selectedNodeIds.has(node.id) ? "is-selected" : "";
         const singleSelectedClass = singleSelectedNodeId === node.id ? "is-single-selected" : "";
         const editingClass = editingNodeId === node.id ? "is-editing" : "";
+        const imageClass = imageNode ? "node--image" : "";
         const connectClass =
           draft?.fromNodeId === node.id
             ? "is-connect-source"
@@ -71,7 +73,12 @@ export function createRenderer(elements, store) {
         const fixedSizeClass = hasExplicitNodeSize(node) ? "has-fixed-size" : "";
         const inlineSizeStyle = buildNodeInlineSizeStyle(node);
         const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}`;
-        const nodeColorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
+        const nodeColorAttr = !imageNode && typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
+        const imageMarkup = imageNode
+          ? `
+            <div class="node__image-pane" style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
+          `
+          : '';
         const content =
           editingNodeId === node.id
             ? `
@@ -87,13 +94,16 @@ export function createRenderer(elements, store) {
             </div>
           `
             : `
-            <div class="node__head">
-              <h3 class="node__title">${escapeHTML(node.title)}</h3>
+            ${imageMarkup}
+            <div class="node__meta">
+              <div class="node__head">
+                <h3 class="node__title">${escapeHTML(node.title)}</h3>
+              </div>
+              ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ""}
             </div>
-            ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ""}
           `;
         return `
-          <article class="node ${selectedClass} ${singleSelectedClass} ${editingClass} ${connectClass} ${fixedSizeClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
+          <article class="node ${selectedClass} ${singleSelectedClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
             <div class="node__toolbar">
               <button class="node__tool-btn" type="button" data-node-edit-open="${node.id}" aria-label="Edit node" title="Edit Node">
                 <i class="bi bi-pencil-fill"></i>
@@ -316,7 +326,9 @@ function buildNodeInlineSizeStyle(node) {
   }
   if (hasHeight) {
     style += `height: ${height}px;`;
-    style += `--node-description-lines: ${computeDescriptionLineClamp(height)};`;
+    if (!isImageNode(node)) {
+      style += `--node-description-lines: ${computeDescriptionLineClamp(height)};`;
+    }
   }
   return style;
 }
@@ -532,6 +544,16 @@ function escapeHTML(value) {
 
 function escapeAttr(value) {
   return escapeHTML(value).replaceAll("`", "&#096;");
+}
+
+function escapeCssUrl(value) {
+  return String(value)
+    .replaceAll('\\', '\\\\')
+    .replaceAll("'", "\\'");
+}
+
+function isImageNode(node) {
+  return node?.kind === 'image' && typeof node?.imageData === 'string' && Number(node?.imageAspectRatio) > 0;
 }
 
 function getSelectedNodeIds(selection) {

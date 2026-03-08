@@ -101,16 +101,21 @@ Responsible for:
 ```json
 {
   "id": "node_id",
+  "kind": "text|image",
   "title": "Node title",
   "description": "",
   "x": 0,
   "y": 0,
   "width": 210,
-  "height": 96
+  "height": 96,
+  "imageData": "data:image/png;base64,...",
+  "imageAspectRatio": 1.777
 }
 ```
 
-`width` and `height` are optional and are present when a node has been explicitly resized.
+`kind` defaults to `text`. `imageData` and `imageAspectRatio` are required when `kind` is `image`.
+
+`width` and `height` are optional for text nodes and are present when explicitly resized. Image nodes persist explicit width/height for ratio-safe resizing.
 
 ### Edge
 

@@ -583,6 +583,27 @@ textarea:focus-visible {
   overflow: hidden;
 }
 
+.node__meta {
+  min-width: 0;
+}
+
+.node--image .node__content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.node--image .node__image-pane {
+  width: 100%;
+  aspect-ratio: var(--node-image-aspect-ratio, 16 / 9);
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background-color: color-mix(in srgb, var(--surface-soft) 80%, transparent);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
 .node.is-selected {
   border-color: var(--node-selected-border);
   box-shadow:

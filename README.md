@@ -10,8 +10,10 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Edit node title/description inline from the selected-node mini toolbar.
 - Color selected node backgrounds from a toolbar palette (10 curated colors + reset) with legible text and complementary selected highlights in light/dark themes.
 - Delete selected nodes with `Delete`/`Backspace`.
-- Create edges from node anchor points (top/right/bottom/left).
+- Create edges from text and image node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
+- Add image nodes from the toolbar using local image files (stored as base64 data URLs in graph JSON).
+- Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.
 - Single selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
 - Multi-select nodes with `Ctrl/Cmd + click` (additive).
 - Multi-select nodes with `Ctrl/Cmd + drag` marquee (touch/intersection hit rule).

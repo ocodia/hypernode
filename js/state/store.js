@@ -1,6 +1,6 @@
 import { createId } from '../utils/id.js';
 import { emptyGraphState, sanitizeEdge, sanitizeGraphName, sanitizeGraphSettings, sanitizeNode } from '../utils/graph.js';
-import { NODE_COLOR_KEYS, NODE_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
+import { IMAGE_NODE_DEFAULTS, NODE_COLOR_KEYS, NODE_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
 
 export function createStore(initialGraph = null) {
   let state = emptyGraphState();
@@ -196,18 +196,33 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
-  function addNode({ x, y, title = NODE_DEFAULTS.title, description = '' }, options = {}) {
+  function addNode({
+    x,
+    y,
+    title = NODE_DEFAULTS.title,
+    description = '',
+    kind = 'text',
+    imageData = null,
+    imageAspectRatio = null,
+    width = null,
+    height = null,
+  }, options = {}) {
     if (!options.skipHistory) pushHistory('add-node');
     const resolvedColorKey = options.colorKey !== undefined
       ? sanitizeColorKey(options.colorKey)
       : sanitizeColorKey(state.settings.nodeColorDefault);
+    const isImageNode = kind === IMAGE_NODE_DEFAULTS.kind;
     const node = sanitizeNode({
       id: createId('node'),
       title,
       description,
+      kind,
+      ...(isImageNode ? { imageData, imageAspectRatio } : {}),
       x,
       y,
-      colorKey: resolvedColorKey,
+      ...(width === null ? {} : { width }),
+      ...(height === null ? {} : { height }),
+      ...(isImageNode ? {} : { colorKey: resolvedColorKey }),
     });
     state.nodes.push(node);
     state.selection = { type: 'node', id: node.id };
@@ -321,7 +336,7 @@ export function createStore(initialGraph = null) {
     if (!selectedIds.length) return;
 
     const normalizedColorKey = sanitizeColorKey(colorKey);
-    const targets = state.nodes.filter((node) => selectedIds.includes(node.id));
+    const targets = state.nodes.filter((node) => selectedIds.includes(node.id) && node.kind !== IMAGE_NODE_DEFAULTS.kind);
     const changed = targets.some((node) => (node.colorKey || null) !== normalizedColorKey);
     if (!changed) return;
 
