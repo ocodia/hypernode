@@ -85,9 +85,12 @@ css/
   styles.css
 js/
   main.js
+  shared/
   interaction/
+    binders/
   persistence/
   render/
+    modules/
   state/
   utils/
 icons/

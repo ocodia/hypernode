@@ -15,9 +15,25 @@ import {
   NODE_DEFAULTS,
   VIEWPORT_LIMITS,
 } from '../utils/constants.js';
+import {
+  findBestFrameIdForNode as findBestFrameIdForNodeInFrames,
+  findEntityById,
+  getNodeFrameOverlapArea,
+} from '../shared/entities.js';
+import { resolveAutoAnchor } from '../shared/anchors.js';
+import {
+  areSelectionsEqual,
+  cloneSelection,
+  getSelectedNodeIds,
+  isFrameSelected,
+  isNodeSelected,
+  normalizeNodeSelection,
+} from '../shared/selection.js';
+import { createHistoryManager } from './history.js';
+import { clearTransientUiState } from './ui.js';
 
 export function createStore(initialGraph = null) {
-  let state = emptyGraphState();
+  const state = emptyGraphState();
   if (initialGraph) {
     state.name = sanitizeGraphName(initialGraph.name);
     state.settings = sanitizeGraphSettings(initialGraph.settings);
@@ -29,30 +45,12 @@ export function createStore(initialGraph = null) {
 
   const listeners = new Set();
   let importStatusTimeoutHandle = null;
+  const { snapshot, pushHistory } = createHistoryManager(state);
 
   function notify() {
     for (const listener of listeners) {
       listener(state);
     }
-  }
-
-  function snapshot() {
-    return {
-      name: state.name,
-      settings: structuredClone(state.settings),
-      nodes: structuredClone(state.nodes),
-      frames: structuredClone(state.frames),
-      edges: structuredClone(state.edges),
-      selection: cloneSelection(state.selection),
-    };
-  }
-
-  function pushHistory(actionLabel) {
-    state.history.past.push({ label: actionLabel, data: snapshot() });
-    if (state.history.past.length > 100) {
-      state.history.past.shift();
-    }
-    state.history.future = [];
   }
 
   function getState() {
@@ -815,20 +813,7 @@ export function createStore(initialGraph = null) {
     state.nodes = graph.nodes.map((node) => sanitizeNode(node, frameIds));
     state.edges = graph.edges.map(sanitizeEdge);
     state.selection = null;
-    state.ui.edgeDraft = null;
-    state.ui.edgeTwangId = null;
-    state.ui.editingNodeId = null;
-    state.ui.editingFrameId = null;
-    state.ui.isPanning = false;
-    state.ui.isDragging = false;
-    state.ui.isResizing = false;
-    state.ui.isConnecting = false;
-    state.ui.isDrawingFrame = false;
-    state.ui.frameDraft = null;
-    state.ui.frameMembershipPreview = {};
-    state.ui.nodeMembershipPreview = {};
-    state.ui.isMarqueeSelecting = false;
-    state.ui.selectionMarquee = null;
+    clearTransientUiState(state);
     notify();
   }
 
@@ -913,20 +898,7 @@ export function createStore(initialGraph = null) {
     state.frames = Array.isArray(data.frames) ? data.frames : [];
     state.edges = data.edges;
     state.selection = data.selection;
-    state.ui.edgeDraft = null;
-    state.ui.edgeTwangId = null;
-    state.ui.editingNodeId = null;
-    state.ui.editingFrameId = null;
-    state.ui.isPanning = false;
-    state.ui.isDragging = false;
-    state.ui.isResizing = false;
-    state.ui.isConnecting = false;
-    state.ui.isDrawingFrame = false;
-    state.ui.frameDraft = null;
-    state.ui.frameMembershipPreview = {};
-    state.ui.nodeMembershipPreview = {};
-    state.ui.isMarqueeSelecting = false;
-    state.ui.selectionMarquee = null;
+    clearTransientUiState(state);
   }
 
   function finalizeEditingNodeText(nodeId) {
@@ -948,9 +920,7 @@ export function createStore(initialGraph = null) {
   }
 
   function getGraphEntity(id) {
-    const node = state.nodes.find((entry) => entry.id === id);
-    if (node) return node;
-    return state.frames.find((entry) => entry.id === id) || null;
+    return findEntityById(state, id);
   }
 
   function dedupeNodeTargets(ids) {
@@ -980,16 +950,7 @@ export function createStore(initialGraph = null) {
   }
 
   function findBestFrameIdForNode(node) {
-    let best = null;
-    for (let index = 0; index < state.frames.length; index += 1) {
-      const frame = state.frames[index];
-      const area = getNodeFrameOverlapArea(node, frame);
-      if (area <= 0) continue;
-      if (!best || area > best.area || (area === best.area && index > best.index)) {
-        best = { frameId: frame.id, area, index };
-      }
-    }
-    return best?.frameId || null;
+    return findBestFrameIdForNodeInFrames(node, state.frames);
   }
 
   return {
@@ -1060,94 +1021,6 @@ export function createStore(initialGraph = null) {
     redo,
   };
 }
-function resolveAutoAnchor(fromEntity, toEntity) {
-  const fromCenter = getEntityCenter(fromEntity);
-  const toCenter = getEntityCenter(toEntity);
-  const dx = toCenter.x - fromCenter.x;
-  const dy = toCenter.y - fromCenter.y;
-  if (Math.abs(dx) >= Math.abs(dy)) {
-    return dx >= 0 ? 'right' : 'left';
-  }
-  return dy >= 0 ? 'bottom' : 'top';
-}
-
-function getEntityCenter(entity) {
-  const width = getEntityWidth(entity);
-  const height = getEntityHeight(entity);
-  return {
-    x: (Number(entity.x) || 0) + (width / 2),
-    y: (Number(entity.y) || 0) + (height / 2),
-  };
-}
-
-function getNodeWidth(node) {
-  const width = Number(node?.width);
-  return Number.isFinite(width) && width > 0 ? width : NODE_DEFAULTS.width;
-}
-
-function getNodeHeight(node) {
-  const height = Number(node?.height);
-  if (Number.isFinite(height) && height > 0) return height;
-  if (node?.kind === IMAGE_NODE_DEFAULTS.kind && Number(node?.imageAspectRatio) > 0) {
-    return (getNodeWidth(node) / Number(node.imageAspectRatio)) + IMAGE_NODE_DEFAULTS.metaHeight;
-  }
-  return NODE_DEFAULTS.height;
-}
-
-function isFrameEntity(entity) {
-  return entity && Number.isFinite(Number(entity.width)) && Number.isFinite(Number(entity.height))
-    && !Object.prototype.hasOwnProperty.call(entity, 'kind');
-}
-
-function getEntityWidth(entity) {
-  if (isFrameEntity(entity)) {
-    const frameWidth = Number(entity?.width);
-    return Number.isFinite(frameWidth) && frameWidth > 0 ? frameWidth : FRAME_DEFAULTS.width;
-  }
-  return getNodeWidth(entity);
-}
-
-function getEntityHeight(entity) {
-  if (isFrameEntity(entity)) {
-    const frameHeight = Number(entity?.height);
-    return Number.isFinite(frameHeight) && frameHeight > 0 ? frameHeight : FRAME_DEFAULTS.height;
-  }
-  return getNodeHeight(entity);
-}
-
-function getNodeRect(node) {
-  const width = getNodeWidth(node);
-  const height = getNodeHeight(node);
-  const left = Number(node.x) || 0;
-  const top = Number(node.y) || 0;
-  return {
-    left,
-    top,
-    right: left + width,
-    bottom: top + height,
-  };
-}
-
-function getFrameRect(frame) {
-  const left = Number(frame.x) || 0;
-  const top = Number(frame.y) || 0;
-  const width = Number(frame.width) || FRAME_DEFAULTS.width;
-  const height = Number(frame.height) || FRAME_DEFAULTS.height;
-  return {
-    left,
-    top,
-    right: left + width,
-    bottom: top + height,
-  };
-}
-
-function getNodeFrameOverlapArea(node, frame) {
-  const nodeRect = getNodeRect(node);
-  const frameRect = getFrameRect(frame);
-  const overlapWidth = Math.max(0, Math.min(nodeRect.right, frameRect.right) - Math.max(nodeRect.left, frameRect.left));
-  const overlapHeight = Math.max(0, Math.min(nodeRect.bottom, frameRect.bottom) - Math.max(nodeRect.top, frameRect.top));
-  return overlapWidth * overlapHeight;
-}
 
 function applyColor(entity, colorKey) {
   if (colorKey === null) {
@@ -1165,78 +1038,4 @@ function sanitizeColorKey(colorKey) {
     return null;
   }
   return NODE_COLOR_KEYS.includes(colorKey) ? colorKey : null;
-}
-
-function areSelectionsEqual(left, right) {
-  if (!left && !right) return true;
-  if (!left || !right) return false;
-  if (left.type !== right.type) return false;
-  if (left.type === 'nodes') {
-    const leftIds = Array.isArray(left.ids) ? left.ids : [];
-    const rightIds = Array.isArray(right.ids) ? right.ids : [];
-    if (leftIds.length !== rightIds.length) return false;
-    for (let index = 0; index < leftIds.length; index += 1) {
-      if (leftIds[index] !== rightIds[index]) return false;
-    }
-    return (left.primaryId || null) === (right.primaryId || null);
-  }
-  return left.id === right.id;
-}
-
-function cloneSelection(selection) {
-  if (!selection) return null;
-  if (selection.type === 'nodes') {
-    return {
-      type: 'nodes',
-      ids: Array.isArray(selection.ids) ? [...selection.ids] : [],
-      primaryId: selection.primaryId || null,
-    };
-  }
-  return { ...selection };
-}
-
-function getSelectedNodeIds(selection) {
-  if (!selection) return [];
-  if (selection.type === 'node') return [selection.id];
-  if (selection.type === 'nodes') {
-    return Array.isArray(selection.ids) ? [...selection.ids] : [];
-  }
-  return [];
-}
-
-function isNodeSelected(selection, nodeId) {
-  if (!nodeId || !selection) return false;
-  if (selection.type === 'node') return selection.id === nodeId;
-  if (selection.type === 'nodes') {
-    return Array.isArray(selection.ids) && selection.ids.includes(nodeId);
-  }
-  return false;
-}
-
-function isFrameSelected(selection, frameId) {
-  if (!frameId || !selection) return false;
-  return selection.type === 'frame' && selection.id === frameId;
-}
-
-function normalizeNodeSelection(ids, nodes, preferredPrimaryId = null) {
-  const validIds = new Set((nodes || []).map((node) => node.id));
-  const deduped = [];
-  for (const id of Array.isArray(ids) ? ids : []) {
-    if (typeof id !== 'string' || !validIds.has(id) || deduped.includes(id)) continue;
-    deduped.push(id);
-  }
-
-  if (deduped.length === 0) return null;
-  if (deduped.length === 1) {
-    return { type: 'node', id: deduped[0] };
-  }
-
-  const primaryId = (preferredPrimaryId && deduped.includes(preferredPrimaryId))
-    ? preferredPrimaryId
-    : deduped[deduped.length - 1];
-  return {
-    type: 'nodes',
-    ids: deduped,
-    primaryId: primaryId || null,
-  };
 }

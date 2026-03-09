@@ -37,14 +37,24 @@ css/
 docs/
 js/
   main.js
-  interaction/bindings.js
-  persistence/file.js
-  persistence/storage.js
-  render/renderer.js
-  state/store.js
-  utils/constants.js
-  utils/graph.js
-  utils/id.js
+  shared/
+  interaction/
+    bindings.js
+    binders/
+  persistence/
+    file.js
+    storage.js
+  render/
+    renderer.js
+    modules/
+  state/
+    store.js
+    history.js
+    ui.js
+  utils/
+    constants.js
+    graph.js
+    id.js
 index.html
 ```
 
@@ -64,29 +74,31 @@ Stores:
   - includes resize interaction state (`isResizing`)
 - undo/redo history
 
+Delegates pure concerns to focused helpers:
+
+- `js/state/history.js` for snapshots and history stack bookkeeping
+- `js/state/ui.js` for transient UI resets
+- `js/shared/*` for selection/entity math reused outside the store
+
 ### Rendering (`js/render/renderer.js`)
 
-Responsible for:
+Responsible for orchestrating focused render modules:
 
-- rendering frame boxes/metadata/anchors/resize UI
-- applying viewport transform
-- rendering node cards, selected-node mini toolbar actions, and inline node editor UI
-- rendering edges and selected-edge overlay controls
-- rendering edge draft preview
-- rendering import status toast
+- `modules/viewport.js` for viewport/background transforms
+- `modules/frames.js` for frame markup
+- `modules/nodes.js` for node markup
+- `modules/edges.js` for committed/draft edge SVG
+- `modules/ui.js` for overlays, metadata, and toast UI
 
 ### Interaction (`js/interaction/bindings.js`)
 
-Responsible for:
+Responsible for coordinating shared interaction state and delegating listener registration to feature binders:
 
-- pan and zoom interactions
-- node selection/drag/edit lifecycle
-- frame draw/selection/drag/resize/edit lifecycle
-- selected-node mini toolbar actions (`Edit`, `Delete`)
-- edge creation from node/frame anchors
-- edge endpoint reconnect workflow
-- keyboard shortcuts
-- toolbar actions
+- `binders/canvas.js` for canvas navigation and frame-draw entry
+- `binders/nodes.js` for node and selection-control events
+- `binders/frames.js` for frame events
+- `binders/edges.js` for edge hit/endpoint events
+- `binders/toolbar.js` and `binders/keyboard.js` for chrome actions and shortcuts
 
 ### Persistence (`js/persistence`)
 
@@ -98,6 +110,13 @@ Responsible for:
 - constants
 - graph sanitization/validation
 - id generation
+
+### Shared Domain Helpers (`js/shared`)
+
+- math helpers
+- entity sizing, lookup, and overlap helpers
+- anchor resolution helpers
+- selection normalization/comparison helpers
 
 ## Data Model
 
@@ -133,5 +152,5 @@ History snapshots are bounded (past stack capped at 100).
 ## Constraints
 
 - No framework dependency.
-- Keep modules focused.
+- Keep top-level entry modules thin and feature-specific code in focused submodules.
 - Prefer clear direct logic over abstraction-heavy patterns.

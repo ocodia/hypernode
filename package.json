@@ -1,0 +1,12 @@
+{
+  "name": "hypernode",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint js test"
+  },
+  "devDependencies": {
+    "eslint": "^9.22.0"
+  }
+}
