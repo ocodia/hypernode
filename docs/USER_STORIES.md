@@ -199,6 +199,38 @@ Acceptance criteria:
 - Delete/Backspace removes selected node or selected edge.
 - Shortcuts do not hijack active text-input editing.
 
+## Epic 6 - Frames
+
+### US-19: Draw frames
+
+As a user, I want to draw a frame so I can group related nodes spatially.
+
+Acceptance criteria:
+
+- Toolbar frame mode allows drag-to-draw frame rectangles.
+- Releasing after a valid drag creates and selects a frame.
+- Escape cancels active frame draw mode.
+
+### US-20: Embed nodes in frames
+
+As a user, I want to drag nodes into and out of frames so grouping is fluid.
+
+Acceptance criteria:
+
+- Node membership is resolved on drag release using overlap with frames.
+- Embedded nodes move with their parent frame.
+- Dragging a node out of overlap removes frame membership.
+
+### US-21: Frame editing and edges
+
+As a user, I want frames to behave like super nodes for metadata and connectivity.
+
+Acceptance criteria:
+
+- Frames support title/description editing and corner resize.
+- Frames expose top/right/bottom/left anchors for edge create/reconnect.
+- Deleting a frame keeps contained nodes and clears their frame membership.
+
 ## Definition of Done (v1)
 
 Version 1 is complete when:

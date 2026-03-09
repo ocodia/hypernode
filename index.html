@@ -17,6 +17,7 @@
         <div class="actions toolbar__actions">
           <button id="add-node-btn" class="toolbar__icon-btn" type="button" aria-label="Add Node" title="Add Node"><i class="bi bi-plus-square"></i></button>
           <button id="add-image-btn" class="toolbar__icon-btn" type="button" aria-label="Add Image Node" title="Add Image Node"><i class="bi bi-image"></i></button>
+          <button id="add-frame-btn" class="toolbar__icon-btn" type="button" aria-label="Draw Frame" title="Draw Frame"><i class="bi bi-bounding-box-circles"></i></button>
           <button id="reset-view-btn" class="toolbar__icon-btn" type="button" aria-label="Reset View" title="Reset View"><i class="bi bi-aspect-ratio"></i></button>
           <button id="undo-btn" class="toolbar__icon-btn" type="button" aria-label="Undo" title="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>
           <button id="redo-btn" class="toolbar__icon-btn" type="button" aria-label="Redo" title="Redo"><i class="bi bi-arrow-clockwise"></i></button>
@@ -48,6 +49,7 @@
 
       <div class="canvas" id="canvas">
         <div id="selection-marquee" class="selection-marquee" hidden aria-hidden="true"></div>
+        <div class="frames" id="frames-layer"></div>
         <svg class="edges" id="edges-layer" aria-hidden="true">
           <g id="edges-group"></g>
           <g id="edge-draft-group"></g>
@@ -69,6 +71,7 @@
         <h3>How to use</h3>
         <ul>
           <li>Double-click empty canvas or use + to create a node.</li>
+          <li>Use the frame toolbar button to draw a frame container on canvas.</li>
           <li>Select one node to show its mini toolbar with Edit/Delete actions.</li>
           <li>Use Ctrl/Cmd+Click or Ctrl/Cmd+Drag to multi-select nodes.</li>
           <li>Drag selected nodes to move them together; click empty space to clear selection.</li>
@@ -85,7 +88,7 @@
           <li><kbd>Ctrl/Cmd + S</kbd>: save graph file.</li>
           <li><kbd>Ctrl/Cmd + Enter</kbd>: toggle selected node editor.</li>
           <li><kbd>Ctrl/Cmd + Click</kbd>: add node to current selection.</li>
-          <li><kbd>Esc</kbd>: exit edit mode, cancel connect, or clear selection.</li>
+          <li><kbd>Esc</kbd>: exit edit mode, cancel connect/frame draw, or clear selection.</li>
         </ul>
       </article>
     </dialog>

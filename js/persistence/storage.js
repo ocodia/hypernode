@@ -18,6 +18,7 @@ export function saveGraphToStorage(graph) {
     name: graph.name,
     settings: graph.settings,
     nodes: graph.nodes,
+    frames: graph.frames,
     edges: graph.edges,
   });
   localStorage.setItem(STORAGE_KEY, payload);

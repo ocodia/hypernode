@@ -33,6 +33,17 @@ Use this checklist before shipping interaction changes.
 - [ ] Verify one undo step reverts a full resize gesture; redo reapplies it.
 - [ ] Verify resized node dimensions persist across reload and open/save/new flows.
 
+### Frame draw, embed, and resize
+
+- [ ] Toggle frame draw mode, drag to create a frame at zoom levels `0.35`, `1.0`, and `2.5`.
+- [ ] Press `Escape` during frame draw mode and confirm draft cancels cleanly.
+- [ ] Select a frame and verify frame mini toolbar appears with `Edit` and `Delete`.
+- [ ] Resize frame from each corner and confirm frame bounds update with zoom-aware pointer alignment.
+- [ ] Drag nodes into a frame and verify they become embedded on release.
+- [ ] Drag embedded nodes out of frame overlap and verify they ungroup.
+- [ ] Move a frame with embedded nodes and verify member nodes move with it.
+- [ ] Delete a frame and verify contained nodes remain in place and become ungrouped.
+
 ### Panning after selection
 
 - [ ] Select a node, then pan from empty canvas area.

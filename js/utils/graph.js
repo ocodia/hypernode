@@ -1,4 +1,11 @@
-import { GRAPH_DEFAULTS, IMAGE_NODE_DEFAULTS, NODE_COLOR_KEYS, NODE_DEFAULTS, VIEWPORT_LIMITS } from './constants.js';
+import {
+  FRAME_DEFAULTS,
+  GRAPH_DEFAULTS,
+  IMAGE_NODE_DEFAULTS,
+  NODE_COLOR_KEYS,
+  NODE_DEFAULTS,
+  VIEWPORT_LIMITS,
+} from './constants.js';
 
 const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
 const BACKGROUND_STYLES = new Set(['dots', 'graph-paper']);
@@ -19,6 +26,7 @@ export function emptyGraphState() {
       nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
     },
     nodes: [],
+    frames: [],
     edges: [],
     selection: null,
     viewport: {
@@ -31,10 +39,13 @@ export function emptyGraphState() {
       edgeDraft: null,
       edgeTwangId: null,
       editingNodeId: null,
+      editingFrameId: null,
       isPanning: false,
       isDragging: false,
       isResizing: false,
       isConnecting: false,
+      isDrawingFrame: false,
+      frameDraft: null,
       isMarqueeSelecting: false,
       selectionMarquee: null,
     },
@@ -45,11 +56,12 @@ export function emptyGraphState() {
   };
 }
 
-export function sanitizeNode(node) {
+export function sanitizeNode(node, frameIds = null) {
   const kind = sanitizeNodeKind(node.kind);
   const width = sanitizeOptionalSize(node.width);
   const height = sanitizeOptionalSize(node.height);
   const colorKey = sanitizeNodeColorKey(node.colorKey);
+  const frameId = sanitizeFrameRef(node.frameId, frameIds);
   const baseNode = {
     id: String(node.id),
     title: String(node.title || NODE_DEFAULTS.title).trim() || NODE_DEFAULTS.title,
@@ -57,6 +69,7 @@ export function sanitizeNode(node) {
     kind,
     x: Number(node.x) || 0,
     y: Number(node.y) || 0,
+    ...(frameId === null ? {} : { frameId }),
     ...(colorKey === null ? {} : { colorKey }),
   };
 
@@ -95,6 +108,23 @@ export function sanitizeNode(node) {
   };
 }
 
+export function sanitizeFrame(frame) {
+  const width = sanitizeOptionalSize(frame.width) ?? FRAME_DEFAULTS.width;
+  const height = sanitizeOptionalSize(frame.height) ?? FRAME_DEFAULTS.height;
+  const colorKey = sanitizeNodeColorKey(frame.colorKey);
+
+  return {
+    id: String(frame.id),
+    title: String(frame.title || FRAME_DEFAULTS.title).trim() || FRAME_DEFAULTS.title,
+    description: String(frame.description || ''),
+    x: Number(frame.x) || 0,
+    y: Number(frame.y) || 0,
+    width: Math.max(FRAME_DEFAULTS.minWidth, width),
+    height: Math.max(FRAME_DEFAULTS.minHeight, height),
+    ...(colorKey === null ? {} : { colorKey }),
+  };
+}
+
 export function sanitizeEdge(edge) {
   return {
     id: String(edge.id),
@@ -107,6 +137,10 @@ export function sanitizeEdge(edge) {
 
 export function validateGraphPayload(payload) {
   if (!payload || typeof payload.name !== 'string' || !payload.settings || !Array.isArray(payload.nodes) || !Array.isArray(payload.edges)) {
+    return false;
+  }
+
+  if (payload.frames !== undefined && !Array.isArray(payload.frames)) {
     return false;
   }
 
@@ -124,7 +158,18 @@ export function validateGraphPayload(payload) {
     return false;
   }
 
-  const hasValidNodes = payload.nodes.every((node) => validateGraphNodePayload(node));
+  const frames = Array.isArray(payload.frames) ? payload.frames : [];
+  const hasValidFrames = frames.every((frame) => validateGraphFramePayload(frame));
+  if (!hasValidFrames) {
+    return false;
+  }
+
+  const frameIds = new Set(frames.map((frame) => frame.id));
+  if (frameIds.size !== frames.length) {
+    return false;
+  }
+
+  const hasValidNodes = payload.nodes.every((node) => validateGraphNodePayload(node, frameIds));
   if (!hasValidNodes) {
     return false;
   }
@@ -134,11 +179,13 @@ export function validateGraphPayload(payload) {
     return false;
   }
 
+  const endpointIds = new Set([...nodeIds, ...frameIds]);
   return payload.edges.every((edge) => {
     return edge
       && typeof edge.id === 'string'
-      && nodeIds.has(edge.from)
-      && nodeIds.has(edge.to)
+      && endpointIds.has(edge.from)
+      && endpointIds.has(edge.to)
+      && edge.from !== edge.to
       && isValidAnchor(edge.fromAnchor)
       && isValidAnchor(edge.toAnchor);
   });
@@ -241,18 +288,32 @@ function isValidImageDataUrl(value) {
   return markerIndex < (value.length - ';base64,'.length);
 }
 
-function validateGraphNodePayload(node) {
+function validateGraphNodePayload(node, frameIds) {
   if (!node || typeof node !== 'object') return false;
   if (typeof node.id !== 'string' || !node.id) return false;
   if (node.kind !== undefined && !isValidNodeKind(node.kind)) return false;
   if (node.width !== undefined && sanitizeOptionalSize(node.width) === null) return false;
   if (node.height !== undefined && sanitizeOptionalSize(node.height) === null) return false;
+  if (node.frameId !== undefined && node.frameId !== null) {
+    if (typeof node.frameId !== 'string' || !frameIds.has(node.frameId)) return false;
+  }
 
   const resolvedKind = node.kind === 'image' ? 'image' : 'text';
   if (resolvedKind === 'image') {
     return isValidImageDataUrl(node.imageData) && sanitizeImageAspectRatio(node.imageAspectRatio) !== null;
   }
 
+  return true;
+}
+
+function validateGraphFramePayload(frame) {
+  if (!frame || typeof frame !== 'object') return false;
+  if (typeof frame.id !== 'string' || !frame.id) return false;
+  if (frame.width !== undefined && sanitizeOptionalSize(frame.width) === null) return false;
+  if (frame.height !== undefined && sanitizeOptionalSize(frame.height) === null) return false;
+  if (frame.colorKey !== undefined && frame.colorKey !== null && !isValidNodeColorKey(frame.colorKey)) {
+    return false;
+  }
   return true;
 }
 
@@ -268,4 +329,17 @@ function sanitizeNodeColorKey(value) {
 
 function isValidNodeColorKey(value) {
   return typeof value === 'string' && NODE_COLOR_KEYS.includes(value);
+}
+
+function sanitizeFrameRef(value, frameIds = null) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  if (typeof value !== 'string') {
+    return null;
+  }
+  if (frameIds instanceof Set && !frameIds.has(value)) {
+    return null;
+  }
+  return value;
 }

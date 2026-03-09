@@ -12,6 +12,9 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Delete selected nodes with `Delete`/`Backspace`.
 - Create edges from text and image node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
+- Draw Frames from toolbar drag mode. Frames act as background super-nodes with anchors, resize handles, title, and description.
+- Drag nodes into Frames to embed them; embedded nodes move with their Frame and can be dragged out to ungroup.
+- Create and reconnect edges to Frames via frame anchors.
 - Add image nodes from the toolbar using local image files (stored as base64 data URLs in graph JSON).
 - Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.
 - Single selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
@@ -36,6 +39,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
   - graph name
 - Node color tool also sets the default color for newly created nodes.
+- Node color tool also applies to selected Frames (flat palette style) and still sets the default color for newly created nodes.
 - Graph name shown in toolbar title and browser tab title.
 - First-time Save suggests a filename based on the graph name.
 - Open/save toolbar actions use the File System Access API and are disabled in browsers that do not support it.
@@ -55,6 +59,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - `Ctrl/Cmd + Enter`: toggle selected node editor
 - `Ctrl/Cmd + Click`: add a node to current node selection
 - `Escape`: exit node edit mode, cancel edge draft mode, or clear selection
+- `Escape`: also exits frame draw mode and frame edit mode
 
 ## Tech Stack
 

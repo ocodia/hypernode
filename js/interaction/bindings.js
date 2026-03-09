@@ -1,5 +1,6 @@
 import {
   GRAPH_DEFAULTS,
+  FRAME_DEFAULTS,
   IMAGE_NODE_DEFAULTS,
   KEYBOARD_DIRECTIONAL_SELECTION,
   KEYBOARD_LINKED_NODE,
@@ -12,7 +13,14 @@ import { openGraphFile, saveGraphFile, supportsFileSystemAccess } from '../persi
 const THEME_STORAGE_KEY = 'hypernode.theme.v1';
 
 export function bindInteractions(elements, store) {
-  const { workspace, canvas, nodesLayer, edgesGroup, edgeOverlayGroup } = elements;
+  const {
+    workspace,
+    canvas,
+    framesLayer,
+    nodesLayer,
+    edgesGroup,
+    edgeOverlayGroup,
+  } = elements;
   const canUseFileSystemAccess = supportsFileSystemAccess();
   let currentFileHandle = null;
 
@@ -20,9 +28,14 @@ export function bindInteractions(elements, store) {
   let dragSession = null;
   let marqueeSession = null;
   let resizeSession = null;
+  let frameResizeSession = null;
+  let frameDragSession = null;
+  let frameDrawSession = null;
+  let isFrameDrawMode = false;
   let edgeSession = null;
   let edgeTwangTimer = null;
   let activeLiveEditNodeId = null;
+  let activeLiveEditFrameId = null;
   let editorFocusLock = null;
   let isNodeColorPopoverOpen = false;
 
@@ -101,9 +114,9 @@ export function bindInteractions(elements, store) {
     if (!edgeSession || edgeSession.pointerId !== event.pointerId) return;
     const state = store.getState();
     const pointer = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
-    const hoverNodeId = getNodeIdAtClientPoint(event.clientX, event.clientY);
-    const sourceNode = getNode(edgeSession.fromNodeId, state);
-    const targetNode = hoverNodeId ? getNode(hoverNodeId, state) : null;
+    const hoverEntityId = getGraphEntityIdAtClientPoint(event.clientX, event.clientY);
+    const sourceNode = getEntity(edgeSession.fromNodeId, state);
+    const targetNode = hoverEntityId ? getEntity(hoverEntityId, state) : null;
     const isValidTarget = sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
     const hoverAnchor = isValidTarget
       ? resolveSessionTargetAnchor({
@@ -147,7 +160,8 @@ export function bindInteractions(elements, store) {
     };
 
     store.setConnecting(true);
-    store.setSelection({ type: 'node', id: parsed.nodeId });
+    const sourceFrame = getFrame(parsed.nodeId, store.getState());
+    store.setSelection(sourceFrame ? { type: 'frame', id: parsed.nodeId } : { type: 'node', id: parsed.nodeId });
     nodesLayer.setPointerCapture(event.pointerId);
     updateEdgeDraft(event);
   }
@@ -159,8 +173,8 @@ export function bindInteractions(elements, store) {
     const state = store.getState();
     const edge = state.edges.find((item) => item.id === parsed.edgeId);
     if (!edge) return;
-    const fromNode = getNode(edge.from, state);
-    const toNode = getNode(edge.to, state);
+    const fromNode = getEntity(edge.from, state);
+    const toNode = getEntity(edge.to, state);
     if (!fromNode || !toNode) return;
 
     const movingFrom = parsed.side === 'from';
@@ -172,8 +186,10 @@ export function bindInteractions(elements, store) {
 
     endPanSession();
     endDragSession();
+    endFrameDragSession();
     endMarqueeSession();
     endResizeSession();
+    endFrameResizeSession();
     cancelEdgeSession();
 
     edgeSession = {
@@ -212,9 +228,11 @@ export function bindInteractions(elements, store) {
 
     endPanSession();
     endDragSession();
+    endFrameDragSession();
     endMarqueeSession();
     cancelEdgeSession();
     endResizeSession();
+    endFrameResizeSession();
 
     const imageAspectRatio = Number(node.imageAspectRatio);
     const imagePaneEl = nodeEl?.querySelector('.node__image-pane');
@@ -253,9 +271,9 @@ export function bindInteractions(elements, store) {
     if (!edgeSession || edgeSession.pointerId !== event.pointerId) return;
     const state = store.getState();
     const pointer = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
-    const hoverNodeId = getNodeIdAtClientPoint(event.clientX, event.clientY);
-    const sourceNode = getNode(edgeSession.fromNodeId, state);
-    const targetNode = hoverNodeId ? getNode(hoverNodeId, state) : null;
+    const hoverNodeId = getGraphEntityIdAtClientPoint(event.clientX, event.clientY);
+    const sourceNode = getEntity(edgeSession.fromNodeId, state);
+    const targetNode = hoverNodeId ? getEntity(hoverNodeId, state) : null;
     const isValidTarget = sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
     let anchoredEdgeId = null;
     if (isValidTarget) {
@@ -314,11 +332,56 @@ export function bindInteractions(elements, store) {
     titleInput.select();
   }
 
+  function endFrameResizeSession(pointerId = null) {
+    if (!frameResizeSession) return;
+    const activePointerId = frameResizeSession.pointerId;
+    frameResizeSession = null;
+    store.setResizing(false);
+    if (pointerId === null || pointerId === activePointerId) {
+      try {
+        framesLayer.releasePointerCapture(activePointerId);
+      } catch {
+        // Pointer may already be released.
+      }
+    }
+  }
+
+  function endFrameDragSession(pointerId = null) {
+    if (!frameDragSession) return;
+    const activePointerId = frameDragSession.pointerId;
+    frameDragSession = null;
+    store.setDragging(false);
+    if (pointerId === null || pointerId === activePointerId) {
+      try {
+        framesLayer.releasePointerCapture(activePointerId);
+      } catch {
+        // Pointer may already be released.
+      }
+    }
+  }
+
+  function endFrameDrawSession(pointerId = null) {
+    if (!frameDrawSession) return;
+    const activePointerId = frameDrawSession.pointerId;
+    frameDrawSession = null;
+    store.setFrameDrawing(false);
+    store.clearFrameDraft();
+    if (pointerId === null || pointerId === activePointerId) {
+      try {
+        canvas.releasePointerCapture(activePointerId);
+      } catch {
+        // Pointer may already be released.
+      }
+    }
+  }
+
   function beginMarqueeSession(event) {
     endPanSession();
     endDragSession();
+    endFrameDragSession();
     endMarqueeSession();
     endResizeSession();
+    endFrameResizeSession();
     cancelEdgeSession();
 
     const state = store.getState();
@@ -418,6 +481,30 @@ export function bindInteractions(elements, store) {
     });
     if (!node) return;
     openNodeEditor(node.id);
+  }
+
+  function setFrameDrawMode(nextEnabled) {
+    isFrameDrawMode = Boolean(nextEnabled);
+    store.setFrameDrawing(isFrameDrawMode);
+    if (!isFrameDrawMode) {
+      store.clearFrameDraft();
+      if (frameDrawSession) {
+        endFrameDrawSession();
+      }
+    }
+  }
+
+  function createFrameFromDraft(draftRect) {
+    const width = Math.max(FRAME_DEFAULTS.minWidth, draftRect.width);
+    const height = Math.max(FRAME_DEFAULTS.minHeight, draftRect.height);
+    const frame = store.addFrame({
+      x: draftRect.left,
+      y: draftRect.top,
+      width,
+      height,
+    });
+    if (!frame) return;
+    openFrameEditor(frame.id);
   }
 
   function createLinkedNodeFromSelection() {
@@ -590,6 +677,47 @@ export function bindInteractions(elements, store) {
     store.clearEditingNode();
   }
 
+  function openFrameEditor(frameId) {
+    activeLiveEditFrameId = null;
+    store.setEditingFrame(frameId);
+    focusFrameTitleInput(frameId);
+  }
+
+  function closeFrameEditor(frameId = null) {
+    const resolvedFrameId = frameId || store.getState().ui.editingFrameId;
+    if (resolvedFrameId && activeLiveEditFrameId === resolvedFrameId) {
+      activeLiveEditFrameId = null;
+    }
+    store.clearEditingFrame();
+  }
+
+  function applyLiveFrameEditorInput(frameId, patch) {
+    const frame = getFrame(frameId, store.getState());
+    if (!frame) return;
+    if (activeLiveEditFrameId !== frameId) {
+      store.beginFrameEdit();
+      activeLiveEditFrameId = frameId;
+    }
+    if (typeof patch.title === 'string') {
+      frame.title = patch.title;
+    }
+    if (typeof patch.description === 'string') {
+      frame.description = patch.description;
+    }
+  }
+
+  function focusFrameTitleInput(frameId, retries = 2) {
+    const titleInput = framesLayer.querySelector(`[data-frame-edit-title="${frameId}"]`);
+    if (!titleInput) {
+      if (retries > 0) {
+        window.requestAnimationFrame(() => focusFrameTitleInput(frameId, retries - 1));
+      }
+      return;
+    }
+    titleInput.focus({ preventScroll: true });
+    titleInput.select();
+  }
+
   function applyLiveNodeEditorInput(nodeId, patch) {
     const node = getNode(nodeId, store.getState());
     if (!node) return;
@@ -640,14 +768,36 @@ export function bindInteractions(elements, store) {
   }
 
   canvas.addEventListener('dblclick', (event) => {
-    if (event.target.closest('[data-node-id]')) return;
+    if (isFrameDrawMode) return;
+    if (event.target.closest('[data-node-id], [data-frame-id]')) return;
     const point = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
     createNodeInEditMode(point);
   });
 
   canvas.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
-    if (event.target.closest('[data-node-id], [data-edge-id], .panel, button, input, textarea, label')) return;
+    if (event.target.closest('[data-node-id], [data-frame-id], [data-edge-id], .panel, button, input, textarea, label')) return;
+
+    if (isFrameDrawMode) {
+      const state = store.getState();
+      const start = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+      frameDrawSession = {
+        pointerId: event.pointerId,
+        startX: start.x,
+        startY: start.y,
+      };
+      store.clearSelection();
+      store.setFrameDrawing(true);
+      store.setFrameDraft({
+        x: start.x,
+        y: start.y,
+        width: 0,
+        height: 0,
+      });
+      canvas.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      return;
+    }
 
     if (isAdditiveModifier(event)) {
       beginMarqueeSession(event);
@@ -657,9 +807,13 @@ export function bindInteractions(elements, store) {
 
     cancelEdgeSession();
     endPanSession();
+    endFrameDrawSession();
     endMarqueeSession();
     endResizeSession();
+    endFrameResizeSession();
+    endFrameDragSession();
     activeLiveEditNodeId = null;
+    activeLiveEditFrameId = null;
     const state = store.getState();
     if (state.selection) {
       store.clearSelection();
@@ -676,6 +830,18 @@ export function bindInteractions(elements, store) {
   });
 
   canvas.addEventListener('pointermove', (event) => {
+    if (frameDrawSession && event.pointerId === frameDrawSession.pointerId) {
+      const state = store.getState();
+      const current = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+      const rect = toRectFromPoints(frameDrawSession.startX, frameDrawSession.startY, current.x, current.y);
+      store.setFrameDraft({
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+      });
+      return;
+    }
     if (marqueeSession && event.pointerId === marqueeSession.pointerId) {
       updateMarqueeSession(event);
       return;
@@ -690,6 +856,17 @@ export function bindInteractions(elements, store) {
   });
 
   canvas.addEventListener('pointerup', (event) => {
+    if (frameDrawSession && event.pointerId === frameDrawSession.pointerId) {
+      const state = store.getState();
+      const current = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+      const rect = toRectFromPoints(frameDrawSession.startX, frameDrawSession.startY, current.x, current.y);
+      if (rect.width >= 24 && rect.height >= 24) {
+        createFrameFromDraft(rect);
+      }
+      endFrameDrawSession(event.pointerId);
+      setFrameDrawMode(false);
+      return;
+    }
     if (marqueeSession && event.pointerId === marqueeSession.pointerId) {
       endMarqueeSession(event.pointerId);
       return;
@@ -699,6 +876,10 @@ export function bindInteractions(elements, store) {
   });
 
   canvas.addEventListener('pointercancel', (event) => {
+    if (frameDrawSession && event.pointerId === frameDrawSession.pointerId) {
+      endFrameDrawSession(event.pointerId);
+      return;
+    }
     if (marqueeSession && event.pointerId === marqueeSession.pointerId) {
       endMarqueeSession(event.pointerId);
       return;
@@ -708,6 +889,10 @@ export function bindInteractions(elements, store) {
   });
 
   canvas.addEventListener('lostpointercapture', (event) => {
+    if (frameDrawSession && event.pointerId === frameDrawSession.pointerId) {
+      endFrameDrawSession();
+      return;
+    }
     if (marqueeSession && event.pointerId === marqueeSession.pointerId) {
       endMarqueeSession();
       return;
@@ -740,6 +925,7 @@ export function bindInteractions(elements, store) {
   }, { passive: false });
 
   nodesLayer.addEventListener('pointerdown', (event) => {
+    if (isFrameDrawMode) return;
     const resizeEl = event.target.closest('[data-node-resize]');
     if (resizeEl && event.button === 0) {
       beginResizeSession(event, resizeEl.dataset.nodeResize);
@@ -765,8 +951,11 @@ export function bindInteractions(elements, store) {
     if (!nodeEl || event.button !== 0) return;
 
     endDragSession();
+    endFrameDragSession();
     endMarqueeSession();
     endResizeSession();
+    endFrameResizeSession();
+    endFrameDrawSession();
     cancelEdgeSession();
 
     const nodeId = nodeEl.dataset.nodeId;
@@ -883,6 +1072,9 @@ export function bindInteractions(elements, store) {
       return;
     }
     if (!dragSession || event.pointerId !== dragSession.pointerId) return;
+    if (dragSession.moved) {
+      store.recomputeNodeFrameMembership(dragSession.nodes.map((entry) => entry.id));
+    }
     endDragSession(event.pointerId);
   });
 
@@ -996,6 +1188,251 @@ export function bindInteractions(elements, store) {
 
     if (target.matches('[data-node-edit-description]')) {
       applyLiveNodeEditorInput(nodeId, { description: target.value });
+      event.stopPropagation();
+    }
+  });
+
+  framesLayer.addEventListener('pointerdown', (event) => {
+    if (isFrameDrawMode) return;
+    const resizeEl = event.target.closest('[data-frame-resize]');
+    if (resizeEl && event.button === 0) {
+      const parsed = parseFrameResizeToken(resizeEl.dataset.frameResize);
+      if (!parsed) return;
+      const state = store.getState();
+      const frame = getFrame(parsed.frameId, state);
+      if (!frame) return;
+
+      endPanSession();
+      endDragSession();
+      endFrameDragSession();
+      endMarqueeSession();
+      endResizeSession();
+      endFrameResizeSession();
+      cancelEdgeSession();
+
+      frameResizeSession = {
+        pointerId: event.pointerId,
+        frameId: parsed.frameId,
+        corner: parsed.corner,
+        startX: event.clientX,
+        startY: event.clientY,
+        startLeft: frame.x,
+        startTop: frame.y,
+        startRight: frame.x + frame.width,
+        startBottom: frame.y + frame.height,
+        moved: false,
+      };
+
+      store.setSelection({ type: 'frame', id: parsed.frameId });
+      store.setResizing(true);
+      framesLayer.setPointerCapture(event.pointerId);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
+    const anchorEl = event.target.closest('[data-frame-anchor]');
+    if (anchorEl && event.button === 0) {
+      beginEdgeSession(event, anchorEl.dataset.frameAnchor);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
+    if (event.target.closest('[data-frame-editor], [data-frame-edit-open], [data-frame-delete]')) {
+      event.stopPropagation();
+      return;
+    }
+
+    const frameEl = event.target.closest('[data-frame-id]');
+    if (!frameEl || event.button !== 0) return;
+
+    endPanSession();
+    endDragSession();
+    endFrameDragSession();
+    endMarqueeSession();
+    endResizeSession();
+    endFrameResizeSession();
+    cancelEdgeSession();
+    endFrameDrawSession();
+
+    const frameId = frameEl.dataset.frameId;
+    const state = store.getState();
+    const frame = getFrame(frameId, state);
+    if (!frame) return;
+
+    if (state.ui.editingNodeId) {
+      closeNodeEditor();
+    }
+    store.setSelection({ type: 'frame', id: frameId });
+
+    frameDragSession = {
+      pointerId: event.pointerId,
+      frameId,
+      startX: event.clientX,
+      startY: event.clientY,
+      frameStartX: frame.x,
+      frameStartY: frame.y,
+      moved: false,
+    };
+
+    store.setDragging(true);
+    framesLayer.setPointerCapture(event.pointerId);
+    event.stopPropagation();
+    event.preventDefault();
+  });
+
+  framesLayer.addEventListener('pointermove', (event) => {
+    if (edgeSession && edgeSession.pointerId === event.pointerId) {
+      updateEdgeDraft(event);
+      return;
+    }
+
+    if (frameResizeSession && frameResizeSession.pointerId === event.pointerId) {
+      const viewport = store.getState().viewport;
+      const dx = (event.clientX - frameResizeSession.startX) / viewport.zoom;
+      const dy = (event.clientY - frameResizeSession.startY) / viewport.zoom;
+
+      if (!frameResizeSession.moved) {
+        if (Math.abs(dx) <= 0.5 && Math.abs(dy) <= 0.5) {
+          return;
+        }
+        store.beginFrameResize();
+        frameResizeSession.moved = true;
+      }
+
+      const next = computeFrameResizedRect(frameResizeSession, dx, dy);
+      store.resizeFrame(frameResizeSession.frameId, next, { skipHistory: true });
+      return;
+    }
+
+    if (!frameDragSession || frameDragSession.pointerId !== event.pointerId) return;
+    const viewport = store.getState().viewport;
+    const dx = (event.clientX - frameDragSession.startX) / viewport.zoom;
+    const dy = (event.clientY - frameDragSession.startY) / viewport.zoom;
+
+    if (!frameDragSession.moved && (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5)) {
+      store.beginFrameMove();
+      frameDragSession.moved = true;
+    }
+
+    store.moveFrame(
+      frameDragSession.frameId,
+      frameDragSession.frameStartX + dx,
+      frameDragSession.frameStartY + dy,
+      { skipHistory: true, moveMembers: true },
+    );
+  });
+
+  framesLayer.addEventListener('pointerup', (event) => {
+    if (frameResizeSession && event.pointerId === frameResizeSession.pointerId) {
+      endFrameResizeSession(event.pointerId);
+      return;
+    }
+    if (edgeSession && event.pointerId === edgeSession.pointerId) {
+      finishEdgeSession(event);
+      return;
+    }
+    if (!frameDragSession || event.pointerId !== frameDragSession.pointerId) return;
+    endFrameDragSession(event.pointerId);
+  });
+
+  framesLayer.addEventListener('pointercancel', (event) => {
+    if (frameResizeSession && event.pointerId === frameResizeSession.pointerId) {
+      endFrameResizeSession(event.pointerId);
+      return;
+    }
+    if (edgeSession && event.pointerId === edgeSession.pointerId) {
+      cancelEdgeSession(event.pointerId);
+      return;
+    }
+    if (!frameDragSession || event.pointerId !== frameDragSession.pointerId) return;
+    endFrameDragSession(event.pointerId);
+  });
+
+  framesLayer.addEventListener('lostpointercapture', (event) => {
+    if (frameResizeSession && event.pointerId === frameResizeSession.pointerId) {
+      endFrameResizeSession();
+      return;
+    }
+    if (edgeSession && event.pointerId === edgeSession.pointerId) {
+      cancelEdgeSession();
+      return;
+    }
+    if (!frameDragSession || event.pointerId !== frameDragSession.pointerId) return;
+    endFrameDragSession();
+  });
+
+  framesLayer.addEventListener('click', (event) => {
+    const openEl = event.target.closest('[data-frame-edit-open]');
+    if (openEl) {
+      const frameId = openEl.dataset.frameEditOpen;
+      store.setSelection({ type: 'frame', id: frameId });
+      openFrameEditor(frameId);
+      event.stopPropagation();
+      return;
+    }
+
+    const deleteEl = event.target.closest('[data-frame-delete]');
+    if (deleteEl) {
+      const frameId = deleteEl.dataset.frameDelete;
+      activeLiveEditFrameId = null;
+      store.deleteFrame(frameId);
+      event.stopPropagation();
+      return;
+    }
+
+    if (event.target.closest('[data-frame-editor]')) {
+      event.stopPropagation();
+      return;
+    }
+
+    const frameEl = event.target.closest('[data-frame-id]');
+    if (!frameEl) return;
+    store.setSelection({ type: 'frame', id: frameEl.dataset.frameId });
+    event.stopPropagation();
+  });
+
+  framesLayer.addEventListener('keydown', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const frameEl = target.closest('[data-frame-id]');
+    const editorEl = target.closest('[data-frame-editor]');
+    if (!frameEl || !editorEl) return;
+    const frameId = frameEl.dataset.frameId;
+    if (!frameId) return;
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeFrameEditor(frameId);
+      return;
+    }
+
+    const ctrlOrCmd = event.ctrlKey || event.metaKey;
+    if (ctrlOrCmd && event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeFrameEditor(frameId);
+    }
+  });
+
+  framesLayer.addEventListener('input', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+    const frameEl = target.closest('[data-frame-id]');
+    if (!frameEl) return;
+    const frameId = frameEl.dataset.frameId;
+    if (!frameId) return;
+
+    if (target.matches('[data-frame-edit-title]')) {
+      applyLiveFrameEditorInput(frameId, { title: target.value });
+      event.stopPropagation();
+      return;
+    }
+
+    if (target.matches('[data-frame-edit-description]')) {
+      applyLiveFrameEditorInput(frameId, { description: target.value });
       event.stopPropagation();
     }
   });
@@ -1191,9 +1628,15 @@ export function bindInteractions(elements, store) {
     nodeColorPopover.addEventListener('click', (event) => {
       const swatchBtn = event.target.closest('[data-node-color-value]');
       if (!(swatchBtn instanceof HTMLButtonElement)) return;
-      const selectionIds = getSelectedNodeIds(store.getState().selection);
+      const selection = store.getState().selection;
+      const selectionIds = getSelectedNodeIds(selection);
       const colorKey = getNormalizedNodeColorValue(swatchBtn.dataset.nodeColorValue);
       store.setNodeColorDefault(colorKey);
+      if (selection?.type === 'frame') {
+        store.setFramesColor([selection.id], colorKey);
+        setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
+        return;
+      }
       if (!selectionIds.length) {
         setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
         return;
@@ -1221,13 +1664,17 @@ export function bindInteractions(elements, store) {
     void handleAddImageNode();
   });
 
+  document.getElementById('add-frame-btn')?.addEventListener('click', () => {
+    setFrameDrawMode(!isFrameDrawMode);
+  });
+
   document.getElementById('reset-view-btn')?.addEventListener('click', () => store.resetView());
   document.getElementById('undo-btn')?.addEventListener('click', () => store.undo());
   document.getElementById('redo-btn')?.addEventListener('click', () => store.redo());
 
   function hasGraphData() {
     const state = store.getState();
-    return state.nodes.length > 0 || state.edges.length > 0;
+    return state.nodes.length > 0 || state.frames.length > 0 || state.edges.length > 0;
   }
 
   function confirmDiscardIfNeeded(action) {
@@ -1270,6 +1717,7 @@ export function bindInteractions(elements, store) {
         name: state.name,
         settings: state.settings,
         nodes: state.nodes,
+        frames: state.frames,
         edges: state.edges,
       }, currentFileHandle);
       store.setImportStatus('Graph saved.');
@@ -1295,6 +1743,7 @@ export function bindInteractions(elements, store) {
         nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
       },
       nodes: [],
+      frames: [],
       edges: [],
     });
     store.resetView();
@@ -1402,17 +1851,31 @@ export function bindInteractions(elements, store) {
       event.preventDefault();
       if (selection.type === 'node') store.deleteNode(selection.id);
       if (selection.type === 'nodes') store.deleteSelectedNodes();
+      if (selection.type === 'frame') store.deleteFrame(selection.id);
       if (selection.type === 'edge') store.deleteEdge(selection.id);
       return;
     }
 
     if (event.key === 'Escape') {
+      if (frameDrawSession || isFrameDrawMode) {
+        endFrameDrawSession();
+        setFrameDrawMode(false);
+        return;
+      }
       if (marqueeSession) {
         endMarqueeSession();
         return;
       }
+      if (frameResizeSession) {
+        endFrameResizeSession();
+        return;
+      }
       if (resizeSession) {
         endResizeSession();
+        return;
+      }
+      if (store.getState().ui.editingFrameId) {
+        closeFrameEditor();
         return;
       }
       if (store.getState().ui.editingNodeId) {
@@ -1421,6 +1884,10 @@ export function bindInteractions(elements, store) {
       }
       if (edgeSession) {
         cancelEdgeSession();
+        return;
+      }
+      if (frameDragSession) {
+        endFrameDragSession();
         return;
       }
       store.clearSelection();
@@ -1488,7 +1955,7 @@ function uniqueIds(ids) {
 }
 
 function getNodeInteractionRect(node) {
-  const nodeEl = getNodeElementById(node.id);
+  const nodeEl = document.querySelector(`[data-node-id="${typeof CSS !== 'undefined' && typeof CSS.escape === 'function' ? CSS.escape(node.id) : node.id}"]`);
   if (nodeEl) {
     const width = nodeEl.offsetWidth || getNodeWidth(node);
     const height = nodeEl.offsetHeight || getNodeHeight(node);
@@ -1519,6 +1986,14 @@ function getNode(id, state) {
   return state.nodes.find((node) => node.id === id) || null;
 }
 
+function getFrame(id, state) {
+  return state.frames.find((frame) => frame.id === id) || null;
+}
+
+function getEntity(id, state) {
+  return getNode(id, state) || getFrame(id, state);
+}
+
 function parseAnchorToken(value) {
   if (!value || typeof value !== 'string') return null;
   const [nodeId, anchor] = value.split(':');
@@ -1526,9 +2001,13 @@ function parseAnchorToken(value) {
   return { nodeId, anchor };
 }
 
-function getNodeIdAtClientPoint(clientX, clientY) {
+function getGraphEntityIdAtClientPoint(clientX, clientY) {
   const hits = document.elementsFromPoint(clientX, clientY);
   for (const hit of hits) {
+    const frameEl = hit.closest('[data-frame-id]');
+    if (frameEl?.dataset?.frameId) {
+      return frameEl.dataset.frameId;
+    }
     const nodeEl = hit.closest('[data-node-id]');
     if (nodeEl?.dataset?.nodeId) {
       return nodeEl.dataset.nodeId;
@@ -1574,7 +2053,7 @@ function resolveSessionTargetAnchor({
   anchorsMode,
 }) {
   if (anchorsMode === 'exact') {
-    const nearestAnchor = resolveNearestNodeAnchorToPointer(targetNode.id, pointer, canvasEl, viewport);
+    const nearestAnchor = resolveNearestEntityAnchorToPointer(targetNode.id, pointer, canvasEl, viewport);
     if (nearestAnchor) {
       return nearestAnchor;
     }
@@ -1584,6 +2063,13 @@ function resolveSessionTargetAnchor({
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function parseFrameResizeToken(value) {
+  if (!value || typeof value !== 'string') return null;
+  const [frameId, corner] = value.split(':');
+  if (!frameId || !isResizeCorner(corner)) return null;
+  return { frameId, corner };
 }
 
 function isDirectionalArrowKey(key) {
@@ -1781,6 +2267,46 @@ function computeResizedRect(session, deltaX, deltaY) {
   };
 }
 
+function computeFrameResizedRect(session, deltaX, deltaY) {
+  let left = session.startLeft;
+  let right = session.startRight;
+  let top = session.startTop;
+  let bottom = session.startBottom;
+
+  if (session.corner.includes('left')) {
+    left = session.startLeft + deltaX;
+  }
+  if (session.corner.includes('right')) {
+    right = session.startRight + deltaX;
+  }
+  if (session.corner.includes('top')) {
+    top = session.startTop + deltaY;
+  }
+  if (session.corner.includes('bottom')) {
+    bottom = session.startBottom + deltaY;
+  }
+
+  if (session.corner.includes('left')) {
+    left = Math.min(left, right - FRAME_DEFAULTS.minWidth);
+  }
+  if (session.corner.includes('right')) {
+    right = Math.max(right, left + FRAME_DEFAULTS.minWidth);
+  }
+  if (session.corner.includes('top')) {
+    top = Math.min(top, bottom - FRAME_DEFAULTS.minHeight);
+  }
+  if (session.corner.includes('bottom')) {
+    bottom = Math.max(bottom, top + FRAME_DEFAULTS.minHeight);
+  }
+
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  };
+}
+
 function computeImageResizedRect(session, deltaX) {
   const startWidth = session.startRight - session.startLeft;
   const aspectRatio = Number(session.imageAspectRatio) > 0 ? Number(session.imageAspectRatio) : 1;
@@ -1828,9 +2354,9 @@ function resolveEffectiveAnchorForSession(storedAnchor, fromNode, toNode, anchor
   return resolveAnchorName(null, fromNode, toNode);
 }
 
-function resolveNearestNodeAnchorToPointer(nodeId, pointer, canvasEl, viewport) {
+function resolveNearestEntityAnchorToPointer(nodeId, pointer, canvasEl, viewport) {
   if (!nodeId || !pointer || !canvasEl || !viewport) return null;
-  const nodeEl = getNodeElementById(nodeId);
+  const nodeEl = getGraphElementById(nodeId);
   if (!nodeEl) return null;
 
   const rect = nodeEl.getBoundingClientRect();
@@ -1856,11 +2382,11 @@ function resolveNearestNodeAnchorToPointer(nodeId, pointer, canvasEl, viewport) 
   return isAnchorName(nearest) ? nearest : null;
 }
 
-function getNodeElementById(nodeId) {
+function getGraphElementById(nodeId) {
   const escapedId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
     ? CSS.escape(nodeId)
     : nodeId;
-  const nodeEl = document.querySelector(`[data-node-id="${escapedId}"]`);
+  const nodeEl = document.querySelector(`[data-node-id="${escapedId}"], [data-frame-id="${escapedId}"]`);
   return nodeEl instanceof HTMLElement ? nodeEl : null;
 }
 

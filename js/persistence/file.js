@@ -37,6 +37,7 @@ export async function saveGraphFile(graph, handle = null) {
     name: graph.name,
     settings: graph.settings,
     nodes: graph.nodes,
+    frames: graph.frames,
     edges: graph.edges,
   }, null, 2);
   const writable = await targetHandle.createWritable();

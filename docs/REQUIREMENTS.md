@@ -110,6 +110,18 @@ Graph settings must include graph name, background style, anchors mode, arrowhea
 FR-30
 The app must provide a theme toggle (light/dark) and persist the user theme preference locally.
 
+FR-31
+Users must be able to create, edit, move, resize, and delete Frames.
+
+FR-32
+Frames must support anchor-based edge create/reconnect workflows like nodes.
+
+FR-33
+Nodes must support single-frame embedding by overlap; embedded nodes move with their parent Frame.
+
+FR-34
+Deleting a Frame must ungroup contained nodes without deleting those nodes.
+
 ## Non Functional Requirements
 
 ### Performance
@@ -139,7 +151,7 @@ When file system APIs are unavailable, unsupported actions should degrade gracef
 ### Data Format and Safety
 
 NFR-7
-Graph persistence and import/export formats must use JSON with `{ name, settings, nodes, edges }`.
+Graph persistence and import/export formats must use JSON with `{ name, settings, nodes, frames, edges }`.
 
 NFR-8
 All graph data processing must occur client-side.

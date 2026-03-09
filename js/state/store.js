@@ -1,13 +1,29 @@
+
 import { createId } from '../utils/id.js';
-import { emptyGraphState, sanitizeEdge, sanitizeGraphName, sanitizeGraphSettings, sanitizeNode } from '../utils/graph.js';
-import { IMAGE_NODE_DEFAULTS, NODE_COLOR_KEYS, NODE_DEFAULTS, VIEWPORT_LIMITS } from '../utils/constants.js';
+import {
+  emptyGraphState,
+  sanitizeEdge,
+  sanitizeFrame,
+  sanitizeGraphName,
+  sanitizeGraphSettings,
+  sanitizeNode,
+} from '../utils/graph.js';
+import {
+  FRAME_DEFAULTS,
+  IMAGE_NODE_DEFAULTS,
+  NODE_COLOR_KEYS,
+  NODE_DEFAULTS,
+  VIEWPORT_LIMITS,
+} from '../utils/constants.js';
 
 export function createStore(initialGraph = null) {
   let state = emptyGraphState();
   if (initialGraph) {
     state.name = sanitizeGraphName(initialGraph.name);
     state.settings = sanitizeGraphSettings(initialGraph.settings);
-    state.nodes = initialGraph.nodes.map(sanitizeNode);
+    state.frames = (Array.isArray(initialGraph.frames) ? initialGraph.frames : []).map(sanitizeFrame);
+    const frameIds = new Set(state.frames.map((frame) => frame.id));
+    state.nodes = initialGraph.nodes.map((node) => sanitizeNode(node, frameIds));
     state.edges = initialGraph.edges.map(sanitizeEdge);
   }
 
@@ -25,6 +41,7 @@ export function createStore(initialGraph = null) {
       name: state.name,
       settings: structuredClone(state.settings),
       nodes: structuredClone(state.nodes),
+      frames: structuredClone(state.frames),
       edges: structuredClone(state.edges),
       selection: cloneSelection(state.selection),
     };
@@ -91,6 +108,10 @@ export function createStore(initialGraph = null) {
 
   function setEditingNode(id) {
     const nextId = id || null;
+    if (state.ui.editingFrameId && state.ui.editingFrameId !== nextId) {
+      finalizeEditingFrameText(state.ui.editingFrameId);
+      state.ui.editingFrameId = null;
+    }
     if (state.ui.editingNodeId && state.ui.editingNodeId !== nextId) {
       finalizeEditingNodeText(state.ui.editingNodeId);
     }
@@ -102,6 +123,26 @@ export function createStore(initialGraph = null) {
     if (!state.ui.editingNodeId) return;
     finalizeEditingNodeText(state.ui.editingNodeId);
     state.ui.editingNodeId = null;
+    notify();
+  }
+
+  function setEditingFrame(id) {
+    const nextId = id || null;
+    if (state.ui.editingNodeId && state.ui.editingNodeId !== nextId) {
+      finalizeEditingNodeText(state.ui.editingNodeId);
+      state.ui.editingNodeId = null;
+    }
+    if (state.ui.editingFrameId && state.ui.editingFrameId !== nextId) {
+      finalizeEditingFrameText(state.ui.editingFrameId);
+    }
+    state.ui.editingFrameId = nextId;
+    notify();
+  }
+
+  function clearEditingFrame() {
+    if (!state.ui.editingFrameId) return;
+    finalizeEditingFrameText(state.ui.editingFrameId);
+    state.ui.editingFrameId = null;
     notify();
   }
 
@@ -122,6 +163,22 @@ export function createStore(initialGraph = null) {
 
   function setConnecting(isConnecting) {
     state.ui.isConnecting = Boolean(isConnecting);
+    notify();
+  }
+
+  function setFrameDrawing(isDrawingFrame) {
+    state.ui.isDrawingFrame = Boolean(isDrawingFrame);
+    notify();
+  }
+
+  function setFrameDraft(frameDraft) {
+    state.ui.frameDraft = frameDraft || null;
+    notify();
+  }
+
+  function clearFrameDraft() {
+    if (!state.ui.frameDraft) return;
+    state.ui.frameDraft = null;
     notify();
   }
 
@@ -155,6 +212,13 @@ export function createStore(initialGraph = null) {
       if (!keepEditing) {
         finalizeEditingNodeText(state.ui.editingNodeId);
         state.ui.editingNodeId = null;
+      }
+    }
+    if (state.ui.editingFrameId) {
+      const keepEditing = isFrameSelected(state.selection, state.ui.editingFrameId);
+      if (!keepEditing) {
+        finalizeEditingFrameText(state.ui.editingFrameId);
+        state.ui.editingFrameId = null;
       }
     }
     notify();
@@ -191,8 +255,12 @@ export function createStore(initialGraph = null) {
     if (state.ui.editingNodeId) {
       finalizeEditingNodeText(state.ui.editingNodeId);
     }
+    if (state.ui.editingFrameId) {
+      finalizeEditingFrameText(state.ui.editingFrameId);
+    }
     state.selection = null;
     state.ui.editingNodeId = null;
+    state.ui.editingFrameId = null;
     notify();
   }
 
@@ -206,6 +274,7 @@ export function createStore(initialGraph = null) {
     imageAspectRatio = null,
     width = null,
     height = null,
+    frameId = null,
   }, options = {}) {
     if (!options.skipHistory) pushHistory('add-node');
     const resolvedColorKey = options.colorKey !== undefined
@@ -221,14 +290,61 @@ export function createStore(initialGraph = null) {
       y,
       ...(width === null ? {} : { width }),
       ...(height === null ? {} : { height }),
+      ...(frameId ? { frameId } : {}),
       colorKey: resolvedColorKey,
-    });
+    }, new Set(state.frames.map((frame) => frame.id)));
+
+    if (!node.frameId && options.resolveFrameMembership !== false) {
+      const bestFrameId = findBestFrameIdForNode(node);
+      if (bestFrameId) {
+        node.frameId = bestFrameId;
+      }
+    }
+
     state.nodes.push(node);
     state.selection = { type: 'node', id: node.id };
     notify();
     return node;
   }
 
+  function addFrame({
+    x,
+    y,
+    width = FRAME_DEFAULTS.width,
+    height = FRAME_DEFAULTS.height,
+    title = FRAME_DEFAULTS.title,
+    description = '',
+    colorKey = null,
+  }, options = {}) {
+    if (!options.skipHistory) pushHistory('add-frame');
+
+    const frame = sanitizeFrame({
+      id: createId('frame'),
+      title,
+      description,
+      x,
+      y,
+      width,
+      height,
+      colorKey,
+    });
+
+    state.frames.push(frame);
+
+    if (options.assignOverlaps !== false) {
+      for (const node of state.nodes) {
+        if (node.frameId) continue;
+        const area = getNodeFrameOverlapArea(node, frame);
+        if (area > 0) {
+          node.frameId = frame.id;
+        }
+      }
+    }
+
+    state.selection = { type: 'frame', id: frame.id };
+    notify();
+    return frame;
+  }
   function updateNode(id, patch, options = {}) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
@@ -245,6 +361,39 @@ export function createStore(initialGraph = null) {
     }
     if (typeof patch.y === 'number') {
       node.y = patch.y;
+    }
+    if (patch.frameId === null || patch.frameId === undefined || patch.frameId === '') {
+      delete node.frameId;
+    } else if (typeof patch.frameId === 'string' && state.frames.some((frame) => frame.id === patch.frameId)) {
+      node.frameId = patch.frameId;
+    }
+    if (!options.skipNotify) {
+      notify();
+    }
+  }
+
+  function updateFrame(id, patch, options = {}) {
+    const frame = state.frames.find((item) => item.id === id);
+    if (!frame) return;
+    if (!options.skipHistory) pushHistory('update-frame');
+    if (typeof patch.title === 'string') {
+      const title = patch.title.trim();
+      frame.title = title || FRAME_DEFAULTS.title;
+    }
+    if (typeof patch.description === 'string') {
+      frame.description = patch.description;
+    }
+    if (typeof patch.x === 'number') {
+      frame.x = patch.x;
+    }
+    if (typeof patch.y === 'number') {
+      frame.y = patch.y;
+    }
+    if (typeof patch.width === 'number') {
+      frame.width = Math.max(FRAME_DEFAULTS.minWidth, patch.width);
+    }
+    if (typeof patch.height === 'number') {
+      frame.height = Math.max(FRAME_DEFAULTS.minHeight, patch.height);
     }
     if (!options.skipNotify) {
       notify();
@@ -273,6 +422,27 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function moveFrame(id, x, y, options = {}) {
+    const frame = state.frames.find((item) => item.id === id);
+    if (!frame) return;
+    if (!options.skipHistory) pushHistory('move-frame');
+    const dx = x - frame.x;
+    const dy = y - frame.y;
+    frame.x = x;
+    frame.y = y;
+
+    if (options.moveMembers !== false && (dx !== 0 || dy !== 0)) {
+      for (const node of state.nodes) {
+        if (node.frameId === frame.id) {
+          node.x += dx;
+          node.y += dy;
+        }
+      }
+    }
+
+    notify();
+  }
+
   function resizeNode(id, patch, options = {}) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
@@ -292,6 +462,25 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function resizeFrame(id, patch, options = {}) {
+    const frame = state.frames.find((item) => item.id === id);
+    if (!frame) return;
+    if (!options.skipHistory) pushHistory('resize-frame');
+    if (typeof patch.x === 'number') {
+      frame.x = patch.x;
+    }
+    if (typeof patch.y === 'number') {
+      frame.y = patch.y;
+    }
+    if (typeof patch.width === 'number') {
+      frame.width = Math.max(FRAME_DEFAULTS.minWidth, patch.width);
+    }
+    if (typeof patch.height === 'number') {
+      frame.height = Math.max(FRAME_DEFAULTS.minHeight, patch.height);
+    }
+    notify();
+  }
+
   function beginNodeMove() {
     pushHistory('move-node');
   }
@@ -302,6 +491,18 @@ export function createStore(initialGraph = null) {
 
   function beginNodeResize() {
     pushHistory('resize-node');
+  }
+
+  function beginFrameMove() {
+    pushHistory('move-frame');
+  }
+
+  function beginFrameEdit() {
+    pushHistory('update-frame');
+  }
+
+  function beginFrameResize() {
+    pushHistory('resize-frame');
   }
 
   function deleteNode(id) {
@@ -322,30 +523,57 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
-  function setNodesColor(ids, colorKey) {
-    const selectedIds = [];
-    const seen = new Set();
-    for (const id of Array.isArray(ids) ? ids : []) {
-      if (typeof id !== 'string' || seen.has(id)) continue;
-      seen.add(id);
-      if (state.nodes.some((node) => node.id === id)) {
-        selectedIds.push(id);
+  function deleteFrame(id) {
+    const index = state.frames.findIndex((frame) => frame.id === id);
+    if (index === -1) return;
+    pushHistory('delete-frame');
+
+    state.frames.splice(index, 1);
+    for (const node of state.nodes) {
+      if (node.frameId === id) {
+        delete node.frameId;
       }
     }
-    if (!selectedIds.length) return;
+
+    state.edges = state.edges.filter((edge) => edge.from !== id && edge.to !== id);
+
+    if (state.selection?.type === 'frame' && state.selection.id === id) {
+      state.selection = null;
+    }
+
+    if (state.ui.editingFrameId === id) {
+      state.ui.editingFrameId = null;
+    }
+
+    notify();
+  }
+
+  function setNodesColor(ids, colorKey) {
+    const targets = dedupeNodeTargets(ids);
+    if (!targets.length) return;
 
     const normalizedColorKey = sanitizeColorKey(colorKey);
-    const targets = state.nodes.filter((node) => selectedIds.includes(node.id));
     const changed = targets.some((node) => (node.colorKey || null) !== normalizedColorKey);
     if (!changed) return;
 
     pushHistory('set-node-color');
     for (const node of targets) {
-      if (normalizedColorKey === null) {
-        delete node.colorKey;
-      } else {
-        node.colorKey = normalizedColorKey;
-      }
+      applyColor(node, normalizedColorKey);
+    }
+    notify();
+  }
+
+  function setFramesColor(ids, colorKey) {
+    const targets = dedupeFrameTargets(ids);
+    if (!targets.length) return;
+
+    const normalizedColorKey = sanitizeColorKey(colorKey);
+    const changed = targets.some((frame) => (frame.colorKey || null) !== normalizedColorKey);
+    if (!changed) return;
+
+    pushHistory('set-frame-color');
+    for (const frame of targets) {
+      applyColor(frame, normalizedColorKey);
     }
     notify();
   }
@@ -372,19 +600,17 @@ export function createStore(initialGraph = null) {
       notify();
       return existingEdge.id;
     }
-    const hasNodes = state.nodes.some((node) => node.id === from) && state.nodes.some((node) => node.id === to);
-    if (!hasNodes) return null;
-    const fromNode = state.nodes.find((node) => node.id === from);
-    const toNode = state.nodes.find((node) => node.id === to);
-    if (!fromNode || !toNode) return null;
+    const fromEntity = getGraphEntity(from);
+    const toEntity = getGraphEntity(to);
+    if (!fromEntity || !toEntity) return null;
 
     pushHistory('add-edge');
     const edge = sanitizeEdge({
       id: createId('edge'),
       from,
       to,
-      fromAnchor: resolveAutoAnchor(fromNode, toNode),
-      toAnchor: resolveAutoAnchor(toNode, fromNode),
+      fromAnchor: resolveAutoAnchor(fromEntity, toEntity),
+      toAnchor: resolveAutoAnchor(toEntity, fromEntity),
     });
     state.edges.push(edge);
     state.selection = { type: 'edge', id: edge.id };
@@ -401,8 +627,8 @@ export function createStore(initialGraph = null) {
       return existingEdge.id;
     }
 
-    const hasNodes = state.nodes.some((node) => node.id === fromNodeId) && state.nodes.some((node) => node.id === toNodeId);
-    if (!hasNodes) return null;
+    const hasEndpoints = Boolean(getGraphEntity(fromNodeId)) && Boolean(getGraphEntity(toNodeId));
+    if (!hasEndpoints) return null;
 
     pushHistory('add-edge');
     const edge = sanitizeEdge({
@@ -418,11 +644,11 @@ export function createStore(initialGraph = null) {
     return edge.id;
   }
 
-  function reconnectEdge(id, side, nodeId, anchor = null) {
+  function reconnectEdge(id, side, entityId, anchor = null) {
     const edge = state.edges.find((item) => item.id === id);
     if (!edge) return null;
-    const hasNode = state.nodes.some((node) => node.id === nodeId);
-    if (!hasNode) return null;
+    const hasEntity = Boolean(getGraphEntity(entityId));
+    if (!hasEntity) return null;
 
     const next = {
       from: edge.from,
@@ -432,10 +658,10 @@ export function createStore(initialGraph = null) {
     };
 
     if (side === 'from') {
-      next.from = nodeId;
+      next.from = entityId;
       next.fromAnchor = anchor;
     } else if (side === 'to') {
-      next.to = nodeId;
+      next.to = entityId;
       next.toAnchor = anchor;
     } else {
       return null;
@@ -512,21 +738,25 @@ export function createStore(initialGraph = null) {
     }
     notify();
   }
-
   function replaceGraph(graph) {
     pushHistory('import-graph');
     state.name = sanitizeGraphName(graph.name);
     state.settings = sanitizeGraphSettings(graph.settings);
-    state.nodes = graph.nodes.map(sanitizeNode);
+    state.frames = (Array.isArray(graph.frames) ? graph.frames : []).map(sanitizeFrame);
+    const frameIds = new Set(state.frames.map((frame) => frame.id));
+    state.nodes = graph.nodes.map((node) => sanitizeNode(node, frameIds));
     state.edges = graph.edges.map(sanitizeEdge);
     state.selection = null;
     state.ui.edgeDraft = null;
     state.ui.edgeTwangId = null;
     state.ui.editingNodeId = null;
+    state.ui.editingFrameId = null;
     state.ui.isPanning = false;
     state.ui.isDragging = false;
     state.ui.isResizing = false;
     state.ui.isConnecting = false;
+    state.ui.isDrawingFrame = false;
+    state.ui.frameDraft = null;
     state.ui.isMarqueeSelecting = false;
     state.ui.selectionMarquee = null;
     notify();
@@ -558,24 +788,43 @@ export function createStore(initialGraph = null) {
     });
   }
 
+  function recomputeNodeFrameMembership(nodeIds, options = {}) {
+    const ids = Array.isArray(nodeIds) ? nodeIds : [nodeIds];
+    const normalizedIds = ids.filter((id) => typeof id === 'string');
+    if (!normalizedIds.length) return false;
+
+    const changedNodes = [];
+    for (const id of normalizedIds) {
+      const node = state.nodes.find((entry) => entry.id === id);
+      if (!node) continue;
+      const nextFrameId = findBestFrameIdForNode(node);
+      const current = node.frameId || null;
+      if (current === nextFrameId) continue;
+      changedNodes.push({ node, nextFrameId });
+    }
+
+    if (!changedNodes.length) return false;
+    if (!options.skipHistory) {
+      pushHistory('set-node-frame');
+    }
+
+    for (const entry of changedNodes) {
+      if (entry.nextFrameId) {
+        entry.node.frameId = entry.nextFrameId;
+      } else {
+        delete entry.node.frameId;
+      }
+    }
+
+    notify();
+    return true;
+  }
+
   function undo() {
     const entry = state.history.past.pop();
     if (!entry) return;
     state.history.future.push({ label: 'undo', data: snapshot() });
-    state.name = entry.data.name;
-    state.settings = entry.data.settings;
-    state.nodes = entry.data.nodes;
-    state.edges = entry.data.edges;
-    state.selection = entry.data.selection;
-    state.ui.edgeDraft = null;
-    state.ui.edgeTwangId = null;
-    state.ui.editingNodeId = null;
-    state.ui.isPanning = false;
-    state.ui.isDragging = false;
-    state.ui.isResizing = false;
-    state.ui.isConnecting = false;
-    state.ui.isMarqueeSelecting = false;
-    state.ui.selectionMarquee = null;
+    restoreSnapshot(entry.data);
     notify();
   }
 
@@ -583,21 +832,29 @@ export function createStore(initialGraph = null) {
     const entry = state.history.future.pop();
     if (!entry) return;
     state.history.past.push({ label: 'redo', data: snapshot() });
-    state.name = entry.data.name;
-    state.settings = entry.data.settings;
-    state.nodes = entry.data.nodes;
-    state.edges = entry.data.edges;
-    state.selection = entry.data.selection;
+    restoreSnapshot(entry.data);
+    notify();
+  }
+
+  function restoreSnapshot(data) {
+    state.name = data.name;
+    state.settings = data.settings;
+    state.nodes = data.nodes;
+    state.frames = Array.isArray(data.frames) ? data.frames : [];
+    state.edges = data.edges;
+    state.selection = data.selection;
     state.ui.edgeDraft = null;
     state.ui.edgeTwangId = null;
     state.ui.editingNodeId = null;
+    state.ui.editingFrameId = null;
     state.ui.isPanning = false;
     state.ui.isDragging = false;
     state.ui.isResizing = false;
     state.ui.isConnecting = false;
+    state.ui.isDrawingFrame = false;
+    state.ui.frameDraft = null;
     state.ui.isMarqueeSelecting = false;
     state.ui.selectionMarquee = null;
-    notify();
   }
 
   function finalizeEditingNodeText(nodeId) {
@@ -607,6 +864,60 @@ export function createStore(initialGraph = null) {
     const title = String(node.title ?? '').trim();
     node.title = title || NODE_DEFAULTS.title;
     node.description = String(node.description ?? '');
+  }
+
+  function finalizeEditingFrameText(frameId) {
+    if (!frameId) return;
+    const frame = state.frames.find((item) => item.id === frameId);
+    if (!frame) return;
+    const title = String(frame.title ?? '').trim();
+    frame.title = title || FRAME_DEFAULTS.title;
+    frame.description = String(frame.description ?? '');
+  }
+
+  function getGraphEntity(id) {
+    const node = state.nodes.find((entry) => entry.id === id);
+    if (node) return node;
+    return state.frames.find((entry) => entry.id === id) || null;
+  }
+
+  function dedupeNodeTargets(ids) {
+    const selectedIds = [];
+    const seen = new Set();
+    for (const id of Array.isArray(ids) ? ids : []) {
+      if (typeof id !== 'string' || seen.has(id)) continue;
+      seen.add(id);
+      if (state.nodes.some((node) => node.id === id)) {
+        selectedIds.push(id);
+      }
+    }
+    return state.nodes.filter((node) => selectedIds.includes(node.id));
+  }
+
+  function dedupeFrameTargets(ids) {
+    const selectedIds = [];
+    const seen = new Set();
+    for (const id of Array.isArray(ids) ? ids : []) {
+      if (typeof id !== 'string' || seen.has(id)) continue;
+      seen.add(id);
+      if (state.frames.some((frame) => frame.id === id)) {
+        selectedIds.push(id);
+      }
+    }
+    return state.frames.filter((frame) => selectedIds.includes(frame.id));
+  }
+
+  function findBestFrameIdForNode(node) {
+    let best = null;
+    for (let index = 0; index < state.frames.length; index += 1) {
+      const frame = state.frames[index];
+      const area = getNodeFrameOverlapArea(node, frame);
+      if (area <= 0) continue;
+      if (!best || area > best.area || (area === best.area && index > best.index)) {
+        best = { frameId: frame.id, area, index };
+      }
+    }
+    return best?.frameId || null;
   }
 
   return {
@@ -619,10 +930,15 @@ export function createStore(initialGraph = null) {
     clearEdgeTwang,
     setEditingNode,
     clearEditingNode,
+    setEditingFrame,
+    clearEditingFrame,
     setPanning,
     setDragging,
     setResizing,
     setConnecting,
+    setFrameDrawing,
+    setFrameDraft,
+    clearFrameDraft,
     setSelectionMarquee,
     setSelection,
     setNodeSelection,
@@ -630,15 +946,25 @@ export function createStore(initialGraph = null) {
     toggleNodeInSelection,
     clearSelection,
     addNode,
+    addFrame,
     updateNode,
+    updateFrame,
     moveNode,
     moveNodes,
+    moveFrame,
     resizeNode,
+    resizeFrame,
     beginNodeMove,
     beginNodeEdit,
     beginNodeResize,
+    beginFrameMove,
+    beginFrameEdit,
+    beginFrameResize,
+    recomputeNodeFrameMembership,
     setNodesColor,
+    setFramesColor,
     deleteNode,
+    deleteFrame,
     deleteSelectedNodes,
     addEdge,
     connectNodes,
@@ -657,14 +983,101 @@ export function createStore(initialGraph = null) {
     redo,
   };
 }
-
-function resolveAutoAnchor(fromNode, toNode) {
-  const dx = toNode.x - fromNode.x;
-  const dy = toNode.y - fromNode.y;
+function resolveAutoAnchor(fromEntity, toEntity) {
+  const fromCenter = getEntityCenter(fromEntity);
+  const toCenter = getEntityCenter(toEntity);
+  const dx = toCenter.x - fromCenter.x;
+  const dy = toCenter.y - fromCenter.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
     return dx >= 0 ? 'right' : 'left';
   }
   return dy >= 0 ? 'bottom' : 'top';
+}
+
+function getEntityCenter(entity) {
+  const width = getEntityWidth(entity);
+  const height = getEntityHeight(entity);
+  return {
+    x: (Number(entity.x) || 0) + (width / 2),
+    y: (Number(entity.y) || 0) + (height / 2),
+  };
+}
+
+function getNodeWidth(node) {
+  const width = Number(node?.width);
+  return Number.isFinite(width) && width > 0 ? width : NODE_DEFAULTS.width;
+}
+
+function getNodeHeight(node) {
+  const height = Number(node?.height);
+  if (Number.isFinite(height) && height > 0) return height;
+  if (node?.kind === IMAGE_NODE_DEFAULTS.kind && Number(node?.imageAspectRatio) > 0) {
+    return (getNodeWidth(node) / Number(node.imageAspectRatio)) + IMAGE_NODE_DEFAULTS.metaHeight;
+  }
+  return NODE_DEFAULTS.height;
+}
+
+function isFrameEntity(entity) {
+  return entity && Number.isFinite(Number(entity.width)) && Number.isFinite(Number(entity.height))
+    && !Object.prototype.hasOwnProperty.call(entity, 'kind');
+}
+
+function getEntityWidth(entity) {
+  if (isFrameEntity(entity)) {
+    const frameWidth = Number(entity?.width);
+    return Number.isFinite(frameWidth) && frameWidth > 0 ? frameWidth : FRAME_DEFAULTS.width;
+  }
+  return getNodeWidth(entity);
+}
+
+function getEntityHeight(entity) {
+  if (isFrameEntity(entity)) {
+    const frameHeight = Number(entity?.height);
+    return Number.isFinite(frameHeight) && frameHeight > 0 ? frameHeight : FRAME_DEFAULTS.height;
+  }
+  return getNodeHeight(entity);
+}
+
+function getNodeRect(node) {
+  const width = getNodeWidth(node);
+  const height = getNodeHeight(node);
+  const left = Number(node.x) || 0;
+  const top = Number(node.y) || 0;
+  return {
+    left,
+    top,
+    right: left + width,
+    bottom: top + height,
+  };
+}
+
+function getFrameRect(frame) {
+  const left = Number(frame.x) || 0;
+  const top = Number(frame.y) || 0;
+  const width = Number(frame.width) || FRAME_DEFAULTS.width;
+  const height = Number(frame.height) || FRAME_DEFAULTS.height;
+  return {
+    left,
+    top,
+    right: left + width,
+    bottom: top + height,
+  };
+}
+
+function getNodeFrameOverlapArea(node, frame) {
+  const nodeRect = getNodeRect(node);
+  const frameRect = getFrameRect(frame);
+  const overlapWidth = Math.max(0, Math.min(nodeRect.right, frameRect.right) - Math.max(nodeRect.left, frameRect.left));
+  const overlapHeight = Math.max(0, Math.min(nodeRect.bottom, frameRect.bottom) - Math.max(nodeRect.top, frameRect.top));
+  return overlapWidth * overlapHeight;
+}
+
+function applyColor(entity, colorKey) {
+  if (colorKey === null) {
+    delete entity.colorKey;
+    return;
+  }
+  entity.colorKey = colorKey;
 }
 
 function sanitizeColorKey(colorKey) {
@@ -721,6 +1134,11 @@ function isNodeSelected(selection, nodeId) {
     return Array.isArray(selection.ids) && selection.ids.includes(nodeId);
   }
   return false;
+}
+
+function isFrameSelected(selection, frameId) {
+  if (!frameId || !selection) return false;
+  return selection.type === 'frame' && selection.id === frameId;
 }
 
 function normalizeNodeSelection(ids, nodes, preferredPrimaryId = null) {

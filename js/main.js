@@ -6,6 +6,7 @@ import { loadGraphFromStorage, saveGraphToStorage } from './persistence/storage.
 const elements = {
   workspace: document.getElementById('workspace'),
   canvas: document.getElementById('canvas'),
+  framesLayer: document.getElementById('frames-layer'),
   nodesLayer: document.getElementById('nodes-layer'),
   edgesLayer: document.getElementById('edges-layer'),
   edgesOverlayLayer: document.getElementById('edges-overlay-layer'),
@@ -29,10 +30,11 @@ store.subscribe((state) => {
   saveHandle = window.setTimeout(() => {
     saveGraphToStorage({
       name: state.name,
-      settings: state.settings,
-      nodes: state.nodes,
-      edges: state.edges,
-    });
+    settings: state.settings,
+    nodes: state.nodes,
+    frames: state.frames,
+    edges: state.edges,
+  });
   }, 120);
 });
 

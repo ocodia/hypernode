@@ -15,6 +15,14 @@ export const NODE_DEFAULTS = {
   title: "Untitled Node",
 };
 
+export const FRAME_DEFAULTS = {
+  width: 320,
+  height: 200,
+  minWidth: 200,
+  minHeight: 140,
+  title: "Untitled Frame",
+};
+
 export const IMAGE_NODE_DEFAULTS = {
   kind: "image",
   metaHeight: 64,

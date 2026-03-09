@@ -36,9 +36,17 @@ Users create nodes, connect them with directed edges, move items spatially, and 
 ### Edge Workflow
 
 - create edges from node anchors
+- create edges from frame anchors
 - preview draft edge while choosing target
 - reconnect selected edge endpoints
 - delete selected edges
+
+### Frame Workflow
+
+- draw frame containers from toolbar mode
+- edit frame title/description below frame body
+- resize and move frames
+- embed nodes by overlap so grouped nodes move with frame
 
 ### Canvas Navigation
 

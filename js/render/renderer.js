@@ -1,9 +1,10 @@
-import { NODE_DEFAULTS } from "../utils/constants.js";
+import { FRAME_DEFAULTS, NODE_DEFAULTS } from "../utils/constants.js";
 
 export function createRenderer(elements, store) {
   const {
     workspace,
     canvas,
+    framesLayer,
     nodesLayer,
     edgesGroup,
     edgeDraftGroup,
@@ -17,6 +18,7 @@ export function createRenderer(elements, store) {
 
   function applyViewport(viewport) {
     const transform = `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`;
+    framesLayer.style.transform = transform;
     nodesLayer.style.transform = transform;
     edgesLayer.style.transform = transform;
     edgesOverlayLayer.style.transform = transform;
@@ -48,6 +50,77 @@ export function createRenderer(elements, store) {
     canvas.style.setProperty('--bg-grid-minor-alpha', String(gridMinorAlpha));
     canvas.style.setProperty('--bg-grid-major-alpha', String(gridMajorAlpha));
     canvas.style.setProperty('--bg-dot-alpha', String(dotAlpha));
+  }
+
+  function renderFrames(state) {
+    const selectedFrameId = state.selection?.type === 'frame' ? state.selection.id : null;
+    const editingFrameId = state.ui.editingFrameId;
+    const draft = state.ui.edgeDraft;
+    const frameDraft = state.ui.frameDraft;
+
+    const framesMarkup = state.frames
+      .map((frame) => {
+        const selectedClass = selectedFrameId === frame.id ? 'is-selected' : '';
+        const editingClass = editingFrameId === frame.id ? 'is-editing' : '';
+        const connectClass =
+          draft?.fromNodeId === frame.id
+            ? 'is-connect-source'
+            : draft
+              ? draft.hoverNodeId === frame.id
+                ? 'is-connect-target'
+                : 'is-connect-candidate'
+              : '';
+        const frameColorAttr = typeof frame.colorKey === 'string' ? ` data-frame-color="${frame.colorKey}"` : '';
+        const frameStyle = `transform: translate(${frame.x}px, ${frame.y}px); width: ${frame.width}px; height: ${frame.height}px;`;
+        const meta = editingFrameId === frame.id
+          ? `
+            <div class="frame__editor" data-frame-editor="${frame.id}">
+              <label class="frame__editor-label">
+                Name
+                <input class="frame__editor-input" data-frame-edit-title="${frame.id}" value="${escapeAttr(frame.title)}" maxlength="80" />
+              </label>
+              <label class="frame__editor-label">
+                Description
+                <textarea class="frame__editor-textarea" data-frame-edit-description="${frame.id}">${escapeHTML(frame.description)}</textarea>
+              </label>
+            </div>
+          `
+          : `
+            <h3 class="frame__title">${escapeHTML(frame.title)}</h3>
+            ${frame.description ? `<p class="frame__description">${escapeHTML(frame.description)}</p>` : ''}
+          `;
+        return `
+          <article class="frame ${selectedClass} ${editingClass} ${connectClass}" data-frame-id="${frame.id}"${frameColorAttr} style="${frameStyle}">
+            <div class="frame__box"></div>
+            <div class="frame__toolbar">
+              <button class="frame__tool-btn" type="button" data-frame-edit-open="${frame.id}" aria-label="Edit frame" title="Edit Frame">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+              <button class="frame__tool-btn node__tool-btn--danger" type="button" data-frame-delete="${frame.id}" aria-label="Delete frame" title="Delete Frame">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+            <div class="frame__meta">
+              ${meta}
+            </div>
+            <button class="frame__resize frame__resize--top-left" type="button" data-frame-resize="${frame.id}:top-left" aria-label="Resize frame from top left corner"></button>
+            <button class="frame__resize frame__resize--top-right" type="button" data-frame-resize="${frame.id}:top-right" aria-label="Resize frame from top right corner"></button>
+            <button class="frame__resize frame__resize--bottom-right" type="button" data-frame-resize="${frame.id}:bottom-right" aria-label="Resize frame from bottom right corner"></button>
+            <button class="frame__resize frame__resize--bottom-left" type="button" data-frame-resize="${frame.id}:bottom-left" aria-label="Resize frame from bottom left corner"></button>
+            <button class="frame__anchor frame__anchor--top" type="button" data-frame-anchor="${frame.id}:top" aria-label="Connect from top anchor"></button>
+            <button class="frame__anchor frame__anchor--right" type="button" data-frame-anchor="${frame.id}:right" aria-label="Connect from right anchor"></button>
+            <button class="frame__anchor frame__anchor--bottom" type="button" data-frame-anchor="${frame.id}:bottom" aria-label="Connect from bottom anchor"></button>
+            <button class="frame__anchor frame__anchor--left" type="button" data-frame-anchor="${frame.id}:left" aria-label="Connect from left anchor"></button>
+          </article>
+        `;
+      })
+      .join('');
+
+    const draftMarkup = frameDraft
+      ? `<div class="frame__draft" style="left:${frameDraft.x}px;top:${frameDraft.y}px;width:${frameDraft.width}px;height:${frameDraft.height}px;"></div>`
+      : '';
+
+    framesLayer.innerHTML = `${framesMarkup}${draftMarkup}`;
   }
 
   function renderNodes(state) {
@@ -130,8 +203,11 @@ export function createRenderer(elements, store) {
   }
 
   function renderEdges(state) {
-    const byId = new Map(state.nodes.map((node) => [node.id, node]));
-    const bySize = measureNodeSizes();
+    const byId = new Map([
+      ...state.nodes.map((node) => [node.id, node]),
+      ...state.frames.map((frame) => [frame.id, frame]),
+    ]);
+    const bySize = measureEntitySizes(state);
     const useExactAnchors = state.settings.anchorsMode === 'exact';
     const showArrowheads = state.settings.arrowheads === 'shown';
     const arrowheadScale = getArrowheadSizeScale(state.settings.arrowheadSizeStep);
@@ -141,18 +217,18 @@ export function createRenderer(elements, store) {
 
     edgesGroup.innerHTML = state.edges
       .map((edge) => {
-        const fromNode = byId.get(edge.from);
-        const toNode = byId.get(edge.to);
-        if (!fromNode || !toNode) {
+        const fromEntity = byId.get(edge.from);
+        const toEntity = byId.get(edge.to);
+        if (!fromEntity || !toEntity) {
           return "";
         }
 
-        const fromSize = bySize.get(fromNode.id) || defaultNodeSize();
-        const toSize = bySize.get(toNode.id) || defaultNodeSize();
-        const fromAnchor = resolveEdgeAnchor(edge.fromAnchor, fromNode, toNode, useExactAnchors);
-        const toAnchor = resolveEdgeAnchor(edge.toAnchor, toNode, fromNode, useExactAnchors);
-        const start = getAnchorPoint(fromNode, fromSize, fromAnchor);
-        const end = getAnchorPoint(toNode, toSize, toAnchor);
+        const fromSize = bySize.get(fromEntity.id) || defaultEntitySize(fromEntity);
+        const toSize = bySize.get(toEntity.id) || defaultEntitySize(toEntity);
+        const fromAnchor = resolveEdgeAnchor(edge.fromAnchor, fromEntity, toEntity, useExactAnchors);
+        const toAnchor = resolveEdgeAnchor(edge.toAnchor, toEntity, fromEntity, useExactAnchors);
+        const start = getAnchorPoint(fromEntity, fromSize, fromAnchor);
+        const end = getAnchorPoint(toEntity, toSize, toAnchor);
         const controls = getTautControls(start, end, fromAnchor, toAnchor);
         const d = buildTautPath(start, end, fromAnchor, toAnchor);
         const midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
@@ -193,31 +269,31 @@ export function createRenderer(elements, store) {
       return;
     }
 
-    const bySize = measureNodeSizes();
-    const sourceNode = state.nodes.find((node) => node.id === draft.fromNodeId);
-    if (!sourceNode) {
+    const bySize = measureEntitySizes(state);
+    const sourceEntity = findEntityById(state, draft.fromNodeId);
+    if (!sourceEntity) {
       edgeDraftGroup.innerHTML = "";
       return;
     }
 
-    const sourceSize = bySize.get(sourceNode.id) || defaultNodeSize();
+    const sourceSize = bySize.get(sourceEntity.id) || defaultEntitySize(sourceEntity);
     let end = { x: draft.pointerX, y: draft.pointerY };
-    let fromAnchor = draft.fromAnchor || resolveAnchorToPoint(sourceNode, sourceSize, end);
+    let fromAnchor = draft.fromAnchor || resolveAnchorToPoint(sourceEntity, sourceSize, end);
     let toAnchor = null;
 
     const targetNodeId = draft.hoverNodeId || draft.toNodeId;
     const targetAnchor = draft.hoverAnchor || draft.toAnchor;
     if (targetNodeId && targetAnchor) {
-      const targetNode = state.nodes.find((node) => node.id === targetNodeId);
-      if (targetNode) {
-        const targetSize = bySize.get(targetNode.id) || defaultNodeSize();
-        fromAnchor = draft.fromAnchor || resolveAutoAnchor(sourceNode, targetNode);
-        end = getAnchorPoint(targetNode, targetSize, targetAnchor);
+      const targetEntity = findEntityById(state, targetNodeId);
+      if (targetEntity) {
+        const targetSize = bySize.get(targetEntity.id) || defaultEntitySize(targetEntity);
+        fromAnchor = draft.fromAnchor || resolveAutoAnchor(sourceEntity, targetEntity);
+        end = getAnchorPoint(targetEntity, targetSize, targetAnchor);
         toAnchor = targetAnchor;
       }
     }
 
-    const start = getAnchorPoint(sourceNode, sourceSize, fromAnchor);
+    const start = getAnchorPoint(sourceEntity, sourceSize, fromAnchor);
     const resolvedToAnchor = toAnchor || inferIncomingAnchor(start, end);
     const d = buildTautPath(start, end, fromAnchor, resolvedToAnchor);
     edgeDraftGroup.innerHTML = `
@@ -243,6 +319,7 @@ export function createRenderer(elements, store) {
   function render(state) {
     applyViewport(state.viewport);
     canvas.dataset.backgroundStyle = state.settings.backgroundStyle;
+    renderFrames(state);
     renderNodes(state);
     renderEdges(state);
     renderDraftEdge(state);
@@ -252,9 +329,11 @@ export function createRenderer(elements, store) {
     canvas.classList.toggle("is-dragging", Boolean(state.ui.isDragging));
     canvas.classList.toggle("is-resizing", Boolean(state.ui.isResizing));
     canvas.classList.toggle("is-connecting", Boolean(state.ui.isConnecting));
+    canvas.classList.toggle("is-drawing-frame", Boolean(state.ui.isDrawingFrame));
     workspace.classList.toggle("is-dragging", Boolean(state.ui.isDragging));
     workspace.classList.toggle("is-resizing", Boolean(state.ui.isResizing));
     workspace.classList.toggle("is-connecting", Boolean(state.ui.isConnecting));
+    workspace.classList.toggle("is-drawing-frame", Boolean(state.ui.isDrawingFrame));
     workspace.classList.toggle("is-marquee-selecting", Boolean(state.ui.isMarqueeSelecting));
 
     if (selectionMarquee instanceof HTMLElement) {
@@ -296,7 +375,7 @@ function lerp(from, to, t) {
   return from + (to - from) * t;
 }
 
-function measureNodeSizes() {
+function measureEntitySizes(state) {
   const sizes = new Map();
   document.querySelectorAll("[data-node-id]").forEach((nodeEl) => {
     const nodeId = nodeEl.dataset.nodeId;
@@ -305,10 +384,23 @@ function measureNodeSizes() {
       height: nodeEl.offsetHeight || NODE_DEFAULTS.height,
     });
   });
+  for (const frame of state.frames || []) {
+    const frameEl = document.querySelector(`[data-frame-id="${escapeSelector(frame.id)}"]`);
+    sizes.set(frame.id, {
+      width: frameEl?.offsetWidth || Number(frame.width) || FRAME_DEFAULTS.width,
+      height: frameEl?.offsetHeight || Number(frame.height) || FRAME_DEFAULTS.height,
+    });
+  }
   return sizes;
 }
 
-function defaultNodeSize() {
+function defaultEntitySize(entity) {
+  if (isFrameEntity(entity)) {
+    return {
+      width: Number(entity.width) || FRAME_DEFAULTS.width,
+      height: Number(entity.height) || FRAME_DEFAULTS.height,
+    };
+  }
   return { width: NODE_DEFAULTS.width, height: NODE_DEFAULTS.height };
 }
 
@@ -369,8 +461,12 @@ function getAnchorPoint(node, size, anchor) {
 }
 
 function resolveAutoAnchor(fromNode, toNode) {
-  const dx = toNode.x - fromNode.x;
-  const dy = toNode.y - fromNode.y;
+  const fromSize = defaultEntitySize(fromNode);
+  const toSize = defaultEntitySize(toNode);
+  const fromCenter = getNodeCenter(fromNode, fromSize);
+  const toCenter = getNodeCenter(toNode, toSize);
+  const dx = toCenter.x - fromCenter.x;
+  const dy = toCenter.y - fromCenter.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
     return dx >= 0 ? "right" : "left";
   }
@@ -552,8 +648,25 @@ function escapeCssUrl(value) {
     .replaceAll("'", "\\'");
 }
 
+function escapeSelector(value) {
+  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+    return CSS.escape(String(value));
+  }
+  return String(value);
+}
+
 function isImageNode(node) {
   return node?.kind === 'image' && typeof node?.imageData === 'string' && Number(node?.imageAspectRatio) > 0;
+}
+
+function isFrameEntity(entity) {
+  return entity && !Object.prototype.hasOwnProperty.call(entity, 'kind');
+}
+
+function findEntityById(state, id) {
+  const node = state.nodes.find((item) => item.id === id);
+  if (node) return node;
+  return state.frames.find((item) => item.id === id) || null;
 }
 
 function getSelectedNodeIds(selection) {

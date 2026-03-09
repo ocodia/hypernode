@@ -22,6 +22,7 @@ No backend services are used.
 Hybrid rendering:
 
 - Nodes: HTML elements in `#nodes-layer`
+- Frames: HTML elements in `#frames-layer` (background container layer)
 - Edges: SVG paths in `#edges-group`
 - Edge controls (selected edge endpoints/delete control): SVG overlay in `#edge-overlay-group`
 - Edge draft preview: SVG in `#edge-draft-group`
@@ -54,10 +55,12 @@ index.html
 Stores:
 
 - `nodes`, `edges`
+- `frames`
 - graph metadata (`name`, `settings`)
 - `selection`
 - `viewport` (`panX`, `panY`, `zoom`)
 - UI state (`edgeDraft`, `edgeTwangId`, `editingNodeId`, `isPanning`, `isDragging`, `isConnecting`, `importStatus`)
+  - includes frame UI state (`editingFrameId`, `isDrawingFrame`, `frameDraft`)
   - includes resize interaction state (`isResizing`)
 - undo/redo history
 
@@ -65,6 +68,7 @@ Stores:
 
 Responsible for:
 
+- rendering frame boxes/metadata/anchors/resize UI
 - applying viewport transform
 - rendering node cards, selected-node mini toolbar actions, and inline node editor UI
 - rendering edges and selected-edge overlay controls
@@ -77,8 +81,9 @@ Responsible for:
 
 - pan and zoom interactions
 - node selection/drag/edit lifecycle
+- frame draw/selection/drag/resize/edit lifecycle
 - selected-node mini toolbar actions (`Edit`, `Delete`)
-- edge creation from node anchors
+- edge creation from node/frame anchors
 - edge endpoint reconnect workflow
 - keyboard shortcuts
 - toolbar actions
@@ -106,6 +111,7 @@ Responsible for:
   "description": "",
   "x": 0,
   "y": 0,
+  "frameId": "frame_id|null",
   "width": 210,
   "height": 96,
   "imageData": "data:image/png;base64,...",
@@ -116,6 +122,20 @@ Responsible for:
 `kind` defaults to `text`. `imageData` and `imageAspectRatio` are required when `kind` is `image`.
 
 `width` and `height` are optional for text nodes and are present when explicitly resized. Image nodes persist explicit width/height for ratio-safe resizing.
+
+### Frame
+
+```json
+{
+  "id": "frame_id",
+  "title": "Frame title",
+  "description": "",
+  "x": 0,
+  "y": 0,
+  "width": 320,
+  "height": 200
+}
+```
 
 ### Edge
 
@@ -141,6 +161,7 @@ Responsible for:
     "arrowheadSizeStep": 0
   },
   "nodes": [],
+  "frames": [],
   "edges": []
 }
 ```
