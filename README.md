@@ -154,4 +154,4 @@ Recommended PR checklist item:
 
 ## License
 
-License to be determined.
+Released under the [MIT License](https://opensource.org/license/MIT).
