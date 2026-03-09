@@ -91,7 +91,7 @@ FR-23
 Users must be able to redo actions.
 
 FR-24  
-Delete keyboard shortcuts must remove selected node/edge.
+Delete keyboard shortcuts must remove selected node/edge, except in Focus mode where delete must require `Ctrl/Cmd + Delete` (or `Ctrl/Cmd + Backspace`) plus confirmation.
 
 FR-25  
 Escape must exit current lightweight interaction states (edge draft, node resize, or inline edit) and otherwise clear selection.

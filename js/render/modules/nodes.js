@@ -22,21 +22,37 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const editLabel = editingActive ? 'Switch to reading mode' : 'Edit node';
   const editTitle = editingActive ? 'Reading Mode' : 'Edit Node';
   const editIcon = editingActive ? 'bi-eye-fill' : 'bi-pencil-fill';
+  const showShortcuts = Boolean(options.showShortcuts);
+  const editShortcut = 'Ctrl/Cmd+Enter';
+  const focusShortcut = focusActive ? 'Esc' : 'Ctrl/Cmd+Alt+Enter';
+  const deleteShortcut = focusActive ? 'Ctrl/Cmd+Del' : 'Del';
 
   return `
     <div class="${toolbarClass}">
       ${includeEdit ? `
         <button class="node__tool-btn" type="button" data-node-edit-open="${nodeId}" aria-label="${editLabel}" title="${editTitle}" aria-pressed="${editingActive ? 'true' : 'false'}">
           <i class="bi ${editIcon}"></i>
+          <span class="node__tool-btn-copy">
+            <span class="node__tool-btn-label">${editingActive ? 'Read' : 'Edit'}</span>
+            ${showShortcuts ? `<span class="node__tool-btn-shortcut">${editShortcut}</span>` : ''}
+          </span>
         </button>
       ` : ''}
       ${includeFocus ? `
         <button class="node__tool-btn" type="button" data-node-focus-toggle="${nodeId}" aria-label="${focusLabel}" title="${focusTitle}" aria-pressed="${focusActive ? 'true' : 'false'}">
           <i class="bi ${focusActive ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'}"></i>
+          <span class="node__tool-btn-copy">
+            <span class="node__tool-btn-label">${focusActive ? 'Exit' : 'Focus'}</span>
+            ${showShortcuts ? `<span class="node__tool-btn-shortcut">${focusShortcut}</span>` : ''}
+          </span>
         </button>
       ` : ''}
       <button class="node__tool-btn node__tool-btn--danger" type="button" data-node-delete="${nodeId}" aria-label="Delete node" title="Delete Node">
         <i class="bi bi-trash"></i>
+        <span class="node__tool-btn-copy">
+          <span class="node__tool-btn-label">Delete</span>
+          ${showShortcuts ? `<span class="node__tool-btn-shortcut">${deleteShortcut}</span>` : ''}
+        </span>
       </button>
     </div>
   `;
@@ -79,6 +95,42 @@ export function buildNodeContentMarkup(node, options = {}) {
       </div>
     `
     : '';
+
+  if (editing && focused && imageNode) {
+    return `
+      <div class="${contentClass}">
+        <div class="node__editor node__editor--focus" data-node-editor="${node.id}">
+          <label class="node__editor-label node__editor-label--focus node__editor-label--focus-title">
+            Name
+            <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" />
+          </label>
+          ${focusMediaMarkup}
+          <label class="node__editor-label node__editor-label--description node__editor-label--description-focus node__editor-label--focus node__editor-label--focus-description">
+            Description
+            <textarea class="node__editor-textarea node__editor-textarea--focus" data-node-edit-description="${node.id}">${escapeHTML(node.description)}</textarea>
+          </label>
+        </div>
+      </div>
+    `;
+  }
+
+  if (!editing && focused && imageNode) {
+    return `
+      <div class="${contentClass}">
+        <section class="node__focus-field node__focus-field--title">
+          <div class="node__focus-value node__focus-value--title">
+            <h3 class="node__title node__title--focus">${escapeHTML(node.title)}</h3>
+          </div>
+        </section>
+        ${focusMediaMarkup}
+        <section class="node__focus-field node__focus-field--description">
+          <div class="node__focus-value node__focus-value--description">
+            ${node.description ? `<div class="node__description node__description--focus">${renderDescriptionMarkdown(node.description)}</div>` : '<div class="node__description node__description--focus node__description--empty">No description</div>'}
+          </div>
+        </section>
+      </div>
+    `;
+  }
 
   const content =
     editing

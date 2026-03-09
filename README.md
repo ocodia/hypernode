@@ -9,7 +9,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
 - Edit node title/description inline from the selected-node mini toolbar, with description display supporting basic markdown (headers, paragraphs, lists, links, emphasis, inline code).
 - Color selected node backgrounds from a toolbar palette (10 curated colors + reset) with legible text and complementary selected highlights in light/dark themes.
-- Delete selected nodes with `Delete`/`Backspace`.
+- Delete selected nodes with `Delete`/`Backspace`, or with `Ctrl/Cmd + Delete` plus confirmation while in Focus mode.
 - Create edges from text and image node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
 - Selected node/frame toolbars, resize handles, and anchor points render above overlapping canvas content.
@@ -58,6 +58,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 ## Keyboard Shortcuts
 
 - `Delete` / `Backspace`: delete selected node/edge
+- `Ctrl/Cmd + Delete` or `Ctrl/Cmd + Backspace`: delete the focused node from Focus mode after confirmation
 - `Ctrl/Cmd + Shift + Enter`: create a new node linked from the selected node
 - `Ctrl/Cmd + Arrow` (`Up`/`Down`/`Left`/`Right`): follow connected node in that direction, otherwise nearest
 - `Ctrl/Cmd + Z`: undo

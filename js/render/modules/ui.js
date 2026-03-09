@@ -117,6 +117,7 @@ export function renderFocusOverlay(focusLayer, state) {
         toolbarClass: 'node__toolbar node__toolbar--focus',
         focusActive: true,
         editingActive: state.ui.editingNodeId === node.id,
+        showShortcuts: true,
       })}
       <article class="focus-overlay__panel node ${node.kind === 'image' ? 'node--image' : ''}${state.ui.editingNodeId === node.id ? ' is-editing' : ''}" data-node-id="${node.id}"${colorAttr}>
         ${buildNodeContentMarkup(node, { isEditing: state.ui.editingNodeId === node.id, isFocused: true })}

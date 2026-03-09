@@ -543,6 +543,18 @@ export function bindInteractions(elements, store) {
     focusLayer?.classList.toggle('is-file-drop-active', Boolean(active));
   }
 
+  function confirmFocusedDelete(selection) {
+    if (!selection) return false;
+    const label = selection.type === 'frame'
+      ? 'this frame'
+      : selection.type === 'edge'
+        ? 'this edge'
+        : selection.type === 'nodes'
+          ? 'these nodes'
+          : 'this node';
+    return window.confirm(`Delete ${label}?`);
+  }
+
   async function readImageFileInfo(file, options = {}) {
     const dataUrl = await readFileAsDataUrl(file);
     const imageMeta = await loadImageMeta(dataUrl);
@@ -2389,6 +2401,21 @@ export function bindInteractions(elements, store) {
     if (event.key === 'Delete' || event.key === 'Backspace') {
       const selection = store.getState().selection;
       if (!selection) return;
+      const focusedNodeId = store.getState().ui.focusedNodeId;
+      if (focusedNodeId) {
+        if (!ctrlOrCmd) {
+          return;
+        }
+        event.preventDefault();
+        if (!confirmFocusedDelete(selection)) {
+          return;
+        }
+        if (selection.type === 'node') store.deleteNode(selection.id);
+        if (selection.type === 'nodes') store.deleteSelectedNodes();
+        if (selection.type === 'frame') store.deleteFrame(selection.id);
+        if (selection.type === 'edge') store.deleteEdge(selection.id);
+        return;
+      }
       event.preventDefault();
       if (selection.type === 'node') store.deleteNode(selection.id);
       if (selection.type === 'nodes') store.deleteSelectedNodes();

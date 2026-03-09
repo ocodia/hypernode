@@ -198,6 +198,7 @@ Acceptance criteria:
 
 - Delete/Backspace removes selected node or selected edge.
 - Shortcuts do not hijack active text-input editing.
+- While Focus mode is active, deletion requires `Ctrl/Cmd + Delete` or `Ctrl/Cmd + Backspace` and a confirmation prompt.
 
 ## Epic 6 - Frames
 

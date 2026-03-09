@@ -11,6 +11,10 @@ The format loosely follows Keep a Changelog. Entries summarize shipped user-visi
 - Canvas drag-and-drop for creating image nodes from local files.
 - Focus-mode image drop zone for replacing the current image without leaving zen mode.
 
+### Changed
+
+- Focus-mode deletion now requires `Ctrl/Cmd + Delete` confirmation instead of plain `Delete`.
+
 ## 2026-03-09
 
 ### Added
