@@ -90,6 +90,8 @@ Responsible for orchestrating focused render modules:
 - `modules/edges.js` for committed/draft edge SVG
 - `modules/ui.js` for overlays, metadata, and toast UI
 
+Description markdown rendering is handled in the render layer so persisted node/frame descriptions remain plain strings while display markup is generated at render time from a sanitized limited markdown subset.
+
 ### Interaction (`js/interaction/bindings.js`)
 
 Responsible for coordinating shared interaction state and delegating listener registration to feature binders:

@@ -29,7 +29,7 @@ Each node must contain:
 
 - id
 - title
-- optional description
+- optional description stored as a string and rendered as a basic markdown subset (ATX headers, paragraphs, lists, links, emphasis, inline code)
 - x coordinate
 - y coordinate
 - optional width
@@ -40,6 +40,7 @@ Users must be able to drag nodes.
 
 FR-9  
 Users must be able to edit node title and description inline.
+Description editing must preserve raw markdown source while rendered node/frame descriptions display the supported markdown subset without executing raw HTML.
 
 FR-10  
 Deleting a node must remove connected edges.

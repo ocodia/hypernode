@@ -1,4 +1,5 @@
 import { escapeAttr, escapeHTML } from '../helpers.js';
+import { renderDescriptionMarkdown } from '../markdown.js';
 
 export function renderFrames(framesLayer, state) {
   const selectedFrameId = state.selection?.type === 'frame' ? state.selection.id : null;
@@ -52,7 +53,7 @@ export function renderFrames(framesLayer, state) {
         `
         : `
           <h3 class="frame__title">${escapeHTML(frame.title)}</h3>
-          ${frame.description ? `<p class="frame__description">${escapeHTML(frame.description)}</p>` : ''}
+          ${frame.description ? `<div class="frame__description">${renderDescriptionMarkdown(frame.description)}</div>` : ''}
         `;
       return `
         <article class="frame ${selectedClass} ${overlayControlsClass} ${editingClass} ${connectClass} ${membershipPreviewClass}" data-frame-id="${frame.id}"${frameColorAttr} style="${frameStyle}">

@@ -73,9 +73,6 @@ export function buildNodeInlineSizeStyle(node) {
   }
   if (hasHeight) {
     style += `height: ${height}px;`;
-    if (!isImageNode(node)) {
-      style += `--node-description-lines: ${computeDescriptionLineClamp(height)};`;
-    }
   }
   return style;
 }
@@ -84,12 +81,6 @@ export function hasExplicitNodeSize(node) {
   const width = Number(node.width);
   const height = Number(node.height);
   return (Number.isFinite(width) && width > 0) || (Number.isFinite(height) && height > 0);
-}
-
-export function computeDescriptionLineClamp(height) {
-  const availableHeight = Math.max(0, height - 58);
-  const lineHeightPx = 19;
-  return Math.max(1, Math.floor(availableHeight / lineHeightPx));
 }
 
 export function getNodeCenter(node, size) {

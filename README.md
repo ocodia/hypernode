@@ -7,14 +7,14 @@ It runs fully client-side with no backend and no account system. Graph data auto
 ## Current Features
 
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
-- Edit node title/description inline from the selected-node mini toolbar.
+- Edit node title/description inline from the selected-node mini toolbar, with description display supporting basic markdown (headers, paragraphs, lists, links, emphasis, inline code).
 - Color selected node backgrounds from a toolbar palette (10 curated colors + reset) with legible text and complementary selected highlights in light/dark themes.
 - Delete selected nodes with `Delete`/`Backspace`.
 - Create edges from text and image node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
 - Selected node/frame toolbars, resize handles, and anchor points render above overlapping canvas content.
 - Resize handles and anchor points grow when zoomed out so they stay easier to grab.
-- Draw Frames from toolbar drag mode. Frames act as background super-nodes with anchors, resize handles, and title/description.
+- Draw Frames from toolbar drag mode. Frames act as background super-nodes with anchors, resize handles, and title/description, including the same basic markdown support in descriptions.
 - Frame mini toolbar renders above selected frames.
 - Frame inline editor includes border width (`1-8`) and border style (`solid`, `dashed`, `dotted`).
 - Drag nodes into Frames to embed them; embedded nodes move with their Frame and can be dragged out to ungroup.

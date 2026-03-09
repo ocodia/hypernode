@@ -107,7 +107,7 @@ Rules:
 
 - `id` must be a non-empty string
 - `title` is stored as a string and sanitized to the default title when empty after trimming
-- `description` is stored as a string
+- `description` is stored as a string; UI rendering interprets a limited markdown subset while persistence preserves the raw source text
 - `kind` may be `text` or `image`; invalid or missing values resolve to `text`
 - `x` and `y` are stored as numbers and sanitize to `0` when invalid
 - `width` and `height` are optional, but when present must be positive finite numbers
@@ -148,7 +148,7 @@ Rules:
 
 - `id` must be a non-empty string
 - `title` is sanitized to the default title when empty after trimming
-- `description` is stored as a string
+- `description` is stored as a string; UI rendering interprets a limited markdown subset while persistence preserves the raw source text
 - `width` and `height` must be positive finite numbers when present
 - sanitized frame dimensions are clamped to minimum frame dimensions in app state
 - `borderWidth` is sanitized to an integer in the inclusive range `1..8`

@@ -1,0 +1,86 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+
+import { renderDescriptionMarkdown } from '../js/render/markdown.js';
+import { renderFrames } from '../js/render/modules/frames.js';
+import { renderNodes } from '../js/render/modules/nodes.js';
+
+test('renderDescriptionMarkdown escapes raw html', () => {
+  assert.equal(renderDescriptionMarkdown('<script>alert(1)</script>'), '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
+});
+
+test('renderDescriptionMarkdown supports atx headers and paragraphs', () => {
+  assert.equal(
+    renderDescriptionMarkdown('# Heading\n\nBody copy'),
+    '<h1>Heading</h1><p>Body copy</p>',
+  );
+  assert.equal(renderDescriptionMarkdown('###### Tiny'), '<h6>Tiny</h6>');
+});
+
+test('renderDescriptionMarkdown supports unordered and ordered lists', () => {
+  assert.equal(
+    renderDescriptionMarkdown('- one\n- two\n\n1. first\n2. second'),
+    '<ul><li>one</li><li>two</li></ul><ol><li>first</li><li>second</li></ol>',
+  );
+});
+
+test('renderDescriptionMarkdown supports emphasis and inline code', () => {
+  assert.equal(
+    renderDescriptionMarkdown('**bold** and *italic* with `code <x>`'),
+    '<p><strong>bold</strong> and <em>italic</em> with <code>code &lt;x&gt;</code></p>',
+  );
+  assert.equal(
+    renderDescriptionMarkdown('__bold__ and _italic_'),
+    '<p><strong>bold</strong> and <em>italic</em></p>',
+  );
+});
+
+test('renderDescriptionMarkdown renders safe links and drops unsafe urls', () => {
+  assert.equal(
+    renderDescriptionMarkdown('[This link](http://example.net/)'),
+    '<p><a href="http://example.net/" target="_blank" rel="noopener noreferrer">This link</a></p>',
+  );
+  assert.equal(
+    renderDescriptionMarkdown('[Bad](javascript:alert(1))'),
+    '<p>Bad</p>',
+  );
+});
+
+test('renderDescriptionMarkdown supports mixed content and malformed links remain text', () => {
+  assert.equal(
+    renderDescriptionMarkdown('Line one\nline two\n\n- item with [link](https://example.net/) and `code`\n\n[broken](notaurl)'),
+    '<p>Line one line two</p><ul><li>item with <a href="https://example.net/" target="_blank" rel="noopener noreferrer">link</a> and <code>code</code></li></ul><p>broken</p>',
+  );
+});
+
+test('renderers use markdown output in view mode and raw text in edit mode', () => {
+  const nodesLayer = { innerHTML: '' };
+  const framesLayer = { innerHTML: '' };
+  const markdown = '# Title\n\nVisit [site](https://example.net/)';
+
+  renderNodes(nodesLayer, {
+    nodes: [{ id: 'n1', title: 'Node', description: markdown, kind: 'text', x: 0, y: 0 }],
+    frames: [],
+    edges: [],
+    selection: { type: 'node', id: 'n1' },
+    ui: { editingNodeId: null, edgeDraft: null, nodeMembershipPreview: {} },
+  });
+  assert.match(nodesLayer.innerHTML, /<div class="node__description"><h1>Title<\/h1><p>Visit <a href="https:\/\/example.net\/"/);
+
+  renderNodes(nodesLayer, {
+    nodes: [{ id: 'n1', title: 'Node', description: markdown, kind: 'text', x: 0, y: 0 }],
+    frames: [],
+    edges: [],
+    selection: { type: 'node', id: 'n1' },
+    ui: { editingNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
+  });
+  assert.match(nodesLayer.innerHTML, /<textarea class="node__editor-textarea" data-node-edit-description="n1"># Title/);
+
+  renderFrames(framesLayer, {
+    nodes: [],
+    frames: [{ id: 'f1', title: 'Frame', description: markdown, x: 0, y: 0, width: 320, height: 200 }],
+    selection: { type: 'frame', id: 'f1' },
+    ui: { editingFrameId: null, edgeDraft: null, frameDraft: null, frameMembershipPreview: {} },
+  });
+  assert.match(framesLayer.innerHTML, /<div class="frame__description"><h1>Title<\/h1><p>Visit <a href="https:\/\/example.net\/"/);
+});

@@ -9,6 +9,7 @@ import {
   hasExplicitNodeSize,
   isImageNode,
 } from '../helpers.js';
+import { renderDescriptionMarkdown } from '../markdown.js';
 
 export function renderNodes(nodesLayer, state) {
   const selectedNodeIds = new Set(getSelectedNodeIds(state.selection));
@@ -72,7 +73,7 @@ export function renderNodes(nodesLayer, state) {
             <div class="node__head">
               <h3 class="node__title">${escapeHTML(node.title)}</h3>
             </div>
-            ${node.description ? `<p class="node__description">${escapeHTML(node.description)}</p>` : ''}
+            ${node.description ? `<div class="node__description">${renderDescriptionMarkdown(node.description)}</div>` : ''}
           </div>
         `;
       return `
