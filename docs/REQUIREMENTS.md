@@ -129,6 +129,12 @@ Frames must support per-frame border width and style controls (`solid`, `dashed`
 FR-36
 During node drag, Frames must provide visual add/remove membership preview feedback before drop.
 
+FR-37
+Users must be able to drag a local image file onto the canvas to create an image node at the drop position.
+
+FR-38
+Focused image nodes must provide a zen-mode drop zone that accepts a local image file and replaces the node image in place.
+
 ## Non Functional Requirements
 
 ### Performance

@@ -6,7 +6,10 @@ The format loosely follows Keep a Changelog. Entries summarize shipped user-visi
 
 ## Unreleased
 
-- No unreleased entries yet.
+### Added
+
+- Canvas drag-and-drop for creating image nodes from local files.
+- Focus-mode image drop zone for replacing the current image without leaving zen mode.
 
 ## 2026-03-09
 

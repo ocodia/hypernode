@@ -21,10 +21,10 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - While dragging nodes, frames preview add/remove membership with distinct highlight states.
 - While resizing frames, nodes preview add/remove membership changes and grouping updates on resize release.
 - Create and reconnect edges to Frames via frame anchors.
-- Add image nodes from the toolbar using local image files (stored as base64 data URLs in graph JSON).
+- Add image nodes from the toolbar or by dragging local image files onto the canvas (stored as base64 data URLs in graph JSON).
 - Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.
 - Single selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
-- Single selected nodes also expose a `Focus` action for full-screen zen editing; image nodes place the image on the right in Focus mode and keep text width readable.
+- Single selected nodes also expose a `Focus` action for full-screen zen editing; image nodes place the image on the right in Focus mode, keep text width readable, and provide a drop zone to replace the current image.
 - Multi-select nodes with `Ctrl/Cmd + click` (additive).
 - Multi-select nodes with `Ctrl/Cmd + drag` marquee (touch/intersection hit rule).
 - Drag any selected node to move the full selected group together.

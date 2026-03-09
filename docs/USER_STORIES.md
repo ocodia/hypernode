@@ -242,9 +242,21 @@ As a user, I want to place local images on the canvas so I can use visual refere
 Acceptance criteria:
 
 - Toolbar image action opens a local image picker.
+- Dragging a valid local image file onto the canvas creates an image node at the drop position.
 - Valid image files create image nodes with embedded base64 image data.
 - New image nodes are created selected and enter the same inline editing flow as other nodes.
 - Invalid image reads fail safely without corrupting the graph.
+
+### US-33: Replace a focused image from Zen mode
+
+As a user, I want Focus mode to accept dropped images so I can update a visual reference without leaving the reading/editing view.
+
+Acceptance criteria:
+
+- Focus mode for image nodes renders a visible drop zone near the focused image.
+- Dropping a valid local image on that drop zone replaces the current image content.
+- Clicking the drop zone opens the same local image picker used by the toolbar.
+- Replacement preserves the node and its text metadata while updating the stored image payload safely.
 
 ### US-23: Resize image nodes while preserving aspect ratio
 

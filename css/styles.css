@@ -142,6 +142,43 @@ textarea:focus-visible {
   cursor: grab;
 }
 
+.canvas-drop-zone {
+  position: absolute;
+  inset: 22px;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  border: 2px dashed color-mix(in srgb, var(--accent) 56%, transparent);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 74%, transparent), color-mix(in srgb, var(--surface-soft) 84%, transparent));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-border) 55%, transparent);
+  pointer-events: none;
+}
+
+.canvas-drop-zone[hidden] {
+  display: none;
+}
+
+.canvas-drop-zone__copy {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  padding: 18px 24px;
+  color: var(--text);
+  text-align: center;
+}
+
+.canvas-drop-zone__copy strong {
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.canvas-drop-zone__copy span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
 .selection-marquee {
   position: absolute;
   border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
@@ -848,19 +885,56 @@ textarea:focus-visible {
 .node__focus-media {
   min-width: 0;
   align-self: start;
-  display: flex;
+  display: grid;
+  gap: 14px;
   width: 100%;
 }
 
 .node__image-pane--focus {
   display: block;
-  flex: 1 1 auto;
   width: 100%;
   min-width: 0;
   min-height: 220px;
   max-height: min(72vh, 760px);
   border-radius: 16px;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--node-border) 65%, transparent);
+}
+
+.node__image-dropzone {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 48%, var(--panel-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-soft) 82%, transparent);
+  color: var(--node-text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.node__image-dropzone:hover,
+.node__image-dropzone:focus-visible,
+.focus-overlay.is-file-drop-active .node__image-dropzone {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--surface) 90%, color-mix(in srgb, var(--accent) 10%, transparent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+  transform: translateY(-1px);
+}
+
+.node__image-dropzone-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.node__image-dropzone-hint {
+  color: var(--node-muted);
+  font-size: 0.8rem;
 }
 
 .frame {
@@ -1868,6 +1942,10 @@ textarea:focus-visible {
 
 .toast.is-visible {
   opacity: 1;
+}
+
+.canvas.is-file-drop-active {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .canvas.is-panning,

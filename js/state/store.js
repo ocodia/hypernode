@@ -425,6 +425,13 @@ export function createStore(initialGraph = null) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
     if (!options.skipHistory) pushHistory('update-node');
+    if (typeof patch.kind === 'string' && (patch.kind === 'text' || patch.kind === IMAGE_NODE_DEFAULTS.kind)) {
+      node.kind = patch.kind;
+      if (patch.kind !== IMAGE_NODE_DEFAULTS.kind) {
+        delete node.imageData;
+        delete node.imageAspectRatio;
+      }
+    }
     if (typeof patch.title === 'string') {
       const title = patch.title.trim();
       node.title = title || NODE_DEFAULTS.title;
@@ -437,6 +444,18 @@ export function createStore(initialGraph = null) {
     }
     if (typeof patch.y === 'number') {
       node.y = patch.y;
+    }
+    if (typeof patch.imageData === 'string' && patch.imageData.startsWith('data:image/')) {
+      node.imageData = patch.imageData;
+    }
+    if (typeof patch.imageAspectRatio === 'number' && Number.isFinite(patch.imageAspectRatio) && patch.imageAspectRatio > 0) {
+      node.imageAspectRatio = patch.imageAspectRatio;
+    }
+    if (typeof patch.width === 'number' && Number.isFinite(patch.width) && patch.width > 0) {
+      node.width = patch.width;
+    }
+    if (typeof patch.height === 'number' && Number.isFinite(patch.height) && patch.height > 0) {
+      node.height = patch.height;
     }
     if (patch.frameId === null || patch.frameId === undefined || patch.frameId === '') {
       delete node.frameId;

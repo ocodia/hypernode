@@ -70,3 +70,32 @@ test('deleting a focused node clears focus state', () => {
   assert.equal(state.ui.editingNodeId, null);
   assert.equal(state.selection, null);
 });
+
+test('updating a focused image node can replace image payload and size', () => {
+  const store = createStore({
+    name: 'Graph',
+    settings: {},
+    nodes: [
+      { id: 'n1', title: 'Image', description: '', kind: 'image', x: 0, y: 0, imageData: 'data:image/png;base64,abc', imageAspectRatio: 1.5, width: 210, height: 204 },
+    ],
+    frames: [],
+    edges: [],
+  });
+
+  store.setSelection({ type: 'node', id: 'n1' });
+  store.setFocusedNode('n1');
+  store.updateNode('n1', {
+    kind: 'image',
+    imageData: 'data:image/jpeg;base64,def',
+    imageAspectRatio: 2,
+    width: 320,
+    height: 224,
+  }, { skipHistory: true });
+
+  const state = store.getState();
+  assert.equal(state.nodes[0].imageData, 'data:image/jpeg;base64,def');
+  assert.equal(state.nodes[0].imageAspectRatio, 2);
+  assert.equal(state.nodes[0].width, 320);
+  assert.equal(state.nodes[0].height, 224);
+  assert.equal(state.ui.focusedNodeId, 'n1');
+});

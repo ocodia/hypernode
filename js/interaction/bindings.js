@@ -22,6 +22,7 @@ export function bindInteractions(elements, store) {
   const {
     workspace,
     canvas,
+    canvasDropZone,
     framesLayer,
     nodesLayer,
     focusLayer,
@@ -47,6 +48,8 @@ export function bindInteractions(elements, store) {
   let editorFocusLock = null;
   let isNodeColorPopoverOpen = false;
   let lastNodePress = { id: null, at: 0 };
+  let canvasFileDragDepth = 0;
+  let focusImageDragDepth = 0;
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -526,6 +529,73 @@ export function bindInteractions(elements, store) {
     });
     if (!node) return;
     openNodeEditor(node.id);
+  }
+
+  function setCanvasFileDropActive(active) {
+    const enabled = Boolean(active);
+    canvas.classList.toggle('is-file-drop-active', enabled);
+    if (canvasDropZone instanceof HTMLElement) {
+      canvasDropZone.hidden = !enabled;
+    }
+  }
+
+  function setFocusImageDropActive(active) {
+    focusLayer?.classList.toggle('is-file-drop-active', Boolean(active));
+  }
+
+  async function readImageFileInfo(file, options = {}) {
+    const dataUrl = await readFileAsDataUrl(file);
+    const imageMeta = await loadImageMeta(dataUrl);
+    const width = Math.max(IMAGE_NODE_DEFAULTS.minImageWidth, Math.round(Number(options.width) || NODE_DEFAULTS.width));
+    const metaHeight = Math.max(IMAGE_NODE_DEFAULTS.metaHeight, Math.round(Number(options.metaHeight) || IMAGE_NODE_DEFAULTS.metaHeight));
+    const imageHeight = Math.max(IMAGE_NODE_DEFAULTS.minImageHeight, Math.round(width / imageMeta.aspectRatio));
+    return {
+      title: deriveNodeTitleFromFilename(file.name),
+      dataUrl,
+      aspectRatio: imageMeta.aspectRatio,
+      width,
+      height: imageHeight + metaHeight,
+    };
+  }
+
+  async function handleDroppedCanvasImage(file, point) {
+    try {
+      const imageFileInfo = await readImageFileInfo(file);
+      createImageNodeInEditMode(point, imageFileInfo);
+    } catch {
+      store.setImportStatus('Image add failed. Try another file.');
+    }
+  }
+
+  async function handleFocusedImageReplace(nodeId, file) {
+    const state = store.getState();
+    const node = state.nodes.find((entry) => entry.id === nodeId);
+    if (!node) return;
+
+    const currentWidth = Math.max(IMAGE_NODE_DEFAULTS.minImageWidth, Math.round(Number(node.width) || NODE_DEFAULTS.width));
+    const currentHeight = Math.max(IMAGE_NODE_DEFAULTS.metaHeight, Math.round(Number(node.height) || IMAGE_NODE_DEFAULTS.metaHeight));
+    const currentAspectRatio = Number(node.imageAspectRatio);
+    const currentImageHeight = Number.isFinite(currentAspectRatio) && currentAspectRatio > 0
+      ? Math.round(currentWidth / currentAspectRatio)
+      : Math.max(IMAGE_NODE_DEFAULTS.minImageHeight, currentHeight - IMAGE_NODE_DEFAULTS.metaHeight);
+    const metaHeight = Math.max(IMAGE_NODE_DEFAULTS.metaHeight, currentHeight - currentImageHeight);
+
+    try {
+      const imageFileInfo = await readImageFileInfo(file, {
+        width: currentWidth,
+        metaHeight,
+      });
+      store.updateNode(nodeId, {
+        kind: IMAGE_NODE_DEFAULTS.kind,
+        imageData: imageFileInfo.dataUrl,
+        imageAspectRatio: imageFileInfo.aspectRatio,
+        width: imageFileInfo.width,
+        height: imageFileInfo.height,
+      });
+      store.setImportStatus('Image updated.');
+    } catch {
+      store.setImportStatus('Image replace failed. Try another file.');
+    }
   }
 
   function setFrameDrawMode(nextEnabled) {
@@ -1344,6 +1414,17 @@ export function bindInteractions(elements, store) {
       return;
     }
 
+    const imagePickEl = event.target.closest('[data-node-image-pick]');
+    if (imagePickEl) {
+      const nodeId = imagePickEl.dataset.nodeImagePick;
+      void pickImageFile().then((file) => {
+        if (!file || !nodeId) return;
+        return handleFocusedImageReplace(nodeId, file);
+      });
+      event.stopPropagation();
+      return;
+    }
+
     if (event.target.closest('[data-node-editor]')) {
       event.stopPropagation();
       return;
@@ -1561,6 +1642,82 @@ export function bindInteractions(elements, store) {
     onSelectionControlsPointerDown,
     onSelectionControlsClick,
     onSelectionControlsDoubleClick,
+  });
+
+  canvas.addEventListener('dragenter', (event) => {
+    if (!containsImageFile(event.dataTransfer) || store.getState().ui.focusedNodeId) return;
+    canvasFileDragDepth += 1;
+    setCanvasFileDropActive(true);
+    event.preventDefault();
+  });
+
+  canvas.addEventListener('dragover', (event) => {
+    if (!containsImageFile(event.dataTransfer) || store.getState().ui.focusedNodeId) return;
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+    setCanvasFileDropActive(true);
+  });
+
+  canvas.addEventListener('dragleave', (event) => {
+    if (!containsImageFile(event.dataTransfer)) return;
+    canvasFileDragDepth = Math.max(0, canvasFileDragDepth - 1);
+    if (canvasFileDragDepth === 0) {
+      setCanvasFileDropActive(false);
+    }
+    event.preventDefault();
+  });
+
+  canvas.addEventListener('drop', (event) => {
+    if (!containsImageFile(event.dataTransfer) || store.getState().ui.focusedNodeId) return;
+    const file = getFirstImageFile(event.dataTransfer);
+    canvasFileDragDepth = 0;
+    setCanvasFileDropActive(false);
+    if (!file) return;
+    event.preventDefault();
+    const point = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
+    void handleDroppedCanvasImage(file, point);
+  });
+
+  focusLayer?.addEventListener('dragenter', (event) => {
+    const dropzone = event.target instanceof HTMLElement ? event.target.closest('[data-focus-image-dropzone]') : null;
+    if (!dropzone || !containsImageFile(event.dataTransfer)) return;
+    focusImageDragDepth += 1;
+    setFocusImageDropActive(true);
+    event.preventDefault();
+  });
+
+  focusLayer?.addEventListener('dragover', (event) => {
+    const dropzone = event.target instanceof HTMLElement ? event.target.closest('[data-focus-image-dropzone]') : null;
+    if (!dropzone || !containsImageFile(event.dataTransfer)) return;
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+    setFocusImageDropActive(true);
+  });
+
+  focusLayer?.addEventListener('dragleave', (event) => {
+    const dropzone = event.target instanceof HTMLElement ? event.target.closest('[data-focus-image-dropzone]') : null;
+    if (!dropzone || !containsImageFile(event.dataTransfer)) return;
+    focusImageDragDepth = Math.max(0, focusImageDragDepth - 1);
+    if (focusImageDragDepth === 0) {
+      setFocusImageDropActive(false);
+    }
+    event.preventDefault();
+  });
+
+  focusLayer?.addEventListener('drop', (event) => {
+    const dropzone = event.target instanceof HTMLElement ? event.target.closest('[data-focus-image-dropzone]') : null;
+    if (!dropzone || !containsImageFile(event.dataTransfer)) return;
+    const file = getFirstImageFile(event.dataTransfer);
+    const nodeId = dropzone instanceof HTMLElement ? dropzone.dataset.focusImageDropzone : null;
+    focusImageDragDepth = 0;
+    setFocusImageDropActive(false);
+    if (!file || !nodeId) return;
+    event.preventDefault();
+    void handleFocusedImageReplace(nodeId, file);
   });
 
   function onFramePointerDown(event) {
@@ -1991,23 +2148,13 @@ export function bindInteractions(elements, store) {
     try {
       const file = await pickImageFile();
       if (!file) return;
-      const dataUrl = await readFileAsDataUrl(file);
-      const imageMeta = await loadImageMeta(dataUrl);
       const { viewport } = store.getState();
       const point = {
         x: (120 - viewport.panX) / viewport.zoom,
         y: (120 - viewport.panY) / viewport.zoom,
       };
-      const defaultWidth = NODE_DEFAULTS.width;
-      const imageHeight = Math.round(defaultWidth / imageMeta.aspectRatio);
-      const nodeTitle = deriveNodeTitleFromFilename(file.name);
-      createImageNodeInEditMode(point, {
-        title: nodeTitle,
-        dataUrl,
-        aspectRatio: imageMeta.aspectRatio,
-        width: defaultWidth,
-        height: imageHeight + IMAGE_NODE_DEFAULTS.metaHeight,
-      });
+      const imageFileInfo = await readImageFileInfo(file);
+      createImageNodeInEditMode(point, imageFileInfo);
     } catch {
       store.setImportStatus('Image add failed. Try another file.');
     }
@@ -2924,6 +3071,20 @@ function pickImageFile() {
     picker.addEventListener('cancel', () => finalize(null), { once: true });
     picker.click();
   });
+}
+
+function containsImageFile(dataTransfer) {
+  if (!dataTransfer) return false;
+  const items = Array.from(dataTransfer.items || []);
+  if (items.some((item) => item.kind === 'file' && typeof item.type === 'string' && item.type.startsWith('image/'))) {
+    return true;
+  }
+  return Array.from(dataTransfer.files || []).some((file) => typeof file.type === 'string' && file.type.startsWith('image/'));
+}
+
+function getFirstImageFile(dataTransfer) {
+  if (!dataTransfer) return null;
+  return Array.from(dataTransfer.files || []).find((file) => typeof file.type === 'string' && file.type.startsWith('image/')) || null;
 }
 
 function readFileAsDataUrl(file) {

@@ -100,11 +100,16 @@ export function renderFocusOverlay(focusLayer, state) {
   if (!node) {
     focusLayer.hidden = true;
     focusLayer.innerHTML = '';
+    focusLayer.classList?.remove('is-file-drop-active');
+    if (focusLayer.dataset) {
+      delete focusLayer.dataset.focusedNodeId;
+    }
     return;
   }
 
   const colorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
   focusLayer.hidden = false;
+  focusLayer.classList?.remove('is-file-drop-active');
   focusLayer.innerHTML = `
     <div class="focus-overlay__backdrop" aria-hidden="true"></div>
     <div class="focus-overlay__content">
@@ -118,6 +123,9 @@ export function renderFocusOverlay(focusLayer, state) {
       </article>
     </div>
   `;
+  if (focusLayer.dataset) {
+    focusLayer.dataset.focusedNodeId = node.id;
+  }
 }
 
 export function renderImportStatus(importStatus, state) {

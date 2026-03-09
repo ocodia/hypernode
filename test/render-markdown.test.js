@@ -130,6 +130,8 @@ test('focus overlay renders constrained focused editor with image pane on the me
   assert.match(focusLayer.innerHTML, /node__editor-label--description-focus/);
   assert.match(focusLayer.innerHTML, /node__focus-media/);
   assert.match(focusLayer.innerHTML, /node__image-pane node__image-pane--focus/);
+  assert.match(focusLayer.innerHTML, /data-focus-image-dropzone="n1"/);
+  assert.match(focusLayer.innerHTML, /data-node-image-pick="n1"/);
 });
 
 test('focus overlay reading mode uses enlarged labeled fields', () => {

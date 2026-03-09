@@ -6,6 +6,7 @@ import { loadGraphFromStorage, saveGraphToStorage } from './persistence/storage.
 const elements = {
   workspace: document.getElementById('workspace'),
   canvas: document.getElementById('canvas'),
+  canvasDropZone: document.getElementById('canvas-drop-zone'),
   framesLayer: document.getElementById('frames-layer'),
   nodesLayer: document.getElementById('nodes-layer'),
   edgesLayer: document.getElementById('edges-layer'),

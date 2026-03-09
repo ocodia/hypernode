@@ -46,6 +46,7 @@ export function buildNodeContentMarkup(node, options = {}) {
   const editing = Boolean(options.isEditing);
   const focused = Boolean(options.isFocused);
   const imageNode = isImageNode(node);
+  const hasImageData = typeof node.imageData === 'string' && node.imageData.startsWith('data:image/');
   const contentClass = focused
     ? `node__content node__content--focus${imageNode ? ' node__content--focus-image' : ' node__content--focus-text'}`
     : 'node__content';
@@ -53,6 +54,29 @@ export function buildNodeContentMarkup(node, options = {}) {
   const imageMarkup = imageNode
     ? `
       <div class="node__image-pane${focused ? ' node__image-pane--focus' : ''}" style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
+    `
+    : '';
+  const focusImageDropzoneMarkup = focused && imageNode
+    ? `
+      <button
+        class="node__image-dropzone"
+        type="button"
+        data-focus-image-dropzone="${node.id}"
+        data-node-image-pick="${node.id}"
+        aria-label="${hasImageData ? 'Replace image' : 'Add image'}"
+        title="${hasImageData ? 'Replace image' : 'Add image'}"
+      >
+        <span class="node__image-dropzone-title">${hasImageData ? 'Replace image' : 'Add image'}</span>
+        <span class="node__image-dropzone-hint">Drop a file here or click to choose.</span>
+      </button>
+    `
+    : '';
+  const focusMediaMarkup = focused && imageNode
+    ? `
+      <div class="node__focus-media">
+        ${imageMarkup}
+        ${focusImageDropzoneMarkup}
+      </div>
     `
     : '';
 
@@ -70,7 +94,7 @@ export function buildNodeContentMarkup(node, options = {}) {
             <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}">${escapeHTML(node.description)}</textarea>
           </label>
         </div>
-        ${focused && imageNode ? `<div class="node__focus-media">${imageMarkup}</div>` : ''}
+        ${focusMediaMarkup}
       </div>
     `
       : `
@@ -100,7 +124,7 @@ export function buildNodeContentMarkup(node, options = {}) {
           </div>
         `}
       ${focused && imageNode ? '</div>' : ''}
-      ${focused && imageNode ? `<div class="node__focus-media">${imageMarkup}</div>` : ''}
+      ${focusMediaMarkup}
     `;
 
   return `<div class="${contentClass}">${content}</div>`;
