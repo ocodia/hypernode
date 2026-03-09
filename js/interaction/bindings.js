@@ -1061,6 +1061,10 @@ export function bindInteractions(elements, store) {
     onWorkspaceWheel,
   });
 
+  function isDescriptionLinkTarget(target) {
+    return target instanceof Element && Boolean(target.closest('.node__description a, .frame__description a'));
+  }
+
   function onNodePointerDown(event) {
     if (isFrameDrawMode) return;
     const resizeEl = event.target.closest('[data-node-resize]');
@@ -1076,6 +1080,11 @@ export function bindInteractions(elements, store) {
       beginEdgeSession(event, anchorEl.dataset.nodeAnchor);
       event.stopPropagation();
       event.preventDefault();
+      return;
+    }
+
+    if (isDescriptionLinkTarget(event.target)) {
+      event.stopPropagation();
       return;
     }
 
@@ -1251,6 +1260,11 @@ export function bindInteractions(elements, store) {
   }
 
   function onNodeClick(event) {
+    if (isDescriptionLinkTarget(event.target)) {
+      event.stopPropagation();
+      return;
+    }
+
     const openEl = event.target.closest('[data-node-edit-open]');
     if (openEl) {
       const nodeId = openEl.dataset.nodeEditOpen;
@@ -1447,6 +1461,11 @@ export function bindInteractions(elements, store) {
       return;
     }
 
+    if (isDescriptionLinkTarget(event.target)) {
+      event.stopPropagation();
+      return;
+    }
+
     if (event.target.closest('[data-frame-editor], [data-frame-edit-open], [data-frame-delete]')) {
       event.stopPropagation();
       return;
@@ -1582,6 +1601,11 @@ export function bindInteractions(elements, store) {
   }
 
   function onFrameClick(event) {
+    if (isDescriptionLinkTarget(event.target)) {
+      event.stopPropagation();
+      return;
+    }
+
     const openEl = event.target.closest('[data-frame-edit-open]');
     if (openEl) {
       const frameId = openEl.dataset.frameEditOpen;
