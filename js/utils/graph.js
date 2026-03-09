@@ -48,6 +48,7 @@ export function emptyGraphState() {
       isDrawingFrame: false,
       frameDraft: null,
       frameMembershipPreview: {},
+      nodeMembershipPreview: [],
       isMarqueeSelecting: false,
       selectionMarquee: null,
     },

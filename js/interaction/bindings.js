@@ -338,6 +338,8 @@ export function bindInteractions(elements, store) {
     const activePointerId = frameResizeSession.pointerId;
     frameResizeSession = null;
     store.setResizing(false);
+    store.clearFrameMembershipPreview();
+    store.clearNodeMembershipPreview();
     if (pointerId === null || pointerId === activePointerId) {
       try {
         framesLayer.releasePointerCapture(activePointerId);
@@ -771,6 +773,26 @@ export function bindInteractions(elements, store) {
     }
 
     store.setFrameMembershipPreview(preview);
+  }
+
+  function updateFrameResizeMembershipPreview(frameId, nextRect, state) {
+    const removeNodeIds = findMemberNodesOutsideFrameRect(frameId, nextRect, state);
+    if (removeNodeIds.length) {
+      store.setFrameMembershipPreview({ [frameId]: 'remove' });
+      store.setNodeMembershipPreview(removeNodeIds);
+      return;
+    }
+    store.clearFrameMembershipPreview();
+    store.clearNodeMembershipPreview();
+  }
+
+  function applyFrameResizeMembership(frameId, state) {
+    const frame = getFrame(frameId, state);
+    if (!frame) return;
+    const frameRect = getFrameRect(frame);
+    const removeNodeIds = findMemberNodesOutsideFrameRect(frameId, frameRect, state);
+    if (!removeNodeIds.length) return;
+    store.clearNodesFrameMembership(removeNodeIds, { skipHistory: true });
   }
 
   function setNodeColorPopoverOpen(nextOpen, buttonEl, popoverEl) {
@@ -1338,7 +1360,8 @@ export function bindInteractions(elements, store) {
     }
 
     if (frameResizeSession && frameResizeSession.pointerId === event.pointerId) {
-      const viewport = store.getState().viewport;
+      const state = store.getState();
+      const viewport = state.viewport;
       const dx = (event.clientX - frameResizeSession.startX) / viewport.zoom;
       const dy = (event.clientY - frameResizeSession.startY) / viewport.zoom;
 
@@ -1352,6 +1375,12 @@ export function bindInteractions(elements, store) {
 
       const next = computeFrameResizedRect(frameResizeSession, dx, dy);
       store.resizeFrame(frameResizeSession.frameId, next, { skipHistory: true });
+      updateFrameResizeMembershipPreview(frameResizeSession.frameId, {
+        left: next.x,
+        top: next.y,
+        right: next.x + next.width,
+        bottom: next.y + next.height,
+      }, state);
       return;
     }
 
@@ -1375,6 +1404,9 @@ export function bindInteractions(elements, store) {
 
   framesLayer.addEventListener('pointerup', (event) => {
     if (frameResizeSession && event.pointerId === frameResizeSession.pointerId) {
+      if (frameResizeSession.moved) {
+        applyFrameResizeMembership(frameResizeSession.frameId, store.getState());
+      }
       endFrameResizeSession(event.pointerId);
       return;
     }
@@ -2212,6 +2244,23 @@ function findBestFrameIdForNodeFromRects(node, frames) {
     }
   }
   return best?.frameId || null;
+}
+
+function findMemberNodesOutsideFrameRect(frameId, frameRect, state) {
+  const removeIds = [];
+  for (const node of state.nodes) {
+    if (node.frameId !== frameId) continue;
+    const overlap = getNodeFrameOverlapArea(node, {
+      x: frameRect.left,
+      y: frameRect.top,
+      width: frameRect.right - frameRect.left,
+      height: frameRect.bottom - frameRect.top,
+    });
+    if (overlap <= 0) {
+      removeIds.push(node.id);
+    }
+  }
+  return removeIds;
 }
 
 function buildDirectionalScore(originCenter, candidateNode, key) {

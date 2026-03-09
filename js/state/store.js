@@ -201,6 +201,29 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setNodeMembershipPreview(nodeIds) {
+    const normalized = [];
+    const seen = new Set();
+    for (const id of Array.isArray(nodeIds) ? nodeIds : []) {
+      if (typeof id !== 'string' || seen.has(id)) continue;
+      seen.add(id);
+      normalized.push(id);
+    }
+    const previous = Array.isArray(state.ui.nodeMembershipPreview) ? state.ui.nodeMembershipPreview : [];
+    if (previous.length === normalized.length && previous.every((id, index) => id === normalized[index])) {
+      return;
+    }
+    state.ui.nodeMembershipPreview = normalized;
+    notify();
+  }
+
+  function clearNodeMembershipPreview() {
+    const previous = Array.isArray(state.ui.nodeMembershipPreview) ? state.ui.nodeMembershipPreview : [];
+    if (!previous.length) return;
+    state.ui.nodeMembershipPreview = [];
+    notify();
+  }
+
   function setSelectionMarquee(marquee) {
     if (!marquee) {
       state.ui.selectionMarquee = null;
@@ -389,6 +412,19 @@ export function createStore(initialGraph = null) {
     if (!options.skipNotify) {
       notify();
     }
+  }
+
+  function clearNodesFrameMembership(nodeIds, options = {}) {
+    const ids = new Set((Array.isArray(nodeIds) ? nodeIds : []).filter((id) => typeof id === 'string'));
+    if (!ids.size) return false;
+    const targets = state.nodes.filter((node) => ids.has(node.id) && typeof node.frameId === 'string');
+    if (!targets.length) return false;
+    if (!options.skipHistory) pushHistory('set-node-frame');
+    for (const node of targets) {
+      delete node.frameId;
+    }
+    notify();
+    return true;
   }
 
   function updateFrame(id, patch, options = {}) {
@@ -786,6 +822,7 @@ export function createStore(initialGraph = null) {
     state.ui.isDrawingFrame = false;
     state.ui.frameDraft = null;
     state.ui.frameMembershipPreview = {};
+    state.ui.nodeMembershipPreview = [];
     state.ui.isMarqueeSelecting = false;
     state.ui.selectionMarquee = null;
     notify();
@@ -883,6 +920,7 @@ export function createStore(initialGraph = null) {
     state.ui.isDrawingFrame = false;
     state.ui.frameDraft = null;
     state.ui.frameMembershipPreview = {};
+    state.ui.nodeMembershipPreview = [];
     state.ui.isMarqueeSelecting = false;
     state.ui.selectionMarquee = null;
   }
@@ -971,6 +1009,8 @@ export function createStore(initialGraph = null) {
     clearFrameDraft,
     setFrameMembershipPreview,
     clearFrameMembershipPreview,
+    setNodeMembershipPreview,
+    clearNodeMembershipPreview,
     setSelectionMarquee,
     setSelection,
     setNodeSelection,
@@ -980,6 +1020,7 @@ export function createStore(initialGraph = null) {
     addNode,
     addFrame,
     updateNode,
+    clearNodesFrameMembership,
     updateFrame,
     moveNode,
     moveNodes,

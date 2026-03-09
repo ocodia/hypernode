@@ -141,6 +141,7 @@ export function createRenderer(elements, store) {
 
   function renderNodes(state) {
     const selectedNodeIds = new Set(getSelectedNodeIds(state.selection));
+    const previewNodeIds = new Set(Array.isArray(state.ui.nodeMembershipPreview) ? state.ui.nodeMembershipPreview : []);
     const singleSelectedNodeId = getSingleSelectedNodeId(state.selection);
     const editingNodeId = state.ui.editingNodeId;
     const draft = state.ui.edgeDraft;
@@ -151,6 +152,7 @@ export function createRenderer(elements, store) {
         const singleSelectedClass = singleSelectedNodeId === node.id ? "is-single-selected" : "";
         const editingClass = editingNodeId === node.id ? "is-editing" : "";
         const imageClass = imageNode ? "node--image" : "";
+        const membershipPreviewClass = previewNodeIds.has(node.id) ? "is-frame-membership-remove-preview" : "";
         const connectClass =
           draft?.fromNodeId === node.id
             ? "is-connect-source"
@@ -192,7 +194,7 @@ export function createRenderer(elements, store) {
             </div>
           `;
         return `
-          <article class="node ${selectedClass} ${singleSelectedClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
+          <article class="node ${selectedClass} ${singleSelectedClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
             <div class="node__toolbar">
               <button class="node__tool-btn" type="button" data-node-edit-open="${node.id}" aria-label="Edit node" title="Edit Node">
                 <i class="bi bi-pencil-fill"></i>
