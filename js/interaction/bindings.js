@@ -58,6 +58,7 @@ export function bindInteractions(elements, store) {
     const activePointerId = dragSession.pointerId;
     dragSession = null;
     store.setDragging(false);
+    store.clearFrameMembershipPreview();
     if (pointerId === null || pointerId === activePointerId) {
       try {
         nodesLayer.releasePointerCapture(activePointerId);
@@ -704,6 +705,15 @@ export function bindInteractions(elements, store) {
     if (typeof patch.description === 'string') {
       frame.description = patch.description;
     }
+    if (patch.borderWidth !== undefined) {
+      const numeric = Math.round(Number(patch.borderWidth));
+      if (Number.isFinite(numeric)) {
+        frame.borderWidth = clamp(numeric, FRAME_DEFAULTS.borderWidthMin, FRAME_DEFAULTS.borderWidthMax);
+      }
+    }
+    if (typeof patch.borderStyle === 'string' && ['solid', 'dashed', 'dotted'].includes(patch.borderStyle)) {
+      frame.borderStyle = patch.borderStyle;
+    }
   }
 
   function focusFrameTitleInput(frameId, retries = 2) {
@@ -731,6 +741,36 @@ export function bindInteractions(elements, store) {
     if (typeof patch.description === 'string') {
       node.description = patch.description;
     }
+  }
+
+  function updateFrameMembershipPreview(dragNodes, dx, dy) {
+    const state = store.getState();
+    if (!Array.isArray(state.frames) || state.frames.length === 0) {
+      store.clearFrameMembershipPreview();
+      return;
+    }
+
+    const preview = {};
+    for (const nodeEntry of dragNodes) {
+      const node = getNode(nodeEntry.id, state);
+      if (!node) continue;
+      const simulatedNode = {
+        ...node,
+        x: nodeEntry.nodeStartX + dx,
+        y: nodeEntry.nodeStartY + dy,
+      };
+      const bestFrameId = findBestFrameIdForNodeFromRects(simulatedNode, state.frames);
+      const currentFrameId = node.frameId || null;
+
+      if (currentFrameId && currentFrameId !== bestFrameId) {
+        preview[currentFrameId] = 'remove';
+      }
+      if (bestFrameId && bestFrameId !== currentFrameId) {
+        preview[bestFrameId] = 'add';
+      }
+    }
+
+    store.setFrameMembershipPreview(preview);
   }
 
   function setNodeColorPopoverOpen(nextOpen, buttonEl, popoverEl) {
@@ -1052,6 +1092,9 @@ export function bindInteractions(elements, store) {
     if (dragSession.nodes.length === 1) {
       const single = dragSession.nodes[0];
       store.moveNode(single.id, single.nodeStartX + dx, single.nodeStartY + dy, { skipHistory: true });
+      if (dragSession.moved) {
+        updateFrameMembershipPreview(dragSession.nodes, dx, dy);
+      }
       return;
     }
     const batch = dragSession.nodes.map((entry) => ({
@@ -1060,6 +1103,9 @@ export function bindInteractions(elements, store) {
       y: entry.nodeStartY + dy,
     }));
     store.moveNodes(batch, { skipHistory: true });
+    if (dragSession.moved) {
+      updateFrameMembershipPreview(dragSession.nodes, dx, dy);
+    }
   });
 
   nodesLayer.addEventListener('pointerup', (event) => {
@@ -1075,6 +1121,7 @@ export function bindInteractions(elements, store) {
     if (dragSession.moved) {
       store.recomputeNodeFrameMembership(dragSession.nodes.map((entry) => entry.id));
     }
+    store.clearFrameMembershipPreview();
     endDragSession(event.pointerId);
   });
 
@@ -1088,6 +1135,7 @@ export function bindInteractions(elements, store) {
       return;
     }
     if (!dragSession || event.pointerId !== dragSession.pointerId) return;
+    store.clearFrameMembershipPreview();
     endDragSession(event.pointerId);
   });
 
@@ -1101,6 +1149,7 @@ export function bindInteractions(elements, store) {
       return;
     }
     if (!dragSession || event.pointerId !== dragSession.pointerId) return;
+    store.clearFrameMembershipPreview();
     endDragSession();
   });
 
@@ -1419,7 +1468,7 @@ export function bindInteractions(elements, store) {
 
   framesLayer.addEventListener('input', (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
     const frameEl = target.closest('[data-frame-id]');
     if (!frameEl) return;
     const frameId = frameEl.dataset.frameId;
@@ -1433,6 +1482,18 @@ export function bindInteractions(elements, store) {
 
     if (target.matches('[data-frame-edit-description]')) {
       applyLiveFrameEditorInput(frameId, { description: target.value });
+      event.stopPropagation();
+      return;
+    }
+
+    if (target.matches('[data-frame-edit-border-width]')) {
+      applyLiveFrameEditorInput(frameId, { borderWidth: target.value });
+      event.stopPropagation();
+      return;
+    }
+
+    if (target.matches('[data-frame-edit-border-style]')) {
+      applyLiveFrameEditorInput(frameId, { borderStyle: target.value });
       event.stopPropagation();
     }
   });
@@ -2098,6 +2159,59 @@ function getNodeHeight(node) {
     return (getNodeWidth(node) / Number(node.imageAspectRatio)) + IMAGE_NODE_DEFAULTS.metaHeight;
   }
   return NODE_DEFAULTS.height;
+}
+
+function getFrameWidth(frame) {
+  const width = Number(frame?.width);
+  return Number.isFinite(width) && width > 0 ? width : FRAME_DEFAULTS.width;
+}
+
+function getFrameHeight(frame) {
+  const height = Number(frame?.height);
+  return Number.isFinite(height) && height > 0 ? height : FRAME_DEFAULTS.height;
+}
+
+function getNodeRect(node) {
+  const left = Number(node.x) || 0;
+  const top = Number(node.y) || 0;
+  return {
+    left,
+    top,
+    right: left + getNodeWidth(node),
+    bottom: top + getNodeHeight(node),
+  };
+}
+
+function getFrameRect(frame) {
+  const left = Number(frame.x) || 0;
+  const top = Number(frame.y) || 0;
+  return {
+    left,
+    top,
+    right: left + getFrameWidth(frame),
+    bottom: top + getFrameHeight(frame),
+  };
+}
+
+function getNodeFrameOverlapArea(node, frame) {
+  const nodeRect = getNodeRect(node);
+  const frameRect = getFrameRect(frame);
+  const overlapWidth = Math.max(0, Math.min(nodeRect.right, frameRect.right) - Math.max(nodeRect.left, frameRect.left));
+  const overlapHeight = Math.max(0, Math.min(nodeRect.bottom, frameRect.bottom) - Math.max(nodeRect.top, frameRect.top));
+  return overlapWidth * overlapHeight;
+}
+
+function findBestFrameIdForNodeFromRects(node, frames) {
+  let best = null;
+  for (let index = 0; index < frames.length; index += 1) {
+    const frame = frames[index];
+    const overlap = getNodeFrameOverlapArea(node, frame);
+    if (overlap <= 0) continue;
+    if (!best || overlap > best.overlap || (overlap === best.overlap && index > best.index)) {
+      best = { frameId: frame.id, overlap, index };
+    }
+  }
+  return best?.frameId || null;
 }
 
 function buildDirectionalScore(originCenter, candidateNode, key) {

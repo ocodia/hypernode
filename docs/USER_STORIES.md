@@ -228,7 +228,9 @@ As a user, I want frames to behave like super nodes for metadata and connectivit
 Acceptance criteria:
 
 - Frames support title/description editing and corner resize.
+- Frame editor supports border width/style controls.
 - Frames expose top/right/bottom/left anchors for edge create/reconnect.
+- Node drag previews frame add/remove membership with distinct highlights.
 - Deleting a frame keeps contained nodes and clears their frame membership.
 
 ## Definition of Done (v1)

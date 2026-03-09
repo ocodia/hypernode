@@ -57,6 +57,7 @@ export function createRenderer(elements, store) {
     const editingFrameId = state.ui.editingFrameId;
     const draft = state.ui.edgeDraft;
     const frameDraft = state.ui.frameDraft;
+    const membershipPreview = state.ui.frameMembershipPreview || {};
 
     const framesMarkup = state.frames
       .map((frame) => {
@@ -70,8 +71,13 @@ export function createRenderer(elements, store) {
                 ? 'is-connect-target'
                 : 'is-connect-candidate'
               : '';
+        const membershipPreviewClass = membershipPreview[frame.id] === 'add'
+          ? 'is-membership-add-preview'
+          : membershipPreview[frame.id] === 'remove'
+            ? 'is-membership-remove-preview'
+            : '';
         const frameColorAttr = typeof frame.colorKey === 'string' ? ` data-frame-color="${frame.colorKey}"` : '';
-        const frameStyle = `transform: translate(${frame.x}px, ${frame.y}px); width: ${frame.width}px; height: ${frame.height}px;`;
+        const frameStyle = `transform: translate(${frame.x}px, ${frame.y}px); width: ${frame.width}px; height: ${frame.height}px; --frame-border-width: ${frame.borderWidth || 1}px; --frame-border-style: ${escapeAttr(frame.borderStyle || 'solid')};`;
         const meta = editingFrameId === frame.id
           ? `
             <div class="frame__editor" data-frame-editor="${frame.id}">
@@ -83,6 +89,16 @@ export function createRenderer(elements, store) {
                 Description
                 <textarea class="frame__editor-textarea" data-frame-edit-description="${frame.id}">${escapeHTML(frame.description)}</textarea>
               </label>
+              <label class="frame__editor-label">
+                Border Width
+                <input class="frame__editor-input" data-frame-edit-border-width="${frame.id}" type="range" min="1" max="8" step="1" value="${escapeAttr(frame.borderWidth || 1)}" />
+              </label>
+              <label class="frame__editor-label">
+                Border Style
+                <select class="frame__editor-input" data-frame-edit-border-style="${frame.id}">
+                  ${['solid', 'dashed', 'dotted'].map((style) => `<option value="${style}"${(frame.borderStyle || 'solid') === style ? ' selected' : ''}>${style}</option>`).join('')}
+                </select>
+              </label>
             </div>
           `
           : `
@@ -90,7 +106,7 @@ export function createRenderer(elements, store) {
             ${frame.description ? `<p class="frame__description">${escapeHTML(frame.description)}</p>` : ''}
           `;
         return `
-          <article class="frame ${selectedClass} ${editingClass} ${connectClass}" data-frame-id="${frame.id}"${frameColorAttr} style="${frameStyle}">
+          <article class="frame ${selectedClass} ${editingClass} ${connectClass} ${membershipPreviewClass}" data-frame-id="${frame.id}"${frameColorAttr} style="${frameStyle}">
             <div class="frame__box"></div>
             <div class="frame__toolbar">
               <button class="frame__tool-btn" type="button" data-frame-edit-open="${frame.id}" aria-label="Edit frame" title="Edit Frame">

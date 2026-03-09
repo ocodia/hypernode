@@ -182,6 +182,25 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setFrameMembershipPreview(previewByFrameId) {
+    const nextPreview = (previewByFrameId && typeof previewByFrameId === 'object')
+      ? { ...previewByFrameId }
+      : {};
+    const prevKeys = Object.keys(state.ui.frameMembershipPreview || {});
+    const nextKeys = Object.keys(nextPreview);
+    if (prevKeys.length === nextKeys.length && prevKeys.every((key) => state.ui.frameMembershipPreview[key] === nextPreview[key])) {
+      return;
+    }
+    state.ui.frameMembershipPreview = nextPreview;
+    notify();
+  }
+
+  function clearFrameMembershipPreview() {
+    if (!state.ui.frameMembershipPreview || Object.keys(state.ui.frameMembershipPreview).length === 0) return;
+    state.ui.frameMembershipPreview = {};
+    notify();
+  }
+
   function setSelectionMarquee(marquee) {
     if (!marquee) {
       state.ui.selectionMarquee = null;
@@ -394,6 +413,15 @@ export function createStore(initialGraph = null) {
     }
     if (typeof patch.height === 'number') {
       frame.height = Math.max(FRAME_DEFAULTS.minHeight, patch.height);
+    }
+    if (patch.borderWidth !== undefined) {
+      const numeric = Math.round(Number(patch.borderWidth));
+      if (Number.isFinite(numeric)) {
+        frame.borderWidth = Math.min(FRAME_DEFAULTS.borderWidthMax, Math.max(FRAME_DEFAULTS.borderWidthMin, numeric));
+      }
+    }
+    if (typeof patch.borderStyle === 'string' && ['solid', 'dashed', 'dotted'].includes(patch.borderStyle)) {
+      frame.borderStyle = patch.borderStyle;
     }
     if (!options.skipNotify) {
       notify();
@@ -757,6 +785,7 @@ export function createStore(initialGraph = null) {
     state.ui.isConnecting = false;
     state.ui.isDrawingFrame = false;
     state.ui.frameDraft = null;
+    state.ui.frameMembershipPreview = {};
     state.ui.isMarqueeSelecting = false;
     state.ui.selectionMarquee = null;
     notify();
@@ -853,6 +882,7 @@ export function createStore(initialGraph = null) {
     state.ui.isConnecting = false;
     state.ui.isDrawingFrame = false;
     state.ui.frameDraft = null;
+    state.ui.frameMembershipPreview = {};
     state.ui.isMarqueeSelecting = false;
     state.ui.selectionMarquee = null;
   }
@@ -939,6 +969,8 @@ export function createStore(initialGraph = null) {
     setFrameDrawing,
     setFrameDraft,
     clearFrameDraft,
+    setFrameMembershipPreview,
+    clearFrameMembershipPreview,
     setSelectionMarquee,
     setSelection,
     setNodeSelection,

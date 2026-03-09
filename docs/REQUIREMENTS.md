@@ -122,6 +122,12 @@ Nodes must support single-frame embedding by overlap; embedded nodes move with t
 FR-34
 Deleting a Frame must ungroup contained nodes without deleting those nodes.
 
+FR-35
+Frames must support per-frame border width and style controls (`solid`, `dashed`, `dotted`).
+
+FR-36
+During node drag, Frames must provide visual add/remove membership preview feedback before drop.
+
 ## Non Functional Requirements
 
 ### Performance

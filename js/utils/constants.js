@@ -21,6 +21,10 @@ export const FRAME_DEFAULTS = {
   minWidth: 200,
   minHeight: 140,
   title: "Untitled Frame",
+  borderWidth: 1,
+  borderWidthMin: 1,
+  borderWidthMax: 8,
+  borderStyle: "solid",
 };
 
 export const IMAGE_NODE_DEFAULTS = {

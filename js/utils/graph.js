@@ -14,6 +14,7 @@ const ARROWHEADS_MODES = new Set(['shown', 'hidden']);
 const ARROWHEAD_SIZE_STEP_MIN = 0;
 const ARROWHEAD_SIZE_STEP_MAX = 9;
 const NODE_KINDS = new Set(['text', 'image']);
+const FRAME_BORDER_STYLES = new Set(['solid', 'dashed', 'dotted']);
 
 export function emptyGraphState() {
   return {
@@ -46,6 +47,7 @@ export function emptyGraphState() {
       isConnecting: false,
       isDrawingFrame: false,
       frameDraft: null,
+      frameMembershipPreview: {},
       isMarqueeSelecting: false,
       selectionMarquee: null,
     },
@@ -111,6 +113,8 @@ export function sanitizeNode(node, frameIds = null) {
 export function sanitizeFrame(frame) {
   const width = sanitizeOptionalSize(frame.width) ?? FRAME_DEFAULTS.width;
   const height = sanitizeOptionalSize(frame.height) ?? FRAME_DEFAULTS.height;
+  const borderWidth = sanitizeFrameBorderWidth(frame.borderWidth);
+  const borderStyle = sanitizeFrameBorderStyle(frame.borderStyle);
   const colorKey = sanitizeNodeColorKey(frame.colorKey);
 
   return {
@@ -121,6 +125,8 @@ export function sanitizeFrame(frame) {
     y: Number(frame.y) || 0,
     width: Math.max(FRAME_DEFAULTS.minWidth, width),
     height: Math.max(FRAME_DEFAULTS.minHeight, height),
+    borderWidth,
+    borderStyle,
     ...(colorKey === null ? {} : { colorKey }),
   };
 }
@@ -311,6 +317,8 @@ function validateGraphFramePayload(frame) {
   if (typeof frame.id !== 'string' || !frame.id) return false;
   if (frame.width !== undefined && sanitizeOptionalSize(frame.width) === null) return false;
   if (frame.height !== undefined && sanitizeOptionalSize(frame.height) === null) return false;
+  if (frame.borderWidth !== undefined && !isValidFrameBorderWidth(frame.borderWidth)) return false;
+  if (frame.borderStyle !== undefined && !isValidFrameBorderStyle(frame.borderStyle)) return false;
   if (frame.colorKey !== undefined && frame.colorKey !== null && !isValidNodeColorKey(frame.colorKey)) {
     return false;
   }
@@ -342,4 +350,32 @@ function sanitizeFrameRef(value, frameIds = null) {
     return null;
   }
   return value;
+}
+
+function sanitizeFrameBorderWidth(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return FRAME_DEFAULTS.borderWidth;
+  }
+  const rounded = Math.round(numeric);
+  if (rounded < FRAME_DEFAULTS.borderWidthMin) return FRAME_DEFAULTS.borderWidthMin;
+  if (rounded > FRAME_DEFAULTS.borderWidthMax) return FRAME_DEFAULTS.borderWidthMax;
+  return rounded;
+}
+
+function sanitizeFrameBorderStyle(value) {
+  if (typeof value !== 'string' || !FRAME_BORDER_STYLES.has(value)) {
+    return FRAME_DEFAULTS.borderStyle;
+  }
+  return value;
+}
+
+function isValidFrameBorderWidth(value) {
+  return Number.isInteger(Number(value))
+    && Number(value) >= FRAME_DEFAULTS.borderWidthMin
+    && Number(value) <= FRAME_DEFAULTS.borderWidthMax;
+}
+
+function isValidFrameBorderStyle(value) {
+  return typeof value === 'string' && FRAME_BORDER_STYLES.has(value);
 }

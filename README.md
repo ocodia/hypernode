@@ -12,8 +12,11 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Delete selected nodes with `Delete`/`Backspace`.
 - Create edges from text and image node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
-- Draw Frames from toolbar drag mode. Frames act as background super-nodes with anchors, resize handles, title, and description.
+- Draw Frames from toolbar drag mode. Frames act as background super-nodes with anchors, resize handles, and title/description.
+- Frame mini toolbar renders above selected frames.
+- Frame inline editor includes border width (`1-8`) and border style (`solid`, `dashed`, `dotted`).
 - Drag nodes into Frames to embed them; embedded nodes move with their Frame and can be dragged out to ungroup.
+- While dragging nodes, frames preview add/remove membership with distinct highlight states.
 - Create and reconnect edges to Frames via frame anchors.
 - Add image nodes from the toolbar using local image files (stored as base64 data URLs in graph JSON).
 - Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.

@@ -38,9 +38,13 @@ Use this checklist before shipping interaction changes.
 - [ ] Toggle frame draw mode, drag to create a frame at zoom levels `0.35`, `1.0`, and `2.5`.
 - [ ] Press `Escape` during frame draw mode and confirm draft cancels cleanly.
 - [ ] Select a frame and verify frame mini toolbar appears with `Edit` and `Delete`.
+- [ ] Verify frame mini toolbar appears above frame bounds (not inside frame body).
 - [ ] Resize frame from each corner and confirm frame bounds update with zoom-aware pointer alignment.
+- [ ] In frame edit mode, set border width and border style and verify immediate visual update.
 - [ ] Drag nodes into a frame and verify they become embedded on release.
+- [ ] While dragging into a frame, verify add-preview highlight appears before release.
 - [ ] Drag embedded nodes out of frame overlap and verify they ungroup.
+- [ ] While dragging out of a frame, verify remove-preview highlight appears before release.
 - [ ] Move a frame with embedded nodes and verify member nodes move with it.
 - [ ] Delete a frame and verify contained nodes remain in place and become ungrouped.
 
