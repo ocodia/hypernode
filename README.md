@@ -24,6 +24,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Add image nodes from the toolbar using local image files (stored as base64 data URLs in graph JSON).
 - Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.
 - Single selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
+- Single selected nodes also expose a `Focus` action for full-screen zen editing; image nodes place the image on the right in Focus mode and keep text width readable.
 - Multi-select nodes with `Ctrl/Cmd + click` (additive).
 - Multi-select nodes with `Ctrl/Cmd + drag` marquee (touch/intersection hit rule).
 - Drag any selected node to move the full selected group together.
@@ -63,8 +64,9 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
 - `Ctrl/Cmd + S`: save graph file
 - `Ctrl/Cmd + Enter`: toggle selected node/frame editor
+- `Ctrl/Cmd + Alt + Enter`: toggle Focus mode for the selected node
 - `Ctrl/Cmd + Click`: add a node to current node selection
-- `Escape`: exit node edit mode, cancel edge draft mode, or clear selection
+- `Escape`: exit Focus/node edit mode, cancel edge draft mode, or clear selection
 - `Escape`: also exits frame draw mode and frame edit mode
 
 ## Tech Stack

@@ -11,6 +11,80 @@ import {
 } from '../helpers.js';
 import { renderDescriptionMarkdown } from '../markdown.js';
 
+export function buildNodeToolbarMarkup(nodeId, options = {}) {
+  const includeEdit = options.includeEdit !== false;
+  const includeFocus = options.includeFocus !== false;
+  const focusActive = Boolean(options.focusActive);
+  const toolbarClass = options.toolbarClass || 'node__toolbar';
+  const focusLabel = focusActive ? 'Exit focus mode' : 'Focus node';
+  const focusTitle = focusActive ? 'Exit Focus' : 'Focus';
+
+  return `
+    <div class="${toolbarClass}">
+      ${includeEdit ? `
+        <button class="node__tool-btn" type="button" data-node-edit-open="${nodeId}" aria-label="Edit node" title="Edit Node">
+          <i class="bi bi-pencil-fill"></i>
+        </button>
+      ` : ''}
+      ${includeFocus ? `
+        <button class="node__tool-btn" type="button" data-node-focus-toggle="${nodeId}" aria-label="${focusLabel}" title="${focusTitle}" aria-pressed="${focusActive ? 'true' : 'false'}">
+          <i class="bi ${focusActive ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'}"></i>
+        </button>
+      ` : ''}
+      <button class="node__tool-btn node__tool-btn--danger" type="button" data-node-delete="${nodeId}" aria-label="Delete node" title="Delete Node">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  `;
+}
+
+export function buildNodeContentMarkup(node, options = {}) {
+  const editing = Boolean(options.isEditing);
+  const focused = Boolean(options.isFocused);
+  const imageNode = isImageNode(node);
+  const contentClass = focused
+    ? `node__content node__content--focus${imageNode ? ' node__content--focus-image' : ' node__content--focus-text'}`
+    : 'node__content';
+  const metaClass = focused ? 'node__meta node__meta--focus' : 'node__meta';
+  const imageMarkup = imageNode
+    ? `
+      <div class="node__image-pane${focused ? ' node__image-pane--focus' : ''}" style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
+    `
+    : '';
+
+  const content =
+    editing
+      ? `
+      <div class="node__editor${focused ? ' node__editor--focus' : ''}" data-node-editor="${node.id}">
+        <div class="node__editor-fields">
+          <label class="node__editor-label${focused ? ' node__editor-label--focus' : ''}">
+            Name
+            <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" />
+          </label>
+          <label class="node__editor-label node__editor-label--description${focused ? ' node__editor-label--description-focus' : ''}${focused ? ' node__editor-label--focus' : ''}">
+            Description
+            <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}">${escapeHTML(node.description)}</textarea>
+          </label>
+        </div>
+        ${focused && imageNode ? `<div class="node__focus-media">${imageMarkup}</div>` : ''}
+      </div>
+    `
+      : `
+      ${focused && imageNode ? '<div class="node__focus-copy">' : ''}
+      ${!focused && imageNode ? imageMarkup : ''}
+      <div class="${metaClass}">
+        <div class="node__head">
+          <h3 class="node__title${focused ? ' node__title--focus' : ''}">${escapeHTML(node.title)}</h3>
+        </div>
+        ${node.description ? `<div class="node__description${focused ? ' node__description--focus' : ''}">${renderDescriptionMarkdown(node.description)}</div>` : ''}
+      </div>
+      ${focused && imageNode ? '</div>' : ''}
+      ${focused && imageNode ? `<div class="node__focus-media">${imageMarkup}</div>` : ''}
+    `;
+
+  return `<div class="${contentClass}">${content}</div>`;
+}
+
 export function renderNodes(nodesLayer, state) {
   const selectedNodeIds = new Set(getSelectedNodeIds(state.selection));
   const previewNodeMap = state.ui.nodeMembershipPreview || {};
@@ -48,47 +122,10 @@ export function renderNodes(nodesLayer, state) {
       const inlineSizeStyle = buildNodeInlineSizeStyle(node);
       const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}`;
       const nodeColorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
-      const imageMarkup = imageNode
-        ? `
-          <div class="node__image-pane" style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
-        `
-        : '';
-      const content =
-        editingNodeId === node.id
-          ? `
-          <div class="node__editor" data-node-editor="${node.id}">
-            <label class="node__editor-label">
-              Name
-              <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" />
-            </label>
-            <label class="node__editor-label node__editor-label--description">
-              Description
-              <textarea class="node__editor-textarea" data-node-edit-description="${node.id}">${escapeHTML(node.description)}</textarea>
-            </label>
-          </div>
-        `
-          : `
-          ${imageMarkup}
-          <div class="node__meta">
-            <div class="node__head">
-              <h3 class="node__title">${escapeHTML(node.title)}</h3>
-            </div>
-            ${node.description ? `<div class="node__description">${renderDescriptionMarkdown(node.description)}</div>` : ''}
-          </div>
-        `;
       return `
         <article class="node ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
-          <div class="node__toolbar">
-            <button class="node__tool-btn" type="button" data-node-edit-open="${node.id}" aria-label="Edit node" title="Edit Node">
-              <i class="bi bi-pencil-fill"></i>
-            </button>
-            <button class="node__tool-btn node__tool-btn--danger" type="button" data-node-delete="${node.id}" aria-label="Delete node" title="Delete Node">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>
-          <div class="node__content">
-            ${content}
-          </div>
+          ${buildNodeToolbarMarkup(node.id)}
+          ${buildNodeContentMarkup(node, { isEditing: editingNodeId === node.id })}
           <button class="node__resize node__resize--top-left" type="button" data-node-resize="${node.id}:top-left" aria-label="Resize from top left corner"></button>
           <button class="node__resize node__resize--top-right" type="button" data-node-resize="${node.id}:top-right" aria-label="Resize from top right corner"></button>
           <button class="node__resize node__resize--bottom-right" type="button" data-node-resize="${node.id}:bottom-right" aria-label="Resize from bottom right corner"></button>

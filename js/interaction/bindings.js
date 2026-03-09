@@ -24,6 +24,7 @@ export function bindInteractions(elements, store) {
     canvas,
     framesLayer,
     nodesLayer,
+    focusLayer,
     edgesGroup,
     edgeOverlayGroup,
     selectionControlsLayer,
@@ -328,7 +329,7 @@ export function bindInteractions(elements, store) {
   }
 
   function focusNodeTitleInput(nodeId, retries = 2) {
-    const titleInput = nodesLayer.querySelector(`[data-node-edit-title="${nodeId}"]`);
+    const titleInput = getNodeTitleInput(nodeId);
     if (!titleInput) {
       if (retries > 0) {
         window.requestAnimationFrame(() => focusNodeTitleInput(nodeId, retries - 1));
@@ -733,6 +734,35 @@ export function bindInteractions(elements, store) {
     store.clearEditingNode();
   }
 
+  function openNodeFocus(nodeId) {
+    if (!nodeId) return false;
+    store.setSelection({ type: 'node', id: nodeId });
+    activeLiveEditFrameId = null;
+    store.setFocusedNode(nodeId);
+    openNodeEditor(nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
+    return true;
+  }
+
+  function closeNodeFocus() {
+    const focusedNodeId = store.getState().ui.focusedNodeId;
+    if (!focusedNodeId) return false;
+    if (activeLiveEditNodeId === focusedNodeId) {
+      activeLiveEditNodeId = null;
+    }
+    clearEditorFocusLock(focusedNodeId);
+    store.clearFocusedNode();
+    return true;
+  }
+
+  function toggleFocusedSelectionNode() {
+    const state = store.getState();
+    if (state.selection?.type !== 'node') return false;
+    if (state.ui.focusedNodeId === state.selection.id) {
+      return closeNodeFocus();
+    }
+    return openNodeFocus(state.selection.id);
+  }
+
   function openFrameEditor(frameId) {
     activeLiveEditFrameId = null;
     store.setEditingFrame(frameId);
@@ -1029,6 +1059,7 @@ export function bindInteractions(elements, store) {
   }
 
   function onWorkspaceWheel(event) {
+    if (isTypingTarget(event.target)) return;
     if (!event.ctrlKey && Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
     event.preventDefault();
 
@@ -1283,6 +1314,18 @@ export function bindInteractions(elements, store) {
       return;
     }
 
+    const focusEl = event.target.closest('[data-node-focus-toggle]');
+    if (focusEl) {
+      const nodeId = focusEl.dataset.nodeFocusToggle;
+      if (store.getState().ui.focusedNodeId === nodeId) {
+        closeNodeFocus();
+      } else {
+        openNodeFocus(nodeId);
+      }
+      event.stopPropagation();
+      return;
+    }
+
     if (event.target.closest('[data-node-editor]')) {
       event.stopPropagation();
       return;
@@ -1316,6 +1359,22 @@ export function bindInteractions(elements, store) {
 
     const nodeId = nodeEl.dataset.nodeId;
     if (!nodeId) return;
+    const focusedNodeId = store.getState().ui.focusedNodeId;
+    const focusShortcut = (event.ctrlKey || event.metaKey) && event.altKey && event.key === 'Enter';
+
+    if (event.key === 'Escape' && focusedNodeId === nodeId) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeNodeFocus();
+      return;
+    }
+
+    if (focusShortcut && focusedNodeId === nodeId) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeNodeFocus();
+      return;
+    }
 
     if (event.key === 'Escape') {
       event.preventDefault();
@@ -1325,7 +1384,7 @@ export function bindInteractions(elements, store) {
     }
 
     const ctrlOrCmd = event.ctrlKey || event.metaKey;
-    if (ctrlOrCmd && event.key === 'Enter') {
+    if (ctrlOrCmd && event.key === 'Enter' && !event.altKey) {
       event.preventDefault();
       event.stopPropagation();
       closeNodeEditor(nodeId);
@@ -1387,7 +1446,7 @@ export function bindInteractions(elements, store) {
       return;
     }
 
-    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-frame-edit-open], [data-frame-delete]')) {
+    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-node-focus-toggle], [data-frame-edit-open], [data-frame-delete]')) {
       event.stopPropagation();
     }
   }
@@ -1411,6 +1470,19 @@ export function bindInteractions(elements, store) {
       return;
     }
 
+    const nodeFocusEl = event.target.closest('[data-node-focus-toggle]');
+    if (nodeFocusEl) {
+      const nodeId = nodeFocusEl.dataset.nodeFocusToggle;
+      store.setSelection({ type: 'node', id: nodeId });
+      if (store.getState().ui.focusedNodeId === nodeId) {
+        closeNodeFocus();
+      } else {
+        openNodeFocus(nodeId);
+      }
+      event.stopPropagation();
+      return;
+    }
+
     const frameOpenEl = event.target.closest('[data-frame-edit-open]');
     if (frameOpenEl) {
       const frameId = frameOpenEl.dataset.frameEditOpen;
@@ -1429,7 +1501,7 @@ export function bindInteractions(elements, store) {
     }
   }
 
-  bindNodeInteractions({ nodesLayer, selectionControlsLayer }, {
+  bindNodeInteractions({ nodesLayer, selectionControlsLayer, focusLayer }, {
     onNodePointerDown,
     onNodeDoubleClick,
     onNodePointerMove,
@@ -1747,7 +1819,7 @@ export function bindInteractions(elements, store) {
       return;
     }
 
-    const titleInput = nodesLayer.querySelector(`[data-node-edit-title="${lock.nodeId}"]`);
+    const titleInput = getNodeTitleInput(lock.nodeId);
     if (!(titleInput instanceof HTMLInputElement)) return;
 
     const active = document.activeElement;
@@ -1766,7 +1838,7 @@ export function bindInteractions(elements, store) {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (!isTypingTarget(target)) return;
-    const titleInput = nodesLayer.querySelector(`[data-node-edit-title="${editorFocusLock.nodeId}"]`);
+    const titleInput = getNodeTitleInput(editorFocusLock.nodeId);
     if (target !== titleInput) {
       clearEditorFocusLock();
     }
@@ -2073,9 +2145,15 @@ export function bindInteractions(elements, store) {
       setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
       return;
     }
-    if (isTypingTarget(event.target)) return;
-
     const ctrlOrCmd = event.ctrlKey || event.metaKey;
+    const focusShortcut = ctrlOrCmd && event.altKey && event.key === 'Enter';
+    if (focusShortcut) {
+      if (toggleFocusedSelectionNode()) {
+        event.preventDefault();
+      }
+      return;
+    }
+    if (isTypingTarget(event.target)) return;
 
     if (ctrlOrCmd && event.key.toLowerCase() === 'z' && !event.shiftKey) {
       event.preventDefault();
@@ -2125,6 +2203,10 @@ export function bindInteractions(elements, store) {
     }
 
     if (event.key === 'Escape') {
+      if (store.getState().ui.focusedNodeId) {
+        closeNodeFocus();
+        return;
+      }
       if (frameDrawSession || isFrameDrawMode) {
         endFrameDrawSession();
         setFrameDrawMode(false);
@@ -2723,6 +2805,11 @@ function computeImageResizedRect(session, deltaX) {
 function isTypingTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
   return target.matches('input, textarea, [contenteditable="true"]');
+}
+
+function getNodeTitleInput(nodeId) {
+  const selector = `[data-node-edit-title="${nodeId}"]`;
+  return document.querySelector(`#focus-layer ${selector}`) || document.querySelector(`#nodes-layer ${selector}`);
 }
 
 function resolveEffectiveAnchorForSession(storedAnchor, fromNode, toNode, anchorsMode) {

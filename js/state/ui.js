@@ -2,6 +2,7 @@ export function clearTransientUiState(state) {
   state.ui.edgeDraft = null;
   state.ui.edgeTwangId = null;
   state.ui.editingNodeId = null;
+  state.ui.focusedNodeId = null;
   state.ui.editingFrameId = null;
   state.ui.isPanning = false;
   state.ui.isDragging = false;

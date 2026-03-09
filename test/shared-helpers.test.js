@@ -59,6 +59,7 @@ test('clearTransientUiState resets interactive ui flags', () => {
       edgeDraft: { fromNodeId: 'a' },
       edgeTwangId: 'edge-1',
       editingNodeId: 'node-1',
+      focusedNodeId: 'node-1',
       editingFrameId: 'frame-1',
       isPanning: true,
       isDragging: true,
@@ -74,6 +75,7 @@ test('clearTransientUiState resets interactive ui flags', () => {
   };
   clearTransientUiState(state);
   assert.equal(state.ui.edgeDraft, null);
+  assert.equal(state.ui.focusedNodeId, null);
   assert.deepEqual(state.ui.frameMembershipPreview, {});
   assert.equal(state.ui.isDrawingFrame, false);
   assert.equal(state.ui.selectionMarquee, null);

@@ -5,6 +5,7 @@ import {
   getSingleSelectedNodeId,
   measureEntitySizes,
 } from '../helpers.js';
+import { buildNodeContentMarkup, buildNodeToolbarMarkup } from './nodes.js';
 
 export function renderSelectionControls(selectionControlsLayer, state) {
   if (!(selectionControlsLayer instanceof HTMLElement)) {
@@ -14,6 +15,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
   const selectedNodeId = getSingleSelectedNodeId(state.selection);
   const selectedFrameId = state.selection?.type === 'frame' ? state.selection.id : null;
   const editingNodeId = state.ui.editingNodeId;
+  const focusedNodeId = state.ui.focusedNodeId;
   const editingFrameId = state.ui.editingFrameId;
   const draft = state.ui.edgeDraft;
   const bySize = measureEntitySizes(state);
@@ -59,7 +61,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
     `;
   }
 
-  if (node) {
+  if (node && !focusedNodeId) {
     const nodeSize = bySize.get(node.id) || defaultEntitySize(node);
     const connectClass =
       draft?.fromNodeId === node.id
@@ -78,14 +80,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
         style="transform: translate(${node.x}px, ${node.y}px); width: ${nodeSize.width}px; height: ${nodeSize.height}px; --selection-anchor-size: ${nodeAnchorSize}px; --selection-resize-size: ${nodeResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px;"
       >
         ${editingNodeId === node.id ? '' : `
-          <div class="node__toolbar selection-controls__toolbar selection-controls__toolbar--node">
-            <button class="node__tool-btn" type="button" data-node-edit-open="${node.id}" data-node-id="${node.id}" aria-label="Edit node" title="Edit Node">
-              <i class="bi bi-pencil-fill"></i>
-            </button>
-            <button class="node__tool-btn node__tool-btn--danger" type="button" data-node-delete="${node.id}" data-node-id="${node.id}" aria-label="Delete node" title="Delete Node">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>
+          ${buildNodeToolbarMarkup(node.id, { toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--node' })}
           ${buildNodeOverlayControls(node.id)}
         `}
       </div>
@@ -93,6 +88,32 @@ export function renderSelectionControls(selectionControlsLayer, state) {
   }
 
   selectionControlsLayer.innerHTML = markup;
+}
+
+export function renderFocusOverlay(focusLayer, state) {
+  if (!focusLayer || typeof focusLayer.innerHTML !== 'string') {
+    return;
+  }
+
+  const focusedNodeId = state.ui.focusedNodeId;
+  const node = focusedNodeId ? state.nodes.find((item) => item.id === focusedNodeId) : null;
+  if (!node) {
+    focusLayer.hidden = true;
+    focusLayer.innerHTML = '';
+    return;
+  }
+
+  const colorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
+  focusLayer.hidden = false;
+  focusLayer.innerHTML = `
+    <div class="focus-overlay__backdrop" aria-hidden="true"></div>
+    <div class="focus-overlay__content">
+      ${buildNodeToolbarMarkup(node.id, { toolbarClass: 'node__toolbar node__toolbar--focus', focusActive: true, includeEdit: false })}
+      <article class="focus-overlay__panel node ${node.kind === 'image' ? 'node--image' : ''}${state.ui.editingNodeId === node.id ? ' is-editing' : ''}" data-node-id="${node.id}"${colorAttr}>
+        ${buildNodeContentMarkup(node, { isEditing: state.ui.editingNodeId === node.id, isFocused: true })}
+      </article>
+    </div>
+  `;
 }
 
 export function renderImportStatus(importStatus, state) {

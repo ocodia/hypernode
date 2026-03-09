@@ -124,11 +124,36 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setFocusedNode(id) {
+    const nextId = id || null;
+    if (nextId && !state.nodes.some((node) => node.id === nextId)) return;
+    if (state.ui.focusedNodeId === nextId) return;
+    if (state.ui.editingFrameId) {
+      finalizeEditingFrameText(state.ui.editingFrameId);
+      state.ui.editingFrameId = null;
+    }
+    state.ui.focusedNodeId = nextId;
+    notify();
+  }
+
+  function clearFocusedNode() {
+    if (!state.ui.focusedNodeId) return;
+    if (state.ui.editingNodeId === state.ui.focusedNodeId) {
+      finalizeEditingNodeText(state.ui.editingNodeId);
+      state.ui.editingNodeId = null;
+    }
+    state.ui.focusedNodeId = null;
+    notify();
+  }
+
   function setEditingFrame(id) {
     const nextId = id || null;
     if (state.ui.editingNodeId && state.ui.editingNodeId !== nextId) {
       finalizeEditingNodeText(state.ui.editingNodeId);
       state.ui.editingNodeId = null;
+    }
+    if (nextId) {
+      state.ui.focusedNodeId = null;
     }
     if (state.ui.editingFrameId && state.ui.editingFrameId !== nextId) {
       finalizeEditingFrameText(state.ui.editingFrameId);
@@ -258,6 +283,12 @@ export function createStore(initialGraph = null) {
         state.ui.editingNodeId = null;
       }
     }
+    if (state.ui.focusedNodeId) {
+      const keepFocused = state.selection?.type === 'node' && state.selection.id === state.ui.focusedNodeId;
+      if (!keepFocused) {
+        state.ui.focusedNodeId = null;
+      }
+    }
     if (state.ui.editingFrameId) {
       const keepEditing = isFrameSelected(state.selection, state.ui.editingFrameId);
       if (!keepEditing) {
@@ -304,6 +335,7 @@ export function createStore(initialGraph = null) {
     }
     state.selection = null;
     state.ui.editingNodeId = null;
+    state.ui.focusedNodeId = null;
     state.ui.editingFrameId = null;
     notify();
   }
@@ -586,6 +618,9 @@ export function createStore(initialGraph = null) {
     if (state.ui.editingNodeId === id) {
       state.ui.editingNodeId = null;
     }
+    if (state.ui.focusedNodeId === id) {
+      state.ui.focusedNodeId = null;
+    }
     notify();
   }
 
@@ -653,6 +688,9 @@ export function createStore(initialGraph = null) {
     state.edges = state.edges.filter((edge) => !selected.has(edge.from) && !selected.has(edge.to));
     if (state.ui.editingNodeId && selected.has(state.ui.editingNodeId)) {
       state.ui.editingNodeId = null;
+    }
+    if (state.ui.focusedNodeId && selected.has(state.ui.focusedNodeId)) {
+      state.ui.focusedNodeId = null;
     }
     state.selection = null;
     notify();
@@ -963,6 +1001,8 @@ export function createStore(initialGraph = null) {
     clearEdgeTwang,
     setEditingNode,
     clearEditingNode,
+    setFocusedNode,
+    clearFocusedNode,
     setEditingFrame,
     clearEditingFrame,
     setPanning,

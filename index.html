@@ -60,6 +60,7 @@
         </svg>
         <div class="selection-controls" id="selection-controls-layer"></div>
       </div>
+      <div id="focus-layer" class="focus-overlay" hidden></div>
       <div id="import-status" class="toast" aria-live="polite" hidden></div>
     </main>
     <dialog id="about-dialog" class="about-dialog">
@@ -88,8 +89,9 @@
           <li><kbd>Ctrl/Cmd + Y</kbd> or <kbd>Ctrl/Cmd + Shift + Z</kbd>: redo.</li>
           <li><kbd>Ctrl/Cmd + S</kbd>: save graph file.</li>
           <li><kbd>Ctrl/Cmd + Enter</kbd>: toggle selected node editor.</li>
+          <li><kbd>Ctrl/Cmd + Alt + Enter</kbd>: toggle Focus mode for selected node.</li>
           <li><kbd>Ctrl/Cmd + Click</kbd>: add node to current selection.</li>
-          <li><kbd>Esc</kbd>: exit edit mode, cancel connect/frame draw, or clear selection.</li>
+          <li><kbd>Esc</kbd>: exit Focus/edit mode, cancel connect/frame draw, or clear selection.</li>
         </ul>
       </article>
     </dialog>

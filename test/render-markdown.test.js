@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { renderDescriptionMarkdown } from '../js/render/markdown.js';
 import { renderFrames } from '../js/render/modules/frames.js';
 import { renderNodes } from '../js/render/modules/nodes.js';
+import { renderFocusOverlay } from '../js/render/modules/ui.js';
 
 test('renderDescriptionMarkdown escapes raw html', () => {
   assert.equal(renderDescriptionMarkdown('<script>alert(1)</script>'), '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
@@ -83,4 +84,49 @@ test('renderers use markdown output in view mode and raw text in edit mode', () 
     ui: { editingFrameId: null, edgeDraft: null, frameDraft: null, frameMembershipPreview: {} },
   });
   assert.match(framesLayer.innerHTML, /<div class="frame__description"><h1>Title<\/h1><p>Visit <a href="https:\/\/example.net\/"/);
+});
+
+test('single selected node renders focus toolbar action', () => {
+  const nodesLayer = { innerHTML: '' };
+
+  renderNodes(nodesLayer, {
+    nodes: [{ id: 'n1', title: 'Node', description: '', kind: 'text', x: 0, y: 0 }],
+    frames: [],
+    edges: [],
+    selection: { type: 'node', id: 'n1' },
+    ui: { editingNodeId: null, edgeDraft: null, nodeMembershipPreview: {} },
+  });
+
+  assert.match(nodesLayer.innerHTML, /data-node-focus-toggle="n1"/);
+});
+
+test('focus overlay renders constrained focused editor with image pane on the media side', () => {
+  const focusLayer = { innerHTML: '', hidden: true };
+
+  renderFocusOverlay(focusLayer, {
+    nodes: [{
+      id: 'n1',
+      title: 'Image Node',
+      description: 'Body copy',
+      kind: 'image',
+      x: 0,
+      y: 0,
+      imageData: 'data:image/png;base64,abc',
+      imageAspectRatio: 1.5,
+    }],
+    frames: [],
+    edges: [],
+    selection: { type: 'node', id: 'n1' },
+    ui: { focusedNodeId: 'n1', editingNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
+  });
+
+  assert.equal(focusLayer.hidden, false);
+  assert.match(focusLayer.innerHTML, /focus-overlay__content/);
+  assert.match(focusLayer.innerHTML, /node__toolbar node__toolbar--focus/);
+  assert.doesNotMatch(focusLayer.innerHTML, /data-node-edit-open="n1"/);
+  assert.match(focusLayer.innerHTML, /focus-overlay__panel node node--image is-editing/);
+  assert.match(focusLayer.innerHTML, /node__content node__content--focus node__content--focus-image/);
+  assert.match(focusLayer.innerHTML, /node__editor-label--description-focus/);
+  assert.match(focusLayer.innerHTML, /node__focus-media/);
+  assert.match(focusLayer.innerHTML, /node__image-pane node__image-pane--focus/);
 });

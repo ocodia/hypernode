@@ -1,4 +1,4 @@
-export function bindNodeInteractions({ nodesLayer, selectionControlsLayer }, handlers) {
+export function bindNodeInteractions({ nodesLayer, selectionControlsLayer, focusLayer }, handlers) {
   nodesLayer.addEventListener('pointerdown', handlers.onNodePointerDown);
   nodesLayer.addEventListener('dblclick', handlers.onNodeDoubleClick);
   nodesLayer.addEventListener('pointermove', handlers.onNodePointerMove);
@@ -11,4 +11,8 @@ export function bindNodeInteractions({ nodesLayer, selectionControlsLayer }, han
 
   selectionControlsLayer?.addEventListener('pointerdown', handlers.onSelectionControlsPointerDown);
   selectionControlsLayer?.addEventListener('click', handlers.onSelectionControlsClick);
+
+  focusLayer?.addEventListener('click', handlers.onNodeClick);
+  focusLayer?.addEventListener('keydown', handlers.onNodeKeyDown);
+  focusLayer?.addEventListener('input', handlers.onNodeInput);
 }

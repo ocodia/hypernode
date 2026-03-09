@@ -1,7 +1,7 @@
 import { renderEdges, renderDraftEdge } from './modules/edges.js';
 import { renderFrames } from './modules/frames.js';
 import { renderNodes } from './modules/nodes.js';
-import { renderGraphMetadata, renderImportStatus, renderSelectionControls } from './modules/ui.js';
+import { renderFocusOverlay, renderGraphMetadata, renderImportStatus, renderSelectionControls } from './modules/ui.js';
 import { applyViewport } from './modules/viewport.js';
 
 export function createRenderer(elements, _store) {
@@ -17,6 +17,7 @@ export function createRenderer(elements, _store) {
     edgesOverlayLayer,
     edgeOverlayGroup,
     selectionControlsLayer,
+    focusLayer,
     importStatus,
     graphTitle,
     selectionMarquee,
@@ -43,6 +44,7 @@ export function createRenderer(elements, _store) {
     renderEdges(edgeElements, state);
     renderDraftEdge(edgeDraftGroup, state);
     renderSelectionControls(selectionControlsLayer, state);
+    renderFocusOverlay(focusLayer, state);
     renderImportStatus(importStatus, state);
     renderGraphMetadata(graphTitle, state);
     canvas.classList.toggle('is-panning', Boolean(state.ui.isPanning));
@@ -55,6 +57,7 @@ export function createRenderer(elements, _store) {
     workspace.classList.toggle('is-connecting', Boolean(state.ui.isConnecting));
     workspace.classList.toggle('is-drawing-frame', Boolean(state.ui.isDrawingFrame));
     workspace.classList.toggle('is-marquee-selecting', Boolean(state.ui.isMarqueeSelecting));
+    workspace.classList.toggle('is-focus-mode', Boolean(state.ui.focusedNodeId));
 
     if (selectionMarquee instanceof HTMLElement) {
       const marquee = state.ui.selectionMarquee;

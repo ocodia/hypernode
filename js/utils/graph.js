@@ -40,6 +40,7 @@ export function emptyGraphState() {
       edgeDraft: null,
       edgeTwangId: null,
       editingNodeId: null,
+      focusedNodeId: null,
       editingFrameId: null,
       isPanning: false,
       isDragging: false,
