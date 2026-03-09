@@ -693,7 +693,22 @@ textarea:focus-visible {
 }
 
 .node__content--focus-image {
-  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(460px, 34rem) minmax(280px, 1fr);
+}
+
+.node--image .node__content--focus {
+  display: grid;
+}
+
+.node__content--focus-image > .node__focus-copy,
+.node__content--focus-image > .node__focus-fields {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.node__content--focus-image > .node__focus-media {
+  grid-column: 2;
+  align-self: start;
 }
 
 .node__meta--focus,
@@ -717,8 +732,16 @@ textarea:focus-visible {
 }
 
 .node__content--focus-image .node__editor--focus {
-  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(460px, 34rem) minmax(280px, 1fr);
   align-items: start;
+}
+
+.node__content--focus-image .node__editor--focus > .node__editor-fields {
+  grid-column: 1;
+}
+
+.node__content--focus-image .node__editor--focus > .node__focus-media {
+  grid-column: 2;
 }
 
 .node__editor-label--focus {
@@ -752,6 +775,9 @@ textarea:focus-visible {
 .node__editor--focus .node__editor-input {
   min-height: 54px;
   flex: 0 0 auto;
+  font-size: clamp(1.55rem, 2vw, 2.1rem);
+  line-height: 1.2;
+  font-weight: 700;
 }
 
 .node__editor-textarea--focus {
@@ -764,28 +790,74 @@ textarea:focus-visible {
 }
 
 .node__title--focus {
-  font-size: clamp(1.6rem, 2vw, 2.2rem);
-  line-height: 1.15;
+  font-size: clamp(1.55rem, 2vw, 2.1rem);
+  line-height: 1.2;
+  font-weight: 700;
 }
 
 .node__description--focus {
   max-width: 70ch;
-  font-size: 1rem;
+  font-size: 1.08rem;
   line-height: 1.65;
+}
+
+.node__focus-fields {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 70ch);
+  height: 100%;
+  min-height: 0;
+}
+
+.node__focus-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.node__focus-field--description {
+  margin-top: 22px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.node__focus-value {
+  padding: 4px 0 0;
+}
+
+.node__focus-value--title {
+  display: flex;
+  align-items: center;
+}
+
+.node__focus-value--description {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
+.node__description--empty {
+  opacity: 0.72;
 }
 
 .node__focus-copy {
   min-width: 0;
+  height: 100%;
 }
 
 .node__focus-media {
   min-width: 0;
-  align-self: stretch;
+  align-self: start;
   display: flex;
+  width: 100%;
 }
 
 .node__image-pane--focus {
+  display: block;
+  flex: 1 1 auto;
   width: 100%;
+  min-width: 0;
+  min-height: 220px;
   max-height: min(72vh, 760px);
   border-radius: 16px;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--node-border) 65%, transparent);
@@ -1106,6 +1178,28 @@ textarea:focus-visible {
   gap: 10px;
 }
 
+.focus-overlay__panel.node--image .node__content--focus {
+  display: grid;
+  gap: 24px;
+}
+
+.focus-overlay__panel.node--image .node__content--focus.node__content--focus-image {
+  grid-template-columns: minmax(460px, 34rem) minmax(280px, 1fr);
+}
+
+.focus-overlay__panel.node--image .node__content--focus > .node__focus-copy,
+.focus-overlay__panel.node--image .node__content--focus > .node__editor,
+.focus-overlay__panel.node--image .node__content--focus > .node__editor-fields,
+.focus-overlay__panel.node--image .node__content--focus > .node__focus-fields {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.focus-overlay__panel.node--image .node__content--focus > .node__focus-media {
+  grid-column: 2;
+  min-width: 0;
+}
+
 .node--image .node__image-pane {
   width: 100%;
   aspect-ratio: var(--node-image-aspect-ratio, 16 / 9);
@@ -1239,6 +1333,26 @@ textarea:focus-visible {
   min-height: 0;
 }
 
+.focus-overlay__panel.node .node__editor--focus {
+  display: grid;
+  gap: 24px;
+  height: 100%;
+  min-height: min(560px, calc(100vh - 180px));
+}
+
+.focus-overlay__panel.node--image .node__content--focus.node__content--focus-image .node__editor--focus {
+  grid-template-columns: minmax(460px, 34rem) minmax(280px, 1fr);
+  align-items: start;
+}
+
+.focus-overlay__panel.node--image .node__content--focus.node__content--focus-image .node__editor--focus > .node__editor-fields {
+  grid-column: 1;
+}
+
+.focus-overlay__panel.node--image .node__content--focus.node__content--focus-image .node__editor--focus > .node__focus-media {
+  grid-column: 2;
+}
+
 .node__editor-label {
   display: flex;
   flex-direction: column;
@@ -1277,7 +1391,7 @@ textarea:focus-visible {
   overflow: auto;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 680px) {
   .focus-overlay {
     padding: 16px;
   }

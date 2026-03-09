@@ -46,6 +46,7 @@ export function bindInteractions(elements, store) {
   let activeLiveEditFrameId = null;
   let editorFocusLock = null;
   let isNodeColorPopoverOpen = false;
+  let lastNodePress = { id: null, at: 0 };
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -763,6 +764,15 @@ export function bindInteractions(elements, store) {
     return openNodeFocus(state.selection.id);
   }
 
+  function consumeNodeDoublePress(nodeId) {
+    const now = performance.now();
+    const isRepeat = lastNodePress.id === nodeId && (now - lastNodePress.at) <= 420;
+    lastNodePress = isRepeat
+      ? { id: null, at: 0 }
+      : { id: nodeId, at: now };
+    return isRepeat;
+  }
+
   function openFrameEditor(frameId) {
     activeLiveEditFrameId = null;
     store.setEditingFrame(frameId);
@@ -1126,7 +1136,6 @@ export function bindInteractions(elements, store) {
 
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl || event.button !== 0) return;
-
     endDragSession();
     endFrameDragSession();
     endMarqueeSession();
@@ -1165,6 +1174,7 @@ export function bindInteractions(elements, store) {
 
     dragSession = {
       pointerId: event.pointerId,
+      nodeId,
       startX: event.clientX,
       startY: event.clientY,
       nodes: dragNodes.map((node) => ({
@@ -1184,8 +1194,7 @@ export function bindInteractions(elements, store) {
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl) return;
     const nodeId = nodeEl.dataset.nodeId;
-    store.setSelection({ type: 'node', id: nodeId });
-    openNodeEditor(nodeId);
+    openNodeFocus(nodeId);
     event.stopPropagation();
     event.preventDefault();
   }
@@ -1255,11 +1264,16 @@ export function bindInteractions(elements, store) {
       return;
     }
     if (!dragSession || event.pointerId !== dragSession.pointerId) return;
+    const sessionNodeId = dragSession.nodeId;
+    const wasMoved = dragSession.moved;
     if (dragSession.moved) {
       store.recomputeNodeFrameMembership(dragSession.nodes.map((entry) => entry.id));
     }
     store.clearFrameMembershipPreview();
     endDragSession(event.pointerId);
+    if (!wasMoved && sessionNodeId && consumeNodeDoublePress(sessionNodeId)) {
+      openNodeFocus(sessionNodeId);
+    }
   }
 
   function onNodePointerCancel(event) {
@@ -1300,7 +1314,11 @@ export function bindInteractions(elements, store) {
     if (openEl) {
       const nodeId = openEl.dataset.nodeEditOpen;
       store.setSelection({ type: 'node', id: nodeId });
-      openNodeEditor(nodeId);
+      if (store.getState().ui.focusedNodeId === nodeId && store.getState().ui.editingNodeId === nodeId) {
+        closeNodeEditor(nodeId);
+      } else {
+        openNodeEditor(nodeId);
+      }
       event.stopPropagation();
       return;
     }
@@ -1333,6 +1351,12 @@ export function bindInteractions(elements, store) {
 
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl) return;
+    if (event.detail >= 2) {
+      openNodeFocus(nodeEl.dataset.nodeId);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
     if (isAdditiveModifier(event)) {
       store.toggleNodeInSelection(nodeEl.dataset.nodeId);
       event.stopPropagation();
@@ -1452,11 +1476,24 @@ export function bindInteractions(elements, store) {
   }
 
   function onSelectionControlsClick(event) {
+    const nodeGroupEl = event.target.closest('.selection-controls__group--node[data-node-id]');
+    const clickedToolbarControl = event.target.closest('[data-node-edit-open], [data-node-delete], [data-node-focus-toggle], [data-node-resize], [data-node-anchor]');
+    if (nodeGroupEl && !clickedToolbarControl && event.detail >= 2) {
+      openNodeFocus(nodeGroupEl.dataset.nodeId);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
     const nodeOpenEl = event.target.closest('[data-node-edit-open]');
     if (nodeOpenEl) {
       const nodeId = nodeOpenEl.dataset.nodeEditOpen;
       store.setSelection({ type: 'node', id: nodeId });
-      openNodeEditor(nodeId);
+      if (store.getState().ui.focusedNodeId === nodeId && store.getState().ui.editingNodeId === nodeId) {
+        closeNodeEditor(nodeId);
+      } else {
+        openNodeEditor(nodeId);
+      }
       event.stopPropagation();
       return;
     }
@@ -1501,6 +1538,16 @@ export function bindInteractions(elements, store) {
     }
   }
 
+  function onSelectionControlsDoubleClick(event) {
+    const nodeGroupEl = event.target.closest('.selection-controls__group--node[data-node-id]');
+    if (!nodeGroupEl) return;
+    const nodeId = nodeGroupEl.dataset.nodeId;
+    if (!nodeId) return;
+    openNodeFocus(nodeId);
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
   bindNodeInteractions({ nodesLayer, selectionControlsLayer, focusLayer }, {
     onNodePointerDown,
     onNodeDoubleClick,
@@ -1513,6 +1560,7 @@ export function bindInteractions(elements, store) {
     onNodeInput,
     onSelectionControlsPointerDown,
     onSelectionControlsClick,
+    onSelectionControlsDoubleClick,
   });
 
   function onFramePointerDown(event) {

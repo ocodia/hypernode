@@ -13,17 +13,21 @@ import { renderDescriptionMarkdown } from '../markdown.js';
 
 export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const includeEdit = options.includeEdit !== false;
+  const editingActive = Boolean(options.editingActive);
   const includeFocus = options.includeFocus !== false;
   const focusActive = Boolean(options.focusActive);
   const toolbarClass = options.toolbarClass || 'node__toolbar';
   const focusLabel = focusActive ? 'Exit focus mode' : 'Focus node';
   const focusTitle = focusActive ? 'Exit Focus' : 'Focus';
+  const editLabel = editingActive ? 'Switch to reading mode' : 'Edit node';
+  const editTitle = editingActive ? 'Reading Mode' : 'Edit Node';
+  const editIcon = editingActive ? 'bi-eye-fill' : 'bi-pencil-fill';
 
   return `
     <div class="${toolbarClass}">
       ${includeEdit ? `
-        <button class="node__tool-btn" type="button" data-node-edit-open="${nodeId}" aria-label="Edit node" title="Edit Node">
-          <i class="bi bi-pencil-fill"></i>
+        <button class="node__tool-btn" type="button" data-node-edit-open="${nodeId}" aria-label="${editLabel}" title="${editTitle}" aria-pressed="${editingActive ? 'true' : 'false'}">
+          <i class="bi ${editIcon}"></i>
         </button>
       ` : ''}
       ${includeFocus ? `
@@ -72,12 +76,29 @@ export function buildNodeContentMarkup(node, options = {}) {
       : `
       ${focused && imageNode ? '<div class="node__focus-copy">' : ''}
       ${!focused && imageNode ? imageMarkup : ''}
-      <div class="${metaClass}">
-        <div class="node__head">
-          <h3 class="node__title${focused ? ' node__title--focus' : ''}">${escapeHTML(node.title)}</h3>
-        </div>
-        ${node.description ? `<div class="node__description${focused ? ' node__description--focus' : ''}">${renderDescriptionMarkdown(node.description)}</div>` : ''}
-      </div>
+      ${focused
+        ? `
+          <div class="node__focus-fields">
+            <section class="node__focus-field">
+              <div class="node__focus-value node__focus-value--title">
+                <h3 class="node__title node__title--focus">${escapeHTML(node.title)}</h3>
+              </div>
+            </section>
+            <section class="node__focus-field node__focus-field--description">
+              <div class="node__focus-value node__focus-value--description">
+                ${node.description ? `<div class="node__description node__description--focus">${renderDescriptionMarkdown(node.description)}</div>` : '<div class="node__description node__description--focus node__description--empty">No description</div>'}
+              </div>
+            </section>
+          </div>
+        `
+        : `
+          <div class="${metaClass}">
+            <div class="node__head">
+              <h3 class="node__title">${escapeHTML(node.title)}</h3>
+            </div>
+            ${node.description ? `<div class="node__description">${renderDescriptionMarkdown(node.description)}</div>` : ''}
+          </div>
+        `}
       ${focused && imageNode ? '</div>' : ''}
       ${focused && imageNode ? `<div class="node__focus-media">${imageMarkup}</div>` : ''}
     `;

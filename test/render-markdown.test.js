@@ -123,10 +123,35 @@ test('focus overlay renders constrained focused editor with image pane on the me
   assert.equal(focusLayer.hidden, false);
   assert.match(focusLayer.innerHTML, /focus-overlay__content/);
   assert.match(focusLayer.innerHTML, /node__toolbar node__toolbar--focus/);
-  assert.doesNotMatch(focusLayer.innerHTML, /data-node-edit-open="n1"/);
+  assert.match(focusLayer.innerHTML, /data-node-edit-open="n1"/);
+  assert.match(focusLayer.innerHTML, /bi-eye-fill/);
   assert.match(focusLayer.innerHTML, /focus-overlay__panel node node--image is-editing/);
   assert.match(focusLayer.innerHTML, /node__content node__content--focus node__content--focus-image/);
   assert.match(focusLayer.innerHTML, /node__editor-label--description-focus/);
   assert.match(focusLayer.innerHTML, /node__focus-media/);
   assert.match(focusLayer.innerHTML, /node__image-pane node__image-pane--focus/);
+});
+
+test('focus overlay reading mode uses enlarged labeled fields', () => {
+  const focusLayer = { innerHTML: '', hidden: true };
+
+  renderFocusOverlay(focusLayer, {
+    nodes: [{
+      id: 'n1',
+      title: 'Readable Node',
+      description: 'Hello **world**',
+      kind: 'text',
+      x: 0,
+      y: 0,
+    }],
+    frames: [],
+    edges: [],
+    selection: { type: 'node', id: 'n1' },
+    ui: { focusedNodeId: 'n1', editingNodeId: null, edgeDraft: null, nodeMembershipPreview: {} },
+  });
+
+  assert.match(focusLayer.innerHTML, /node__focus-fields/);
+  assert.doesNotMatch(focusLayer.innerHTML, /node__focus-label/);
+  assert.match(focusLayer.innerHTML, /node__focus-value--description/);
+  assert.match(focusLayer.innerHTML, /bi-pencil-fill/);
 });
