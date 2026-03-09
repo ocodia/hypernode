@@ -62,7 +62,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
 - `Ctrl/Cmd + S`: save graph file
-- `Ctrl/Cmd + Enter`: toggle selected node editor
+- `Ctrl/Cmd + Enter`: toggle selected node/frame editor
 - `Ctrl/Cmd + Click`: add a node to current node selection
 - `Escape`: exit node edit mode, cancel edge draft mode, or clear selection
 - `Escape`: also exits frame draw mode and frame edit mode

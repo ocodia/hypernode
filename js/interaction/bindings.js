@@ -688,16 +688,30 @@ export function bindInteractions(elements, store) {
     return best?.nodeId || null;
   }
 
-  function toggleSelectedNodeEditor() {
+  function toggleSelectedEditor() {
     const state = store.getState();
     const selection = state.selection;
-    if (!selection || selection.type !== 'node') return false;
-    if (state.ui.editingNodeId === selection.id) {
-      closeNodeEditor(selection.id);
+    if (!selection) return false;
+
+    if (selection.type === 'node') {
+      if (state.ui.editingNodeId === selection.id) {
+        closeNodeEditor(selection.id);
+        return true;
+      }
+      openNodeEditor(selection.id);
       return true;
     }
-    openNodeEditor(selection.id);
-    return true;
+
+    if (selection.type === 'frame') {
+      if (state.ui.editingFrameId === selection.id) {
+        closeFrameEditor(selection.id);
+        return true;
+      }
+      openFrameEditor(selection.id);
+      return true;
+    }
+
+    return false;
   }
 
   function openNodeEditor(nodeId, options = {}) {
@@ -2059,7 +2073,7 @@ export function bindInteractions(elements, store) {
 
     if (ctrlOrCmd && !event.shiftKey && event.key === 'Enter') {
       event.preventDefault();
-      toggleSelectedNodeEditor();
+      toggleSelectedEditor();
       return;
     }
 
@@ -2851,4 +2865,3 @@ function updateArrowheadSizeLabel(labelEl, step) {
   const percent = level === 1 ? 100 : (100 + ((level - 1) * 20));
   labelEl.textContent = `Level ${level} (${percent}%)`;
 }
-
