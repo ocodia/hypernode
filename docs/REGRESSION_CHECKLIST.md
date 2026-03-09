@@ -41,7 +41,9 @@ Use this checklist before shipping interaction changes.
 - [ ] Verify frame mini toolbar appears above frame bounds (not inside frame body).
 - [ ] Resize frame from each corner and confirm frame bounds update with zoom-aware pointer alignment.
 - [ ] While resizing a frame smaller, verify previously embedded out-of-bounds nodes get remove-preview highlight.
+- [ ] While resizing a frame larger, verify newly covered nodes get add-preview highlight.
 - [ ] On frame resize release, verify out-of-bounds member nodes are automatically ungrouped.
+- [ ] On frame resize release, verify newly covered nodes are automatically grouped into the frame.
 - [ ] In frame edit mode, set border width and border style and verify immediate visual update.
 - [ ] Drag nodes into a frame and verify they become embedded on release.
 - [ ] While dragging into a frame, verify add-preview highlight appears before release.

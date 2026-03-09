@@ -201,26 +201,30 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
-  function setNodeMembershipPreview(nodeIds) {
-    const normalized = [];
-    const seen = new Set();
-    for (const id of Array.isArray(nodeIds) ? nodeIds : []) {
-      if (typeof id !== 'string' || seen.has(id)) continue;
-      seen.add(id);
-      normalized.push(id);
+  function setNodeMembershipPreview(previewByNodeId) {
+    const nextPreview = {};
+    if (previewByNodeId && typeof previewByNodeId === 'object') {
+      for (const [nodeId, mode] of Object.entries(previewByNodeId)) {
+        if (typeof nodeId !== 'string') continue;
+        if (mode !== 'add' && mode !== 'remove') continue;
+        nextPreview[nodeId] = mode;
+      }
     }
-    const previous = Array.isArray(state.ui.nodeMembershipPreview) ? state.ui.nodeMembershipPreview : [];
-    if (previous.length === normalized.length && previous.every((id, index) => id === normalized[index])) {
+
+    const previous = state.ui.nodeMembershipPreview || {};
+    const prevKeys = Object.keys(previous);
+    const nextKeys = Object.keys(nextPreview);
+    if (prevKeys.length === nextKeys.length && prevKeys.every((key) => previous[key] === nextPreview[key])) {
       return;
     }
-    state.ui.nodeMembershipPreview = normalized;
+    state.ui.nodeMembershipPreview = nextPreview;
     notify();
   }
 
   function clearNodeMembershipPreview() {
-    const previous = Array.isArray(state.ui.nodeMembershipPreview) ? state.ui.nodeMembershipPreview : [];
-    if (!previous.length) return;
-    state.ui.nodeMembershipPreview = [];
+    const previous = state.ui.nodeMembershipPreview || {};
+    if (!Object.keys(previous).length) return;
+    state.ui.nodeMembershipPreview = {};
     notify();
   }
 
@@ -822,7 +826,7 @@ export function createStore(initialGraph = null) {
     state.ui.isDrawingFrame = false;
     state.ui.frameDraft = null;
     state.ui.frameMembershipPreview = {};
-    state.ui.nodeMembershipPreview = [];
+    state.ui.nodeMembershipPreview = {};
     state.ui.isMarqueeSelecting = false;
     state.ui.selectionMarquee = null;
     notify();
@@ -920,7 +924,7 @@ export function createStore(initialGraph = null) {
     state.ui.isDrawingFrame = false;
     state.ui.frameDraft = null;
     state.ui.frameMembershipPreview = {};
-    state.ui.nodeMembershipPreview = [];
+    state.ui.nodeMembershipPreview = {};
     state.ui.isMarqueeSelecting = false;
     state.ui.selectionMarquee = null;
   }

@@ -883,6 +883,13 @@ textarea:focus-visible {
     var(--node-shadow);
 }
 
+.node.is-frame-membership-add-preview {
+  border-color: #2f855a;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, #2f855a 24%, transparent),
+    var(--node-shadow);
+}
+
 .node__title {
   margin: 0;
   font-size: 0.95rem;

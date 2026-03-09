@@ -776,12 +776,23 @@ export function bindInteractions(elements, store) {
   }
 
   function updateFrameResizeMembershipPreview(frameId, nextRect, state) {
-    const removeNodeIds = findMemberNodesOutsideFrameRect(frameId, nextRect, state);
-    if (removeNodeIds.length) {
-      store.setFrameMembershipPreview({ [frameId]: 'remove' });
-      store.setNodeMembershipPreview(removeNodeIds);
+    const { addNodeIds, removeNodeIds } = getFrameResizeMembershipDelta(frameId, nextRect, state);
+    const nodePreview = {};
+    for (const id of addNodeIds) {
+      nodePreview[id] = 'add';
+    }
+    for (const id of removeNodeIds) {
+      if (!(id in nodePreview)) {
+        nodePreview[id] = 'remove';
+      }
+    }
+
+    if (Object.keys(nodePreview).length) {
+      store.setNodeMembershipPreview(nodePreview);
+      store.setFrameMembershipPreview({ [frameId]: addNodeIds.length ? 'add' : 'remove' });
       return;
     }
+
     store.clearFrameMembershipPreview();
     store.clearNodeMembershipPreview();
   }
@@ -790,9 +801,9 @@ export function bindInteractions(elements, store) {
     const frame = getFrame(frameId, state);
     if (!frame) return;
     const frameRect = getFrameRect(frame);
-    const removeNodeIds = findMemberNodesOutsideFrameRect(frameId, frameRect, state);
-    if (!removeNodeIds.length) return;
-    store.clearNodesFrameMembership(removeNodeIds, { skipHistory: true });
+    const candidates = findFrameResizeCandidateNodeIds(frameId, frameRect, state);
+    if (!candidates.length) return;
+    store.recomputeNodeFrameMembership(candidates, { skipHistory: true });
   }
 
   function setNodeColorPopoverOpen(nextOpen, buttonEl, popoverEl) {
@@ -2246,21 +2257,57 @@ function findBestFrameIdForNodeFromRects(node, frames) {
   return best?.frameId || null;
 }
 
-function findMemberNodesOutsideFrameRect(frameId, frameRect, state) {
-  const removeIds = [];
-  for (const node of state.nodes) {
-    if (node.frameId !== frameId) continue;
-    const overlap = getNodeFrameOverlapArea(node, {
+function getFrameResizeMembershipDelta(frameId, frameRect, state) {
+  const addNodeIds = [];
+  const removeNodeIds = [];
+  const candidateIds = findFrameResizeCandidateNodeIds(frameId, frameRect, state);
+  if (!candidateIds.length) {
+    return { addNodeIds, removeNodeIds };
+  }
+
+  const simulatedFrames = state.frames.map((frame) => {
+    if (frame.id !== frameId) return frame;
+    return {
+      ...frame,
       x: frameRect.left,
       y: frameRect.top,
       width: frameRect.right - frameRect.left,
       height: frameRect.bottom - frameRect.top,
-    });
-    if (overlap <= 0) {
-      removeIds.push(node.id);
+    };
+  });
+
+  for (const nodeId of candidateIds) {
+    const node = getNode(nodeId, state);
+    if (!node) continue;
+    const bestFrameId = findBestFrameIdForNodeFromRects(node, simulatedFrames);
+    const currentFrameId = node.frameId || null;
+    if (bestFrameId === frameId && currentFrameId !== frameId) {
+      addNodeIds.push(node.id);
+      continue;
+    }
+    if (currentFrameId === frameId && bestFrameId !== frameId) {
+      removeNodeIds.push(node.id);
     }
   }
-  return removeIds;
+
+  return { addNodeIds, removeNodeIds };
+}
+
+function findFrameResizeCandidateNodeIds(frameId, frameRect, state) {
+  const ids = [];
+  for (const node of state.nodes) {
+    const currentlyInFrame = node.frameId === frameId;
+    const overlapsResizedFrame = getNodeFrameOverlapArea(node, {
+      x: frameRect.left,
+      y: frameRect.top,
+      width: frameRect.right - frameRect.left,
+      height: frameRect.bottom - frameRect.top,
+    }) > 0;
+    if (currentlyInFrame || overlapsResizedFrame) {
+      ids.push(node.id);
+    }
+  }
+  return ids;
 }
 
 function buildDirectionalScore(originCenter, candidateNode, key) {

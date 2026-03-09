@@ -17,6 +17,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Frame inline editor includes border width (`1-8`) and border style (`solid`, `dashed`, `dotted`).
 - Drag nodes into Frames to embed them; embedded nodes move with their Frame and can be dragged out to ungroup.
 - While dragging nodes, frames preview add/remove membership with distinct highlight states.
+- While resizing frames, nodes preview add/remove membership changes and grouping updates on resize release.
 - Create and reconnect edges to Frames via frame anchors.
 - Add image nodes from the toolbar using local image files (stored as base64 data URLs in graph JSON).
 - Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.

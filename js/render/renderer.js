@@ -141,7 +141,7 @@ export function createRenderer(elements, store) {
 
   function renderNodes(state) {
     const selectedNodeIds = new Set(getSelectedNodeIds(state.selection));
-    const previewNodeIds = new Set(Array.isArray(state.ui.nodeMembershipPreview) ? state.ui.nodeMembershipPreview : []);
+    const previewNodeMap = state.ui.nodeMembershipPreview || {};
     const singleSelectedNodeId = getSingleSelectedNodeId(state.selection);
     const editingNodeId = state.ui.editingNodeId;
     const draft = state.ui.edgeDraft;
@@ -152,7 +152,11 @@ export function createRenderer(elements, store) {
         const singleSelectedClass = singleSelectedNodeId === node.id ? "is-single-selected" : "";
         const editingClass = editingNodeId === node.id ? "is-editing" : "";
         const imageClass = imageNode ? "node--image" : "";
-        const membershipPreviewClass = previewNodeIds.has(node.id) ? "is-frame-membership-remove-preview" : "";
+        const membershipPreviewClass = previewNodeMap[node.id] === 'add'
+          ? "is-frame-membership-add-preview"
+          : previewNodeMap[node.id] === 'remove'
+            ? "is-frame-membership-remove-preview"
+            : "";
         const connectClass =
           draft?.fromNodeId === node.id
             ? "is-connect-source"
