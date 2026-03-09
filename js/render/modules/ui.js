@@ -136,9 +136,15 @@ export function renderImportStatus(importStatus, state) {
   importStatus.classList.toggle('is-visible', Boolean(message));
 }
 
-export function renderGraphMetadata(graphTitle, state) {
-  if (graphTitle) {
+export function renderHypernodeMetadata(graphTitle, viewportCoordinates, canvas, state) {
+  if (graphTitle && 'textContent' in graphTitle) {
     graphTitle.textContent = state.name;
+  }
+  if (viewportCoordinates && 'textContent' in viewportCoordinates && canvas && typeof canvas.getBoundingClientRect === 'function') {
+    const rect = canvas.getBoundingClientRect();
+    const centerX = Math.round(((rect.width / 2) - state.viewport.panX) / state.viewport.zoom);
+    const centerY = Math.round(((rect.height / 2) - state.viewport.panY) / state.viewport.zoom);
+    viewportCoordinates.textContent = `x: ${centerX}  y: ${centerY}`;
   }
   document.title = `${state.name} - hypernode`;
 }

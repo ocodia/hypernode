@@ -1,4 +1,4 @@
-# Hypernode - User Stories
+# hypernode - User Stories
 
 ## Purpose
 
@@ -8,7 +8,7 @@ This document captures version-1 user behavior slices with clear acceptance crit
 
 ### US-1: Pan the canvas
 
-As a user, I want to pan so I can navigate larger graphs.
+As a user, I want to pan so I can navigate larger hypernodes.
 
 Acceptance criteria:
 
@@ -33,7 +33,7 @@ As a user, I want a reset action to return to a known viewport.
 Acceptance criteria:
 
 - Reset restores default pan/zoom.
-- Graph data remains unchanged.
+- Hypernode data remains unchanged.
 
 ## Epic 2 - Nodes
 
@@ -43,9 +43,10 @@ As a user, I want to create nodes fast from canvas or toolbar.
 
 Acceptance criteria:
 
-- Double-click canvas creates a node at pointer graph position.
-- Toolbar action creates a node at default graph position.
+- Double-click canvas creates a node at pointer hypernode position.
+- Toolbar action creates a node at the default hypernode position.
 - New node is immediately visible and selected.
+- A fresh hypernode starts with one starter node already selected, in Zen edit mode, with the title focused.
 
 ### US-5: Drag nodes
 
@@ -130,42 +131,42 @@ Acceptance criteria:
 
 ## Epic 4 - Persistence and Files
 
-### US-11: Autosave graph
+### US-11: Autosave hypernode
 
 As a user, I want work saved automatically.
 
 Acceptance criteria:
 
-- Graph changes autosave locally.
+- Hypernode changes autosave locally.
 - Autosave does not require internet.
 
-### US-12: Restore graph on reopen
+### US-12: Restore hypernode on reopen
 
 As a user, I want previous work restored when I return.
 
 Acceptance criteria:
 
-- Startup loads valid saved graph.
-- Invalid/corrupted saved data falls back to empty graph without crash.
+- Startup loads a valid saved hypernode.
+- Invalid or corrupted saved data falls back to a fresh hypernode without crashing.
 
-### US-13: Export graph JSON
+### US-13: Export hypernode JSON
 
-As a user, I want to back up/share graph data.
+As a user, I want to back up or share hypernode data.
 
 Acceptance criteria:
 
 - Export action downloads valid JSON with nodes and edges.
 - Export occurs fully client-side.
 
-### US-14: Import graph JSON safely
+### US-14: Import hypernode JSON safely
 
-As a user, I want to restore/import prior graph files.
+As a user, I want to restore or import prior hypernode files.
 
 Acceptance criteria:
 
 - Import validates payload before apply.
-- Valid import replaces current graph.
-- Invalid import preserves current graph.
+- Valid import replaces the current hypernode.
+- Invalid import preserves the current hypernode.
 - User receives visible success/failure feedback.
 
 ## Epic 5 - Productivity and Safety
@@ -327,29 +328,29 @@ Acceptance criteria:
 
 ### US-29: Edit graph settings from a dedicated panel
 
-As a user, I want graph-wide controls in one place so I can adjust presentation and edge behavior without editing files.
+As a user, I want hypernode-wide controls in one place so I can adjust presentation and edge behavior without editing files.
 
 Acceptance criteria:
 
-- Settings dialog exposes graph name, background style, anchors mode, arrowhead visibility, and arrowhead size.
-- Changing a setting updates the current graph immediately.
-- Graph name updates the toolbar title and browser tab title.
+- Settings dialog exposes hypernode name, background style, anchors mode, arrowhead visibility, and arrowhead size.
+- Changing a setting updates the current hypernode immediately.
+- Hypernode name updates the metadata chip and browser tab title.
 - Settings remain available without leaving the canvas workflow.
 
 ### US-30: Persist settings through autosave and file round-trips
 
-As a user, I want graph settings to stay with the document so the graph reopens the way I left it.
+As a user, I want hypernode settings to stay with the document so the hypernode reopens the way I left it.
 
 Acceptance criteria:
 
-- Autosave persists graph settings with the graph payload.
-- Opening a valid graph JSON restores persisted settings.
-- Saving a graph JSON writes the current settings into the file.
-- Invalid settings payloads are rejected before replacing the current graph.
+- Autosave persists hypernode settings with the hypernode payload.
+- Opening a valid hypernode JSON file restores persisted settings.
+- Saving a hypernode JSON file writes the current settings into the file.
+- Invalid settings payloads are rejected before replacing the current hypernode.
 
 ### US-31: Navigate the graph with directional shortcuts
 
-As a user, I want keyboard navigation across connected nodes so I can inspect a graph without relying on pointer travel.
+As a user, I want keyboard navigation across connected nodes so I can inspect a hypernode without relying on pointer travel.
 
 Acceptance criteria:
 

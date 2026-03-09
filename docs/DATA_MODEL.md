@@ -1,8 +1,8 @@
-# Hypernode - Data Model
+# hypernode - Data Model
 
 ## Purpose
 
-This document defines the canonical graph payload persisted to browser storage and written to graph JSON files.
+This document defines the canonical hypernode payload persisted to browser storage and written to hypernode JSON files.
 
 The same top-level shape is used for:
 
@@ -10,13 +10,13 @@ The same top-level shape is used for:
 - import validation
 - export serialization
 
-Theme preference is not part of the graph payload. It is stored separately in browser storage under its own key.
+Theme preference is not part of the hypernode payload. It is stored separately in browser storage under its own key.
 
-## Canonical Graph Payload
+## Canonical Hypernode Payload
 
 ```json
 {
-  "name": "Untitled Graph",
+  "name": "Untitled hypernode",
   "settings": {
     "backgroundStyle": "dots",
     "anchorsMode": "auto",
@@ -62,7 +62,7 @@ Rules:
 
 Fallback behavior:
 
-- invalid or missing settings values are sanitized back to graph defaults when loaded into app state
+- invalid or missing settings values are sanitized back to hypernode defaults when loaded into app state
 - payload validation rejects invalid setting enum values and invalid color keys before import/restore succeeds
 
 ## Nodes
@@ -195,7 +195,7 @@ Payload validation rejects graphs when any of the following are true:
 
 ## Persistence Boundaries
 
-- Graph autosave is stored under the graph storage key as `{ name, settings, nodes, frames, edges }`
-- Graph export writes the same shape as formatted JSON
-- Graph import accepts only payloads that pass validation for the same shape
-- Theme preference is persisted separately from graph data and is not included in exported files
+- Hypernode autosave is stored under the hypernode storage key as `{ name, settings, nodes, frames, edges }`
+- Hypernode export writes the same shape as formatted JSON
+- Hypernode import accepts only payloads that pass validation for the same shape
+- Theme preference is persisted separately from hypernode data and is not included in exported files

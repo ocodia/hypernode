@@ -19,6 +19,7 @@ const elements = {
   selectionMarquee: document.getElementById('selection-marquee'),
   importStatus: document.getElementById('import-status'),
   graphTitle: document.getElementById('graph-title'),
+  viewportCoordinates: document.getElementById('viewport-coordinates'),
 };
 
 const initialGraph = loadGraphFromStorage();
@@ -41,7 +42,7 @@ store.subscribe((state) => {
   }, 120);
 });
 
-bindInteractions(elements, store);
+bindInteractions(elements, store, { shouldCreateStarter: !initialGraph });
 renderer.render(store.getState());
 registerServiceWorker();
 

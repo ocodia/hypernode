@@ -1,11 +1,12 @@
 # hypernode
 
-hypernode is a lightweight browser-based node graph editor for fast visual thinking.
+hypernode is a lightweight browser-based editor for building connected thinking spaces fast.
 
-It runs fully client-side with no backend and no account system. Graph data autosaves in `localStorage`, and can be opened/saved as JSON files.
+It runs fully client-side with no backend and no account system. Hypernode data autosaves in `localStorage`, and can be opened or saved as hypernode files backed by JSON.
 
 ## Current Features
 
+- Fresh hypernodes start with a starter node already open in Zen edit mode, with the title focused and seeded to the current date.
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
 - Edit node title/description inline from the selected-node mini toolbar, with description display supporting basic markdown (headers, paragraphs, lists, links, emphasis, inline code).
 - Color selected node backgrounds from a toolbar palette (10 curated colors + reset) with legible text and complementary selected highlights in light/dark themes.
@@ -21,7 +22,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - While dragging nodes, frames preview add/remove membership with distinct highlight states.
 - While resizing frames, nodes preview add/remove membership changes and grouping updates on resize release.
 - Create and reconnect edges to Frames via frame anchors.
-- Add image nodes from the toolbar or by dragging local image files onto the canvas (stored as base64 data URLs in graph JSON).
+- Add image nodes from the toolbar or by dragging local image files onto the canvas (stored as base64 data URLs in the hypernode JSON payload).
 - Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.
 - Single selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
 - Single selected nodes also expose a `Focus` action for full-screen zen editing; image nodes place the image on the right in Focus mode, keep text width readable, and provide a drop zone to replace the current image.
@@ -36,23 +37,23 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Zoom with mouse wheel/trackpad (bounded: `0.35` to `2.5`).
 - Reset view to default pan/zoom.
 - Undo/redo via toolbar and keyboard shortcuts.
-- Auto-save graph to browser storage.
-- Open/save graph JSON files with validation and status toast feedback.
-- Start a new graph from the toolbar (with discard confirmation when existing graph data is present).
+- Auto-save hypernodes to browser storage.
+- Open/save hypernode JSON files with validation and status toast feedback.
+- Start a new hypernode from the toolbar (with discard confirmation when existing hypernode data is present).
 - Settings menu for:
-  - graph background style (`dots` or `graph paper`)
+  - hypernode background style (`dots` or `graph paper`)
   - anchors mode (`auto-anchor` or `exact anchor`)
   - arrowheads visibility (`show` or `hide`)
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
-  - graph name
+  - hypernode name
 - Node color tool also sets the default color for newly created nodes.
 - Node color tool also applies to selected Frames (flat palette style) and still sets the default color for newly created nodes.
-- Graph name shown in toolbar title and browser tab title.
-- First-time Save suggests a filename based on the graph name.
+- Hypernode name is shown in the bottom-left metadata chip and browser tab title, alongside live canvas coordinates.
+- First-time Save suggests a filename based on the hypernode name.
 - Open/save toolbar actions use the File System Access API and are disabled in browsers that do not support it.
 - Installable PWA with offline app-shell caching.
 - Interaction-state cursor feedback for drag/connect workflows.
-- About dialog with usage instructions and keyboard shortcuts.
+- About dialog with a toggleable guide wizard, keyboard shortcuts, and a GitHub link.
 - Dark mode toggle with persisted theme preference.
 
 ## Keyboard Shortcuts
@@ -63,7 +64,7 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - `Ctrl/Cmd + Arrow` (`Up`/`Down`/`Left`/`Right`): follow connected node in that direction, otherwise nearest
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
-- `Ctrl/Cmd + S`: save graph file
+- `Ctrl/Cmd + S`: save hypernode file
 - `Ctrl/Cmd + Enter`: toggle selected node/frame editor
 - `Ctrl/Cmd + Alt + Enter`: toggle Focus mode for the selected node
 - `Ctrl/Cmd + Click`: add a node to current node selection
@@ -118,7 +119,7 @@ Then open the URL shown by your server (commonly `http://localhost:3000` or `htt
 
 ## Version 1 Scope
 
-Version 1 includes the core graph editor loop:
+Version 1 includes the core hypernode editor loop:
 
 - node create/edit/move/delete
 - edge create/reconnect/delete
@@ -126,7 +127,7 @@ Version 1 includes the core graph editor loop:
 - selection and inline controls
 - undo/redo
 - local persistence
-- JSON file open/save
+- hypernode JSON file open/save
 
 ## Out of Scope (v1)
 

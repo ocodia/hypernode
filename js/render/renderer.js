@@ -1,7 +1,7 @@
 import { renderEdges, renderDraftEdge } from './modules/edges.js';
 import { renderFrames } from './modules/frames.js';
 import { renderNodes } from './modules/nodes.js';
-import { renderFocusOverlay, renderGraphMetadata, renderImportStatus, renderSelectionControls } from './modules/ui.js';
+import { renderFocusOverlay, renderHypernodeMetadata, renderImportStatus, renderSelectionControls } from './modules/ui.js';
 import { applyViewport } from './modules/viewport.js';
 
 export function createRenderer(elements, _store) {
@@ -20,6 +20,7 @@ export function createRenderer(elements, _store) {
     focusLayer,
     importStatus,
     graphTitle,
+    viewportCoordinates,
     selectionMarquee,
   } = elements;
 
@@ -46,7 +47,7 @@ export function createRenderer(elements, _store) {
     renderSelectionControls(selectionControlsLayer, state);
     renderFocusOverlay(focusLayer, state);
     renderImportStatus(importStatus, state);
-    renderGraphMetadata(graphTitle, state);
+    renderHypernodeMetadata(graphTitle, viewportCoordinates, canvas, state);
     canvas.classList.toggle('is-panning', Boolean(state.ui.isPanning));
     canvas.classList.toggle('is-dragging', Boolean(state.ui.isDragging));
     canvas.classList.toggle('is-resizing', Boolean(state.ui.isResizing));

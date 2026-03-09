@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { renderDescriptionMarkdown } from '../js/render/markdown.js';
 import { renderFrames } from '../js/render/modules/frames.js';
 import { renderNodes } from '../js/render/modules/nodes.js';
-import { renderFocusOverlay } from '../js/render/modules/ui.js';
+import { renderFocusOverlay, renderHypernodeMetadata } from '../js/render/modules/ui.js';
 
 test('renderDescriptionMarkdown escapes raw html', () => {
   assert.equal(renderDescriptionMarkdown('<script>alert(1)</script>'), '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
@@ -162,4 +162,34 @@ test('focus overlay reading mode uses enlarged labeled fields', () => {
   assert.match(focusLayer.innerHTML, /bi-pencil-fill/);
   assert.match(focusLayer.innerHTML, /Edit/);
   assert.match(focusLayer.innerHTML, /Ctrl\/Cmd\+Enter/);
+});
+
+test('renderHypernodeMetadata updates name, viewport center coordinates, and document title', () => {
+  const graphTitle = { textContent: '' };
+  const viewportCoordinates = { textContent: '' };
+  const canvas = {
+    getBoundingClientRect() {
+      return { width: 800, height: 600 };
+    },
+  };
+  const previousDocument = globalThis.document;
+  const mockDocument = { title: '' };
+  globalThis.document = mockDocument;
+
+  try {
+    renderHypernodeMetadata(graphTitle, viewportCoordinates, canvas, {
+      name: '2026-03-09',
+      viewport: {
+        panX: -100,
+        panY: 50,
+        zoom: 2,
+      },
+    });
+  } finally {
+    globalThis.document = previousDocument;
+  }
+
+  assert.equal(graphTitle.textContent, '2026-03-09');
+  assert.equal(viewportCoordinates.textContent, 'x: 250  y: 125');
+  assert.equal(mockDocument.title, '2026-03-09 - hypernode');
 });

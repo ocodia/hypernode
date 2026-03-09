@@ -48,7 +48,7 @@ export const NODE_COLOR_KEYS = [
 ];
 
 export const GRAPH_DEFAULTS = {
-  name: "Untitled Graph",
+  name: "Untitled hypernode",
   backgroundStyle: "dots",
   anchorsMode: "auto",
   arrowheads: "shown",

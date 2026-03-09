@@ -1,7 +1,7 @@
 import { validateGraphPayload } from '../utils/graph.js';
 
 const GRAPH_FILE_PICKER_TYPES = [{
-  description: 'Hypernode Graph JSON',
+  description: 'hypernode file (JSON)',
   accept: {
     'application/json': ['.json'],
   },
@@ -47,7 +47,7 @@ export async function saveGraphFile(graph, handle = null) {
 }
 
 function buildSuggestedGraphFilename(graphName) {
-  const safeBase = String(graphName ?? 'untitled-graph')
+  const safeBase = String(graphName ?? 'untitled-hypernode')
     .trim()
     .toLowerCase()
     .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
@@ -55,14 +55,14 @@ function buildSuggestedGraphFilename(graphName) {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 
-  return `${safeBase || 'untitled-graph'}.json`;
+  return `${safeBase || 'untitled-hypernode'}.json`;
 }
 
 async function parseGraphFile(file) {
   const text = await file.text();
   const parsed = JSON.parse(text);
   if (!validateGraphPayload(parsed)) {
-    throw new Error('Invalid graph file format.');
+    throw new Error('Invalid hypernode file format.');
   }
   return parsed;
 }

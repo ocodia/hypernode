@@ -11,23 +11,31 @@
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
   <body>
-    <main class="workspace" id="workspace" aria-label="Graph workspace">
-      <div class="toolbar" aria-label="Graph controls">
-        <h1 class="toolbar__title" id="graph-title">Untitled Graph</h1>
-        <div class="actions toolbar__actions">
-          <button id="add-node-btn" class="toolbar__icon-btn" type="button" aria-label="Add Node" title="Add Node"><i class="bi bi-plus-square"></i></button>
-          <button id="add-image-btn" class="toolbar__icon-btn" type="button" aria-label="Add Image Node" title="Add Image Node"><i class="bi bi-image"></i></button>
-          <button id="add-frame-btn" class="toolbar__icon-btn" type="button" aria-label="Draw Frame" title="Draw Frame"><i class="bi bi-bounding-box-circles"></i></button>
-          <button id="reset-view-btn" class="toolbar__icon-btn" type="button" aria-label="Reset View" title="Reset View"><i class="bi bi-aspect-ratio"></i></button>
+    <main class="workspace" id="workspace" aria-label="hypernode workspace">
+      <div class="toolbar" aria-label="hypernode controls">
+        <div class="toolbar__group" aria-label="Create">
+          <button id="new-graph-btn" class="toolbar__icon-btn" type="button" aria-label="New hypernode" title="New hypernode"><i class="bi bi-file-earmark-plus"></i></button>
+          <button id="add-node-btn" class="toolbar__icon-btn" type="button" aria-label="Add node" title="Add node"><i class="bi bi-plus-square"></i></button>
+          <button id="add-image-btn" class="toolbar__icon-btn" type="button" aria-label="Add image node" title="Add image node"><i class="bi bi-image"></i></button>
+          <button id="add-frame-btn" class="toolbar__icon-btn" type="button" aria-label="Draw frame" title="Draw frame"><i class="bi bi-bounding-box-circles"></i></button>
+        </div>
+        <div class="toolbar__group" aria-label="File">
+          <button id="open-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Open hypernode" title="Open hypernode"><i class="bi bi-folder2-open"></i></button>
+          <button id="save-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Save hypernode" title="Save hypernode"><i class="bi bi-floppy"></i></button>
+        </div>
+        <div class="toolbar__group" aria-label="History and view">
           <button id="undo-btn" class="toolbar__icon-btn" type="button" aria-label="Undo" title="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>
           <button id="redo-btn" class="toolbar__icon-btn" type="button" aria-label="Redo" title="Redo"><i class="bi bi-arrow-clockwise"></i></button>
-          <button id="new-graph-btn" class="toolbar__icon-btn" type="button" aria-label="New Graph" title="New Graph"><i class="bi bi-file-earmark-plus"></i></button>
-          <button id="open-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Open Graph" title="Open Graph"><i class="bi bi-folder2-open"></i></button>
-          <button id="save-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Save Graph" title="Save Graph"><i class="bi bi-floppy"></i></button>
-          <button id="node-color-btn" class="toolbar__icon-btn" type="button" aria-label="Color selected nodes" title="Color Selected Nodes" aria-haspopup="dialog" aria-expanded="false" aria-controls="node-color-popover" disabled><i class="bi bi-palette"></i></button>
-          <button id="settings-btn" class="toolbar__icon-btn" type="button" aria-label="Settings" title="Settings"><i class="bi bi-sliders2"></i></button>
-          <button id="theme-toggle-btn" class="toolbar__icon-btn" type="button" aria-label="Enable dark mode" title="Enable Dark Mode"><i class="bi bi-moon-stars"></i></button>
-          <button id="about-btn" class="toolbar__icon-btn" type="button" aria-label="About and instructions" title="About"><i class="bi bi-question-circle"></i></button>
+          <button id="reset-view-btn" class="toolbar__icon-btn" type="button" aria-label="Reset view" title="Reset view"><i class="bi bi-aspect-ratio"></i></button>
+        </div>
+        <div class="toolbar__group" aria-label="Style and settings">
+          <button id="node-color-btn" class="toolbar__icon-btn" type="button" aria-label="Color selected nodes" title="Color selected nodes" aria-haspopup="dialog" aria-expanded="false" aria-controls="node-color-popover" disabled><i class="bi bi-palette"></i></button>
+          <button id="settings-btn" class="toolbar__icon-btn" type="button" aria-label="Hypernode settings" title="Hypernode settings"><i class="bi bi-sliders2"></i></button>
+          <button id="theme-toggle-btn" class="toolbar__icon-btn" type="button" aria-label="Enable dark mode" title="Enable dark mode"><i class="bi bi-moon-stars"></i></button>
+        </div>
+        <div class="toolbar__group" aria-label="Help">
+          <button id="shortcuts-btn" class="toolbar__icon-btn" type="button" aria-label="Keyboard shortcuts" title="Keyboard shortcuts"><i class="bi bi-command"></i></button>
+          <button id="about-btn" class="toolbar__icon-btn" type="button" aria-label="About hypernode" title="About hypernode"><i class="bi bi-question-circle"></i></button>
         </div>
         <div id="node-color-popover" class="toolbar__popover" role="dialog" aria-label="Node color palette" hidden>
           <p class="toolbar__popover-title">Node Colors</p>
@@ -51,7 +59,7 @@
         <div id="canvas-drop-zone" class="canvas-drop-zone" hidden aria-hidden="true">
           <div class="canvas-drop-zone__copy">
             <strong>Drop image to add node</strong>
-            <span>Images are embedded into the graph file.</span>
+            <span>Images are embedded into the hypernode file.</span>
           </div>
         </div>
         <div id="selection-marquee" class="selection-marquee" hidden aria-hidden="true"></div>
@@ -68,47 +76,134 @@
       </div>
       <div id="focus-layer" class="focus-overlay" hidden></div>
       <div id="import-status" class="toast" aria-live="polite" hidden></div>
+      <div class="workspace-meta" aria-live="polite">
+        <div class="workspace-meta__name" id="graph-title">Untitled hypernode</div>
+        <div class="workspace-meta__coords" id="viewport-coordinates">x: 0  y: 0</div>
+      </div>
     </main>
     <dialog id="about-dialog" class="about-dialog">
-      <article>
+      <article class="about-dialog__article">
         <header class="about-dialog__header">
-          <h2>About hypernode</h2>
+          <div class="about-dialog__titlebar">
+            <span class="about-dialog__title-icon" aria-hidden="true"><i class="bi bi-node-minus"></i></span>
+            <h2>hypernode</h2>
+          </div>
           <button id="about-close-btn" type="button" aria-label="Close about dialog"><i class="bi bi-x-lg"></i></button>
         </header>
-        <p>hypernode is a local-first graph editor for visual thinking. Data autosaves in your browser and can be opened/saved as JSON files.</p>
-        <h3>How to use</h3>
-        <ul>
-          <li>Double-click empty canvas or use + to create a node.</li>
-          <li>Use the frame toolbar button to draw a frame container on canvas.</li>
-          <li>Select one node to show its mini toolbar with Edit/Delete actions.</li>
-          <li>Use Ctrl/Cmd+Click or Ctrl/Cmd+Drag to multi-select nodes.</li>
-          <li>Drag selected nodes to move them together; click empty space to clear selection.</li>
-          <li>Drag empty canvas to pan.</li>
-          <li>Use node anchors or selected edge endpoints to create/reconnect edges.</li>
-        </ul>
-        <h3>Keyboard shortcuts</h3>
-        <ul>
-          <li><kbd>Ctrl/Cmd + Shift + Enter</kbd>: add a linked node from selected node.</li>
-          <li><kbd>Ctrl/Cmd + Arrow</kbd>: follow connected node in that direction, else nearest.</li>
-          <li><kbd>Del</kbd> or <kbd>Backspace</kbd>: delete selected node/edge. In Focus mode use <kbd>Ctrl/Cmd + Del</kbd> and confirm.</li>
-          <li><kbd>Ctrl/Cmd + Z</kbd>: undo.</li>
-          <li><kbd>Ctrl/Cmd + Y</kbd> or <kbd>Ctrl/Cmd + Shift + Z</kbd>: redo.</li>
-          <li><kbd>Ctrl/Cmd + S</kbd>: save graph file.</li>
-          <li><kbd>Ctrl/Cmd + Enter</kbd>: toggle selected node editor.</li>
-          <li><kbd>Ctrl/Cmd + Alt + Enter</kbd>: toggle Focus mode for selected node.</li>
-          <li><kbd>Ctrl/Cmd + Click</kbd>: add node to current selection.</li>
-          <li><kbd>Esc</kbd>: exit Focus/edit mode, cancel connect/frame draw, or clear selection.</li>
-        </ul>
+        <p class="about-dialog__lede">hypernode is a local-first canvas for shaping connected ideas fast. It autosaves in your browser and opens or saves as a JSON file you can control.</p>
+        <section id="about-guide-panel" class="about-dialog__panel" role="region" aria-label="Guide">
+          <div class="about-guide">
+            <div class="about-guide__slides" id="about-guide-slides">
+              <section class="about-guide__slide is-active" data-about-slide="0">
+                <div class="about-guide__icon"><i class="bi bi-plus-square-dotted"></i></div>
+                <h3>Start at speed</h3>
+                <p>New hypernodes open with a starter node already in Zen edit mode, so you can begin typing immediately.</p>
+              </section>
+              <section class="about-guide__slide" data-about-slide="1" aria-hidden="true">
+                <div class="about-guide__icon"><i class="bi bi-bezier2"></i></div>
+                <h3>Connect cleanly</h3>
+                <p>Use anchors to sketch directional relationships, reconnect edges in place, and move through the structure without breaking flow.</p>
+              </section>
+              <section class="about-guide__slide" data-about-slide="2" aria-hidden="true">
+                <div class="about-guide__icon"><i class="bi bi-bounding-box-circles"></i></div>
+                <h3>Frame the field</h3>
+                <p>Draw frames to gather nearby nodes into spatial groups. The canvas previews membership while you drag.</p>
+              </section>
+              <section class="about-guide__slide" data-about-slide="3" aria-hidden="true">
+                <div class="about-guide__icon"><i class="bi bi-arrows-fullscreen"></i></div>
+                <h3>Drop into Zen</h3>
+                <p>Focus a node when you want a quieter editing surface for title, notes, and image updates without leaving the hypernode.</p>
+              </section>
+            </div>
+            <div class="about-guide__footer">
+              <button id="about-prev-btn" class="about-guide__nav" type="button" aria-label="Previous guide page"><i class="bi bi-arrow-left"></i></button>
+              <div class="about-guide__dots" id="about-guide-dots" aria-label="Guide pages">
+                <button class="about-guide__dot is-active" type="button" data-about-slide-target="0" aria-label="Guide page 1" aria-current="true"></button>
+                <button class="about-guide__dot" type="button" data-about-slide-target="1" aria-label="Guide page 2"></button>
+                <button class="about-guide__dot" type="button" data-about-slide-target="2" aria-label="Guide page 3"></button>
+                <button class="about-guide__dot" type="button" data-about-slide-target="3" aria-label="Guide page 4"></button>
+              </div>
+              <button id="about-next-btn" class="about-guide__nav" type="button" aria-label="Next guide page"><i class="bi bi-arrow-right"></i></button>
+            </div>
+          </div>
+        </section>
+        <p class="about-dialog__repo">GitHub: <a href="https://github.com/ocodia/hypernode" target="_blank" rel="noreferrer">github.com/ocodia/hypernode</a></p>
+      </article>
+    </dialog>
+    <dialog id="shortcuts-dialog" class="about-dialog shortcuts-dialog">
+      <article class="about-dialog__article shortcuts-dialog__article">
+        <header class="about-dialog__header">
+          <div class="about-dialog__titlebar">
+            <span class="about-dialog__title-icon" aria-hidden="true"><i class="bi bi-command"></i></span>
+            <h2>Keyboard Shortcuts</h2>
+          </div>
+          <button id="shortcuts-close-btn" type="button" aria-label="Close keyboard shortcuts dialog"><i class="bi bi-x-lg"></i></button>
+        </header>
+        <p class="about-dialog__lede">Fast paths for navigation, editing, focus, selection, and file actions. Search by key or action.</p>
+        <label class="shortcuts-dialog__search">
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <input id="shortcuts-search-input" type="search" placeholder="Search shortcuts" aria-label="Search shortcuts" />
+        </label>
+        <div class="shortcuts-dialog__list" id="shortcuts-list" role="list">
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="delete backspace delete selected node edge">
+            <div class="shortcuts-dialog__keys"><kbd>Delete</kbd><kbd>Backspace</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Delete selection</h3><p>Deletes the selected node or edge outside Zen mode.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd delete backspace zen focused confirm">
+            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Delete</kbd><kbd>Ctrl/Cmd + Backspace</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Delete in Zen mode</h3><p>Deletes the focused node in Zen mode after confirmation.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd shift enter linked node create">
+            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Shift + Enter</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Create linked node</h3><p>Adds a new node linked from the current selection.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd arrow up down left right directional navigation follow connected">
+            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Arrow</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Directional navigation</h3><p>Follows a connected node in that direction, otherwise the nearest candidate.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd z undo">
+            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Z</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Undo</h3><p>Reverts the last change.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd y shift z redo">
+            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Y</kbd><kbd>Ctrl/Cmd + Shift + Z</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Redo</h3><p>Reapplies the last undone change.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd s save hypernode file">
+            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + S</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Save hypernode</h3><p>Saves the current hypernode file.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd enter toggle editor node frame">
+            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Enter</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Toggle editor</h3><p>Toggles the selected node or frame editor.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd alt enter zen focus mode">
+            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Alt + Enter</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Toggle Zen mode</h3><p>Enters or exits Zen mode for the selected node.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd click multi select add node selection">
+            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Click</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Add to selection</h3><p>Adds a node to the current multi-selection.</p></div>
+          </article>
+          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="escape esc cancel clear selection exit zen edit connect frame draw">
+            <div class="shortcuts-dialog__keys"><kbd>Esc</kbd></div>
+            <div class="shortcuts-dialog__meta"><h3>Cancel or exit</h3><p>Exits Zen or edit mode, cancels connect or frame draw, or clears selection.</p></div>
+          </article>
+        </div>
+        <p id="shortcuts-empty-state" class="shortcuts-dialog__empty" hidden>No shortcuts match that search.</p>
       </article>
     </dialog>
     <dialog id="settings-dialog" class="about-dialog settings-dialog">
       <article>
         <header class="about-dialog__header">
-          <h2>Graph Settings</h2>
+          <div class="about-dialog__titlebar">
+            <span class="about-dialog__title-icon" aria-hidden="true"><i class="bi bi-sliders2"></i></span>
+            <h2>Hypernode Settings</h2>
+          </div>
           <button id="settings-close-btn" type="button" aria-label="Close settings dialog"><i class="bi bi-x-lg"></i></button>
         </header>
         <div class="settings-dialog__section">
-          <label class="settings-dialog__label" for="graph-name-input">Graph name</label>
+          <label class="settings-dialog__label" for="graph-name-input">Hypernode name</label>
           <input id="graph-name-input" class="settings-dialog__input" type="text" maxlength="120" />
         </div>
         <fieldset class="settings-dialog__section">

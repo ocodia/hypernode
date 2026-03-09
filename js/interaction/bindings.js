@@ -18,7 +18,7 @@ import { bindToolbarInteractions } from './binders/toolbar.js';
 
 const THEME_STORAGE_KEY = 'hypernode.theme.v1';
 
-export function bindInteractions(elements, store) {
+export function bindInteractions(elements, store, options = {}) {
   const {
     workspace,
     canvas,
@@ -50,6 +50,7 @@ export function bindInteractions(elements, store) {
   let lastNodePress = { id: null, at: 0 };
   let canvasFileDragDepth = 0;
   let focusImageDragDepth = 0;
+  let aboutSlideIndex = 0;
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -345,6 +346,38 @@ export function bindInteractions(elements, store) {
     titleInput.select();
   }
 
+  function getTodayLocalDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function getStarterNodePoint(viewport = store.getState().viewport) {
+    return {
+      x: Math.round((96 - viewport.panX) / viewport.zoom),
+      y: Math.round((96 - viewport.panY) / viewport.zoom),
+    };
+  }
+
+  function createStarterHypernode() {
+    const state = store.getState();
+    if (state.nodes.length || state.frames.length || state.edges.length) {
+      return false;
+    }
+    const title = getTodayLocalDateString();
+    store.setGraphName(title);
+    const node = store.addNode({
+      ...getStarterNodePoint(state.viewport),
+      title,
+      description: '',
+    });
+    if (!node) return false;
+    openNodeFocus(node.id, { lockFocusMs: 7000, stabilizeFrames: 3 });
+    return true;
+  }
+
   function endFrameResizeSession(pointerId = null) {
     if (!frameResizeSession) return;
     const activePointerId = frameResizeSession.pointerId;
@@ -381,6 +414,8 @@ export function bindInteractions(elements, store) {
     frameDrawSession = null;
     store.setFrameDrawing(false);
     store.clearFrameDraft();
+    store.clearFrameMembershipPreview();
+    store.clearNodeMembershipPreview();
     if (pointerId === null || pointerId === activePointerId) {
       try {
         canvas.releasePointerCapture(activePointerId);
@@ -817,12 +852,15 @@ export function bindInteractions(elements, store) {
     store.clearEditingNode();
   }
 
-  function openNodeFocus(nodeId) {
+  function openNodeFocus(nodeId, options = {}) {
     if (!nodeId) return false;
     store.setSelection({ type: 'node', id: nodeId });
     activeLiveEditFrameId = null;
     store.setFocusedNode(nodeId);
-    openNodeEditor(nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
+    openNodeEditor(nodeId, {
+      stabilizeFrames: Number(options.stabilizeFrames) || 2,
+      lockFocusMs: Number(options.lockFocusMs) || 1200,
+    });
     return true;
   }
 
@@ -972,6 +1010,29 @@ export function bindInteractions(elements, store) {
     store.clearNodeMembershipPreview();
   }
 
+  function updateFrameDraftNodePreview(nextRect, state) {
+    const nodePreview = {};
+    const draftFrame = {
+      x: nextRect.left,
+      y: nextRect.top,
+      width: nextRect.right - nextRect.left,
+      height: nextRect.bottom - nextRect.top,
+    };
+
+    for (const node of state.nodes) {
+      if (getNodeFrameOverlapArea(node, draftFrame) > 0) {
+        nodePreview[node.id] = 'add';
+      }
+    }
+
+    if (Object.keys(nodePreview).length > 0) {
+      store.setNodeMembershipPreview(nodePreview);
+    } else {
+      store.clearNodeMembershipPreview();
+    }
+    store.clearFrameMembershipPreview();
+  }
+
   function applyFrameResizeMembership(frameId, state) {
     const frame = getFrame(frameId, state);
     if (!frame) return;
@@ -989,6 +1050,14 @@ export function bindInteractions(elements, store) {
     const open = Boolean(nextOpen && canOpen);
     isNodeColorPopoverOpen = open;
     popoverEl.hidden = !open;
+    if (open) {
+      const toolbarRect = buttonEl.parentElement?.parentElement?.getBoundingClientRect?.();
+      const buttonRect = buttonEl.getBoundingClientRect();
+      if (toolbarRect) {
+        const left = Math.max(0, buttonRect.left - toolbarRect.left - Math.max(0, (popoverEl.offsetWidth - buttonRect.width) / 2));
+        popoverEl.style.left = `${left}px`;
+      }
+    }
     buttonEl.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
@@ -1043,6 +1112,8 @@ export function bindInteractions(elements, store) {
         width: 0,
         height: 0,
       });
+      store.clearFrameMembershipPreview();
+      store.clearNodeMembershipPreview();
       canvas.setPointerCapture(event.pointerId);
       event.preventDefault();
       return;
@@ -1089,6 +1160,7 @@ export function bindInteractions(elements, store) {
         width: rect.width,
         height: rect.height,
       });
+      updateFrameDraftNodePreview(rect, state);
       return;
     }
     if (marqueeSession && event.pointerId === marqueeSession.pointerId) {
@@ -2064,6 +2136,16 @@ export function bindInteractions(elements, store) {
   const aboutDialog = document.getElementById('about-dialog');
   const aboutBtn = document.getElementById('about-btn');
   const aboutCloseBtn = document.getElementById('about-close-btn');
+  const aboutGuideSlides = document.getElementById('about-guide-slides');
+  const aboutGuideDots = document.getElementById('about-guide-dots');
+  const aboutPrevBtn = document.getElementById('about-prev-btn');
+  const aboutNextBtn = document.getElementById('about-next-btn');
+  const shortcutsDialog = document.getElementById('shortcuts-dialog');
+  const shortcutsBtn = document.getElementById('shortcuts-btn');
+  const shortcutsCloseBtn = document.getElementById('shortcuts-close-btn');
+  const shortcutsSearchInput = document.getElementById('shortcuts-search-input');
+  const shortcutsList = document.getElementById('shortcuts-list');
+  const shortcutsEmptyState = document.getElementById('shortcuts-empty-state');
   const settingsDialog = document.getElementById('settings-dialog');
   const settingsBtn = document.getElementById('settings-btn');
   const settingsCloseBtn = document.getElementById('settings-close-btn');
@@ -2084,16 +2166,16 @@ export function bindInteractions(elements, store) {
 
   function confirmDiscardIfNeeded(action) {
     if (!hasGraphData()) return true;
-    return window.confirm(`Discard current graph and ${action}?`);
+    return window.confirm(`Discard the current hypernode and ${action}?`);
   }
 
   async function handleOpenGraph() {
     if (!canUseFileSystemAccess) {
-      store.setImportStatus('Open is unavailable in this browser.');
+      store.setImportStatus('Open hypernode is unavailable in this browser.');
       return;
     }
 
-    if (!confirmDiscardIfNeeded('open another graph')) {
+    if (!confirmDiscardIfNeeded('open another hypernode')) {
       return;
     }
 
@@ -2103,16 +2185,16 @@ export function bindInteractions(elements, store) {
       store.replaceGraph(graph);
       store.resetView();
       syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
-      store.setImportStatus('Graph opened successfully.');
+      store.setImportStatus('Hypernode opened.');
     } catch (error) {
       if (isAbortError(error)) return;
-      store.setImportStatus('Open failed: invalid JSON graph file.');
+      store.setImportStatus('Open failed: invalid hypernode JSON file.');
     }
   }
 
   async function handleSaveGraph() {
     if (!canUseFileSystemAccess) {
-      store.setImportStatus('Save is unavailable in this browser.');
+      store.setImportStatus('Save hypernode is unavailable in this browser.');
       return;
     }
 
@@ -2125,7 +2207,7 @@ export function bindInteractions(elements, store) {
         frames: state.frames,
         edges: state.edges,
       }, currentFileHandle);
-      store.setImportStatus('Graph saved.');
+      store.setImportStatus('Hypernode saved.');
     } catch (error) {
       if (isAbortError(error)) return;
       store.setImportStatus('Save failed. Check file permissions and try again.');
@@ -2133,7 +2215,7 @@ export function bindInteractions(elements, store) {
   }
 
   function handleNewGraph() {
-    if (!confirmDiscardIfNeeded('create a new graph')) {
+    if (!confirmDiscardIfNeeded('create a new hypernode')) {
       return;
     }
 
@@ -2152,8 +2234,9 @@ export function bindInteractions(elements, store) {
       edges: [],
     });
     store.resetView();
+    createStarterHypernode();
     syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
-    store.setImportStatus('New graph created.');
+    store.setImportStatus('New hypernode ready.');
   }
 
   async function handleAddImageNode() {
@@ -2172,12 +2255,61 @@ export function bindInteractions(elements, store) {
     }
   }
 
+  function setAboutSlide(nextIndex) {
+    const slideEls = aboutGuideSlides?.querySelectorAll('[data-about-slide]');
+    if (!slideEls?.length) return;
+    const maxIndex = slideEls.length - 1;
+    aboutSlideIndex = Math.max(0, Math.min(maxIndex, Number(nextIndex) || 0));
+    if (aboutGuideSlides instanceof HTMLElement) {
+      aboutGuideSlides.dataset.activeSlide = String(aboutSlideIndex);
+    }
+    slideEls.forEach((slideEl, index) => {
+      const active = index === aboutSlideIndex;
+      slideEl.classList.toggle('is-active', active);
+      slideEl.setAttribute('aria-hidden', active ? 'false' : 'true');
+    });
+    aboutGuideDots?.querySelectorAll('[data-about-slide-target]').forEach((dotEl, index) => {
+      const active = index === aboutSlideIndex;
+      dotEl.classList.toggle('is-active', active);
+      dotEl.setAttribute('aria-current', active ? 'true' : 'false');
+    });
+    if (aboutPrevBtn instanceof HTMLButtonElement) {
+      aboutPrevBtn.disabled = aboutSlideIndex === 0;
+    }
+    if (aboutNextBtn instanceof HTMLButtonElement) {
+      aboutNextBtn.disabled = aboutSlideIndex === maxIndex;
+    }
+  }
+
+  function filterShortcuts(query) {
+    const normalized = String(query || '').trim().toLowerCase();
+    const items = shortcutsList?.querySelectorAll('[data-shortcut-search]');
+    if (!items?.length) return;
+    let visibleCount = 0;
+    items.forEach((item) => {
+      const haystack = `${item.dataset.shortcutSearch || ''} ${item.textContent || ''}`.toLowerCase();
+      const visible = !normalized || haystack.includes(normalized);
+      item.hidden = !visible;
+      if (visible) {
+        visibleCount += 1;
+      }
+    });
+    if (shortcutsEmptyState instanceof HTMLElement) {
+      shortcutsEmptyState.hidden = visibleCount > 0;
+    }
+  }
+
+  function resetAboutDialog() {
+    setAboutSlide(0);
+  }
+
   function bindToolbar() {
   if (aboutBtn && aboutDialog) {
     aboutBtn.addEventListener('click', () => {
       if (aboutDialog.open) {
         aboutDialog.close();
       } else {
+        resetAboutDialog();
         aboutDialog.showModal();
       }
     });
@@ -2190,6 +2322,46 @@ export function bindInteractions(elements, store) {
       }
     });
   }
+
+  shortcutsBtn?.addEventListener('click', () => {
+    if (!shortcutsDialog) return;
+    if (shortcutsDialog.open) {
+      shortcutsDialog.close();
+      return;
+    }
+    filterShortcuts('');
+    if (shortcutsSearchInput instanceof HTMLInputElement) {
+      shortcutsSearchInput.value = '';
+    }
+    shortcutsDialog.showModal();
+    window.requestAnimationFrame(() => {
+      shortcutsSearchInput?.focus({ preventScroll: true });
+    });
+  });
+
+  shortcutsCloseBtn?.addEventListener('click', () => {
+    if (shortcutsDialog?.open) {
+      shortcutsDialog.close();
+    }
+  });
+
+  shortcutsSearchInput?.addEventListener('input', () => {
+    filterShortcuts(shortcutsSearchInput.value);
+  });
+
+  aboutPrevBtn?.addEventListener('click', () => {
+    setAboutSlide(aboutSlideIndex - 1);
+  });
+
+  aboutNextBtn?.addEventListener('click', () => {
+    setAboutSlide(aboutSlideIndex + 1);
+  });
+
+  aboutGuideDots?.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-about-slide-target]');
+    if (!(target instanceof HTMLButtonElement)) return;
+    setAboutSlide(Number(target.dataset.aboutSlideTarget));
+  });
 
   if (settingsBtn && settingsDialog) {
     settingsBtn.addEventListener('click', () => {
@@ -2332,13 +2504,13 @@ export function bindInteractions(elements, store) {
   if (!canUseFileSystemAccess) {
     if (openGraphBtn) {
       openGraphBtn.disabled = true;
-      openGraphBtn.title = 'Open is unavailable in this browser';
-      openGraphBtn.setAttribute('aria-label', 'Open unavailable in this browser');
+      openGraphBtn.title = 'Open hypernode is unavailable in this browser';
+      openGraphBtn.setAttribute('aria-label', 'Open hypernode unavailable in this browser');
     }
     if (saveGraphBtn) {
       saveGraphBtn.disabled = true;
-      saveGraphBtn.title = 'Save is unavailable in this browser';
-      saveGraphBtn.setAttribute('aria-label', 'Save unavailable in this browser');
+      saveGraphBtn.title = 'Save hypernode is unavailable in this browser';
+      saveGraphBtn.setAttribute('aria-label', 'Save hypernode unavailable in this browser');
     }
   }
 
@@ -2346,7 +2518,7 @@ export function bindInteractions(elements, store) {
 
   function bindKeyboard() {
   document.addEventListener('keydown', (event) => {
-    if (aboutDialog?.open || settingsDialog?.open) return;
+    if (aboutDialog?.open || shortcutsDialog?.open || settingsDialog?.open) return;
     if (event.key === 'Escape' && isNodeColorPopoverOpen) {
       event.preventDefault();
       setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
@@ -2471,8 +2643,14 @@ export function bindInteractions(elements, store) {
     syncNodeColorButtonState(state, nodeColorBtn, nodeColorPopover);
   });
 
+  resetAboutDialog();
+  filterShortcuts('');
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
+  if (options.shouldCreateStarter) {
+    createStarterHypernode();
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
+  }
 }
 
 function isAdditiveModifier(event) {
