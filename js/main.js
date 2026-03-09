@@ -13,6 +13,7 @@ const elements = {
   edgesGroup: document.getElementById('edges-group'),
   edgeDraftGroup: document.getElementById('edge-draft-group'),
   edgeOverlayGroup: document.getElementById('edge-overlay-group'),
+  selectionControlsLayer: document.getElementById('selection-controls-layer'),
   selectionMarquee: document.getElementById('selection-marquee'),
   importStatus: document.getElementById('import-status'),
   graphTitle: document.getElementById('graph-title'),

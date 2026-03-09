@@ -126,6 +126,8 @@ textarea:focus-visible {
   --bg-grid-minor-alpha: 0.45;
   --bg-grid-major-alpha: 0.72;
   --bg-dot-alpha: 0.52;
+  --graph-anchor-size: 10px;
+  --graph-control-border-width: 1.5px;
   position: relative;
   width: 100vw;
   height: 100vh;
@@ -179,7 +181,8 @@ textarea:focus-visible {
 
 .edges,
 .nodes,
-.frames {
+.frames,
+.selection-controls {
   position: absolute;
   top: 0;
   left: 0;
@@ -201,6 +204,23 @@ textarea:focus-visible {
 
 .edges--overlay {
   z-index: 4;
+}
+
+.selection-controls {
+  --viewport-zoom: 1;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.selection-controls__group {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.selection-controls__group > * {
+  pointer-events: auto;
 }
 
 .edges .edge {
@@ -740,6 +760,15 @@ textarea:focus-visible {
   padding: 0;
 }
 
+.selection-controls .frame__resize,
+.selection-controls .node__resize {
+  width: var(--selection-resize-size);
+  height: var(--selection-resize-size);
+  border-width: var(--selection-control-border-width);
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .frame.is-selected:not(.is-editing) .frame__resize {
   opacity: 1;
   pointer-events: auto;
@@ -775,15 +804,24 @@ textarea:focus-visible {
 
 .frame__anchor {
   position: absolute;
-  width: 9px;
-  height: 9px;
+  width: var(--graph-anchor-size);
+  height: var(--graph-anchor-size);
   border-radius: 999px;
-  border: 1.5px solid var(--endpoint-stroke);
+  border: var(--graph-control-border-width) solid var(--endpoint-stroke);
   background: var(--endpoint-fill);
   opacity: 0;
   pointer-events: none;
   z-index: 2;
   padding: 0;
+}
+
+.selection-controls .frame__anchor,
+.selection-controls .node__anchor {
+  width: var(--selection-anchor-size);
+  height: var(--selection-anchor-size);
+  border-width: var(--selection-control-border-width);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .frame.is-selected .frame__anchor,
@@ -1301,14 +1339,14 @@ textarea:focus-visible {
 
 .node__anchor {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: var(--graph-anchor-size);
+  height: var(--graph-anchor-size);
   appearance: none;
   padding: 0;
   line-height: 0;
   aspect-ratio: 1 / 1;
   border-radius: 999px;
-  border: 1.5px solid var(--endpoint-stroke);
+  border: var(--graph-control-border-width) solid var(--endpoint-stroke);
   background: var(--endpoint-fill);
   box-shadow: 0 0 0 1px rgba(159, 178, 204, 0.22);
   opacity: 0;
@@ -1359,6 +1397,37 @@ textarea:focus-visible {
   top: 50%;
   left: 0;
   transform: translate(-50%, -50%);
+}
+
+.selection-controls__toolbar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.selection-controls__toolbar--node {
+  transform: translateY(calc(-100% - 10px));
+}
+
+.selection-controls__toolbar--frame {
+  transform: translateY(calc(-100% - 12px));
+}
+
+.node.has-overlay-controls .node__toolbar,
+.node.has-overlay-controls .node__resize,
+.node.has-overlay-controls .node__anchor,
+.node.has-overlay-controls:hover .node__anchor,
+.node.has-overlay-controls.is-single-selected:not(.is-editing) .node__resize,
+.node.has-overlay-controls.is-connect-source .node__anchor,
+.node.has-overlay-controls.is-connect-candidate .node__anchor,
+.node.has-overlay-controls.is-connect-target .node__anchor,
+.frame.has-overlay-controls .frame__toolbar,
+.frame.has-overlay-controls .frame__resize,
+.frame.has-overlay-controls .frame__anchor,
+.frame.has-overlay-controls:hover .frame__anchor,
+.frame.has-overlay-controls.is-selected:not(.is-editing) .frame__resize,
+.frame.has-overlay-controls.is-selected .frame__anchor {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .toast {

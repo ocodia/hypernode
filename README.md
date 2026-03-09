@@ -12,6 +12,8 @@ It runs fully client-side with no backend and no account system. Graph data auto
 - Delete selected nodes with `Delete`/`Backspace`.
 - Create edges from text and image node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
+- Selected node/frame toolbars, resize handles, and anchor points render above overlapping canvas content.
+- Resize handles and anchor points grow when zoomed out so they stay easier to grab.
 - Draw Frames from toolbar drag mode. Frames act as background super-nodes with anchors, resize handles, and title/description.
 - Frame mini toolbar renders above selected frames.
 - Frame inline editor includes border width (`1-8`) and border style (`solid`, `dashed`, `dotted`).

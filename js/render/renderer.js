@@ -11,17 +11,26 @@ export function createRenderer(elements, store) {
     edgesLayer,
     edgesOverlayLayer,
     edgeOverlayGroup,
+    selectionControlsLayer,
     importStatus,
     graphTitle,
     selectionMarquee,
   } = elements;
 
   function applyViewport(viewport) {
+    const zoom = Math.max(0.01, Number(viewport.zoom) || 1);
     const transform = `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom})`;
     framesLayer.style.transform = transform;
     nodesLayer.style.transform = transform;
     edgesLayer.style.transform = transform;
     edgesOverlayLayer.style.transform = transform;
+    canvas.style.setProperty('--graph-anchor-size', `${Math.max(10, 14 / zoom)}px`);
+    canvas.style.setProperty('--graph-control-border-width', `${Math.min(2, Math.max(1.5, 1.5 / zoom))}px`);
+    canvas.style.setProperty('--graph-edge-endpoint-radius', `${Math.max(5.5, 8 / zoom)}px`);
+    if (selectionControlsLayer instanceof HTMLElement) {
+      selectionControlsLayer.style.transform = transform;
+      selectionControlsLayer.style.setProperty('--viewport-zoom', String(zoom));
+    }
     applyBackgroundViewport(viewport);
   }
 
@@ -62,6 +71,7 @@ export function createRenderer(elements, store) {
     const framesMarkup = state.frames
       .map((frame) => {
         const selectedClass = selectedFrameId === frame.id ? 'is-selected' : '';
+        const overlayControlsClass = selectedFrameId === frame.id ? 'has-overlay-controls' : '';
         const editingClass = editingFrameId === frame.id ? 'is-editing' : '';
         const connectClass =
           draft?.fromNodeId === frame.id
@@ -106,7 +116,7 @@ export function createRenderer(elements, store) {
             ${frame.description ? `<p class="frame__description">${escapeHTML(frame.description)}</p>` : ''}
           `;
         return `
-          <article class="frame ${selectedClass} ${editingClass} ${connectClass} ${membershipPreviewClass}" data-frame-id="${frame.id}"${frameColorAttr} style="${frameStyle}">
+          <article class="frame ${selectedClass} ${overlayControlsClass} ${editingClass} ${connectClass} ${membershipPreviewClass}" data-frame-id="${frame.id}"${frameColorAttr} style="${frameStyle}">
             <div class="frame__box"></div>
             <div class="frame__toolbar">
               <button class="frame__tool-btn" type="button" data-frame-edit-open="${frame.id}" aria-label="Edit frame" title="Edit Frame">
@@ -145,11 +155,21 @@ export function createRenderer(elements, store) {
     const singleSelectedNodeId = getSingleSelectedNodeId(state.selection);
     const editingNodeId = state.ui.editingNodeId;
     const draft = state.ui.edgeDraft;
-    nodesLayer.innerHTML = state.nodes
+    const orderedNodes = [...state.nodes].sort((left, right) => {
+      const leftPriority = getNodeStackPriority(left.id, selectedNodeIds, editingNodeId);
+      const rightPriority = getNodeStackPriority(right.id, selectedNodeIds, editingNodeId);
+      if (leftPriority !== rightPriority) {
+        return leftPriority - rightPriority;
+      }
+      return 0;
+    });
+
+    nodesLayer.innerHTML = orderedNodes
       .map((node) => {
         const imageNode = isImageNode(node);
         const selectedClass = selectedNodeIds.has(node.id) ? "is-selected" : "";
         const singleSelectedClass = singleSelectedNodeId === node.id ? "is-single-selected" : "";
+        const overlayControlsClass = singleSelectedNodeId === node.id ? 'has-overlay-controls' : '';
         const editingClass = editingNodeId === node.id ? "is-editing" : "";
         const imageClass = imageNode ? "node--image" : "";
         const membershipPreviewClass = previewNodeMap[node.id] === 'add'
@@ -198,7 +218,7 @@ export function createRenderer(elements, store) {
             </div>
           `;
         return `
-          <article class="node ${selectedClass} ${singleSelectedClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
+          <article class="node ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
             <div class="node__toolbar">
               <button class="node__tool-btn" type="button" data-node-edit-open="${node.id}" aria-label="Edit node" title="Edit Node">
                 <i class="bi bi-pencil-fill"></i>
@@ -224,6 +244,95 @@ export function createRenderer(elements, store) {
       .join("");
   }
 
+  function renderSelectionControls(state) {
+    if (!(selectionControlsLayer instanceof HTMLElement)) {
+      return;
+    }
+
+    const selectedNodeId = getSingleSelectedNodeId(state.selection);
+    const selectedFrameId = state.selection?.type === 'frame' ? state.selection.id : null;
+    const editingNodeId = state.ui.editingNodeId;
+    const editingFrameId = state.ui.editingFrameId;
+    const draft = state.ui.edgeDraft;
+    const bySize = measureEntitySizes(state);
+    const viewportZoom = Math.max(0.01, Number(state.viewport?.zoom) || 1);
+    const nodeAnchorSize = Math.max(10, 14 / viewportZoom);
+    const nodeResizeSize = Math.max(14, 18 / viewportZoom);
+    const frameAnchorSize = Math.max(10, 14 / viewportZoom);
+    const frameResizeSize = Math.max(14, 18 / viewportZoom);
+    const controlBorderWidth = Math.min(2, Math.max(1.5, 1.5 / viewportZoom));
+    const node = selectedNodeId ? state.nodes.find((item) => item.id === selectedNodeId) : null;
+    const frame = selectedFrameId ? state.frames.find((item) => item.id === selectedFrameId) : null;
+
+    let markup = '';
+
+    if (frame) {
+      const frameSize = bySize.get(frame.id) || defaultEntitySize(frame);
+      const connectClass =
+        draft?.fromNodeId === frame.id
+          ? 'is-connect-source'
+          : draft
+            ? draft.hoverNodeId === frame.id
+              ? 'is-connect-target'
+              : 'is-connect-candidate'
+            : '';
+      const colorAttr = typeof frame.colorKey === 'string' ? ` data-frame-color="${frame.colorKey}"` : '';
+      markup += `
+        <div
+          class="selection-controls__group selection-controls__group--frame ${connectClass}"
+          data-frame-id="${frame.id}"
+          ${colorAttr}
+          style="transform: translate(${frame.x}px, ${frame.y}px); width: ${frameSize.width}px; height: ${frameSize.height}px; --selection-anchor-size: ${frameAnchorSize}px; --selection-resize-size: ${frameResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px;"
+        >
+          <div class="frame__toolbar selection-controls__toolbar selection-controls__toolbar--frame">
+            <button class="frame__tool-btn" type="button" data-frame-edit-open="${frame.id}" data-frame-id="${frame.id}" aria-label="Edit frame" title="Edit Frame">
+              <i class="bi bi-pencil-fill"></i>
+            </button>
+            <button class="frame__tool-btn node__tool-btn--danger" type="button" data-frame-delete="${frame.id}" data-frame-id="${frame.id}" aria-label="Delete frame" title="Delete Frame">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+          ${buildFrameOverlayControls(frame.id, { includeResize: editingFrameId !== frame.id })}
+        </div>
+      `;
+    }
+
+    if (node) {
+      const nodeSize = bySize.get(node.id) || defaultEntitySize(node);
+      const connectClass =
+        draft?.fromNodeId === node.id
+          ? 'is-connect-source'
+          : draft
+            ? draft.hoverNodeId === node.id
+              ? 'is-connect-target'
+              : 'is-connect-candidate'
+            : '';
+      const colorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
+      markup += `
+        <div
+          class="selection-controls__group selection-controls__group--node ${connectClass}"
+          data-node-id="${node.id}"
+          ${colorAttr}
+          style="transform: translate(${node.x}px, ${node.y}px); width: ${nodeSize.width}px; height: ${nodeSize.height}px; --selection-anchor-size: ${nodeAnchorSize}px; --selection-resize-size: ${nodeResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px;"
+        >
+          ${editingNodeId === node.id ? '' : `
+            <div class="node__toolbar selection-controls__toolbar selection-controls__toolbar--node">
+              <button class="node__tool-btn" type="button" data-node-edit-open="${node.id}" data-node-id="${node.id}" aria-label="Edit node" title="Edit Node">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+              <button class="node__tool-btn node__tool-btn--danger" type="button" data-node-delete="${node.id}" data-node-id="${node.id}" aria-label="Delete node" title="Delete Node">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+            ${buildNodeOverlayControls(node.id)}
+          `}
+        </div>
+      `;
+    }
+
+    selectionControlsLayer.innerHTML = markup;
+  }
+
   function renderEdges(state) {
     const byId = new Map([
       ...state.nodes.map((node) => [node.id, node]),
@@ -235,6 +344,7 @@ export function createRenderer(elements, store) {
     const arrowheadScale = getArrowheadSizeScale(state.settings.arrowheadSizeStep);
     const selectedEdgeId = state.selection?.type === "edge" ? state.selection.id : null;
     const twangEdgeId = state.ui.edgeTwangId;
+    const edgeEndpointRadius = Math.max(5.5, 8 / Math.max(0.01, Number(state.viewport?.zoom) || 1));
     let selectedOverlayMarkup = "";
 
     edgesGroup.innerHTML = state.edges
@@ -266,8 +376,8 @@ export function createRenderer(elements, store) {
                 <circle r="9"></circle>
                 <path class="edge__delete-icon" d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" transform="translate(-8, -8)"></path>
               </g>
-              <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:from" cx="${start.x}" cy="${start.y}" r="5.5"></circle>
-              <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:to" cx="${end.x}" cy="${end.y}" r="5.5"></circle>
+              <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:from" cx="${start.x}" cy="${start.y}" r="${edgeEndpointRadius}"></circle>
+              <circle class="edge__endpoint" data-edge-endpoint="${edge.id}:to" cx="${end.x}" cy="${end.y}" r="${edgeEndpointRadius}"></circle>
             </g>
           `;
         }
@@ -345,6 +455,7 @@ export function createRenderer(elements, store) {
     renderNodes(state);
     renderEdges(state);
     renderDraftEdge(state);
+    renderSelectionControls(state);
     renderImportStatus(state);
     renderGraphMetadata(state);
     canvas.classList.toggle("is-panning", Boolean(state.ui.isPanning));
@@ -399,7 +510,7 @@ function lerp(from, to, t) {
 
 function measureEntitySizes(state) {
   const sizes = new Map();
-  document.querySelectorAll("[data-node-id]").forEach((nodeEl) => {
+  document.querySelectorAll("#nodes-layer > [data-node-id]").forEach((nodeEl) => {
     const nodeId = nodeEl.dataset.nodeId;
     sizes.set(nodeId, {
       width: nodeEl.offsetWidth || NODE_DEFAULTS.width,
@@ -407,7 +518,7 @@ function measureEntitySizes(state) {
     });
   });
   for (const frame of state.frames || []) {
-    const frameEl = document.querySelector(`[data-frame-id="${escapeSelector(frame.id)}"]`);
+    const frameEl = document.querySelector(`#frames-layer > [data-frame-id="${escapeSelector(frame.id)}"]`);
     sizes.set(frame.id, {
       width: frameEl?.offsetWidth || Number(frame.width) || FRAME_DEFAULTS.width,
       height: frameEl?.offsetHeight || Number(frame.height) || FRAME_DEFAULTS.height,
@@ -664,6 +775,33 @@ function escapeAttr(value) {
   return escapeHTML(value).replaceAll("`", "&#096;");
 }
 
+function buildNodeOverlayControls(nodeId) {
+  return `
+    <button class="node__resize node__resize--top-left selection-controls__resize" type="button" data-node-resize="${nodeId}:top-left" data-node-id="${nodeId}" aria-label="Resize from top left corner"></button>
+    <button class="node__resize node__resize--top-right selection-controls__resize" type="button" data-node-resize="${nodeId}:top-right" data-node-id="${nodeId}" aria-label="Resize from top right corner"></button>
+    <button class="node__resize node__resize--bottom-right selection-controls__resize" type="button" data-node-resize="${nodeId}:bottom-right" data-node-id="${nodeId}" aria-label="Resize from bottom right corner"></button>
+    <button class="node__resize node__resize--bottom-left selection-controls__resize" type="button" data-node-resize="${nodeId}:bottom-left" data-node-id="${nodeId}" aria-label="Resize from bottom left corner"></button>
+    <button class="node__anchor node__anchor--top selection-controls__anchor" type="button" data-node-anchor="${nodeId}:top" data-node-id="${nodeId}" aria-label="Connect from top anchor"></button>
+    <button class="node__anchor node__anchor--right selection-controls__anchor" type="button" data-node-anchor="${nodeId}:right" data-node-id="${nodeId}" aria-label="Connect from right anchor"></button>
+    <button class="node__anchor node__anchor--bottom selection-controls__anchor" type="button" data-node-anchor="${nodeId}:bottom" data-node-id="${nodeId}" aria-label="Connect from bottom anchor"></button>
+    <button class="node__anchor node__anchor--left selection-controls__anchor" type="button" data-node-anchor="${nodeId}:left" data-node-id="${nodeId}" aria-label="Connect from left anchor"></button>
+  `;
+}
+
+function buildFrameOverlayControls(frameId, options = {}) {
+  const includeResize = options.includeResize !== false;
+  return `
+    ${includeResize ? `<button class="frame__resize frame__resize--top-left selection-controls__resize" type="button" data-frame-resize="${frameId}:top-left" data-frame-id="${frameId}" aria-label="Resize frame from top left corner"></button>
+    <button class="frame__resize frame__resize--top-right selection-controls__resize" type="button" data-frame-resize="${frameId}:top-right" data-frame-id="${frameId}" aria-label="Resize frame from top right corner"></button>
+    <button class="frame__resize frame__resize--bottom-right selection-controls__resize" type="button" data-frame-resize="${frameId}:bottom-right" data-frame-id="${frameId}" aria-label="Resize frame from bottom right corner"></button>
+    <button class="frame__resize frame__resize--bottom-left selection-controls__resize" type="button" data-frame-resize="${frameId}:bottom-left" data-frame-id="${frameId}" aria-label="Resize frame from bottom left corner"></button>` : ''}
+    <button class="frame__anchor frame__anchor--top selection-controls__anchor" type="button" data-frame-anchor="${frameId}:top" data-frame-id="${frameId}" aria-label="Connect from top anchor"></button>
+    <button class="frame__anchor frame__anchor--right selection-controls__anchor" type="button" data-frame-anchor="${frameId}:right" data-frame-id="${frameId}" aria-label="Connect from right anchor"></button>
+    <button class="frame__anchor frame__anchor--bottom selection-controls__anchor" type="button" data-frame-anchor="${frameId}:bottom" data-frame-id="${frameId}" aria-label="Connect from bottom anchor"></button>
+    <button class="frame__anchor frame__anchor--left selection-controls__anchor" type="button" data-frame-anchor="${frameId}:left" data-frame-id="${frameId}" aria-label="Connect from left anchor"></button>
+  `;
+}
+
 function escapeCssUrl(value) {
   return String(value)
     .replaceAll('\\', '\\\\')
@@ -707,4 +845,10 @@ function getSingleSelectedNodeId(selection) {
     return selection.ids[0];
   }
   return null;
+}
+
+function getNodeStackPriority(nodeId, selectedNodeIds, editingNodeId) {
+  if (editingNodeId === nodeId) return 2;
+  if (selectedNodeIds.has(nodeId)) return 1;
+  return 0;
 }

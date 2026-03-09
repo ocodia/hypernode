@@ -20,6 +20,7 @@ export function bindInteractions(elements, store) {
     nodesLayer,
     edgesGroup,
     edgeOverlayGroup,
+    selectionControlsLayer,
   } = elements;
   const canUseFileSystemAccess = supportsFileSystemAccess();
   let currentFileHandle = null;
@@ -376,6 +377,39 @@ export function bindInteractions(elements, store) {
         // Pointer may already be released.
       }
     }
+  }
+
+  function beginFrameResizeSession(event, resizeToken) {
+    const parsed = parseFrameResizeToken(resizeToken);
+    if (!parsed) return;
+    const state = store.getState();
+    const frame = getFrame(parsed.frameId, state);
+    if (!frame) return;
+
+    endPanSession();
+    endDragSession();
+    endFrameDragSession();
+    endMarqueeSession();
+    endResizeSession();
+    endFrameResizeSession();
+    cancelEdgeSession();
+
+    frameResizeSession = {
+      pointerId: event.pointerId,
+      frameId: parsed.frameId,
+      corner: parsed.corner,
+      startX: event.clientX,
+      startY: event.clientY,
+      startLeft: frame.x,
+      startTop: frame.y,
+      startRight: frame.x + frame.width,
+      startBottom: frame.y + frame.height,
+      moved: false,
+    };
+
+    store.setSelection({ type: 'frame', id: parsed.frameId });
+    store.setResizing(true);
+    framesLayer.setPointerCapture(event.pointerId);
   }
 
   function beginMarqueeSession(event) {
@@ -1274,40 +1308,88 @@ export function bindInteractions(elements, store) {
     }
   });
 
+  selectionControlsLayer?.addEventListener('pointerdown', (event) => {
+    if (isFrameDrawMode || event.button !== 0) return;
+
+    const nodeResizeEl = event.target.closest('[data-node-resize]');
+    if (nodeResizeEl) {
+      beginResizeSession(event, nodeResizeEl.dataset.nodeResize);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
+    const frameResizeEl = event.target.closest('[data-frame-resize]');
+    if (frameResizeEl) {
+      beginFrameResizeSession(event, frameResizeEl.dataset.frameResize);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
+    const nodeAnchorEl = event.target.closest('[data-node-anchor]');
+    if (nodeAnchorEl) {
+      beginEdgeSession(event, nodeAnchorEl.dataset.nodeAnchor);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
+    const frameAnchorEl = event.target.closest('[data-frame-anchor]');
+    if (frameAnchorEl) {
+      beginEdgeSession(event, frameAnchorEl.dataset.frameAnchor);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
+    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-frame-edit-open], [data-frame-delete]')) {
+      event.stopPropagation();
+    }
+  });
+
+  selectionControlsLayer?.addEventListener('click', (event) => {
+    const nodeOpenEl = event.target.closest('[data-node-edit-open]');
+    if (nodeOpenEl) {
+      const nodeId = nodeOpenEl.dataset.nodeEditOpen;
+      store.setSelection({ type: 'node', id: nodeId });
+      openNodeEditor(nodeId);
+      event.stopPropagation();
+      return;
+    }
+
+    const nodeDeleteEl = event.target.closest('[data-node-delete]');
+    if (nodeDeleteEl) {
+      const nodeId = nodeDeleteEl.dataset.nodeDelete;
+      activeLiveEditNodeId = null;
+      store.deleteNode(nodeId);
+      event.stopPropagation();
+      return;
+    }
+
+    const frameOpenEl = event.target.closest('[data-frame-edit-open]');
+    if (frameOpenEl) {
+      const frameId = frameOpenEl.dataset.frameEditOpen;
+      store.setSelection({ type: 'frame', id: frameId });
+      openFrameEditor(frameId);
+      event.stopPropagation();
+      return;
+    }
+
+    const frameDeleteEl = event.target.closest('[data-frame-delete]');
+    if (frameDeleteEl) {
+      const frameId = frameDeleteEl.dataset.frameDelete;
+      activeLiveEditFrameId = null;
+      store.deleteFrame(frameId);
+      event.stopPropagation();
+    }
+  });
+
   framesLayer.addEventListener('pointerdown', (event) => {
     if (isFrameDrawMode) return;
     const resizeEl = event.target.closest('[data-frame-resize]');
     if (resizeEl && event.button === 0) {
-      const parsed = parseFrameResizeToken(resizeEl.dataset.frameResize);
-      if (!parsed) return;
-      const state = store.getState();
-      const frame = getFrame(parsed.frameId, state);
-      if (!frame) return;
-
-      endPanSession();
-      endDragSession();
-      endFrameDragSession();
-      endMarqueeSession();
-      endResizeSession();
-      endFrameResizeSession();
-      cancelEdgeSession();
-
-      frameResizeSession = {
-        pointerId: event.pointerId,
-        frameId: parsed.frameId,
-        corner: parsed.corner,
-        startX: event.clientX,
-        startY: event.clientY,
-        startLeft: frame.x,
-        startTop: frame.y,
-        startRight: frame.x + frame.width,
-        startBottom: frame.y + frame.height,
-        moved: false,
-      };
-
-      store.setSelection({ type: 'frame', id: parsed.frameId });
-      store.setResizing(true);
-      framesLayer.setPointerCapture(event.pointerId);
+      beginFrameResizeSession(event, resizeEl.dataset.frameResize);
       event.stopPropagation();
       event.preventDefault();
       return;
