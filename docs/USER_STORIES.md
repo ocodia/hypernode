@@ -233,6 +233,129 @@ Acceptance criteria:
 - Node drag previews frame add/remove membership with distinct highlights.
 - Deleting a frame keeps contained nodes and clears their frame membership.
 
+## Epic 7 - Post-v1 Productivity and Presentation
+
+### US-22: Create image nodes from local files
+
+As a user, I want to place local images on the canvas so I can use visual references inside the graph.
+
+Acceptance criteria:
+
+- Toolbar image action opens a local image picker.
+- Valid image files create image nodes with embedded base64 image data.
+- New image nodes are created selected and enter the same inline editing flow as other nodes.
+- Invalid image reads fail safely without corrupting the graph.
+
+### US-23: Resize image nodes while preserving aspect ratio
+
+As a user, I want image nodes to resize cleanly so visual references stay readable and undistorted.
+
+Acceptance criteria:
+
+- Image nodes expose corner resize handles when selected.
+- Resize keeps the image aspect ratio locked.
+- Persisted width and height round-trip through autosave and JSON files.
+- Title and description remain rendered below the image pane after resize.
+
+### US-24: Add to a node selection incrementally
+
+As a user, I want to add or remove nodes from selection so I can act on a group without losing my current context.
+
+Acceptance criteria:
+
+- `Ctrl/Cmd + Click` toggles a node in the current node selection.
+- Multi-selection remains node-only and does not mix with edge or frame selection.
+- Clicking empty canvas clears the current node selection.
+- Single-node selection still collapses back to the normal single-selected state when only one node remains.
+
+### US-25: Marquee-select multiple nodes
+
+As a user, I want to drag a selection rectangle so I can select nearby nodes quickly.
+
+Acceptance criteria:
+
+- `Ctrl/Cmd + Drag` on empty canvas starts marquee selection.
+- A visible marquee rectangle is rendered during the drag.
+- Nodes are included when their interaction rect touches the marquee area.
+- Marquee results merge with the selection state that existed when the drag started.
+
+### US-26: Move a selected node group together
+
+As a user, I want to move multiple selected nodes in one gesture so I can reorganize a cluster efficiently.
+
+Acceptance criteria:
+
+- Dragging any selected node moves the full selected node group.
+- Relative positions inside the selected group are preserved during drag.
+- Connected edges remain visually attached while the group moves.
+- Group movement is undoable and redoable.
+
+### US-27: Apply palette colors to nodes and frames
+
+As a user, I want to color graph objects so I can add visual structure and emphasis.
+
+Acceptance criteria:
+
+- The palette popover offers 10 curated swatches and a reset action.
+- Choosing a swatch applies that color to all selected nodes.
+- Choosing a swatch while a frame is selected applies that color to the frame.
+- Reset removes the explicit object color and returns it to the default styling.
+
+### US-28: Set the default color for newly created nodes
+
+As a user, I want my chosen palette color to carry forward so repeated node creation is faster.
+
+Acceptance criteria:
+
+- Choosing a palette swatch updates the graph-level default node color.
+- Newly created text nodes inherit the current default color.
+- Newly created image nodes inherit the current default color.
+- Resetting the palette default removes inherited color from future nodes without changing existing ones.
+
+### US-29: Edit graph settings from a dedicated panel
+
+As a user, I want graph-wide controls in one place so I can adjust presentation and edge behavior without editing files.
+
+Acceptance criteria:
+
+- Settings dialog exposes graph name, background style, anchors mode, arrowhead visibility, and arrowhead size.
+- Changing a setting updates the current graph immediately.
+- Graph name updates the toolbar title and browser tab title.
+- Settings remain available without leaving the canvas workflow.
+
+### US-30: Persist settings through autosave and file round-trips
+
+As a user, I want graph settings to stay with the document so the graph reopens the way I left it.
+
+Acceptance criteria:
+
+- Autosave persists graph settings with the graph payload.
+- Opening a valid graph JSON restores persisted settings.
+- Saving a graph JSON writes the current settings into the file.
+- Invalid settings payloads are rejected before replacing the current graph.
+
+### US-31: Navigate the graph with directional shortcuts
+
+As a user, I want keyboard navigation across connected nodes so I can inspect a graph without relying on pointer travel.
+
+Acceptance criteria:
+
+- `Ctrl/Cmd + Arrow` selects a connected node in the requested direction when available.
+- If no directly connected candidate fits that direction, the nearest valid node in that direction is selected.
+- When no node is selected, directional navigation can start from an available node.
+- Navigation changes selection without entering edit mode.
+
+### US-32: Create a linked node from the keyboard
+
+As a user, I want to create a connected follow-up node from the keyboard so I can expand ideas quickly.
+
+Acceptance criteria:
+
+- `Ctrl/Cmd + Shift + Enter` creates a new node from the currently selected node.
+- The new node is positioned near the source node with collision-avoidance behavior.
+- An edge from the source node to the new node is created automatically.
+- The new node becomes selected and enters edit mode immediately.
+
 ## Definition of Done (v1)
 
 Version 1 is complete when:

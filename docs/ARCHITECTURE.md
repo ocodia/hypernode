@@ -101,72 +101,20 @@ Responsible for:
 
 ## Data Model
 
-### Node
+The canonical persisted graph format, field rules, and validation constraints are documented in [DATA_MODEL.md](/c:/Users/Paul/source/repos/hypernode/docs/DATA_MODEL.md).
 
-```json
-{
-  "id": "node_id",
-  "kind": "text|image",
-  "title": "Node title",
-  "description": "",
-  "x": 0,
-  "y": 0,
-  "frameId": "frame_id|null",
-  "width": 210,
-  "height": 96,
-  "imageData": "data:image/png;base64,...",
-  "imageAspectRatio": 1.777
-}
-```
+At a high level, the graph payload contains:
 
-`kind` defaults to `text`. `imageData` and `imageAspectRatio` are required when `kind` is `image`.
-
-`width` and `height` are optional for text nodes and are present when explicitly resized. Image nodes persist explicit width/height for ratio-safe resizing.
-
-### Frame
-
-```json
-{
-  "id": "frame_id",
-  "title": "Frame title",
-  "description": "",
-  "x": 0,
-  "y": 0,
-  "width": 320,
-  "height": 200,
-  "borderWidth": 1,
-  "borderStyle": "solid|dashed|dotted"
-}
-```
-
-### Edge
-
-```json
-{
-  "id": "edge_id",
-  "from": "node_id",
-  "to": "node_id",
-  "fromAnchor": "left|right|top|bottom|null",
-  "toAnchor": "left|right|top|bottom|null"
-}
-```
-
-### Graph
-
-```json
-{
-  "name": "Graph name",
-  "settings": {
-    "backgroundStyle": "dots|graph-paper",
-    "anchorsMode": "auto|exact",
-    "arrowheads": "shown|hidden",
-    "arrowheadSizeStep": 0
-  },
-  "nodes": [],
-  "frames": [],
-  "edges": []
-}
-```
+- `name`
+- `settings`
+  - `backgroundStyle`
+  - `anchorsMode`
+  - `arrowheads`
+  - `arrowheadSizeStep`
+  - `nodeColorDefault`
+- `nodes`
+- `frames`
+- `edges`
 
 ## State Management
 
@@ -176,10 +124,11 @@ History snapshots are bounded (past stack capped at 100).
 
 ## Import/Export and Storage
 
-- Autosave writes `{ name, settings, nodes, edges }` to `localStorage`.
+- Autosave writes `{ name, settings, nodes, frames, edges }` to `localStorage`.
 - Startup loads saved graph if valid.
-- Import validates payload before replace.
+- Import validates the full graph payload before replace.
 - Export writes formatted JSON file.
+- Theme preference is stored separately from graph JSON and graph autosave.
 
 ## Constraints
 

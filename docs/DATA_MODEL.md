@@ -1,0 +1,201 @@
+# Hypernode - Data Model
+
+## Purpose
+
+This document defines the canonical graph payload persisted to browser storage and written to graph JSON files.
+
+The same top-level shape is used for:
+
+- autosave in `localStorage`
+- import validation
+- export serialization
+
+Theme preference is not part of the graph payload. It is stored separately in browser storage under its own key.
+
+## Canonical Graph Payload
+
+```json
+{
+  "name": "Untitled Graph",
+  "settings": {
+    "backgroundStyle": "dots",
+    "anchorsMode": "auto",
+    "arrowheads": "shown",
+    "arrowheadSizeStep": 0,
+    "nodeColorDefault": null
+  },
+  "nodes": [],
+  "frames": [],
+  "edges": []
+}
+```
+
+Validation requires:
+
+- `name` must be a string
+- `settings` must be an object
+- `nodes` must be an array
+- `edges` must be an array
+- `frames` may be omitted, but when present must be an array
+
+Invalid payloads are rejected before import or restore is applied.
+
+## Settings
+
+```json
+{
+  "backgroundStyle": "dots | graph-paper",
+  "anchorsMode": "auto | exact",
+  "arrowheads": "shown | hidden",
+  "arrowheadSizeStep": 0,
+  "nodeColorDefault": "sage | sky | amber | rose | slate | teal | violet | peach | mint | indigo | null"
+}
+```
+
+Rules:
+
+- `backgroundStyle` must be `dots` or `graph-paper`
+- `anchorsMode` must be `auto` or `exact`
+- `arrowheads` must be `shown` or `hidden`
+- `arrowheadSizeStep` is sanitized to an integer in the inclusive range `0..9`
+- `nodeColorDefault` may be `null` or one of the curated palette keys
+
+Fallback behavior:
+
+- invalid or missing settings values are sanitized back to graph defaults when loaded into app state
+- payload validation rejects invalid setting enum values and invalid color keys before import/restore succeeds
+
+## Nodes
+
+### Text Node
+
+```json
+{
+  "id": "node_123",
+  "title": "Untitled Node",
+  "description": "",
+  "kind": "text",
+  "x": 0,
+  "y": 0,
+  "frameId": "frame_123",
+  "colorKey": "sage",
+  "width": 210,
+  "height": 80
+}
+```
+
+### Image Node
+
+```json
+{
+  "id": "node_456",
+  "title": "Reference Screenshot",
+  "description": "",
+  "kind": "image",
+  "x": 0,
+  "y": 0,
+  "frameId": "frame_123",
+  "colorKey": "sky",
+  "width": 210,
+  "height": 182,
+  "imageData": "data:image/png;base64,...",
+  "imageAspectRatio": 1.777
+}
+```
+
+Rules:
+
+- `id` must be a non-empty string
+- `title` is stored as a string and sanitized to the default title when empty after trimming
+- `description` is stored as a string
+- `kind` may be `text` or `image`; invalid or missing values resolve to `text`
+- `x` and `y` are stored as numbers and sanitize to `0` when invalid
+- `width` and `height` are optional, but when present must be positive finite numbers
+- `frameId` is optional and must reference an existing frame when present
+- `colorKey` is optional and may be any curated palette key or `null`
+
+Image-node-specific rules:
+
+- `imageData` is required for `kind: "image"`
+- `imageData` must be a `data:image/...;base64,...` URL
+- `imageAspectRatio` is required for `kind: "image"` and must be a positive finite number
+- image nodes persist explicit `width` and `height`
+- when an image payload is malformed during sanitization, the node falls back to a text node instead of crashing the app
+
+Sizing behavior:
+
+- text-node width and height remain optional unless the node has been resized
+- image-node height is derived from width, aspect ratio, and fixed metadata height when an explicit valid height is not present
+
+## Frames
+
+```json
+{
+  "id": "frame_123",
+  "title": "Untitled Frame",
+  "description": "",
+  "x": 0,
+  "y": 0,
+  "width": 320,
+  "height": 200,
+  "borderWidth": 1,
+  "borderStyle": "solid",
+  "colorKey": "mint"
+}
+```
+
+Rules:
+
+- `id` must be a non-empty string
+- `title` is sanitized to the default title when empty after trimming
+- `description` is stored as a string
+- `width` and `height` must be positive finite numbers when present
+- sanitized frame dimensions are clamped to minimum frame dimensions in app state
+- `borderWidth` is sanitized to an integer in the inclusive range `1..8`
+- `borderStyle` must be `solid`, `dashed`, or `dotted`
+- `colorKey` is optional and uses the same curated palette keys as nodes
+
+## Edges
+
+```json
+{
+  "id": "edge_123",
+  "from": "node_123",
+  "to": "frame_123",
+  "fromAnchor": "right",
+  "toAnchor": "left"
+}
+```
+
+Rules:
+
+- `id` must be a string
+- `from` and `to` must reference existing node or frame ids
+- `from` and `to` may not be the same id
+- stored anchors may be `top`, `right`, `bottom`, `left`, or `null`
+- payload validation rejects edges whose endpoints do not exist
+
+Sanitization behavior:
+
+- invalid anchors are converted to `null` in app state
+
+## Cross-Object Validation
+
+Payload validation rejects graphs when any of the following are true:
+
+- `settings` contains invalid enum values or an out-of-range arrowhead size step
+- `settings.nodeColorDefault` is not `null` and not a valid palette key
+- `frames` contains duplicate frame ids
+- `nodes` contains duplicate node ids
+- a node references a `frameId` that does not exist
+- an image node is missing valid `imageData` or `imageAspectRatio`
+- a frame contains invalid `borderWidth`, `borderStyle`, or `colorKey`
+- an edge points to a node or frame id that does not exist
+- an edge forms a self-loop at the payload level
+
+## Persistence Boundaries
+
+- Graph autosave is stored under the graph storage key as `{ name, settings, nodes, frames, edges }`
+- Graph export writes the same shape as formatted JSON
+- Graph import accepts only payloads that pass validation for the same shape
+- Theme preference is persisted separately from graph data and is not included in exported files
