@@ -3341,12 +3341,12 @@ export function bindInteractions(elements, store, options = {}) {
   resetAboutDialog();
   renderShortcutCatalog();
   filterShortcuts('');
+  resetCanvasView();
   syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   syncShortcutUiFromState();
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
   if (options.shouldCreateStarter) {
-    resetCanvasView();
     createStarterHypernode();
     syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   }
