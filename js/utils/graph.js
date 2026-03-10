@@ -11,7 +11,7 @@ const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
 const BACKGROUND_STYLES = new Set(['dots', 'graph-paper']);
 const ANCHORS_MODES = new Set(['auto', 'exact']);
 const ARROWHEADS_MODES = new Set(['shown', 'hidden']);
-const UI_THEME_PRESETS = new Set(['graphite', 'paper']);
+const UI_THEME_PRESETS = new Set(['blueprint', 'fjord', 'slate', 'paper', 'ember', 'soft-black']);
 const UI_RADIUS_PRESETS = new Set(['sharp', 'soft', 'rounded', 'square']);
 const ARROWHEAD_SIZE_STEP_MIN = 0;
 const ARROWHEAD_SIZE_STEP_MAX = 9;
@@ -159,7 +159,7 @@ export function validateGraphPayload(payload) {
   }
 
   const hasValidUiThemePreset = payload.settings.uiThemePreset === undefined
-    || isValidUiThemePreset(payload.settings.uiThemePreset);
+    || normalizeUiThemePreset(payload.settings.uiThemePreset) !== null;
   const hasValidUiRadiusPreset = payload.settings.uiRadiusPreset === undefined
     || normalizeUiRadiusPreset(payload.settings.uiRadiusPreset) !== null;
   const hasValidCoreSettings = isValidBackgroundStyle(payload.settings.backgroundStyle);
@@ -220,9 +220,7 @@ export function sanitizeGraphName(name) {
 
 export function sanitizeGraphSettings(settings) {
   return {
-    uiThemePreset: isValidUiThemePreset(settings?.uiThemePreset)
-      ? settings.uiThemePreset
-      : GRAPH_DEFAULTS.uiThemePreset,
+    uiThemePreset: normalizeUiThemePreset(settings?.uiThemePreset) ?? GRAPH_DEFAULTS.uiThemePreset,
     uiRadiusPreset: normalizeUiRadiusPreset(settings?.uiRadiusPreset) ?? GRAPH_DEFAULTS.uiRadiusPreset,
     backgroundStyle: isValidBackgroundStyle(settings?.backgroundStyle)
       ? settings.backgroundStyle
@@ -258,6 +256,16 @@ function isValidBackgroundStyle(value) {
 
 function isValidUiThemePreset(value) {
   return typeof value === 'string' && UI_THEME_PRESETS.has(value);
+}
+
+function normalizeUiThemePreset(value) {
+  if (value === 'graphite') {
+    return 'blueprint';
+  }
+  if (value === 'mist') {
+    return 'slate';
+  }
+  return isValidUiThemePreset(value) ? value : null;
 }
 
 function isValidUiRadiusPreset(value) {

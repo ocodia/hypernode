@@ -20,7 +20,7 @@ If the app also keeps a local color-mode preference outside the graph payload, t
 {
   "name": "Untitled hypernode",
   "settings": {
-    "uiThemePreset": "graphite",
+    "uiThemePreset": "blueprint",
     "uiRadiusPreset": "rounded",
     "backgroundStyle": "dots",
     "anchorsMode": "auto",
@@ -50,7 +50,7 @@ Invalid payloads are rejected before import or restore is applied.
 
 ```json
 {
-  "uiThemePreset": "graphite | paper",
+  "uiThemePreset": "blueprint | fjord | slate | paper | ember | soft-black",
   "uiRadiusPreset": "sharp | soft | rounded",
   "backgroundStyle": "dots | graph-paper",
   "anchorsMode": "auto | exact",
@@ -64,7 +64,7 @@ Invalid payloads are rejected before import or restore is applied.
 
 Rules:
 
-- `uiThemePreset` must be `graphite` or `paper`
+- `uiThemePreset` must be `blueprint`, `fjord`, `slate`, `paper`, `ember`, or `soft-black`
 - `uiRadiusPreset` must be `sharp`, `soft`, or `rounded`
 - `backgroundStyle` must be `dots` or `graph-paper`
 - `anchorsMode` must be `auto` or `exact`
@@ -76,7 +76,7 @@ Rules:
 
 Defaults:
 
-- `uiThemePreset` defaults to `graphite` when missing or invalid
+- `uiThemePreset` defaults to `blueprint` when missing or invalid
 - `uiRadiusPreset` defaults to `rounded` when missing or invalid
 - legacy `uiRadiusPreset: "square"` is migrated to `soft`
 
@@ -84,7 +84,9 @@ Fallback behavior:
 
 - invalid or missing settings values are sanitized back to hypernode defaults when loaded into app state
 - payload validation rejects invalid setting enum values and invalid color keys before import/restore succeeds
-- older hypernode files that predate these fields fall back to `graphite` and `rounded`
+- legacy `uiThemePreset: "graphite"` is migrated to `blueprint`
+- legacy `uiThemePreset: "mist"` is migrated to `slate`
+- older hypernode files that predate these fields fall back to `blueprint` and `rounded`
 
 ## Nodes
 

@@ -43,10 +43,10 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Open/save hypernode JSON files with validation and status toast feedback.
 - Start a new hypernode from the toolbar (with discard confirmation when existing hypernode data is present).
 - Built-in semantic design system for surfaces, buttons, inputs, dialogs, toolbar controls, nodes, and frames.
-- Curated hypernode-level UI theme presets (`graphite` and `paper`) saved with the document.
+- Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`) saved with the document.
 - Shared UI radius presets (`sharp`, `soft`, `rounded`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
 - Settings menu for:
-  - UI theme preset (`graphite` or `paper`)
+  - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `soft-black`)
   - UI radius preset (`sharp`, `soft`, or `rounded`)
   - hypernode background style (`dots` or `graph paper`)
   - anchors mode (`auto-anchor` or `exact anchor`)
@@ -132,7 +132,7 @@ These tokens are applied across:
 
 Appearance stays preset-driven:
 
-- UI theme presets: `graphite`, `paper`
+- UI theme presets: `blueprint`, `fjord`, `slate`, `paper`, `ember`, `soft-black`
 - UI radius presets: `sharp`, `soft`, `rounded`
 
 The selected radius preset applies to standard UI controls and canvas objects alike, including nodes and frames.

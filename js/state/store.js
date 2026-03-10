@@ -63,7 +63,7 @@ export function createStore(initialGraph = null) {
   }
 
   function setImportStatus(message) {
-    state.ui.importStatus = String(message ?? '');
+    state.ui.importStatus = normalizeImportStatus(message);
     notify();
 
     if (importStatusTimeoutHandle) {
@@ -71,12 +71,12 @@ export function createStore(initialGraph = null) {
       importStatusTimeoutHandle = null;
     }
 
-    const currentMessage = state.ui.importStatus.trim();
+    const currentMessage = getImportStatusText(state.ui.importStatus);
     if (!currentMessage) return;
 
     importStatusTimeoutHandle = setTimeout(() => {
       importStatusTimeoutHandle = null;
-      if (!state.ui.importStatus.trim()) return;
+      if (!getImportStatusText(state.ui.importStatus)) return;
       state.ui.importStatus = '';
       notify();
     }, 5000);
@@ -1133,4 +1133,30 @@ function sanitizeColorKey(colorKey) {
     return null;
   }
   return NODE_COLOR_KEYS.includes(colorKey) ? colorKey : null;
+}
+
+function normalizeImportStatus(message) {
+  if (message && typeof message === 'object') {
+    const title = String(message.title ?? '').trim();
+    const icon = String(message.icon ?? '').trim();
+    const description = String(message.description ?? '').trim();
+    if (title || description) {
+      return { title, icon, description };
+    }
+  }
+  return String(message ?? '');
+}
+
+function getImportStatusText(message) {
+  if (typeof message === 'string') {
+    return message.trim();
+  }
+  if (message && typeof message === 'object') {
+    return [message.title, message.description]
+      .map((value) => String(value ?? '').trim())
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+  }
+  return '';
 }

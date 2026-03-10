@@ -102,10 +102,14 @@ The visual direction should emphasize:
 
 The theming model should stay preset-driven. Hypernode appearance should be selected from curated presets rather than a free-form token editor.
 
-Initial appearance presets:
+Curated appearance presets:
 
-- `graphite`
+- `blueprint`
+- `fjord`
+- `slate` (soft grey palette)
 - `paper`
+- `ember`
+- `soft-black`
 
 ## Canvas
 
@@ -206,7 +210,7 @@ Ensure:
 - visible keyboard focus outlines driven by the shared `focus-ring` token
 - adequate contrast for text, surfaces, states, and controls across all presets
 - keyboard support for delete, undo, redo, save, edit toggle, linked-node creation, directional navigation, and escape behavior
-- themed controls remain readable and operable in both `graphite` and `paper`
+- themed controls remain readable and operable across `blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`
 
 ## Persistence and Compatibility
 
@@ -214,7 +218,7 @@ Hypernode appearance should be document-level state:
 
 - UI theme preset is saved in hypernode settings
 - UI radius preset is saved in hypernode settings
-- older documents without these values should fall back to `graphite` and `rounded`
+- older documents without these values should fall back to `blueprint` and `rounded`
 
 If the product also keeps an app-level system appearance preference, that preference should be secondary and must not override an explicit hypernode appearance preset.
 

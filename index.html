@@ -31,7 +31,6 @@
         <div class="toolbar__group" aria-label="Style and settings">
           <button id="node-color-btn" class="toolbar__icon-btn" type="button" aria-label="Color selected nodes" title="Color selected nodes" aria-haspopup="dialog" aria-expanded="false" aria-controls="node-color-popover" disabled><i class="bi bi-palette"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
           <button id="settings-btn" class="toolbar__icon-btn" type="button" aria-label="Hypernode settings" title="Hypernode settings"><i class="bi bi-sliders2"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
-          <button id="theme-toggle-btn" class="toolbar__icon-btn" type="button" aria-label="Switch to paper theme" title="Switch to paper theme"><i class="bi bi-sun"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
         </div>
         <div class="toolbar__group" aria-label="Help">
           <button id="shortcuts-btn" class="toolbar__icon-btn" type="button" aria-label="Keyboard shortcuts" title="Keyboard shortcuts"><i class="bi bi-command"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
@@ -175,12 +174,28 @@
                 <legend>Theme</legend>
                 <p class="settings-dialog__hint">Document-level UI presets apply to dialogs, controls, nodes, frames, and focus surfaces.</p>
                 <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="graphite" />
-                  Graphite
+                  <input type="radio" name="ui-theme-preset" value="blueprint" />
+                  Blueprint
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="ui-theme-preset" value="fjord" />
+                  Fjord
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="ui-theme-preset" value="slate" />
+                  Slate
                 </label>
                 <label class="settings-dialog__option">
                   <input type="radio" name="ui-theme-preset" value="paper" />
                   Paper
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="ui-theme-preset" value="ember" />
+                  Ember
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="ui-theme-preset" value="soft-black" />
+                  Soft Black
                 </label>
               </fieldset>
               <fieldset class="settings-dialog__section">

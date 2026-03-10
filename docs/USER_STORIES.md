@@ -343,7 +343,7 @@ As a user, I want to choose a curated appearance preset so each hypernode can ha
 
 Acceptance criteria:
 
-- Settings expose UI theme presets `graphite` and `paper`.
+- Settings expose UI theme presets `blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`.
 - Choosing a preset updates shared UI surfaces, controls, dialogs, nodes, and frames.
 - The node/frame annotation palette remains available and distinct from the document UI theme.
 - Focus states and text contrast remain readable across all supported presets.

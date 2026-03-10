@@ -134,10 +134,26 @@ export function renderFocusOverlay(focusLayer, state) {
 }
 
 export function renderImportStatus(importStatus, state) {
-  const message = String(state.ui.importStatus || '').trim();
-  importStatus.textContent = message;
-  importStatus.hidden = !message;
-  importStatus.classList.toggle('is-visible', Boolean(message));
+  const message = state.ui.importStatus;
+  const text = typeof message === 'string'
+    ? String(message || '').trim()
+    : [message?.title, message?.description].map((value) => String(value || '').trim()).filter(Boolean).join(' ').trim();
+  if (message && typeof message === 'object') {
+    const title = escapeHtml(String(message.title || '').trim());
+    const icon = String(message.icon || '').trim();
+    const description = escapeHtml(String(message.description || '').trim());
+    importStatus.innerHTML = `
+      <span class="toast__content">
+        ${icon ? `<span class="toast__icon" aria-hidden="true"><i class="bi ${icon}"></i></span>` : ''}
+        <span class="toast__title">${title}</span>
+        ${description ? `<span class="toast__description">${description}</span>` : ''}
+      </span>
+    `;
+  } else {
+    importStatus.textContent = text;
+  }
+  importStatus.hidden = !text;
+  importStatus.classList.toggle('is-visible', Boolean(text));
 }
 
 export function renderHypernodeMetadata(graphTitle, viewportCoordinates, canvas, state) {
@@ -151,4 +167,13 @@ export function renderHypernodeMetadata(graphTitle, viewportCoordinates, canvas,
     viewportCoordinates.textContent = `x: ${centerX}  y: ${centerY}`;
   }
   document.title = `${state.name} - hypernode`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }

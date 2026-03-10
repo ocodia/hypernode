@@ -19,6 +19,17 @@ test('sanitizeGraphSettings preserves explicit showShortcutsUi boolean values', 
   assert.equal(sanitizeGraphSettings({ showToolbarShortcutHints: false }).showToolbarShortcutHints, false);
 });
 
+test('sanitizeGraphSettings accepts all curated ui theme presets', () => {
+  for (const preset of ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'soft-black']) {
+    assert.equal(sanitizeGraphSettings({ uiThemePreset: preset }).uiThemePreset, preset);
+  }
+});
+
+test('sanitizeGraphSettings migrates legacy ui theme preset ids', () => {
+  assert.equal(sanitizeGraphSettings({ uiThemePreset: 'graphite' }).uiThemePreset, 'blueprint');
+  assert.equal(sanitizeGraphSettings({ uiThemePreset: 'mist' }).uiThemePreset, 'slate');
+});
+
 test('sanitizeGraphSettings resets invalid showShortcutsUi values to true', () => {
   assert.equal(sanitizeGraphSettings({ showShortcutsUi: 'nope' }).showShortcutsUi, true);
   assert.equal(sanitizeGraphSettings({ showShortcutsUi: 0 }).showShortcutsUi, true);
@@ -52,4 +63,30 @@ test('validateGraphPayload accepts explicit showShortcutsUi booleans and rejects
       showToolbarShortcutHints: 'invalid',
     },
   }), false);
+});
+
+test('validateGraphPayload accepts the expanded curated ui theme preset list', () => {
+  const makePayload = (uiThemePreset) => ({
+    name: 'Graph',
+    settings: {
+      uiThemePreset,
+      backgroundStyle: 'dots',
+      anchorsMode: 'auto',
+      arrowheads: 'shown',
+      arrowheadSizeStep: 0,
+      showShortcutsUi: true,
+      showToolbarShortcutHints: false,
+      nodeColorDefault: null,
+    },
+    nodes: [],
+    frames: [],
+    edges: [],
+  });
+
+  for (const preset of ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'soft-black']) {
+    assert.equal(validateGraphPayload(makePayload(preset)), true);
+  }
+  assert.equal(validateGraphPayload(makePayload('graphite')), true);
+  assert.equal(validateGraphPayload(makePayload('mist')), true);
+  assert.equal(validateGraphPayload(makePayload('nocturne')), false);
 });

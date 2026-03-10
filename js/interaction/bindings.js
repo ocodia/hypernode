@@ -148,8 +148,8 @@ const SHORTCUT_CATALOG = [
     id: 'toggle-theme',
     keys: ['T'],
     title: 'Toggle document theme',
-    description: 'Switches the current hypernode between the graphite and paper presets.',
-    searchTokens: ['theme', 'appearance', 'graphite', 'paper', 'preset'],
+    description: 'Cycles the current hypernode through the curated theme presets.',
+    searchTokens: ['theme', 'appearance', 'blueprint', 'graphite', 'fjord', 'slate', 'mist', 'paper', 'ember', 'soft black', 'preset'],
   },
   {
     id: 'open-about',
@@ -178,7 +178,6 @@ const TOOLBAR_SHORTCUTS = {
   'redo-btn': { label: 'Redo', shortcut: 'Ctrl/Cmd+Y' },
   'reset-view-btn': { label: 'Reset view', shortcut: 'Ctrl/Cmd+0' },
   'settings-btn': { label: 'Hypernode settings', shortcut: 'Ctrl/Cmd+,' },
-  'theme-toggle-btn': { label: 'Toggle document theme', shortcut: 'T' },
   'shortcuts-btn': { label: 'Keyboard shortcuts', shortcut: 'Ctrl/Cmd+/' },
   'about-btn': { label: 'About hypernode', shortcut: 'Shift+?' },
 };
@@ -2366,7 +2365,6 @@ export function bindInteractions(elements, store, options = {}) {
   const showToolbarShortcutsInput = document.getElementById('show-toolbar-shortcuts-input');
   const arrowheadSizeRange = document.getElementById('arrowhead-size-range');
   const arrowheadSizeValue = document.getElementById('arrowhead-size-value');
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
   const newGraphBtn = document.getElementById('new-graph-btn');
   const openGraphBtn = document.getElementById('open-graph-btn');
   const saveGraphBtn = document.getElementById('save-graph-btn');
@@ -2514,9 +2512,14 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function toggleThemePreference() {
-    const currentThemePreset = store.getState().settings?.uiThemePreset === 'paper' ? 'paper' : 'graphite';
-    const nextThemePreset = currentThemePreset === 'graphite' ? 'paper' : 'graphite';
+    const currentThemePreset = getThemePresetSequence().includes(store.getState().settings?.uiThemePreset)
+      ? store.getState().settings.uiThemePreset
+      : 'blueprint';
+    const presetSequence = getThemePresetSequence();
+    const currentIndex = presetSequence.indexOf(currentThemePreset);
+    const nextThemePreset = presetSequence[(currentIndex + 1) % presetSequence.length];
     store.setUiThemePreset(nextThemePreset);
+    showThemeToast(nextThemePreset);
   }
 
   function setAboutSlide(nextIndex) {
@@ -2599,9 +2602,7 @@ export function bindInteractions(elements, store, options = {}) {
         button.classList.remove('toolbar__icon-btn--hinted');
         return;
       }
-      const baseLabel = button.id === 'theme-toggle-btn'
-        ? getThemeToggleButtonCopy(state.settings?.uiThemePreset).label
-        : config.label;
+      const baseLabel = config.label;
       const hintVisible = showToolbarShortcuts && typeof config.shortcut === 'string' && config.shortcut.length > 0;
       const formattedShortcut = formatShortcutLabel(config.shortcut, { compact: true });
       const spokenShortcut = formatShortcutLabel(config.shortcut);
@@ -2754,6 +2755,7 @@ export function bindInteractions(elements, store, options = {}) {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || !target.checked) return;
       store.setUiThemePreset(target.value);
+      showThemeToast(target.value);
     });
   });
 
@@ -2764,12 +2766,6 @@ export function bindInteractions(elements, store, options = {}) {
       store.setUiRadiusPreset(target.value);
     });
   });
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      toggleThemePreference();
-    });
-  }
 
   syncNodeColorButtonState(store.getState(), nodeColorBtn, nodeColorPopover);
 
@@ -3792,34 +3788,42 @@ function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, show
     updateArrowheadSizeLabel(arrowheadSizeValue, step);
   }
 
-  syncThemeToggleButton(state.settings?.uiThemePreset, document.getElementById('theme-toggle-btn'));
 }
 
-function syncThemeToggleButton(uiThemePreset, toggleButton) {
-  if (!(toggleButton instanceof HTMLButtonElement)) return;
-  const { icon, label, title } = getThemeToggleButtonCopy(uiThemePreset);
-  const iconEl = toggleButton.querySelector('.bi');
-  if (iconEl instanceof HTMLElement) {
-    iconEl.className = `bi ${icon}`;
-  }
-  toggleButton.setAttribute('aria-label', label);
-  toggleButton.setAttribute('title', title);
+function getThemePresetSequence() {
+  return ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'soft-black'];
 }
 
-function getThemeToggleButtonCopy(uiThemePreset) {
-  const currentPreset = uiThemePreset === 'paper' ? 'paper' : 'graphite';
-  if (currentPreset === 'paper') {
-    return {
-      icon: 'bi-moon-stars',
-      label: 'Switch to graphite theme',
-      title: 'Switch to Graphite Theme',
-    };
-  }
-  return {
-    icon: 'bi-sun',
-    label: 'Switch to paper theme',
-    title: 'Switch to Paper Theme',
+function getThemePresetPresentation(uiThemePreset) {
+  const presetLabels = {
+    blueprint: 'Blueprint',
+    fjord: 'Fjord',
+    slate: 'Slate',
+    paper: 'Paper',
+    ember: 'Ember',
+    'soft-black': 'Soft Black',
   };
+  const iconByPreset = {
+    blueprint: 'bi-moon-stars',
+    fjord: 'bi-water',
+    slate: 'bi-cloud-fog2',
+    paper: 'bi-sun',
+    ember: 'bi-brightness-alt-high',
+    'soft-black': 'bi-circle-half',
+  };
+  return {
+    icon: iconByPreset[uiThemePreset] || iconByPreset.blueprint,
+    title: presetLabels[uiThemePreset] || presetLabels.blueprint,
+  };
+}
+
+function showThemeToast(uiThemePreset) {
+  const { icon, title } = getThemePresetPresentation(uiThemePreset);
+  store.setImportStatus({
+    icon,
+    title,
+    description: 'theme',
+  });
 }
 
 function updateArrowheadSizeLabel(labelEl, step) {

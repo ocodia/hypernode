@@ -4,6 +4,15 @@ import { renderNodes } from './modules/nodes.js';
 import { renderFocusOverlay, renderHypernodeMetadata, renderImportStatus, renderSelectionControls } from './modules/ui.js';
 import { applyViewport } from './modules/viewport.js';
 
+const THEME_META = {
+  blueprint: { mode: 'dark', color: '#0f172a' },
+  fjord: { mode: 'dark', color: '#0d1b24' },
+  slate: { mode: 'light', color: '#e6e9ed' },
+  paper: { mode: 'light', color: '#f4f7fb' },
+  ember: { mode: 'light', color: '#f3eadf' },
+  'soft-black': { mode: 'dark', color: '#121315' },
+};
+
 export function createRenderer(elements, _store) {
   void _store;
   const {
@@ -42,10 +51,11 @@ export function createRenderer(elements, _store) {
     canvas.dataset.backgroundStyle = state.settings.backgroundStyle;
     document.documentElement.dataset.uiTheme = state.settings.uiThemePreset;
     document.documentElement.dataset.uiRadius = state.settings.uiRadiusPreset;
-    document.documentElement.dataset.theme = state.settings.uiThemePreset === 'graphite' ? 'dark' : 'light';
+    const themeMetaConfig = THEME_META[state.settings.uiThemePreset] ?? THEME_META.blueprint;
+    document.documentElement.dataset.theme = themeMetaConfig.mode;
     const themeMeta = document.querySelector('meta[name="theme-color"]');
     if (themeMeta instanceof HTMLMetaElement) {
-      themeMeta.content = state.settings.uiThemePreset === 'graphite' ? '#0f172a' : '#f4f7fb';
+      themeMeta.content = themeMetaConfig.color;
     }
     renderFrames(framesLayer, state);
     renderNodes(nodesLayer, state);
