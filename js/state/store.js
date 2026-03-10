@@ -146,6 +146,19 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setStarterNode(id) {
+    const nextId = id || null;
+    if (state.ui.starterNodeId === nextId) return;
+    state.ui.starterNodeId = nextId;
+    notify();
+  }
+
+  function clearStarterNode() {
+    if (!state.ui.starterNodeId) return;
+    state.ui.starterNodeId = null;
+    notify();
+  }
+
   function setEditingFrame(id) {
     const nextId = id || null;
     if (state.ui.editingNodeId && state.ui.editingNodeId !== nextId) {
@@ -640,6 +653,9 @@ export function createStore(initialGraph = null) {
     if (state.ui.focusedNodeId === id) {
       state.ui.focusedNodeId = null;
     }
+    if (state.ui.starterNodeId === id) {
+      state.ui.starterNodeId = null;
+    }
     notify();
   }
 
@@ -710,6 +726,9 @@ export function createStore(initialGraph = null) {
     }
     if (state.ui.focusedNodeId && selected.has(state.ui.focusedNodeId)) {
       state.ui.focusedNodeId = null;
+    }
+    if (state.ui.starterNodeId && selected.has(state.ui.starterNodeId)) {
+      state.ui.starterNodeId = null;
     }
     state.selection = null;
     notify();
@@ -1087,6 +1106,8 @@ export function createStore(initialGraph = null) {
     clearEditingNode,
     setFocusedNode,
     clearFocusedNode,
+    setStarterNode,
+    clearStarterNode,
     setEditingFrame,
     clearEditingFrame,
     setPanning,

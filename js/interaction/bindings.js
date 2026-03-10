@@ -568,6 +568,7 @@ export function bindInteractions(elements, store, options = {}) {
       description: '',
     });
     if (!node) return false;
+    store.setStarterNode(node.id);
     openNodeFocus(node.id, { lockFocusMs: 7000, stabilizeFrames: 3 });
     return true;
   }
@@ -814,7 +815,7 @@ export function bindInteractions(elements, store, options = {}) {
     if (!node) return;
 
     const currentWidth = Math.max(IMAGE_NODE_DEFAULTS.minImageWidth, Math.round(Number(node.width) || NODE_DEFAULTS.width));
-    const currentHeight = Math.max(IMAGE_NODE_DEFAULTS.metaHeight, Math.round(Number(node.height) || IMAGE_NODE_DEFAULTS.metaHeight));
+    const currentHeight = Math.max(IMAGE_NODE_DEFAULTS.metaHeight, Math.round(Number(node.height) || (NODE_DEFAULTS.height + IMAGE_NODE_DEFAULTS.metaHeight)));
     const currentAspectRatio = Number(node.imageAspectRatio);
     const currentImageHeight = Number.isFinite(currentAspectRatio) && currentAspectRatio > 0
       ? Math.round(currentWidth / currentAspectRatio)
@@ -833,9 +834,9 @@ export function bindInteractions(elements, store, options = {}) {
         width: imageFileInfo.width,
         height: imageFileInfo.height,
       });
-      store.setImportStatus('Image updated.');
+      store.setImportStatus(node.kind === IMAGE_NODE_DEFAULTS.kind ? 'Image updated.' : 'Image added.');
     } catch {
-      store.setImportStatus('Image replace failed. Try another file.');
+      store.setImportStatus(node.kind === IMAGE_NODE_DEFAULTS.kind ? 'Image replace failed. Try another file.' : 'Image add failed. Try another file.');
     }
   }
 
@@ -1692,6 +1693,16 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
+    const startEl = event.target.closest('[data-node-start]');
+    if (startEl) {
+      const nodeId = startEl.dataset.nodeStart;
+      if (nodeId) {
+        commitStarterHypernode(nodeId);
+      }
+      event.stopPropagation();
+      return;
+    }
+
     const imagePickEl = event.target.closest('[data-node-image-pick]');
     if (imagePickEl) {
       const nodeId = imagePickEl.dataset.nodeImagePick;
@@ -1742,8 +1753,14 @@ export function bindInteractions(elements, store, options = {}) {
 
     const nodeId = nodeEl.dataset.nodeId;
     if (!nodeId) return;
+    const starterActive = store.getState().ui.starterNodeId === nodeId;
     const focusedNodeId = store.getState().ui.focusedNodeId;
     const focusShortcut = (event.ctrlKey || event.metaKey) && event.altKey && event.key === 'Enter';
+
+    if (starterActive && (event.key === 'Escape' || event.key === 'Enter' || focusShortcut)) {
+      event.stopPropagation();
+      return;
+    }
 
     if (event.key === 'Escape' && focusedNodeId === nodeId) {
       event.preventDefault();
@@ -1829,14 +1846,14 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-node-focus-toggle], [data-frame-edit-open], [data-frame-delete]')) {
+    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-delete]')) {
       event.stopPropagation();
     }
   }
 
   function onSelectionControlsClick(event) {
     const nodeGroupEl = event.target.closest('.selection-controls__group--node[data-node-id]');
-    const clickedToolbarControl = event.target.closest('[data-node-edit-open], [data-node-delete], [data-node-focus-toggle], [data-node-resize], [data-node-anchor]');
+    const clickedToolbarControl = event.target.closest('[data-node-edit-open], [data-node-delete], [data-node-focus-toggle], [data-node-start], [data-node-resize], [data-node-anchor]');
     if (nodeGroupEl && !clickedToolbarControl && event.detail >= 2) {
       openNodeFocus(nodeGroupEl.dataset.nodeId);
       event.stopPropagation();
@@ -1874,6 +1891,16 @@ export function bindInteractions(elements, store, options = {}) {
         closeNodeFocus();
       } else {
         openNodeFocus(nodeId);
+      }
+      event.stopPropagation();
+      return;
+    }
+
+    const nodeStartEl = event.target.closest('[data-node-start]');
+    if (nodeStartEl) {
+      const nodeId = nodeStartEl.dataset.nodeStart;
+      if (nodeId) {
+        commitStarterHypernode(nodeId);
       }
       event.stopPropagation();
       return;
@@ -1959,16 +1986,16 @@ export function bindInteractions(elements, store, options = {}) {
   });
 
   focusLayer?.addEventListener('dragenter', (event) => {
-    const dropzone = event.target instanceof HTMLElement ? event.target.closest('[data-focus-image-dropzone]') : null;
-    if (!dropzone || !containsImageFile(event.dataTransfer)) return;
+    const imageTarget = getFocusImageTarget(event.target);
+    if (!imageTarget || !containsImageFile(event.dataTransfer)) return;
     focusImageDragDepth += 1;
     setFocusImageDropActive(true);
     event.preventDefault();
   });
 
   focusLayer?.addEventListener('dragover', (event) => {
-    const dropzone = event.target instanceof HTMLElement ? event.target.closest('[data-focus-image-dropzone]') : null;
-    if (!dropzone || !containsImageFile(event.dataTransfer)) return;
+    const imageTarget = getFocusImageTarget(event.target);
+    if (!imageTarget || !containsImageFile(event.dataTransfer)) return;
     event.preventDefault();
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'copy';
@@ -1977,8 +2004,8 @@ export function bindInteractions(elements, store, options = {}) {
   });
 
   focusLayer?.addEventListener('dragleave', (event) => {
-    const dropzone = event.target instanceof HTMLElement ? event.target.closest('[data-focus-image-dropzone]') : null;
-    if (!dropzone || !containsImageFile(event.dataTransfer)) return;
+    const imageTarget = getFocusImageTarget(event.target);
+    if (!imageTarget || !containsImageFile(event.dataTransfer)) return;
     focusImageDragDepth = Math.max(0, focusImageDragDepth - 1);
     if (focusImageDragDepth === 0) {
       setFocusImageDropActive(false);
@@ -1987,10 +2014,10 @@ export function bindInteractions(elements, store, options = {}) {
   });
 
   focusLayer?.addEventListener('drop', (event) => {
-    const dropzone = event.target instanceof HTMLElement ? event.target.closest('[data-focus-image-dropzone]') : null;
-    if (!dropzone || !containsImageFile(event.dataTransfer)) return;
+    const imageTarget = getFocusImageTarget(event.target);
+    if (!imageTarget || !containsImageFile(event.dataTransfer)) return;
     const file = getFirstImageFile(event.dataTransfer);
-    const nodeId = dropzone instanceof HTMLElement ? dropzone.dataset.focusImageDropzone : null;
+    const nodeId = imageTarget.dataset.focusImageDropzone || imageTarget.dataset.nodeImagePick || null;
     focusImageDragDepth = 0;
     setFocusImageDropActive(false);
     if (!file || !nodeId) return;
@@ -2360,7 +2387,10 @@ export function bindInteractions(elements, store, options = {}) {
   const settingsBtn = document.getElementById('settings-btn');
   const settingsCloseBtn = document.getElementById('settings-close-btn');
   const graphNameInput = document.getElementById('graph-name-input');
+  const settingsTabSelect = document.getElementById('settings-tab-select');
   const showShortcutsUiInput = document.getElementById('show-shortcuts-ui-input');
+  const settingsTabButtons = settingsDialog?.querySelectorAll('[data-settings-tab]') ?? [];
+  const settingsPanels = settingsDialog?.querySelectorAll('[data-settings-panel]') ?? [];
   const positionButtons = settingsDialog?.querySelectorAll('[data-position-target][data-position-value]') ?? [];
   const toolbarOrientationButtons = settingsDialog?.querySelectorAll('[data-toolbar-orientation]') ?? [];
   const arrowheadSizeRange = document.getElementById('arrowhead-size-range');
@@ -2399,9 +2429,10 @@ export function bindInteractions(elements, store, options = {}) {
     try {
       const { handle, graph } = await openGraphFile();
       currentFileHandle = handle;
+      store.clearStarterNode();
       store.replaceGraph(graph);
       resetCanvasView();
-      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
+      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
       store.setImportStatus('Hypernode opened.');
     } catch (error) {
       if (isAbortError(error)) return;
@@ -2437,6 +2468,7 @@ export function bindInteractions(elements, store, options = {}) {
     }
 
     currentFileHandle = null;
+    store.clearStarterNode();
     store.replaceGraph({
       name: GRAPH_DEFAULTS.name,
       settings: {
@@ -2459,7 +2491,7 @@ export function bindInteractions(elements, store, options = {}) {
     });
     resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
     store.setImportStatus('New hypernode ready.');
   }
 
@@ -2484,6 +2516,19 @@ export function bindInteractions(elements, store, options = {}) {
     createNodeInEditMode({ x: (120 - viewport.panX) / viewport.zoom, y: (120 - viewport.panY) / viewport.zoom });
   }
 
+  function commitStarterHypernode(nodeId) {
+    const state = store.getState();
+    if (state.ui.starterNodeId !== nodeId) return false;
+    const node = getNode(nodeId, state);
+    if (!node) return false;
+    const title = String(node.title ?? '').trim() || NODE_DEFAULTS.title;
+    node.title = title;
+    store.setGraphName(title);
+    store.clearStarterNode();
+    closeNodeFocus();
+    return true;
+  }
+
   function handleAddNodeAtPointer() {
     createNodeInEditMode(getLastPointerGraphPoint(store.getState().viewport));
   }
@@ -2504,7 +2549,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   function openSettingsDialog() {
     if (!settingsDialog) return;
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
     settingsDialog.showModal();
   }
 
@@ -2553,11 +2598,14 @@ export function bindInteractions(elements, store, options = {}) {
 
   function filterShortcuts(query) {
     const normalized = normalizeShortcutSearchText(query);
-    const items = shortcutsList?.querySelectorAll('[data-shortcut-search]');
+    const items = shortcutsList?.querySelectorAll('[data-shortcut-id]');
     if (!items?.length) return;
+    const searchIndex = shortcutsList?._shortcutSearchIndex instanceof Map
+      ? shortcutsList._shortcutSearchIndex
+      : new Map();
     let visibleCount = 0;
     items.forEach((item) => {
-      const haystack = normalizeShortcutSearchText(item.dataset.shortcutSearch || '');
+      const haystack = searchIndex.get(item.dataset.shortcutId || '') || '';
       const visible = !normalized || haystack.includes(normalized);
       item.hidden = !visible;
       if (visible) {
@@ -2569,23 +2617,55 @@ export function bindInteractions(elements, store, options = {}) {
     }
   }
 
+  function setActiveSettingsTab(nextTabId, options = {}) {
+    const availableTabIds = Array.from(settingsTabButtons)
+      .map((button) => button instanceof HTMLElement ? button.dataset.settingsTab : null)
+      .filter(Boolean);
+    const requestedTabId = typeof nextTabId === 'string' && nextTabId ? nextTabId : 'general';
+    const tabId = availableTabIds.includes(requestedTabId) ? requestedTabId : (availableTabIds[0] || 'general');
+    settingsTabButtons.forEach((button) => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      const active = button.dataset.settingsTab === tabId;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
+      button.tabIndex = active ? 0 : -1;
+      if (active && options.focusButton) {
+        button.focus({ preventScroll: true });
+      }
+    });
+    settingsPanels.forEach((panel) => {
+      if (!(panel instanceof HTMLElement)) return;
+      const active = panel.dataset.settingsPanel === tabId;
+      panel.classList.toggle('is-active', active);
+      panel.hidden = !active;
+      panel.setAttribute('aria-hidden', active ? 'false' : 'true');
+    });
+    if (settingsTabSelect instanceof HTMLSelectElement && settingsTabSelect.value !== tabId) {
+      settingsTabSelect.value = tabId;
+    }
+  }
+
   function renderShortcutCatalog() {
     if (!(shortcutsList instanceof HTMLElement)) return;
+    const searchIndex = new Map();
     shortcutsList.innerHTML = SHORTCUT_CATALOG.map((shortcut) => {
       const searchText = normalizeShortcutSearchText([
         shortcut.title,
         shortcut.description,
         ...shortcut.keys,
         ...shortcut.keys.map((key) => formatShortcutLabel(key)),
+        ...shortcut.keys.map((key) => formatShortcutLabel(key, { compact: true })),
         ...(Array.isArray(shortcut.searchTokens) ? shortcut.searchTokens : []),
       ].join(' '));
+      searchIndex.set(shortcut.id, searchText);
       return `
-        <article class="shortcuts-dialog__item" role="listitem" data-shortcut-id="${shortcut.id}" data-shortcut-search="${searchText}">
+        <article class="shortcuts-dialog__item" role="listitem" data-shortcut-id="${shortcut.id}">
           <div class="shortcuts-dialog__keys">${shortcut.keys.map((key) => `<kbd>${formatShortcutLabel(key)}</kbd>`).join('')}</div>
           <div class="shortcuts-dialog__meta"><h3>${shortcut.title}</h3><p>${shortcut.description}</p></div>
         </article>
       `;
     }).join('');
+    shortcutsList._shortcutSearchIndex = searchIndex;
   }
 
   function syncShortcutUiFromState(state) {
@@ -2692,17 +2772,30 @@ export function bindInteractions(elements, store, options = {}) {
     });
   }
 
-  settingsDialog?.querySelectorAll('.settings-dialog__group').forEach((group) => {
-    group.addEventListener('toggle', () => {
-      if (!(group instanceof HTMLDetailsElement) || !group.open) return;
-      settingsDialog.querySelectorAll('.settings-dialog__group').forEach((otherGroup) => {
-        if (!(otherGroup instanceof HTMLDetailsElement) || otherGroup === group) return;
-        otherGroup.open = false;
-      });
+  settingsTabButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      setActiveSettingsTab(button.dataset.settingsTab, { focusButton: false });
+    });
+    button.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      const tabs = Array.from(settingsTabButtons).filter((item) => item instanceof HTMLButtonElement);
+      const currentIndex = tabs.indexOf(button);
+      if (currentIndex === -1 || tabs.length === 0) return;
+      const offset = event.key === 'ArrowRight' ? 1 : -1;
+      const nextIndex = (currentIndex + offset + tabs.length) % tabs.length;
+      const nextTab = tabs[nextIndex];
+      setActiveSettingsTab(nextTab.dataset.settingsTab, { focusButton: true });
     });
   });
 
+  settingsTabSelect?.addEventListener('change', () => {
+    setActiveSettingsTab(settingsTabSelect.value, { focusButton: false });
+  });
+
   graphNameInput?.addEventListener('change', () => {
+    store.clearStarterNode();
     store.setGraphName(graphNameInput.value);
   });
 
@@ -2880,7 +2973,13 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
     const ctrlOrCmd = event.ctrlKey || event.metaKey;
+    const starterNodeId = store.getState().ui.starterNodeId;
+    const starterFocused = Boolean(starterNodeId && store.getState().ui.focusedNodeId === starterNodeId);
     const focusShortcut = ctrlOrCmd && event.altKey && event.key === 'Enter';
+    if (starterFocused && (event.key === 'Escape' || event.key === 'Delete' || event.key === 'Backspace' || focusShortcut)) {
+      event.preventDefault();
+      return;
+    }
     if (focusShortcut) {
       if (toggleFocusedSelectionNode()) {
         event.preventDefault();
@@ -3063,20 +3162,20 @@ export function bindInteractions(elements, store, options = {}) {
   store.subscribe((state) => {
     syncNodeColorButtonState(state, nodeColorBtn, nodeColorPopover);
     syncShortcutUiFromState(state);
-    syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
+    syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   });
 
   resetAboutDialog();
   renderShortcutCatalog();
   filterShortcuts('');
-  syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
+  syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   syncShortcutUiFromState(store.getState());
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
   if (options.shouldCreateStarter) {
     resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   }
 }
 
@@ -3265,6 +3364,11 @@ function getNodeCenter(node) {
     x: node.x + (getNodeWidth(node) / 2),
     y: node.y + (getNodeHeight(node) / 2),
   };
+}
+
+function getFocusImageTarget(target) {
+  if (!(target instanceof HTMLElement)) return null;
+  return target.closest('[data-focus-image-dropzone], .node__image-pane[data-node-image-pick]');
 }
 
 function getNodeWidth(node) {
@@ -3766,10 +3870,39 @@ function isAbortError(error) {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons = [], toolbarOrientationButtons = []) {
+function syncSettingsDialogFromState(
+  state,
+  settingsDialog,
+  graphNameInput,
+  showShortcutsUiInput,
+  positionButtons = [],
+  toolbarOrientationButtons = [],
+  settingsTabSelect = null,
+  settingsTabButtons = [],
+  settingsPanels = [],
+) {
   if (!settingsDialog) return;
   if (graphNameInput) {
     graphNameInput.value = state.name;
+  }
+  const activeTab = Array.from(settingsTabButtons)
+    .find((button) => button instanceof HTMLElement && button.classList.contains('is-active'))
+    ?.dataset?.settingsTab || settingsTabSelect?.value || 'general';
+  settingsTabButtons.forEach((button) => {
+    if (!(button instanceof HTMLButtonElement)) return;
+    const active = button.dataset.settingsTab === activeTab;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+    button.tabIndex = active ? 0 : -1;
+  });
+  settingsPanels.forEach((panel) => {
+    if (!(panel instanceof HTMLElement)) return;
+    const active = panel.dataset.settingsPanel === activeTab;
+    panel.classList.toggle('is-active', active);
+    panel.hidden = !active;
+  });
+  if (settingsTabSelect instanceof HTMLSelectElement) {
+    settingsTabSelect.value = activeTab;
   }
   if (showShortcutsUiInput instanceof HTMLInputElement) {
     showShortcutsUiInput.checked = state.settings?.showShortcutsUi !== false;
@@ -3813,7 +3946,6 @@ function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, show
     arrowheadSizeRange.value = String(step);
     updateArrowheadSizeLabel(arrowheadSizeValue, step);
   }
-
 }
 
 function syncPositionPickers(state, settingsDialog, positionButtons, toolbarOrientationButtons = []) {

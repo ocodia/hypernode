@@ -27,7 +27,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Add image nodes from the toolbar or by dragging local image files onto the canvas (stored as base64 data URLs in the hypernode JSON payload).
 - Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.
 - Single selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
-- Single selected nodes also expose a `Focus` action for full-screen zen editing; image nodes place the image on the right in Focus mode, keep text width readable, and provide a drop zone to replace the current image.
+- Single selected nodes also expose a `Focus` action for full-screen zen editing; Focus mode stays responsive across device sizes, keeps text readable/editable, and always shows a drop zone to add or replace a node image.
 - Multi-select nodes with `Ctrl/Cmd + click` (additive).
 - Multi-select nodes with `Ctrl/Cmd + drag` marquee (touch/intersection hit rule).
 - Drag any selected node to move the full selected group together.
@@ -46,6 +46,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Built-in semantic design system for surfaces, buttons, inputs, dialogs, toolbar controls, nodes, and frames.
 - Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`) saved with the document.
 - Shared UI radius presets (`sharp`, `soft`, `rounded`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
+- Full-screen settings, about, and keyboard shortcuts dialogs with responsive layouts.
 - Settings menu for:
   - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `soft-black`)
   - UI radius preset (`sharp`, `soft`, or `rounded`)

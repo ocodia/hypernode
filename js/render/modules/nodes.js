@@ -16,7 +16,9 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const includeEdit = options.includeEdit !== false;
   const editingActive = Boolean(options.editingActive);
   const includeFocus = options.includeFocus !== false;
+  const includeDelete = options.includeDelete !== false;
   const focusActive = Boolean(options.focusActive);
+  const starterActive = Boolean(options.starterActive);
   const toolbarClass = options.toolbarClass || 'node__toolbar';
   const focusLabel = focusActive ? 'Exit focus mode' : 'Focus node';
   const focusTitle = focusActive ? 'Exit Focus' : 'Focus';
@@ -30,6 +32,14 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
 
   return `
     <div class="${toolbarClass}">
+      ${starterActive ? `
+        <button class="node__tool-btn node__tool-btn--primary" type="button" data-node-start="${nodeId}" aria-label="Start hypernode" title="Start hypernode">
+          <i class="bi bi-play-fill"></i>
+          <span class="node__tool-btn-copy">
+            <span class="node__tool-btn-label">Start</span>
+          </span>
+        </button>
+      ` : ''}
       ${includeEdit ? `
         <button class="node__tool-btn" type="button" data-node-edit-open="${nodeId}" aria-label="${editLabel}" title="${editTitle}" aria-pressed="${editingActive ? 'true' : 'false'}">
           <i class="bi ${editIcon}"></i>
@@ -48,6 +58,7 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
           </span>
         </button>
       ` : ''}
+      ${includeDelete ? `
       <button class="node__tool-btn node__tool-btn--danger" type="button" data-node-delete="${nodeId}" aria-label="Delete node" title="Delete Node">
         <i class="bi bi-trash"></i>
         <span class="node__tool-btn-copy">
@@ -55,6 +66,7 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
           ${showShortcuts ? `<span class="node__tool-btn-shortcut">${deleteShortcut}</span>` : ''}
         </span>
       </button>
+      ` : ''}
     </div>
   `;
 }
@@ -64,19 +76,17 @@ export function buildNodeContentMarkup(node, options = {}) {
   const focused = Boolean(options.isFocused);
   const imageNode = isImageNode(node);
   const hasImageData = typeof node.imageData === 'string' && node.imageData.startsWith('data:image/');
-  const contentClass = focused
-    ? `node__content node__content--focus${imageNode ? ' node__content--focus-image' : ' node__content--focus-text'}`
-    : 'node__content';
+  const contentClass = focused ? 'node__content node__content--focus' : 'node__content';
   const metaClass = focused ? 'node__meta node__meta--focus' : 'node__meta';
-  const imageMarkup = imageNode
+  const imageMarkup = hasImageData
     ? `
-      <div class="node__image-pane${focused ? ' node__image-pane--focus' : ''}" style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
+      <div class="node__image-pane${focused ? ' node__image-pane--focus' : ''}"${focused ? ` data-node-image-pick="${node.id}" role="button" tabindex="0" aria-label="Replace image" title="Replace image"` : ''} style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
     `
     : '';
-  const focusImageDropzoneMarkup = focused && imageNode
+  const focusImageDropzoneMarkup = focused
     ? `
       <button
-        class="node__image-dropzone"
+        class="node__image-dropzone${hasImageData ? ' node__image-dropzone--overlay' : ''}"
         type="button"
         data-focus-image-dropzone="${node.id}"
         data-node-image-pick="${node.id}"
@@ -88,16 +98,16 @@ export function buildNodeContentMarkup(node, options = {}) {
       </button>
     `
     : '';
-  const focusMediaMarkup = focused && imageNode
+  const focusMediaMarkup = focused
     ? `
-      <div class="node__focus-media">
-        ${imageMarkup}
+      <div class="node__focus-media${imageNode ? ' node__focus-media--has-image' : ' node__focus-media--empty'}">
+        ${hasImageData ? imageMarkup : ''}
         ${focusImageDropzoneMarkup}
       </div>
     `
     : '';
 
-  if (editing && focused && imageNode) {
+  if (editing && focused) {
     return `
       <div class="${contentClass}">
         <div class="node__editor node__editor--focus" data-node-editor="${node.id}">
@@ -115,7 +125,7 @@ export function buildNodeContentMarkup(node, options = {}) {
     `;
   }
 
-  if (!editing && focused && imageNode) {
+  if (!editing && focused) {
     return `
       <div class="${contentClass}">
         <section class="node__focus-field node__focus-field--title">
@@ -151,7 +161,6 @@ export function buildNodeContentMarkup(node, options = {}) {
       </div>
     `
       : `
-      ${focused && imageNode ? '<div class="node__focus-copy">' : ''}
       ${!focused && imageNode ? imageMarkup : ''}
       ${focused
         ? `
@@ -176,7 +185,6 @@ export function buildNodeContentMarkup(node, options = {}) {
             ${node.description ? `<div class="node__description">${renderDescriptionMarkdown(node.description)}</div>` : ''}
           </div>
         `}
-      ${focused && imageNode ? '</div>' : ''}
       ${focusMediaMarkup}
     `;
 
