@@ -9,8 +9,8 @@ import {
   VIEWPORT_LIMITS,
 } from '../utils/constants.js';
 import { openGraphFile, saveGraphFile, supportsFileSystemAccess } from '../persistence/file.js';
+import { matchesShortcutSearch, normalizeShortcutSearchText } from '../utils/shortcut-search.js';
 import { isDialogBackdropTarget } from '../utils/dialog.js';
-import { normalizeShortcutSearchText } from '../utils/shortcut-search.js';
 import { formatShortcutLabel } from '../utils/shortcuts.js';
 import { getAnchoredUiPlacement, getUnavailableCornerPositions, resolvePlacementChange } from '../utils/ui-placement.js';
 import { bindCanvasInteractions } from './binders/canvas.js';
@@ -2789,7 +2789,6 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function filterShortcuts(query) {
-    const normalized = normalizeShortcutSearchText(query);
     const items = shortcutsList?.querySelectorAll('[data-shortcut-id]');
     if (!items?.length) return;
     const searchIndex = shortcutsList?._shortcutSearchIndex instanceof Map
@@ -2798,7 +2797,7 @@ export function bindInteractions(elements, store, options = {}) {
     let visibleCount = 0;
     items.forEach((item) => {
       const haystack = searchIndex.get(item.dataset.shortcutId || '') || '';
-      const visible = !normalized || haystack.includes(normalized);
+      const visible = matchesShortcutSearch(query, haystack);
       item.hidden = !visible;
       if (visible) {
         visibleCount += 1;

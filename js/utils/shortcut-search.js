@@ -19,3 +19,18 @@ export function normalizeShortcutSearchText(value) {
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+export function matchesShortcutSearch(query, searchText) {
+  const normalizedQuery = normalizeShortcutSearchText(query);
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const normalizedSearchText = normalizeShortcutSearchText(searchText);
+  if (!normalizedSearchText) {
+    return false;
+  }
+
+  const queryTokens = normalizedQuery.split(' ').filter(Boolean);
+  return queryTokens.every((token) => normalizedSearchText.includes(token));
+}

@@ -49,6 +49,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`) saved with the document.
 - Shared UI radius presets (`sharp`, `soft`, `rounded`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
 - Full-screen settings, about, and keyboard shortcuts dialogs with responsive layouts.
+- Theme-aware custom scrollbars across dialogs, focus views, and editor panes that inherit the active preset and radius scale.
 - Settings menu for:
   - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `soft-black`)
   - UI radius preset (`sharp`, `soft`, or `rounded`)

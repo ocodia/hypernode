@@ -27,6 +27,14 @@
   --endpoint-fill: #f8fbff;
   --overlay-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   --node-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  --scrollbar-size: 12px;
+  --scrollbar-radius: var(--radius-pill);
+  --scrollbar-track: color-mix(in srgb, var(--surface-soft) 76%, transparent);
+  --scrollbar-track-border: color-mix(in srgb, var(--panel-border) 56%, transparent);
+  --scrollbar-thumb: color-mix(in srgb, var(--text) 28%, var(--accent) 72%);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--text) 18%, var(--accent) 82%);
+  --scrollbar-thumb-active: color-mix(in srgb, var(--text) 12%, var(--accent) 88%);
+  --scrollbar-corner: transparent;
   --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-md: 14px;
@@ -254,6 +262,44 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--scrollbar-track) 78%, var(--surface) 22%), color-mix(in srgb, var(--scrollbar-track) 96%, transparent));
+  border: 1px solid var(--scrollbar-track-border);
+  border-radius: var(--scrollbar-radius);
+}
+
+*::-webkit-scrollbar-thumb {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--scrollbar-thumb) 92%, white 8%), color-mix(in srgb, var(--scrollbar-thumb) 86%, black 14%));
+  border: 2px solid color-mix(in srgb, var(--surface) 78%, transparent);
+  border-radius: var(--scrollbar-radius);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, white 20%, transparent),
+    0 1px 4px color-mix(in srgb, black 18%, transparent);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--scrollbar-thumb-hover) 94%, white 6%), color-mix(in srgb, var(--scrollbar-thumb-hover) 88%, black 12%));
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--scrollbar-thumb-active) 96%, white 4%), color-mix(in srgb, var(--scrollbar-thumb-active) 90%, black 10%));
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-corner);
 }
 
 body {
@@ -3172,6 +3218,10 @@ kbd {
   border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
+}
+
+.shortcuts-dialog__item[hidden] {
+  display: none;
 }
 
 .shortcuts-dialog__keys {
