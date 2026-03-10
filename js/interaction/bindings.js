@@ -3813,41 +3813,6 @@ function computeFrameResizedRect(session, deltaX, deltaY) {
   };
 }
 
-function computeImageResizedRect(session, deltaX) {
-  const startWidth = session.startRight - session.startLeft;
-  const aspectRatio = Number(session.imageAspectRatio) > 0 ? Number(session.imageAspectRatio) : 1;
-  const metaHeight = Math.max(0, Number(session.imageMetaHeight) || 0);
-  const minImageWidth = IMAGE_NODE_DEFAULTS.minImageWidth;
-  const minImageHeight = IMAGE_NODE_DEFAULTS.minImageHeight;
-  const minWidthByHeight = minImageHeight * aspectRatio;
-  const minWidth = Math.max(minImageWidth, minWidthByHeight);
-
-  let nextWidth = startWidth;
-  if (session.corner.includes('left')) {
-    nextWidth = startWidth - deltaX;
-  } else if (session.corner.includes('right')) {
-    nextWidth = startWidth + deltaX;
-  }
-  nextWidth = Math.max(minWidth, nextWidth);
-
-  const nextImageHeight = Math.max(minImageHeight, nextWidth / aspectRatio);
-  const nextHeight = nextImageHeight + metaHeight;
-
-  const left = session.corner.includes('left')
-    ? session.startRight - nextWidth
-    : session.startLeft;
-  const top = session.corner.includes('top')
-    ? session.startBottom - nextHeight
-    : session.startTop;
-
-  return {
-    x: left,
-    y: top,
-    width: nextWidth,
-    height: nextHeight,
-  };
-}
-
 function isTypingTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
   return target.matches('input, textarea, [contenteditable="true"]');
