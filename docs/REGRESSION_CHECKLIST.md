@@ -24,7 +24,10 @@ Use this checklist before shipping interaction changes.
 - [ ] Select a node and verify all four corner handles are visible.
 - [ ] Select a node and verify mini toolbar appears above node without intersecting node border/anchors.
 - [ ] Verify single-node mini toolbar exposes `Edit`, `Focus`, color, border width, border style, and `Delete`.
+- [ ] At zoom levels `0.35`, `1.0`, and `2.5`, verify the single-node mini toolbar stays comfortably clickable and visually attached to the node.
+- [ ] At zoom levels `0.35`, `1.0`, and `2.5`, open each node toolbar popover and verify trigger alignment, placement, and click targets remain correct.
 - [ ] Multi-select at least 2 nodes and verify only one shared toolbar appears above the selection bounds.
+- [ ] At zoom levels `0.35`, `1.0`, and `2.5`, verify the shared multi-node toolbar stays centered over the selection and remains clickable.
 - [ ] Use the shared node toolbar to change color, border width, and border style for all selected nodes.
 - [ ] Deselect node and verify handles are hidden.
 - [ ] Deselect node and verify mini toolbar is hidden.
@@ -41,6 +44,7 @@ Use this checklist before shipping interaction changes.
 - [ ] Press `Escape` during frame draw mode and confirm draft cancels cleanly.
 - [ ] Select a frame and verify frame mini toolbar appears with color, border width, border style, `Edit`, and `Delete`.
 - [ ] Verify frame mini toolbar appears above frame bounds (not inside frame body).
+- [ ] At zoom levels `0.35`, `1.0`, and `2.5`, verify the frame mini toolbar remains clickable and visually attached to the frame.
 - [ ] Resize frame from each corner and confirm frame bounds update with zoom-aware pointer alignment.
 - [ ] While resizing a frame smaller, verify previously embedded out-of-bounds nodes get remove-preview highlight.
 - [ ] While resizing a frame larger, verify newly covered nodes get add-preview highlight.
@@ -100,3 +104,4 @@ Use this checklist before shipping interaction changes.
 - [ ] Trigger file/theme/image toasts and verify they appear in the bottom-right with accent-highlighted borders and disappear quickly.
 - [ ] Open/close About dialog.
 - [ ] Toggle dark mode and reload page to verify theme persistence.
+- [ ] Zoom until a single-node toolbar would collide with toolbar/meta/toast chrome and verify top/bottom auto-placement still avoids obstructions.

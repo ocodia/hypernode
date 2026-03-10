@@ -17,6 +17,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
 - Selected node/frame toolbars, resize handles, and anchor points render above overlapping canvas content.
 - Resize handles and anchor points grow when zoomed out so they stay easier to grab.
+- Selection toolbars stay zoom-agnostic so node and frame toolbar buttons remain clickable across supported zoom levels.
 - Draw Frames from toolbar drag mode. Frames act as background super-nodes with anchors, resize handles, and title/description, including the same basic markdown support in descriptions.
 - Frame mini toolbar renders above selected frames and includes color, border width, border style, edit/confirm, and delete controls.
 - Node mini toolbars include color, border width, border style, and delete controls; single-node toolbars also include `Edit` and `Focus`.
@@ -54,7 +55,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
   - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `Chalkboard`)
   - UI radius preset (`sharp`, `soft`, or `round`)
   - hypernode background style (`blank`, `dots`, or `graph paper`)
-  - anchors mode (`auto-anchor` or `exact anchor`)
+  - anchors mode (`auto-anchor` or `exact anchor`) where auto-anchor keeps each edge's stored anchor points synced to the currently resolved connection sides as nodes and frames move
   - arrowheads visibility (`show` or `hide`)
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
   - toolbar position (`top left`, `top right`, `bottom left`, or `bottom right`)

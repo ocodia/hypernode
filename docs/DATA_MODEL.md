@@ -210,11 +210,13 @@ Rules:
 - `from` and `to` must reference existing node or frame ids
 - `from` and `to` may not be the same id
 - stored anchors may be `top`, `right`, `bottom`, `left`, or `null`
+- when `settings.anchorsMode` is `auto`, stored anchors are normalized to the latest resolved sides between the current edge endpoints
 - payload validation rejects edges whose endpoints do not exist
 
 Sanitization behavior:
 
 - invalid anchors are converted to `null` in app state
+- when auto-anchor mode is active, `null` or stale stored anchors are backfilled to the latest resolved sides during load/import and subsequent endpoint movement
 
 ## Cross-Object Validation
 

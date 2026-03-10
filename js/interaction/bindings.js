@@ -1334,12 +1334,13 @@ export function bindInteractions(elements, store, options = {}) {
     const verticalGutter = 12;
     const gap = 10;
     const centerX = groupRect.left + (groupRect.width / 2);
+    const viewportZoom = Math.max(0.01, Number.parseFloat(getComputedStyle(selectionControlsLayer).getPropertyValue('--viewport-zoom')) || 1);
     const rawLeft = centerX - (toolbarRect.width / 2);
     const clampedLeft = Math.max(
       workspaceRect.left + horizontalGutter,
       Math.min(rawLeft, workspaceRect.right - horizontalGutter - toolbarRect.width),
     );
-    const shiftX = clampedLeft - rawLeft;
+    const shiftX = (clampedLeft - rawLeft) / viewportZoom;
 
     const topRect = {
       left: clampedLeft,

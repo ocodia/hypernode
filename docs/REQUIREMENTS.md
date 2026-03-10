@@ -62,6 +62,9 @@ Users must be able to reconnect edge endpoints to a different node.
 FR-15  
 Invalid edge states must be prevented (missing nodes, self-edges, duplicate directed edges).
 
+FR-15a
+When anchors mode is `auto`, stored edge anchors must stay synchronized with the latest resolved endpoint sides so autosave and export persist the current attachment points.
+
 ### Persistence and Files
 
 FR-16  
@@ -104,6 +107,9 @@ Users must be able to start a new graph from the toolbar, with a confirmation pr
 
 FR-28
 Selection toolbars must allow applying palette colors to selected nodes and frames without changing the default color used for newly created nodes.
+
+FR-28a
+Canvas selection toolbars must remain usable across the supported zoom range by keeping their click targets effectively screen-space sized while staying attached to the selected node/frame bounds.
 
 FR-29
 Graph settings must include graph name, UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, arrowhead size, and shortcut UI visibility.

@@ -22,6 +22,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
   const draft = state.ui.edgeDraft;
   const bySize = measureEntitySizes(state);
   const viewportZoom = Math.max(0.01, Number(state.viewport?.zoom) || 1);
+  const toolbarScale = 1 / viewportZoom;
   const nodeAnchorSize = Math.max(10, 14 / viewportZoom);
   const nodeResizeSize = Math.max(14, 18 / viewportZoom);
   const frameAnchorSize = Math.max(10, 14 / viewportZoom);
@@ -48,7 +49,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
         class="selection-controls__group selection-controls__group--frame ${connectClass}"
         data-frame-id="${frame.id}"
         ${colorAttr}
-        style="transform: translate(${frame.x}px, ${frame.y}px); width: ${frameSize.width}px; height: ${frameSize.height}px; --selection-anchor-size: ${frameAnchorSize}px; --selection-resize-size: ${frameResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px;"
+        style="transform: translate(${frame.x}px, ${frame.y}px); width: ${frameSize.width}px; height: ${frameSize.height}px; --selection-anchor-size: ${frameAnchorSize}px; --selection-resize-size: ${frameResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px; --selection-toolbar-scale: ${toolbarScale};"
       >
         ${buildFrameToolbarMarkup(frame.id, {
           toolbarClass: 'frame__toolbar selection-controls__toolbar selection-controls__toolbar--frame',
@@ -93,7 +94,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
       <div
         class="selection-controls__group selection-controls__group--nodes"
         data-node-ids="${selectedNodeIds.join(',')}"
-        style="transform: translate(${minX}px, ${minY}px); width: ${Math.max(0, maxX - minX)}px; height: ${Math.max(0, maxY - minY)}px;"
+        style="transform: translate(${minX}px, ${minY}px); width: ${Math.max(0, maxX - minX)}px; height: ${Math.max(0, maxY - minY)}px; --selection-toolbar-scale: ${toolbarScale};"
       >
         ${buildNodeToolbarMarkup(selectedNodeIds[0], {
           toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--nodes',
@@ -128,7 +129,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
         class="selection-controls__group selection-controls__group--node ${connectClass}"
         data-node-id="${node.id}"
         ${colorAttr}
-        style="transform: translate(${node.x}px, ${node.y}px); width: ${nodeSize.width}px; height: ${nodeSize.height}px; --selection-anchor-size: ${nodeAnchorSize}px; --selection-resize-size: ${nodeResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px;"
+        style="transform: translate(${node.x}px, ${node.y}px); width: ${nodeSize.width}px; height: ${nodeSize.height}px; --selection-anchor-size: ${nodeAnchorSize}px; --selection-resize-size: ${nodeResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px; --selection-toolbar-scale: ${toolbarScale};"
       >
         ${buildNodeToolbarMarkup(node.id, {
           toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--node',

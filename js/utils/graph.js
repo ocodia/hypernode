@@ -217,8 +217,8 @@ export function validateGraphPayload(payload) {
       && endpointIds.has(edge.from)
       && endpointIds.has(edge.to)
       && edge.from !== edge.to
-      && isValidAnchor(edge.fromAnchor)
-      && isValidAnchor(edge.toAnchor);
+      && (edge.fromAnchor === null || isValidAnchor(edge.fromAnchor))
+      && (edge.toAnchor === null || isValidAnchor(edge.toAnchor));
   });
 }
 

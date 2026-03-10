@@ -164,8 +164,11 @@ export function getAnchorPoint(node, size, anchor) {
 }
 
 export function resolveEdgeAnchor(preferredAnchor, fromNode, toNode, useExactAnchors) {
-  if (useExactAnchors && isAnchorName(preferredAnchor)) {
+  if (isAnchorName(preferredAnchor)) {
     return preferredAnchor;
+  }
+  if (useExactAnchors) {
+    return resolveAutoAnchor(fromNode, toNode);
   }
   return resolveAutoAnchor(fromNode, toNode);
 }

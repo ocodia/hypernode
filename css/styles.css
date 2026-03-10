@@ -2801,22 +2801,32 @@ select:focus-visible {
   top: 0;
   left: 50%;
   right: auto;
-  transform: translate(calc(-50% + var(--toolbar-shift-x, 0px)), calc(-100% - 10px));
+  transform-origin: center bottom;
+  transform: translate(
+    calc(-50% + var(--toolbar-shift-x, 0px)),
+    calc(-100% - (10px / var(--viewport-zoom, 1)))
+  ) scale(var(--selection-toolbar-scale, 1));
 }
 
 .selection-controls__toolbar--node[data-toolbar-placement="bottom"] {
   top: 100%;
-  transform: translate(calc(-50% + var(--toolbar-shift-x, 0px)), 10px);
+  transform-origin: center top;
+  transform: translate(
+    calc(-50% + var(--toolbar-shift-x, 0px)),
+    calc(10px / var(--viewport-zoom, 1))
+  ) scale(var(--selection-toolbar-scale, 1));
 }
 
 .selection-controls__toolbar--frame {
-  transform: translateY(calc(-100% - 12px));
+  transform-origin: right bottom;
+  transform: translateY(calc(-100% - (12px / var(--viewport-zoom, 1)))) scale(var(--selection-toolbar-scale, 1));
 }
 
 .selection-controls__toolbar--nodes {
   left: 50%;
   right: auto;
-  transform: translate(-50%, calc(-100% - 10px));
+  transform-origin: center bottom;
+  transform: translate(-50%, calc(-100% - (10px / var(--viewport-zoom, 1)))) scale(var(--selection-toolbar-scale, 1));
 }
 
 .node.has-overlay-controls .node__toolbar,

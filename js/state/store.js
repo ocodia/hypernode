@@ -41,6 +41,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const frameIds = new Set(state.frames.map((frame) => frame.id));
     state.nodes = initialGraph.nodes.map((node) => sanitizeNode(node, frameIds));
     state.edges = initialGraph.edges.map(sanitizeEdge);
+    syncAutoAnchorsForAllEdges();
   }
 
   const listeners = new Set();
@@ -51,6 +52,31 @@ export function createStore(initialGraph = null, initialSettings = null) {
     for (const listener of listeners) {
       listener(state);
     }
+  }
+
+  function syncAutoAnchorsForEdge(edge) {
+    if (!edge || state.settings.anchorsMode !== 'auto') return false;
+    const fromEntity = getGraphEntity(edge.from);
+    const toEntity = getGraphEntity(edge.to);
+    if (!fromEntity || !toEntity) return false;
+
+    const fromAnchor = resolveAutoAnchor(fromEntity, toEntity);
+    const toAnchor = resolveAutoAnchor(toEntity, fromEntity);
+    const changed = edge.fromAnchor !== fromAnchor || edge.toAnchor !== toAnchor;
+    if (!changed) return false;
+
+    edge.fromAnchor = fromAnchor;
+    edge.toAnchor = toAnchor;
+    return true;
+  }
+
+  function syncAutoAnchorsForAllEdges() {
+    if (state.settings.anchorsMode !== 'auto') return false;
+    let changed = false;
+    for (const edge of state.edges) {
+      changed = syncAutoAnchorsForEdge(edge) || changed;
+    }
+    return changed;
   }
 
   function getState() {
@@ -484,6 +510,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     } else if (typeof patch.frameId === 'string' && state.frames.some((frame) => frame.id === patch.frameId)) {
       node.frameId = patch.frameId;
     }
+    syncAutoAnchorsForAllEdges();
     if (!options.skipNotify) {
       notify();
     }
@@ -534,6 +561,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (typeof patch.borderStyle === 'string' && ['solid', 'dashed', 'dotted'].includes(patch.borderStyle)) {
       frame.borderStyle = patch.borderStyle;
     }
+    syncAutoAnchorsForAllEdges();
     if (!options.skipNotify) {
       notify();
     }
@@ -545,6 +573,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (!options.skipHistory) pushHistory('move-node');
     node.x = x;
     node.y = y;
+    syncAutoAnchorsForAllEdges();
     notify();
   }
 
@@ -558,6 +587,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
       if (typeof entry.x === 'number') node.x = entry.x;
       if (typeof entry.y === 'number') node.y = entry.y;
     }
+    syncAutoAnchorsForAllEdges();
     notify();
   }
 
@@ -579,6 +609,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
       }
     }
 
+    syncAutoAnchorsForAllEdges();
     notify();
   }
 
@@ -598,6 +629,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (typeof patch.height === 'number') {
       node.height = patch.height;
     }
+    syncAutoAnchorsForAllEdges();
     notify();
   }
 
@@ -617,6 +649,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (typeof patch.height === 'number') {
       frame.height = Math.max(FRAME_DEFAULTS.minHeight, patch.height);
     }
+    syncAutoAnchorsForAllEdges();
     notify();
   }
 
@@ -824,6 +857,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
       toAnchor: resolveAutoAnchor(toEntity, fromEntity),
     });
     state.edges.push(edge);
+    syncAutoAnchorsForEdge(edge);
     state.selection = { type: 'edge', id: edge.id };
     notify();
     return edge.id;
@@ -850,6 +884,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
       toAnchor,
     });
     state.edges.push(edge);
+    syncAutoAnchorsForEdge(edge);
     state.selection = { type: 'edge', id: edge.id };
     notify();
     return edge.id;
@@ -894,6 +929,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     edge.to = next.to;
     edge.fromAnchor = next.fromAnchor;
     edge.toAnchor = next.toAnchor;
+    syncAutoAnchorsForEdge(edge);
     state.selection = { type: 'edge', id: edge.id };
     notify();
     return edge.id;
@@ -945,7 +981,13 @@ export function createStore(initialGraph = null, initialSettings = null) {
   }
 
   function setAnchorsMode(anchorsMode) {
-    updateAppSettings({ anchorsMode });
+    const nextSettings = sanitizeAppSettings({ ...state.settings, anchorsMode });
+    const changed = Object.keys(nextSettings).some((key) => state.settings[key] !== nextSettings[key]);
+    if (!changed) return false;
+    state.settings = nextSettings;
+    syncAutoAnchorsForAllEdges();
+    notify();
+    return true;
   }
 
   function setArrowheads(arrowheads) {
@@ -969,10 +1011,12 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function replaceGraph(graph) {
     pushHistory('import-graph');
     state.name = sanitizeGraphName(graph.name);
+    state.settings = sanitizeAppSettings(graph.settings ?? state.settings);
     state.frames = (Array.isArray(graph.frames) ? graph.frames : []).map(sanitizeFrame);
     const frameIds = new Set(state.frames.map((frame) => frame.id));
     state.nodes = graph.nodes.map((node) => sanitizeNode(node, frameIds));
     state.edges = graph.edges.map(sanitizeEdge);
+    syncAutoAnchorsForAllEdges();
     state.selection = null;
     clearTransientUiState(state);
     notify();
@@ -1055,6 +1099,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     state.nodes = data.nodes;
     state.frames = Array.isArray(data.frames) ? data.frames : [];
     state.edges = data.edges;
+    syncAutoAnchorsForAllEdges();
     state.selection = data.selection;
     clearTransientUiState(state);
   }
