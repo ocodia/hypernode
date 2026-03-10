@@ -1271,13 +1271,12 @@ export function bindInteractions(elements, store, options = {}) {
     const controlRect = triggerEl.parentElement?.getBoundingClientRect?.();
     const triggerRect = triggerEl.getBoundingClientRect();
     if (controlRect) {
-      const left = Math.max(
-        0,
-        Math.min(
-          controlRect.width - popoverEl.offsetWidth,
-          (triggerRect.left - controlRect.left) - ((popoverEl.offsetWidth - triggerRect.width) / 2),
-        ),
-      );
+      const viewportGutter = 12;
+      const popoverWidth = popoverEl.offsetWidth;
+      const preferredLeft = (triggerRect.left - controlRect.left) - ((popoverWidth - triggerRect.width) / 2);
+      const absoluteMinLeft = viewportGutter - controlRect.left;
+      const absoluteMaxLeft = (window.innerWidth - viewportGutter - popoverWidth) - controlRect.left;
+      const left = Math.max(absoluteMinLeft, Math.min(preferredLeft, absoluteMaxLeft));
       popoverEl.style.left = `${left}px`;
     }
     openToolbarPopoverEl = popoverEl;

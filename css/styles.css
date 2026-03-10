@@ -714,6 +714,7 @@ select:focus-visible {
 #settings-close-btn:focus-visible {
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
   border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
 }
 
 .toolbar__icon-btn--has-swatch {
@@ -1024,10 +1025,16 @@ select:focus-visible {
   display: inline-grid;
   place-items: center;
   padding: 0;
-  border-color: transparent;
-  background: transparent;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: none;
   border-radius: var(--radius-xs);
   text-align: center;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease;
 }
 
 .entity-toolbar__btn .bi,
@@ -1043,6 +1050,7 @@ select:focus-visible {
 .node__tool-btn[aria-pressed="true"] {
   border-color: color-mix(in srgb, var(--accent) 50%, var(--panel-border));
   background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  box-shadow: none;
 }
 
 .entity-toolbar__btn.node__tool-btn--danger,
@@ -1108,6 +1116,7 @@ select:focus-visible {
   min-height: 0;
   padding: 28px;
   border-radius: var(--radius-xl);
+  border: var(--node-border-width, 1px) var(--node-border-style, solid) var(--node-border);
   overflow: hidden;
   box-shadow:
     0 28px 70px rgba(15, 23, 42, 0.28),
@@ -1119,12 +1128,14 @@ select:focus-visible {
   top: 0;
   display: flex;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
   right: auto;
   margin-left: auto;
   margin-bottom: 16px;
   padding: 0 0 6px;
+  width: fit-content;
+  max-width: 100%;
   border: 0;
   background: linear-gradient(180deg, color-mix(in srgb, var(--node-bg) 96%, transparent), color-mix(in srgb, var(--node-bg) 72%, transparent));
   box-shadow: none;
@@ -1132,33 +1143,29 @@ select:focus-visible {
   opacity: 1;
   pointer-events: auto;
   transform: none;
-  z-index: 3;
+  z-index: 45;
   backdrop-filter: blur(10px);
+  overflow: visible;
 }
 
 .node__toolbar--focus .node__tool-btn {
-  width: auto;
-  min-width: 0;
-  padding: 0 10px;
-  grid-auto-flow: column;
-  gap: 8px;
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+  grid-auto-flow: row;
+  gap: 0;
 }
 
 .node__toolbar--focus .node__tool-btn-copy {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  white-space: nowrap;
+  display: none;
 }
 
 .node__toolbar--focus .node__tool-btn-label {
-  font-size: 0.82rem;
-  font-weight: 600;
+  display: none;
 }
 
 .node__toolbar--focus .node__tool-btn-shortcut {
-  font-size: 0.72rem;
-  color: var(--node-muted);
+  display: none;
 }
 
 .node__tool-btn--primary {
@@ -1166,9 +1173,7 @@ select:focus-visible {
   background:
     linear-gradient(180deg, color-mix(in srgb, #2f855a 88%, white 12%), color-mix(in srgb, #236746 92%, black 8%));
   border-color: color-mix(in srgb, #2f855a 72%, transparent);
-  box-shadow:
-    0 10px 22px color-mix(in srgb, #2f855a 20%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  box-shadow: none;
 }
 
 .node__tool-btn--primary:hover,
@@ -1176,6 +1181,7 @@ select:focus-visible {
   background:
     linear-gradient(180deg, color-mix(in srgb, #2f855a 92%, white 8%), color-mix(in srgb, #236746 94%, black 6%));
   border-color: color-mix(in srgb, #2f855a 84%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, #2f855a 18%, transparent);
 }
 
 .node__content--focus {

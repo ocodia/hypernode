@@ -65,7 +65,7 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
       ` : ''}
       ${includeFocus ? `
         <button class="node__tool-btn entity-toolbar__btn" type="button" data-node-focus-toggle="${nodeId}" aria-label="${focusLabel}" title="${focusTitle}" aria-pressed="${focusActive ? 'true' : 'false'}">
-          <i class="bi ${focusActive ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'}"></i>
+          <i class="bi ${focusActive ? 'bi-check-lg' : 'bi-arrows-fullscreen'}"></i>
           <span class="node__tool-btn-copy">
             <span class="node__tool-btn-label">${focusActive ? 'Exit' : 'Focus'}</span>
             ${showShortcuts ? `<span class="node__tool-btn-shortcut">${focusShortcut}</span>` : ''}

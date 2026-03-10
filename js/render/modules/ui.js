@@ -167,6 +167,7 @@ export function renderFocusOverlay(focusLayer, state) {
   }
 
   const colorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
+  const focusPanelStyle = `--node-border-width: ${node.borderWidth || 1}px; --node-border-style: ${escapeHtml(node.borderStyle || 'solid')};`;
   const starterActive = state.ui.starterNodeId === node.id;
   focusLayer.hidden = false;
   focusLayer.innerHTML = `
@@ -180,10 +181,13 @@ export function renderFocusOverlay(focusLayer, state) {
         includeEdit: !starterActive,
         includeFocus: !starterActive,
         includeDelete: !starterActive,
-        includeStyleControls: false,
+        includeStyleControls: !starterActive,
+        colorKey: node.colorKey || '',
+        borderWidth: node.borderWidth || 1,
+        borderStyle: node.borderStyle || 'solid',
         showShortcuts: state.settings?.showShortcutsUi !== false,
       })}
-      <article class="focus-overlay__panel node ${node.kind === 'image' ? 'node--image' : ''}${state.ui.editingNodeId === node.id ? ' is-editing' : ''}" data-node-id="${node.id}"${colorAttr}>
+      <article class="focus-overlay__panel node ${node.kind === 'image' ? 'node--image' : ''}${state.ui.editingNodeId === node.id ? ' is-editing' : ''}" data-node-id="${node.id}"${colorAttr} style="${focusPanelStyle}">
         ${buildNodeContentMarkup(node, {
           isEditing: state.ui.editingNodeId === node.id,
           isFocused: true,
