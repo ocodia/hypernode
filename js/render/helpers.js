@@ -14,6 +14,63 @@ export {
   clamp,
 };
 
+const BORDER_STYLE_OPTIONS = ['solid', 'dashed', 'dotted'];
+
+export function buildToolbarColorPopoverMarkup(label = 'Colors') {
+  return `
+    <div class="entity-toolbar__popover" data-toolbar-popover="color" role="dialog" aria-label="${escapeAttr(label)}" hidden>
+      <p class="entity-toolbar__popover-title">${escapeHTML(label)}</p>
+      <div class="node-color-picker" role="group" aria-label="${escapeAttr(label)}">
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="sage" aria-label="Apply sage color" title="Sage"></button>
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="sky" aria-label="Apply sky color" title="Sky"></button>
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="amber" aria-label="Apply amber color" title="Amber"></button>
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="rose" aria-label="Apply rose color" title="Rose"></button>
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="slate" aria-label="Apply slate color" title="Slate"></button>
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="teal" aria-label="Apply teal color" title="Teal"></button>
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="violet" aria-label="Apply violet color" title="Violet"></button>
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="peach" aria-label="Apply peach color" title="Peach"></button>
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="mint" aria-label="Apply mint color" title="Mint"></button>
+        <button class="node-color-picker__swatch" type="button" data-toolbar-color-value="indigo" aria-label="Apply indigo color" title="Indigo"></button>
+        <button class="node-color-picker__reset" type="button" data-toolbar-color-value="default" aria-label="Reset color" title="Reset color">Reset</button>
+      </div>
+    </div>
+  `;
+}
+
+export function buildToolbarBorderWidthPopoverMarkup(value, label = 'Border Width') {
+  const resolvedValue = Number.isFinite(Number(value)) ? Math.round(Number(value)) : NODE_DEFAULTS.borderWidth;
+  return `
+    <div class="entity-toolbar__popover entity-toolbar__popover--range" data-toolbar-popover="border-width" role="dialog" aria-label="${escapeAttr(label)}" hidden>
+      <label class="entity-toolbar__range" data-toolbar-range>
+        <span class="entity-toolbar__range-header">
+          <span class="entity-toolbar__popover-title">${escapeHTML(label)}</span>
+          <span class="entity-toolbar__range-value" data-toolbar-border-width-value>${resolvedValue}</span>
+        </span>
+        <input class="entity-toolbar__range-input" data-toolbar-border-width-input type="range" min="1" max="8" step="1" value="${escapeAttr(resolvedValue)}" />
+      </label>
+    </div>
+  `;
+}
+
+export function buildToolbarBorderStylePopoverMarkup(currentStyle, label = 'Border Style') {
+  const resolvedStyle = BORDER_STYLE_OPTIONS.includes(currentStyle) ? currentStyle : NODE_DEFAULTS.borderStyle;
+  return `
+    <div class="entity-toolbar__popover" data-toolbar-popover="border-style" role="dialog" aria-label="${escapeAttr(label)}" hidden>
+      <p class="entity-toolbar__popover-title">${escapeHTML(label)}</p>
+      <div class="entity-toolbar__style-options" role="group" aria-label="${escapeAttr(label)}">
+        ${BORDER_STYLE_OPTIONS.map((style) => `
+          <button
+            class="entity-toolbar__style-btn"
+            type="button"
+            data-toolbar-border-style-value="${style}"
+            aria-pressed="${resolvedStyle === style ? 'true' : 'false'}"
+          >${escapeHTML(style)}</button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
 export function mapZoomOpacity(zoom, minOpacity, midOpacity, maxOpacity) {
   const minZoom = 0.35;
   const midZoom = 1.0;

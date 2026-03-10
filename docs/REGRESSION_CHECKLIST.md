@@ -23,7 +23,9 @@ Use this checklist before shipping interaction changes.
 
 - [ ] Select a node and verify all four corner handles are visible.
 - [ ] Select a node and verify mini toolbar appears above node without intersecting node border/anchors.
-- [ ] Verify mini toolbar exposes `Edit` and `Delete` actions.
+- [ ] Verify single-node mini toolbar exposes `Edit`, `Focus`, color, border width, border style, and `Delete`.
+- [ ] Multi-select at least 2 nodes and verify only one shared toolbar appears above the selection bounds.
+- [ ] Use the shared node toolbar to change color, border width, and border style for all selected nodes.
 - [ ] Deselect node and verify handles are hidden.
 - [ ] Deselect node and verify mini toolbar is hidden.
 - [ ] Enter node edit mode and verify handles are hidden.
@@ -37,14 +39,15 @@ Use this checklist before shipping interaction changes.
 
 - [ ] Toggle frame draw mode, drag to create a frame at zoom levels `0.35`, `1.0`, and `2.5`.
 - [ ] Press `Escape` during frame draw mode and confirm draft cancels cleanly.
-- [ ] Select a frame and verify frame mini toolbar appears with `Edit` and `Delete`.
+- [ ] Select a frame and verify frame mini toolbar appears with color, border width, border style, `Edit`, and `Delete`.
 - [ ] Verify frame mini toolbar appears above frame bounds (not inside frame body).
 - [ ] Resize frame from each corner and confirm frame bounds update with zoom-aware pointer alignment.
 - [ ] While resizing a frame smaller, verify previously embedded out-of-bounds nodes get remove-preview highlight.
 - [ ] While resizing a frame larger, verify newly covered nodes get add-preview highlight.
 - [ ] On frame resize release, verify out-of-bounds member nodes are automatically ungrouped.
 - [ ] On frame resize release, verify newly covered nodes are automatically grouped into the frame.
-- [ ] In frame edit mode, set border width and border style and verify immediate visual update.
+- [ ] In frame edit mode, verify the `Edit` button changes to a positive confirm tick.
+- [ ] In frame edit mode, use toolbar border width and border style controls and verify visual updates apply to the frame.
 - [ ] Drag nodes into a frame and verify they become embedded on release.
 - [ ] While dragging into a frame, verify add-preview highlight appears before release.
 - [ ] Drag embedded nodes out of frame overlap and verify they ungroup.

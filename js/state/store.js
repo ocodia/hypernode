@@ -470,6 +470,15 @@ export function createStore(initialGraph = null) {
     if (typeof patch.height === 'number' && Number.isFinite(patch.height) && patch.height > 0) {
       node.height = patch.height;
     }
+    if (patch.borderWidth !== undefined) {
+      const numeric = Math.round(Number(patch.borderWidth));
+      if (Number.isFinite(numeric)) {
+        node.borderWidth = Math.min(NODE_DEFAULTS.borderWidthMax, Math.max(NODE_DEFAULTS.borderWidthMin, numeric));
+      }
+    }
+    if (typeof patch.borderStyle === 'string' && ['solid', 'dashed', 'dotted'].includes(patch.borderStyle)) {
+      node.borderStyle = patch.borderStyle;
+    }
     if (patch.frameId === null || patch.frameId === undefined || patch.frameId === '') {
       delete node.frameId;
     } else if (typeof patch.frameId === 'string' && state.frames.some((frame) => frame.id === patch.frameId)) {
@@ -710,6 +719,66 @@ export function createStore(initialGraph = null) {
     pushHistory('set-frame-color');
     for (const frame of targets) {
       applyColor(frame, normalizedColorKey);
+    }
+    notify();
+  }
+
+  function setNodesBorderWidth(ids, borderWidth) {
+    const targets = dedupeNodeTargets(ids);
+    if (!targets.length) return;
+    const numeric = Math.round(Number(borderWidth));
+    if (!Number.isFinite(numeric)) return;
+    const normalized = Math.min(NODE_DEFAULTS.borderWidthMax, Math.max(NODE_DEFAULTS.borderWidthMin, numeric));
+    const changed = targets.some((node) => Number(node.borderWidth || NODE_DEFAULTS.borderWidth) !== normalized);
+    if (!changed) return;
+
+    pushHistory('set-node-border-width');
+    for (const node of targets) {
+      node.borderWidth = normalized;
+    }
+    notify();
+  }
+
+  function setNodesBorderStyle(ids, borderStyle) {
+    const targets = dedupeNodeTargets(ids);
+    if (!targets.length) return;
+    if (typeof borderStyle !== 'string' || !['solid', 'dashed', 'dotted'].includes(borderStyle)) return;
+    const changed = targets.some((node) => String(node.borderStyle || NODE_DEFAULTS.borderStyle) !== borderStyle);
+    if (!changed) return;
+
+    pushHistory('set-node-border-style');
+    for (const node of targets) {
+      node.borderStyle = borderStyle;
+    }
+    notify();
+  }
+
+  function setFramesBorderWidth(ids, borderWidth) {
+    const targets = dedupeFrameTargets(ids);
+    if (!targets.length) return;
+    const numeric = Math.round(Number(borderWidth));
+    if (!Number.isFinite(numeric)) return;
+    const normalized = Math.min(FRAME_DEFAULTS.borderWidthMax, Math.max(FRAME_DEFAULTS.borderWidthMin, numeric));
+    const changed = targets.some((frame) => Number(frame.borderWidth || FRAME_DEFAULTS.borderWidth) !== normalized);
+    if (!changed) return;
+
+    pushHistory('set-frame-border-width');
+    for (const frame of targets) {
+      frame.borderWidth = normalized;
+    }
+    notify();
+  }
+
+  function setFramesBorderStyle(ids, borderStyle) {
+    const targets = dedupeFrameTargets(ids);
+    if (!targets.length) return;
+    if (typeof borderStyle !== 'string' || !['solid', 'dashed', 'dotted'].includes(borderStyle)) return;
+    const changed = targets.some((frame) => String(frame.borderStyle || FRAME_DEFAULTS.borderStyle) !== borderStyle);
+    if (!changed) return;
+
+    pushHistory('set-frame-border-style');
+    for (const frame of targets) {
+      frame.borderStyle = borderStyle;
     }
     notify();
   }
@@ -1146,6 +1215,10 @@ export function createStore(initialGraph = null) {
     recomputeNodeFrameMembership,
     setNodesColor,
     setFramesColor,
+    setNodesBorderWidth,
+    setNodesBorderStyle,
+    setFramesBorderWidth,
+    setFramesBorderStyle,
     deleteNode,
     deleteFrame,
     deleteSelectedNodes,

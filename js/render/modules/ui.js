@@ -2,9 +2,11 @@ import {
   buildFrameOverlayControls,
   buildNodeOverlayControls,
   defaultEntitySize,
+  getSelectedNodeIds,
   getSingleSelectedNodeId,
   measureEntitySizes,
 } from '../helpers.js';
+import { buildFrameToolbarMarkup } from './frames.js';
 import { buildNodeContentMarkup, buildNodeToolbarMarkup } from './nodes.js';
 
 export function renderSelectionControls(selectionControlsLayer, state) {
@@ -27,6 +29,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
   const controlBorderWidth = Math.min(2, Math.max(1.5, 1.5 / viewportZoom));
   const node = selectedNodeId ? state.nodes.find((item) => item.id === selectedNodeId) : null;
   const frame = selectedFrameId ? state.frames.find((item) => item.id === selectedFrameId) : null;
+  const selectedNodeIds = getSelectedNodeIds(state.selection);
   const showShortcuts = state.settings?.showShortcutsUi !== false;
 
   let markup = '';
@@ -49,15 +52,64 @@ export function renderSelectionControls(selectionControlsLayer, state) {
         ${colorAttr}
         style="transform: translate(${frame.x}px, ${frame.y}px); width: ${frameSize.width}px; height: ${frameSize.height}px; --selection-anchor-size: ${frameAnchorSize}px; --selection-resize-size: ${frameResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px;"
       >
-        <div class="frame__toolbar selection-controls__toolbar selection-controls__toolbar--frame">
-          <button class="frame__tool-btn" type="button" data-frame-edit-open="${frame.id}" data-frame-id="${frame.id}" aria-label="Edit frame" title="Edit Frame">
-            <i class="bi bi-pencil-fill"></i>
-          </button>
-          <button class="frame__tool-btn node__tool-btn--danger" type="button" data-frame-delete="${frame.id}" data-frame-id="${frame.id}" aria-label="Delete frame" title="Delete Frame">
-            <i class="bi bi-trash"></i>
-          </button>
-        </div>
+        ${buildFrameToolbarMarkup(frame.id, {
+          toolbarClass: 'frame__toolbar selection-controls__toolbar selection-controls__toolbar--frame',
+          colorKey: frame.colorKey || '',
+          borderWidth: frame.borderWidth || 1,
+          borderStyle: frame.borderStyle || 'solid',
+          editingActive: editingFrameId === frame.id,
+        })}
         ${buildFrameOverlayControls(frame.id, { includeResize: editingFrameId !== frame.id })}
+      </div>
+    `;
+  }
+
+  if (!node && selectedNodeIds.length > 1 && !focusedNodeId) {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    const selectedNodes = state.nodes.filter((item) => selectedNodeIds.includes(item.id));
+    let uniformColorKey = selectedNodes[0]?.colorKey || '';
+    let uniformBorderWidth = selectedNodes[0]?.borderWidth || 1;
+    let uniformBorderStyle = selectedNodes[0]?.borderStyle || 'solid';
+    for (const selectedNode of selectedNodes) {
+      const size = bySize.get(selectedNode.id) || defaultEntitySize(selectedNode);
+      minX = Math.min(minX, selectedNode.x);
+      minY = Math.min(minY, selectedNode.y);
+      maxX = Math.max(maxX, selectedNode.x + size.width);
+      maxY = Math.max(maxY, selectedNode.y + size.height);
+      if ((selectedNode.colorKey || '') !== uniformColorKey) uniformColorKey = '';
+      if ((selectedNode.borderWidth || 1) !== uniformBorderWidth) uniformBorderWidth = 1;
+      if ((selectedNode.borderStyle || 'solid') !== uniformBorderStyle) uniformBorderStyle = 'solid';
+    }
+    const canvasRect = document.getElementById('canvas')?.getBoundingClientRect?.();
+    const visibleMinX = ((0 - (state.viewport?.panX || 0)) / viewportZoom);
+    const visibleMaxX = (((canvasRect?.width || 0) - (state.viewport?.panX || 0)) / viewportZoom);
+    const approxHalfToolbarWidth = 96 / viewportZoom;
+    const centerX = Math.max(
+      visibleMinX + approxHalfToolbarWidth,
+      Math.min(((minX + maxX) / 2), visibleMaxX - approxHalfToolbarWidth),
+    );
+    markup += `
+      <div
+        class="selection-controls__group selection-controls__group--nodes"
+        data-node-ids="${selectedNodeIds.join(',')}"
+        style="transform: translate(${minX}px, ${minY}px); width: ${Math.max(0, maxX - minX)}px; height: ${Math.max(0, maxY - minY)}px;"
+      >
+        ${buildNodeToolbarMarkup(selectedNodeIds[0], {
+          toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--nodes',
+          toolbarStyle: `left: ${centerX - minX}px;`,
+          includeEdit: false,
+          includeFocus: false,
+          includeDelete: true,
+          targetEntity: 'nodes',
+          targetIds: selectedNodeIds,
+          colorKey: uniformColorKey,
+          borderWidth: uniformBorderWidth,
+          borderStyle: uniformBorderStyle,
+          showShortcuts,
+        })}
       </div>
     `;
   }
@@ -84,6 +136,9 @@ export function renderSelectionControls(selectionControlsLayer, state) {
           ${buildNodeToolbarMarkup(node.id, {
             toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--node',
             showShortcuts,
+            colorKey: node.colorKey || '',
+            borderWidth: node.borderWidth || 1,
+            borderStyle: node.borderStyle || 'solid',
           })}
           ${buildNodeOverlayControls(node.id)}
         `}
@@ -125,6 +180,7 @@ export function renderFocusOverlay(focusLayer, state) {
         includeEdit: !starterActive,
         includeFocus: !starterActive,
         includeDelete: !starterActive,
+        includeStyleControls: false,
         showShortcuts: state.settings?.showShortcutsUi !== false,
       })}
       <article class="focus-overlay__panel node ${node.kind === 'image' ? 'node--image' : ''}${state.ui.editingNodeId === node.id ? ' is-editing' : ''}" data-node-id="${node.id}"${colorAttr}>

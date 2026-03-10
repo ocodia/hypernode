@@ -103,7 +103,7 @@ FR-27
 Users must be able to start a new graph from the toolbar, with a confirmation prompt before discarding an existing non-empty graph.
 
 FR-28
-The node color palette must allow applying a color to selected nodes and setting the default color used for newly created nodes.
+Selection toolbars must allow applying palette colors to selected nodes and frames without changing the default color used for newly created nodes.
 
 FR-29
 Graph settings must include graph name, UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, arrowhead size, and shortcut UI visibility.
@@ -143,6 +143,9 @@ Deleting a Frame must ungroup contained nodes without deleting those nodes.
 
 FR-35
 Frames must support per-frame border width and style controls (`solid`, `dashed`, `dotted`).
+
+FR-35a
+Nodes must support per-node border width and style controls (`solid`, `dashed`, `dotted`) with persistence and multi-node batch application.
 
 FR-36
 During node drag, Frames must provide visual add/remove membership preview feedback before drop.

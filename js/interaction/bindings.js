@@ -213,7 +213,7 @@ export function bindInteractions(elements, store, options = {}) {
   let activeLiveEditNodeId = null;
   let activeLiveEditFrameId = null;
   let editorFocusLock = null;
-  let isNodeColorPopoverOpen = false;
+  let openToolbarPopoverEl = null;
   let lastNodePress = { id: null, at: 0 };
   let canvasFileDragDepth = 0;
   let focusImageDragDepth = 0;
@@ -1237,25 +1237,6 @@ export function bindInteractions(elements, store, options = {}) {
     store.recomputeNodeFrameMembership(candidates, { skipHistory: true });
   }
 
-  function setNodeColorPopoverOpen(nextOpen, buttonEl, popoverEl) {
-    if (!(buttonEl instanceof HTMLButtonElement) || !(popoverEl instanceof HTMLElement)) {
-      return;
-    }
-    const canOpen = !buttonEl.disabled;
-    const open = Boolean(nextOpen && canOpen);
-    isNodeColorPopoverOpen = open;
-    popoverEl.hidden = !open;
-    if (open) {
-      const toolbarRect = buttonEl.parentElement?.parentElement?.getBoundingClientRect?.();
-      const buttonRect = buttonEl.getBoundingClientRect();
-      if (toolbarRect) {
-        const left = Math.max(0, buttonRect.left - toolbarRect.left - Math.max(0, (popoverEl.offsetWidth - buttonRect.width) / 2));
-        popoverEl.style.left = `${left}px`;
-      }
-    }
-    buttonEl.setAttribute('aria-expanded', open ? 'true' : 'false');
-  }
-
   function getNormalizedNodeColorValue(value) {
     if (value === 'default') {
       return null;
@@ -1266,18 +1247,161 @@ export function bindInteractions(elements, store, options = {}) {
     return NODE_COLOR_KEYS.includes(value) ? value : null;
   }
 
-  function syncNodeColorButtonState(state, buttonEl, _popoverEl) {
-    void _popoverEl;
-    if (!(buttonEl instanceof HTMLButtonElement)) return;
-    const currentColorKey = getNormalizedNodeColorValue(state.settings?.nodeColorDefault);
-    if (currentColorKey) {
-      buttonEl.dataset.nodeColorCurrent = currentColorKey;
-      buttonEl.classList.add('toolbar__icon-btn--has-swatch');
-    } else {
-      delete buttonEl.dataset.nodeColorCurrent;
-      buttonEl.classList.remove('toolbar__icon-btn--has-swatch');
+  function closeToolbarPopover() {
+    if (!(openToolbarPopoverEl instanceof HTMLElement)) return;
+    const controlEl = openToolbarPopoverEl.closest('.entity-toolbar__control');
+    const triggerEl = controlEl?.querySelector('[data-toolbar-popover-toggle]');
+    openToolbarPopoverEl.hidden = true;
+    openToolbarPopoverEl.style.left = '';
+    if (triggerEl instanceof HTMLElement) {
+      triggerEl.setAttribute('aria-expanded', 'false');
     }
-    buttonEl.disabled = false;
+    openToolbarPopoverEl = null;
+  }
+
+  function openToolbarPopover(triggerEl, popoverEl) {
+    if (!(triggerEl instanceof HTMLElement) || !(popoverEl instanceof HTMLElement)) return;
+    if (openToolbarPopoverEl === popoverEl) {
+      closeToolbarPopover();
+      return;
+    }
+    closeToolbarPopover();
+    popoverEl.hidden = false;
+    triggerEl.setAttribute('aria-expanded', 'true');
+    const controlRect = triggerEl.parentElement?.getBoundingClientRect?.();
+    const triggerRect = triggerEl.getBoundingClientRect();
+    if (controlRect) {
+      const left = Math.max(
+        0,
+        Math.min(
+          controlRect.width - popoverEl.offsetWidth,
+          (triggerRect.left - controlRect.left) - ((popoverEl.offsetWidth - triggerRect.width) / 2),
+        ),
+      );
+      popoverEl.style.left = `${left}px`;
+    }
+    openToolbarPopoverEl = popoverEl;
+  }
+
+  function getToolbarContext(target) {
+    const toolbarEl = target instanceof HTMLElement
+      ? target.closest('[data-toolbar-entity][data-toolbar-target-ids]')
+      : null;
+    if (!(toolbarEl instanceof HTMLElement)) return null;
+    const entity = toolbarEl.dataset.toolbarEntity;
+    const ids = String(toolbarEl.dataset.toolbarTargetIds || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (!entity || !ids.length) return null;
+    return { toolbarEl, entity, ids };
+  }
+
+  function applyToolbarColor(target, colorKey) {
+    const context = getToolbarContext(target);
+    if (!context) return;
+    if (context.entity === 'frame') {
+      store.setFramesColor(context.ids, colorKey);
+      return;
+    }
+    store.setNodesColor(context.ids, colorKey);
+  }
+
+  function applyToolbarBorderWidth(target, borderWidth) {
+    const context = getToolbarContext(target);
+    if (!context) return;
+    if (context.entity === 'frame') {
+      store.setFramesBorderWidth(context.ids, borderWidth);
+      return;
+    }
+    store.setNodesBorderWidth(context.ids, borderWidth);
+  }
+
+  function applyToolbarBorderStyle(target, borderStyle) {
+    const context = getToolbarContext(target);
+    if (!context) return;
+    if (context.entity === 'frame') {
+      store.setFramesBorderStyle(context.ids, borderStyle);
+      return;
+    }
+    store.setNodesBorderStyle(context.ids, borderStyle);
+  }
+
+  function syncToolbarRangeValue(inputEl) {
+    if (!(inputEl instanceof HTMLInputElement)) return;
+    const valueEl = inputEl.closest('[data-toolbar-range]')?.querySelector('[data-toolbar-border-width-value]');
+    if (valueEl instanceof HTMLElement) {
+      valueEl.textContent = String(Math.round(Number(inputEl.value) || 1));
+    }
+  }
+
+  function handleToolbarClick(event) {
+    const toggleEl = event.target.closest('[data-toolbar-popover-toggle]');
+    if (toggleEl instanceof HTMLElement) {
+      const popoverName = toggleEl.dataset.toolbarPopoverToggle;
+      const popoverEl = toggleEl.parentElement?.querySelector(`[data-toolbar-popover="${popoverName}"]`);
+      if (popoverEl instanceof HTMLElement) {
+        openToolbarPopover(toggleEl, popoverEl);
+      }
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
+
+    const colorEl = event.target.closest('[data-toolbar-color-value]');
+    if (colorEl instanceof HTMLButtonElement) {
+      applyToolbarColor(colorEl, getNormalizedNodeColorValue(colorEl.dataset.toolbarColorValue));
+      closeToolbarPopover();
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
+
+    const borderStyleEl = event.target.closest('[data-toolbar-border-style-value]');
+    if (borderStyleEl instanceof HTMLButtonElement) {
+      applyToolbarBorderStyle(borderStyleEl, borderStyleEl.dataset.toolbarBorderStyleValue);
+      closeToolbarPopover();
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
+
+    const multiDeleteEl = event.target.closest('[data-nodes-delete]');
+    if (multiDeleteEl instanceof HTMLButtonElement) {
+      activeLiveEditNodeId = null;
+      store.deleteSelectedNodes();
+      closeToolbarPopover();
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
+
+    const frameConfirmEl = event.target.closest('[data-frame-edit-confirm]');
+    if (frameConfirmEl instanceof HTMLButtonElement) {
+      closeFrameEditor(frameConfirmEl.dataset.frameEditConfirm);
+      closeToolbarPopover();
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
+
+    return false;
+  }
+
+  function handleToolbarInput(event) {
+    const rangeEl = event.target.closest('[data-toolbar-border-width-input]');
+    if (!(rangeEl instanceof HTMLInputElement)) return false;
+    syncToolbarRangeValue(rangeEl);
+    event.stopPropagation();
+    return true;
+  }
+
+  function handleToolbarChange(event) {
+    const rangeEl = event.target.closest('[data-toolbar-border-width-input]');
+    if (!(rangeEl instanceof HTMLInputElement)) return false;
+    applyToolbarBorderWidth(rangeEl, rangeEl.value);
+    event.stopPropagation();
+    return true;
   }
 
   function onCanvasDoubleClick(event) {
@@ -1478,7 +1602,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-node-editor], [data-node-edit-open], [data-node-delete]')) {
+    if (event.target.closest('[data-node-editor], [data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-toolbar-popover-toggle], [data-toolbar-popover]')) {
       event.stopPropagation();
       return;
     }
@@ -1656,6 +1780,10 @@ export function bindInteractions(elements, store, options = {}) {
   function onNodeClick(event) {
     if (isDescriptionLinkTarget(event.target)) {
       event.stopPropagation();
+      return;
+    }
+
+    if (handleToolbarClick(event)) {
       return;
     }
 
@@ -1846,18 +1974,22 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-delete]')) {
+    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover]')) {
       event.stopPropagation();
     }
   }
 
   function onSelectionControlsClick(event) {
     const nodeGroupEl = event.target.closest('.selection-controls__group--node[data-node-id]');
-    const clickedToolbarControl = event.target.closest('[data-node-edit-open], [data-node-delete], [data-node-focus-toggle], [data-node-start], [data-node-resize], [data-node-anchor]');
+    const clickedToolbarControl = event.target.closest('[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-resize], [data-node-anchor], [data-toolbar-popover-toggle], [data-toolbar-popover]');
     if (nodeGroupEl && !clickedToolbarControl && event.detail >= 2) {
       openNodeFocus(nodeGroupEl.dataset.nodeId);
       event.stopPropagation();
       event.preventDefault();
+      return;
+    }
+
+    if (handleToolbarClick(event)) {
       return;
     }
 
@@ -1934,6 +2066,14 @@ export function bindInteractions(elements, store, options = {}) {
     event.preventDefault();
   }
 
+  function onSelectionControlsInput(event) {
+    handleToolbarInput(event);
+  }
+
+  function onSelectionControlsChange(event) {
+    handleToolbarChange(event);
+  }
+
   bindNodeInteractions({ nodesLayer, selectionControlsLayer, focusLayer }, {
     onNodePointerDown,
     onNodeDoubleClick,
@@ -1947,6 +2087,8 @@ export function bindInteractions(elements, store, options = {}) {
     onSelectionControlsPointerDown,
     onSelectionControlsClick,
     onSelectionControlsDoubleClick,
+    onSelectionControlsInput,
+    onSelectionControlsChange,
   });
 
   canvas.addEventListener('dragenter', (event) => {
@@ -2048,7 +2190,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-frame-editor], [data-frame-edit-open], [data-frame-delete]')) {
+    if (event.target.closest('[data-frame-editor], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover]')) {
       event.stopPropagation();
       return;
     }
@@ -2185,6 +2327,10 @@ export function bindInteractions(elements, store, options = {}) {
   function onFrameClick(event) {
     if (isDescriptionLinkTarget(event.target)) {
       event.stopPropagation();
+      return;
+    }
+
+    if (handleToolbarClick(event)) {
       return;
     }
 
@@ -2398,8 +2544,6 @@ export function bindInteractions(elements, store, options = {}) {
   const newGraphBtn = document.getElementById('new-graph-btn');
   const openGraphBtn = document.getElementById('open-graph-btn');
   const saveGraphBtn = document.getElementById('save-graph-btn');
-  const nodeColorBtn = document.getElementById('node-color-btn');
-  const nodeColorPopover = document.getElementById('node-color-popover');
   const toolbarShortcutButtons = Object.entries(TOOLBAR_SHORTCUTS).map(([id, config]) => ({
     button: document.getElementById(id),
     hint: document.getElementById(id)?.querySelector('.toolbar__shortcut-hint'),
@@ -2889,43 +3033,13 @@ export function bindInteractions(elements, store, options = {}) {
     });
   });
 
-  syncNodeColorButtonState(store.getState(), nodeColorBtn, nodeColorPopover);
-
-  if (nodeColorBtn instanceof HTMLButtonElement && nodeColorPopover instanceof HTMLElement) {
-    nodeColorBtn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      setNodeColorPopoverOpen(!isNodeColorPopoverOpen, nodeColorBtn, nodeColorPopover);
-    });
-
-    nodeColorPopover.addEventListener('click', (event) => {
-      const swatchBtn = event.target.closest('[data-node-color-value]');
-      if (!(swatchBtn instanceof HTMLButtonElement)) return;
-      const selection = store.getState().selection;
-      const selectionIds = getSelectedNodeIds(selection);
-      const colorKey = getNormalizedNodeColorValue(swatchBtn.dataset.nodeColorValue);
-      store.setNodeColorDefault(colorKey);
-      if (selection?.type === 'frame') {
-        store.setFramesColor([selection.id], colorKey);
-        setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
-        return;
-      }
-      if (!selectionIds.length) {
-        setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
-        return;
-      }
-      store.setNodesColor(selectionIds, colorKey);
-      setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
-      event.stopPropagation();
-    });
-
-    document.addEventListener('pointerdown', (event) => {
-      if (!isNodeColorPopoverOpen) return;
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      if (target.closest('#node-color-popover') || target.closest('#node-color-btn')) return;
-      setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
-    });
-  }
+  document.addEventListener('pointerdown', (event) => {
+    if (!(openToolbarPopoverEl instanceof HTMLElement)) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.closest('.entity-toolbar__control')) return;
+    closeToolbarPopover();
+  });
 
   document.getElementById('add-node-btn')?.addEventListener('click', handleAddNode);
 
@@ -2967,9 +3081,9 @@ export function bindInteractions(elements, store, options = {}) {
   function bindKeyboard() {
   document.addEventListener('keydown', (event) => {
     if (aboutDialog?.open || shortcutsDialog?.open || settingsDialog?.open) return;
-    if (event.key === 'Escape' && isNodeColorPopoverOpen) {
+    if (event.key === 'Escape' && openToolbarPopoverEl) {
       event.preventDefault();
-      setNodeColorPopoverOpen(false, nodeColorBtn, nodeColorPopover);
+      closeToolbarPopover();
       return;
     }
     const ctrlOrCmd = event.ctrlKey || event.metaKey;
@@ -3160,7 +3274,10 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   store.subscribe((state) => {
-    syncNodeColorButtonState(state, nodeColorBtn, nodeColorPopover);
+    void state;
+    if (openToolbarPopoverEl && !document.body.contains(openToolbarPopoverEl)) {
+      openToolbarPopoverEl = null;
+    }
     syncShortcutUiFromState(state);
     syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   });

@@ -13,6 +13,10 @@ export const NODE_DEFAULTS = {
   minWidth: 160,
   minHeight: 40,
   title: "Untitled Node",
+  borderWidth: 1,
+  borderWidthMin: 1,
+  borderWidthMax: 8,
+  borderStyle: "solid",
 };
 
 export const FRAME_DEFAULTS = {

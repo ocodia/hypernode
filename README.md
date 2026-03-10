@@ -11,22 +11,24 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Fresh hypernodes start with a starter node already open in Zen edit mode, with the title focused and seeded to the current date.
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
 - Edit node title/description inline from the selected-node mini toolbar, with description display supporting basic markdown (headers, paragraphs, lists, links, emphasis, inline code).
-- Color selected node backgrounds from a toolbar palette (10 curated colors + reset) with legible text and complementary selected highlights.
+- Color selected node and frame backgrounds from local selection toolbars (10 curated colors + reset) with legible text and complementary selected highlights.
 - Delete selected nodes with `Delete`/`Backspace`, or with `Ctrl/Cmd + Delete` plus confirmation while in Focus mode.
 - Create edges from text and image node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
 - Selected node/frame toolbars, resize handles, and anchor points render above overlapping canvas content.
 - Resize handles and anchor points grow when zoomed out so they stay easier to grab.
 - Draw Frames from toolbar drag mode. Frames act as background super-nodes with anchors, resize handles, and title/description, including the same basic markdown support in descriptions.
-- Frame mini toolbar renders above selected frames.
-- Frame inline editor includes border width (`1-8`) and border style (`solid`, `dashed`, `dotted`).
+- Frame mini toolbar renders above selected frames and includes color, border width, border style, edit/confirm, and delete controls.
+- Node mini toolbars include color, border width, border style, and delete controls; single-node toolbars also include `Edit` and `Focus`.
+- Multi-selected nodes show one shared toolbar centered above the selection bounds for batch color, border, and delete actions.
+- Frame inline editor keeps title and description fields while frame border controls live in the frame toolbar.
 - Drag nodes into Frames to embed them; embedded nodes move with their Frame and can be dragged out to ungroup.
 - While dragging nodes, frames preview add/remove membership with distinct highlight states.
 - While resizing frames, nodes preview add/remove membership changes and grouping updates on resize release.
 - Create and reconnect edges to Frames via frame anchors.
 - Add image nodes from the toolbar or by dragging local image files onto the canvas (stored as base64 data URLs in the hypernode JSON payload).
 - Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.
-- Single selected nodes show a mini toolbar above the node with `Edit` and `Delete` actions.
+- Single selected nodes show a mini toolbar above the node with `Edit`, `Focus`, color, border, and delete actions.
 - Single selected nodes also expose a `Focus` action for full-screen zen editing; Focus mode stays responsive across device sizes, keeps text readable/editable, and always shows a drop zone to add or replace a node image.
 - Multi-select nodes with `Ctrl/Cmd + click` (additive).
 - Multi-select nodes with `Ctrl/Cmd + drag` marquee (touch/intersection hit rule).
@@ -60,8 +62,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
   - toast position (`top left`, `top right`, `bottom left`, or `bottom right`)
   - metadata position (`top left`, `top right`, `bottom left`, or `bottom right`)
   - hypernode name
-- Node color tool also sets the default color for newly created nodes.
-- Node color tool also applies to selected Frames (flat palette style) and still sets the default color for newly created nodes.
+- Toolbar color picks affect only the current node or frame selection and do not change the default color for newly created nodes.
 - Hypernode name is shown in a glassy metadata chip with a file icon and live canvas coordinates; its corner position is configurable and it also updates the browser tab title.
 - First-time Save suggests a filename based on the hypernode name.
 - Open/save toolbar actions use the File System Access API and are disabled in browsers that do not support it.

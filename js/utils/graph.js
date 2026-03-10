@@ -81,6 +81,8 @@ export function sanitizeNode(node, frameIds = null) {
   const kind = sanitizeNodeKind(node.kind);
   const width = sanitizeOptionalSize(node.width);
   const height = sanitizeOptionalSize(node.height);
+  const borderWidth = sanitizeNodeBorderWidth(node.borderWidth);
+  const borderStyle = sanitizeNodeBorderStyle(node.borderStyle);
   const colorKey = sanitizeNodeColorKey(node.colorKey);
   const frameId = sanitizeFrameRef(node.frameId, frameIds);
   const baseNode = {
@@ -90,6 +92,8 @@ export function sanitizeNode(node, frameIds = null) {
     kind,
     x: Number(node.x) || 0,
     y: Number(node.y) || 0,
+    borderWidth,
+    borderStyle,
     ...(frameId === null ? {} : { frameId }),
     ...(colorKey === null ? {} : { colorKey }),
   };
@@ -384,6 +388,8 @@ function validateGraphNodePayload(node, frameIds) {
   if (node.kind !== undefined && !isValidNodeKind(node.kind)) return false;
   if (node.width !== undefined && sanitizeOptionalSize(node.width) === null) return false;
   if (node.height !== undefined && sanitizeOptionalSize(node.height) === null) return false;
+  if (node.borderWidth !== undefined && !isValidNodeBorderWidth(node.borderWidth)) return false;
+  if (node.borderStyle !== undefined && !isValidNodeBorderStyle(node.borderStyle)) return false;
   if (node.frameId !== undefined && node.frameId !== null) {
     if (typeof node.frameId !== 'string' || !frameIds.has(node.frameId)) return false;
   }
@@ -461,5 +467,33 @@ function isValidFrameBorderWidth(value) {
 }
 
 function isValidFrameBorderStyle(value) {
+  return typeof value === 'string' && FRAME_BORDER_STYLES.has(value);
+}
+
+function sanitizeNodeBorderWidth(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return NODE_DEFAULTS.borderWidth;
+  }
+  const rounded = Math.round(numeric);
+  if (rounded < NODE_DEFAULTS.borderWidthMin) return NODE_DEFAULTS.borderWidthMin;
+  if (rounded > NODE_DEFAULTS.borderWidthMax) return NODE_DEFAULTS.borderWidthMax;
+  return rounded;
+}
+
+function sanitizeNodeBorderStyle(value) {
+  if (typeof value !== 'string' || !FRAME_BORDER_STYLES.has(value)) {
+    return NODE_DEFAULTS.borderStyle;
+  }
+  return value;
+}
+
+function isValidNodeBorderWidth(value) {
+  return Number.isInteger(Number(value))
+    && Number(value) >= NODE_DEFAULTS.borderWidthMin
+    && Number(value) <= NODE_DEFAULTS.borderWidthMax;
+}
+
+function isValidNodeBorderStyle(value) {
   return typeof value === 'string' && FRAME_BORDER_STYLES.has(value);
 }

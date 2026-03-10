@@ -1,4 +1,7 @@
 import {
+  buildToolbarBorderStylePopoverMarkup,
+  buildToolbarBorderWidthPopoverMarkup,
+  buildToolbarColorPopoverMarkup,
   buildNodeInlineSizeStyle,
   escapeAttr,
   escapeCssUrl,
@@ -17,23 +20,34 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const editingActive = Boolean(options.editingActive);
   const includeFocus = options.includeFocus !== false;
   const includeDelete = options.includeDelete !== false;
+  const includeStyleControls = options.includeStyleControls !== false;
   const focusActive = Boolean(options.focusActive);
   const starterActive = Boolean(options.starterActive);
   const toolbarClass = options.toolbarClass || 'node__toolbar';
+  const targetIds = Array.isArray(options.targetIds) && options.targetIds.length ? options.targetIds : [nodeId];
+  const targetEntity = options.targetEntity || (targetIds.length > 1 ? 'nodes' : 'node');
+  const colorKey = typeof options.colorKey === 'string' ? options.colorKey : '';
+  const borderWidth = Number.isFinite(Number(options.borderWidth)) ? Math.round(Number(options.borderWidth)) : 1;
+  const borderStyle = typeof options.borderStyle === 'string' ? options.borderStyle : 'solid';
   const focusLabel = focusActive ? 'Exit focus mode' : 'Focus node';
   const focusTitle = focusActive ? 'Exit Focus' : 'Focus';
   const editLabel = editingActive ? 'Switch to reading mode' : 'Edit node';
   const editTitle = editingActive ? 'Reading Mode' : 'Edit Node';
   const editIcon = editingActive ? 'bi-eye-fill' : 'bi-pencil-fill';
   const showShortcuts = Boolean(options.showShortcuts);
+  const toolbarStyle = options.toolbarStyle ? ` style="${escapeAttr(options.toolbarStyle)}"` : '';
+  const selectionCountLabel = targetEntity === 'nodes' && targetIds.length > 1
+    ? `<div class="entity-toolbar__selection-count" aria-label="${targetIds.length} nodes selected">${targetIds.length} selected</div>`
+    : '';
   const editShortcut = formatShortcutLabel('Ctrl/Cmd + Enter', { compact: true });
   const focusShortcut = focusActive ? 'Esc' : formatShortcutLabel('Ctrl/Cmd + Alt + Enter', { compact: true });
   const deleteShortcut = focusActive ? formatShortcutLabel('Ctrl/Cmd + Delete', { compact: true }) : 'Del';
 
   return `
-    <div class="${toolbarClass}">
+    <div class="${toolbarClass}" data-toolbar-entity="${targetEntity}" data-toolbar-target-ids="${escapeAttr(targetIds.join(','))}"${toolbarStyle}>
+      ${selectionCountLabel}
       ${starterActive ? `
-        <button class="node__tool-btn node__tool-btn--primary" type="button" data-node-start="${nodeId}" aria-label="Start hypernode" title="Start hypernode">
+        <button class="node__tool-btn entity-toolbar__btn node__tool-btn--primary" type="button" data-node-start="${nodeId}" aria-label="Start hypernode" title="Start hypernode">
           <i class="bi bi-play-fill"></i>
           <span class="node__tool-btn-copy">
             <span class="node__tool-btn-label">Start</span>
@@ -41,7 +55,7 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
         </button>
       ` : ''}
       ${includeEdit ? `
-        <button class="node__tool-btn" type="button" data-node-edit-open="${nodeId}" aria-label="${editLabel}" title="${editTitle}" aria-pressed="${editingActive ? 'true' : 'false'}">
+        <button class="node__tool-btn entity-toolbar__btn" type="button" data-node-edit-open="${nodeId}" aria-label="${editLabel}" title="${editTitle}" aria-pressed="${editingActive ? 'true' : 'false'}">
           <i class="bi ${editIcon}"></i>
           <span class="node__tool-btn-copy">
             <span class="node__tool-btn-label">${editingActive ? 'Read' : 'Edit'}</span>
@@ -50,7 +64,7 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
         </button>
       ` : ''}
       ${includeFocus ? `
-        <button class="node__tool-btn" type="button" data-node-focus-toggle="${nodeId}" aria-label="${focusLabel}" title="${focusTitle}" aria-pressed="${focusActive ? 'true' : 'false'}">
+        <button class="node__tool-btn entity-toolbar__btn" type="button" data-node-focus-toggle="${nodeId}" aria-label="${focusLabel}" title="${focusTitle}" aria-pressed="${focusActive ? 'true' : 'false'}">
           <i class="bi ${focusActive ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'}"></i>
           <span class="node__tool-btn-copy">
             <span class="node__tool-btn-label">${focusActive ? 'Exit' : 'Focus'}</span>
@@ -58,8 +72,28 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
           </span>
         </button>
       ` : ''}
+      ${includeStyleControls ? `
+        <div class="entity-toolbar__control">
+          <button class="node__tool-btn entity-toolbar__btn${colorKey ? ' entity-toolbar__trigger--has-swatch' : ''}" type="button" data-toolbar-popover-toggle="color" aria-label="Node colors" title="Node colors" aria-expanded="false"${colorKey ? ` data-toolbar-color-current="${escapeAttr(colorKey)}"` : ''}>
+            <i class="bi bi-palette"></i>
+          </button>
+          ${buildToolbarColorPopoverMarkup('Colors')}
+        </div>
+        <div class="entity-toolbar__control">
+          <button class="node__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="border-width" aria-label="Border width" title="Border width" aria-expanded="false">
+            <i class="bi bi-border-width"></i>
+          </button>
+          ${buildToolbarBorderWidthPopoverMarkup(borderWidth)}
+        </div>
+        <div class="entity-toolbar__control">
+          <button class="node__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="border-style" aria-label="Border style" title="Border style" aria-expanded="false">
+            <i class="bi bi-border-style"></i>
+          </button>
+          ${buildToolbarBorderStylePopoverMarkup(borderStyle)}
+        </div>
+      ` : ''}
       ${includeDelete ? `
-      <button class="node__tool-btn node__tool-btn--danger" type="button" data-node-delete="${nodeId}" aria-label="Delete node" title="Delete Node">
+      <button class="node__tool-btn entity-toolbar__btn node__tool-btn--danger" type="button" ${targetEntity === 'nodes' ? 'data-nodes-delete="true"' : `data-node-delete="${nodeId}"`} aria-label="${targetEntity === 'nodes' ? 'Delete selected nodes' : 'Delete node'}" title="${targetEntity === 'nodes' ? 'Delete Selected Nodes' : 'Delete Node'}">
         <i class="bi bi-trash"></i>
         <span class="node__tool-btn-copy">
           <span class="node__tool-btn-label">Delete</span>
@@ -76,7 +110,9 @@ export function buildNodeContentMarkup(node, options = {}) {
   const focused = Boolean(options.isFocused);
   const imageNode = isImageNode(node);
   const hasImageData = typeof node.imageData === 'string' && node.imageData.startsWith('data:image/');
-  const contentClass = focused ? 'node__content node__content--focus' : 'node__content';
+  const contentClass = focused
+    ? `node__content node__content--focus${imageNode ? ' node__content--focus-image' : ''}`
+    : 'node__content';
   const metaClass = focused ? 'node__meta node__meta--focus' : 'node__meta';
   const imageMarkup = hasImageData
     ? `
@@ -128,17 +164,19 @@ export function buildNodeContentMarkup(node, options = {}) {
   if (!editing && focused) {
     return `
       <div class="${contentClass}">
-        <section class="node__focus-field node__focus-field--title">
-          <div class="node__focus-value node__focus-value--title">
-            <h3 class="node__title node__title--focus">${escapeHTML(node.title)}</h3>
-          </div>
-        </section>
+        <div class="node__focus-fields">
+          <section class="node__focus-field node__focus-field--title">
+            <div class="node__focus-value node__focus-value--title">
+              <h3 class="node__title node__title--focus">${escapeHTML(node.title)}</h3>
+            </div>
+          </section>
+          <section class="node__focus-field node__focus-field--description">
+            <div class="node__focus-value node__focus-value--description">
+              ${node.description ? `<div class="node__description node__description--focus">${renderDescriptionMarkdown(node.description)}</div>` : '<div class="node__description node__description--focus node__description--empty">No description</div>'}
+            </div>
+          </section>
+        </div>
         ${focusMediaMarkup}
-        <section class="node__focus-field node__focus-field--description">
-          <div class="node__focus-value node__focus-value--description">
-            ${node.description ? `<div class="node__description node__description--focus">${renderDescriptionMarkdown(node.description)}</div>` : '<div class="node__description node__description--focus node__description--empty">No description</div>'}
-          </div>
-        </section>
       </div>
     `;
   }
@@ -227,11 +265,16 @@ export function renderNodes(nodesLayer, state) {
             : '';
       const fixedSizeClass = hasExplicitNodeSize(node) ? 'has-fixed-size' : '';
       const inlineSizeStyle = buildNodeInlineSizeStyle(node);
-      const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}`;
+      const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}--node-border-width: ${node.borderWidth || 1}px;--node-border-style: ${escapeAttr(node.borderStyle || 'solid')};`;
       const nodeColorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
       return `
         <article class="node ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
-          ${buildNodeToolbarMarkup(node.id, { showShortcuts })}
+          ${buildNodeToolbarMarkup(node.id, {
+            showShortcuts,
+            colorKey: node.colorKey || '',
+            borderWidth: node.borderWidth || 1,
+            borderStyle: node.borderStyle || 'solid',
+          })}
           ${buildNodeContentMarkup(node, { isEditing: editingNodeId === node.id })}
           <button class="node__resize node__resize--top-left" type="button" data-node-resize="${node.id}:top-left" aria-label="Resize from top left corner"></button>
           <button class="node__resize node__resize--top-right" type="button" data-node-resize="${node.id}:top-right" aria-label="Resize from top right corner"></button>

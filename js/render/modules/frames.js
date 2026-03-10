@@ -1,5 +1,53 @@
-import { escapeAttr, escapeHTML } from '../helpers.js';
+import {
+  buildToolbarBorderStylePopoverMarkup,
+  buildToolbarBorderWidthPopoverMarkup,
+  buildToolbarColorPopoverMarkup,
+  escapeAttr,
+  escapeHTML,
+} from '../helpers.js';
 import { renderDescriptionMarkdown } from '../markdown.js';
+
+export function buildFrameToolbarMarkup(frameId, options = {}) {
+  const toolbarClass = options.toolbarClass || 'frame__toolbar';
+  const colorKey = typeof options.colorKey === 'string' ? options.colorKey : '';
+  const borderWidth = Number.isFinite(Number(options.borderWidth)) ? Math.round(Number(options.borderWidth)) : 1;
+  const borderStyle = typeof options.borderStyle === 'string' ? options.borderStyle : 'solid';
+  const editingActive = Boolean(options.editingActive);
+  const editAttr = editingActive ? `data-frame-edit-confirm="${frameId}"` : `data-frame-edit-open="${frameId}"`;
+  const editLabel = editingActive ? 'Confirm frame edit' : 'Edit frame';
+  const editTitle = editingActive ? 'Confirm Frame' : 'Edit Frame';
+  const editIcon = editingActive ? 'bi-check-lg' : 'bi-pencil-fill';
+  const editClass = editingActive ? ' frame__tool-btn--confirm' : '';
+
+  return `
+    <div class="${toolbarClass}" data-toolbar-entity="frame" data-toolbar-target-ids="${escapeAttr(frameId)}">
+      <button class="frame__tool-btn entity-toolbar__btn${editClass}" type="button" ${editAttr} aria-label="${editLabel}" title="${editTitle}">
+        <i class="bi ${editIcon}"></i>
+      </button>
+      <div class="entity-toolbar__control">
+        <button class="frame__tool-btn entity-toolbar__btn${colorKey ? ' entity-toolbar__trigger--has-swatch' : ''}" type="button" data-toolbar-popover-toggle="color" aria-label="Frame colors" title="Frame colors" aria-expanded="false"${colorKey ? ` data-toolbar-color-current="${escapeAttr(colorKey)}"` : ''}>
+          <i class="bi bi-palette"></i>
+        </button>
+        ${buildToolbarColorPopoverMarkup('Colors')}
+      </div>
+      <div class="entity-toolbar__control">
+        <button class="frame__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="border-width" aria-label="Border width" title="Border width" aria-expanded="false">
+          <i class="bi bi-border-width"></i>
+        </button>
+        ${buildToolbarBorderWidthPopoverMarkup(borderWidth)}
+      </div>
+      <div class="entity-toolbar__control">
+        <button class="frame__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="border-style" aria-label="Border style" title="Border style" aria-expanded="false">
+          <i class="bi bi-border-style"></i>
+        </button>
+        ${buildToolbarBorderStylePopoverMarkup(borderStyle)}
+      </div>
+      <button class="frame__tool-btn entity-toolbar__btn node__tool-btn--danger" type="button" data-frame-delete="${frameId}" aria-label="Delete frame" title="Delete Frame">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  `;
+}
 
 export function renderFrames(framesLayer, state) {
   const selectedFrameId = state.selection?.type === 'frame' ? state.selection.id : null;
@@ -39,16 +87,6 @@ export function renderFrames(framesLayer, state) {
               Description
               <textarea class="frame__editor-textarea" data-frame-edit-description="${frame.id}">${escapeHTML(frame.description)}</textarea>
             </label>
-            <label class="frame__editor-label">
-              Border Width
-              <input class="frame__editor-input" data-frame-edit-border-width="${frame.id}" type="range" min="1" max="8" step="1" value="${escapeAttr(frame.borderWidth || 1)}" />
-            </label>
-            <label class="frame__editor-label">
-              Border Style
-              <select class="frame__editor-input" data-frame-edit-border-style="${frame.id}">
-                ${['solid', 'dashed', 'dotted'].map((style) => `<option value="${style}"${(frame.borderStyle || 'solid') === style ? ' selected' : ''}>${style}</option>`).join('')}
-              </select>
-            </label>
           </div>
         `
         : `
@@ -58,14 +96,12 @@ export function renderFrames(framesLayer, state) {
       return `
         <article class="frame ${selectedClass} ${overlayControlsClass} ${editingClass} ${connectClass} ${membershipPreviewClass}" data-frame-id="${frame.id}"${frameColorAttr} style="${frameStyle}">
           <div class="frame__box"></div>
-          <div class="frame__toolbar">
-            <button class="frame__tool-btn" type="button" data-frame-edit-open="${frame.id}" aria-label="Edit frame" title="Edit Frame">
-              <i class="bi bi-pencil-fill"></i>
-            </button>
-            <button class="frame__tool-btn node__tool-btn--danger" type="button" data-frame-delete="${frame.id}" aria-label="Delete frame" title="Delete Frame">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>
+          ${buildFrameToolbarMarkup(frame.id, {
+            colorKey: frame.colorKey || '',
+            borderWidth: frame.borderWidth || 1,
+            borderStyle: frame.borderStyle || 'solid',
+            editingActive: editingFrameId === frame.id,
+          })}
           <div class="frame__meta">
             ${meta}
           </div>
