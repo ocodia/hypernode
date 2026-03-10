@@ -22,13 +22,15 @@ If the app also keeps a local color-mode preference outside the graph payload, t
   "settings": {
     "uiThemePreset": "blueprint",
     "uiRadiusPreset": "rounded",
-    "toolbarPosition": "top-center",
+    "toolbarPosition": "top-left",
+    "toolbarOrientation": "horizontal",
+    "toastPosition": "bottom-right",
+    "metaPosition": "bottom-left",
     "backgroundStyle": "dots",
     "anchorsMode": "auto",
     "arrowheads": "shown",
     "arrowheadSizeStep": 0,
     "showShortcutsUi": true,
-    "showToolbarShortcutHints": false,
     "nodeColorDefault": null
   },
   "nodes": [],
@@ -53,13 +55,15 @@ Invalid payloads are rejected before import or restore is applied.
 {
   "uiThemePreset": "blueprint | fjord | slate | paper | ember | soft-black",
   "uiRadiusPreset": "sharp | soft | rounded",
-  "toolbarPosition": "top-center | top-left | bottom-center | bottom-left | left-column | right-column",
+  "toolbarPosition": "top-left | top-right | bottom-left | bottom-right",
+  "toolbarOrientation": "horizontal | vertical",
+  "toastPosition": "top-left | top-right | bottom-left | bottom-right",
+  "metaPosition": "top-left | top-right | bottom-left | bottom-right",
   "backgroundStyle": "dots | graph-paper",
   "anchorsMode": "auto | exact",
   "arrowheads": "shown | hidden",
   "arrowheadSizeStep": 0,
   "showShortcutsUi": "true | false",
-  "showToolbarShortcutHints": "true | false",
   "nodeColorDefault": "sage | sky | amber | rose | slate | teal | violet | peach | mint | indigo | null"
 }
 ```
@@ -68,26 +72,32 @@ Rules:
 
 - `uiThemePreset` must be `blueprint`, `fjord`, `slate`, `paper`, `ember`, or `soft-black`
 - `uiRadiusPreset` must be `sharp`, `soft`, or `rounded`
-- `toolbarPosition` must be `top-center`, `top-left`, `bottom-center`, `bottom-left`, `left-column`, or `right-column`
+- `toolbarPosition` must be `top-left`, `top-right`, `bottom-left`, or `bottom-right`
+- `toolbarOrientation` must be `horizontal` or `vertical`
+- `toastPosition` must be `top-left`, `top-right`, `bottom-left`, or `bottom-right`
+- `metaPosition` must be `top-left`, `top-right`, `bottom-left`, or `bottom-right`
 - `backgroundStyle` must be `dots` or `graph-paper`
 - `anchorsMode` must be `auto` or `exact`
 - `arrowheads` must be `shown` or `hidden`
 - `arrowheadSizeStep` is sanitized to an integer in the inclusive range `0..9`
 - `showShortcutsUi` must be a boolean and defaults to `true` when missing or invalid
-- `showToolbarShortcutHints` must be a boolean and defaults to `false` when missing or invalid
 - `nodeColorDefault` may be `null` or one of the curated palette keys
 
 Defaults:
 
 - `uiThemePreset` defaults to `blueprint` when missing or invalid
 - `uiRadiusPreset` defaults to `rounded` when missing or invalid
-- `toolbarPosition` defaults to `top-center` when missing or invalid
+- `toolbarPosition` defaults to `top-left` when missing or invalid
+- `toolbarOrientation` defaults to `horizontal` when missing or invalid
+- `toastPosition` defaults to `bottom-right` when missing or invalid
+- `metaPosition` defaults to `bottom-left` when missing or invalid
 - legacy `uiRadiusPreset: "square"` is migrated to `soft`
 
 Fallback behavior:
 
 - invalid or missing settings values are sanitized back to hypernode defaults when loaded into app state
 - payload validation rejects invalid setting enum values and invalid color keys before import/restore succeeds
+- legacy toolbar positions are migrated to the nearest supported corner (`top-center -> top-left`, `bottom-center -> bottom-right`, `bottom-left -> bottom-left`, `left-column -> top-left`, `right-column -> top-right`)
 - legacy `uiThemePreset: "graphite"` is migrated to `blueprint`
 - legacy `uiThemePreset: "mist"` is migrated to `slate`
 - older hypernode files that predate these fields fall back to `blueprint` and `rounded`
@@ -215,7 +225,6 @@ Payload validation rejects graphs when any of the following are true:
 - `settings.uiRadiusPreset` is not a supported preset
 - `settings.toolbarPosition` is not a supported position
 - `settings.showShortcutsUi` is present but not a boolean
-- `settings.showToolbarShortcutHints` is present but not a boolean
 - `settings.nodeColorDefault` is not `null` and not a valid palette key
 - `frames` contains duplicate frame ids
 - `nodes` contains duplicate node ids

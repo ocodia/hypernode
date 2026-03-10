@@ -844,10 +844,43 @@ export function createStore(initialGraph = null) {
   }
 
   function setToolbarPosition(toolbarPosition) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, toolbarPosition }).toolbarPosition;
-    if (state.settings.toolbarPosition === nextValue) return;
+    const nextSettings = sanitizeGraphSettings({ ...state.settings, toolbarPosition });
+    const unchanged = state.settings.toolbarPosition === nextSettings.toolbarPosition
+      && state.settings.toolbarOrientation === nextSettings.toolbarOrientation
+      && state.settings.toastPosition === nextSettings.toastPosition
+      && state.settings.metaPosition === nextSettings.metaPosition;
+    if (unchanged) return;
     pushHistory('set-toolbar-position');
-    state.settings.toolbarPosition = nextValue;
+    state.settings.toolbarPosition = nextSettings.toolbarPosition;
+    state.settings.toastPosition = nextSettings.toastPosition;
+    state.settings.metaPosition = nextSettings.metaPosition;
+    notify();
+  }
+
+  function setToolbarOrientation(toolbarOrientation) {
+    const nextSettings = sanitizeGraphSettings({ ...state.settings, toolbarOrientation });
+    if (state.settings.toolbarOrientation === nextSettings.toolbarOrientation) return;
+    pushHistory('set-toolbar-orientation');
+    state.settings.toolbarOrientation = nextSettings.toolbarOrientation;
+    notify();
+  }
+
+  function setToastPosition(toastPosition) {
+    const nextSettings = sanitizeGraphSettings({ ...state.settings, toastPosition });
+    const unchanged = state.settings.toastPosition === nextSettings.toastPosition
+      && state.settings.metaPosition === nextSettings.metaPosition;
+    if (unchanged) return;
+    pushHistory('set-toast-position');
+    state.settings.toastPosition = nextSettings.toastPosition;
+    state.settings.metaPosition = nextSettings.metaPosition;
+    notify();
+  }
+
+  function setMetaPosition(metaPosition) {
+    const nextSettings = sanitizeGraphSettings({ ...state.settings, metaPosition });
+    if (state.settings.metaPosition === nextSettings.metaPosition) return;
+    pushHistory('set-meta-position');
+    state.settings.metaPosition = nextSettings.metaPosition;
     notify();
   }
 
@@ -880,14 +913,6 @@ export function createStore(initialGraph = null) {
     if (state.settings.showShortcutsUi === nextValue) return;
     pushHistory('set-show-shortcuts-ui');
     state.settings.showShortcutsUi = nextValue;
-    notify();
-  }
-
-  function setShowToolbarShortcutHints(showToolbarShortcutHints) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, showToolbarShortcutHints }).showToolbarShortcutHints;
-    if (state.settings.showToolbarShortcutHints === nextValue) return;
-    pushHistory('set-show-toolbar-shortcut-hints');
-    state.settings.showToolbarShortcutHints = nextValue;
     notify();
   }
 
@@ -1111,12 +1136,14 @@ export function createStore(initialGraph = null) {
     setUiThemePreset,
     setUiRadiusPreset,
     setToolbarPosition,
+    setToolbarOrientation,
+    setToastPosition,
+    setMetaPosition,
     setBackgroundStyle,
     setAnchorsMode,
     setArrowheads,
     setArrowheadSizeStep,
     setShowShortcutsUi,
-    setShowToolbarShortcutHints,
     setNodeColorDefault,
     replaceGraph,
     setViewport,

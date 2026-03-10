@@ -106,10 +106,19 @@ FR-28
 The node color palette must allow applying a color to selected nodes and setting the default color used for newly created nodes.
 
 FR-29
-Graph settings must include graph name, UI theme preset, UI radius preset, toolbar position, background style, anchors mode, arrowhead visibility, arrowhead size, shortcut UI visibility, and toolbar shortcut hint visibility.
+Graph settings must include graph name, UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, arrowhead size, and shortcut UI visibility.
 
 FR-29a
 The shortcuts dialog must support search by shortcut keys and action text.
+
+FR-29b
+Toolbar, toast, and metadata position settings must use an interactive placement control that prevents overlap and auto-resolves conflicts to the nearest valid slot.
+
+FR-29c
+Settings, About, and Shortcuts dialogs must dismiss when users click the backdrop outside the dialog content.
+
+FR-29d
+Dialog overflow must scroll within the dialog content regions rather than scrolling the entire dialog shell.
 
 FR-30
 The app must provide hypernode-level appearance presets and persist the selected UI theme preset and UI radius preset with the graph document.

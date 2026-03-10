@@ -9,7 +9,10 @@ import {
   VIEWPORT_LIMITS,
 } from '../utils/constants.js';
 import { openGraphFile, saveGraphFile, supportsFileSystemAccess } from '../persistence/file.js';
+import { isDialogBackdropTarget } from '../utils/dialog.js';
+import { normalizeShortcutSearchText } from '../utils/shortcut-search.js';
 import { formatShortcutLabel } from '../utils/shortcuts.js';
+import { getAnchoredUiPlacement, getUnavailableCornerPositions, resolvePlacementChange } from '../utils/ui-placement.js';
 import { bindCanvasInteractions } from './binders/canvas.js';
 import { bindEdgeInteractions } from './binders/edges.js';
 import { bindFrameInteractions } from './binders/frames.js';
@@ -181,10 +184,6 @@ const TOOLBAR_SHORTCUTS = {
   'shortcuts-btn': { label: 'Keyboard shortcuts', shortcut: 'Ctrl/Cmd+/' },
   'about-btn': { label: 'About hypernode', shortcut: 'Shift+?' },
 };
-
-function normalizeShortcutSearchText(value) {
-  return String(value ?? '').trim().toLowerCase();
-}
 
 export function bindInteractions(elements, store, options = {}) {
   const {
@@ -2362,8 +2361,8 @@ export function bindInteractions(elements, store, options = {}) {
   const settingsCloseBtn = document.getElementById('settings-close-btn');
   const graphNameInput = document.getElementById('graph-name-input');
   const showShortcutsUiInput = document.getElementById('show-shortcuts-ui-input');
-  const showToolbarShortcutsInput = document.getElementById('show-toolbar-shortcuts-input');
-  const toolbarPositionInputs = settingsDialog?.querySelectorAll('input[name="toolbar-position"]') ?? [];
+  const positionButtons = settingsDialog?.querySelectorAll('[data-position-target][data-position-value]') ?? [];
+  const toolbarOrientationButtons = settingsDialog?.querySelectorAll('[data-toolbar-orientation]') ?? [];
   const arrowheadSizeRange = document.getElementById('arrowhead-size-range');
   const arrowheadSizeValue = document.getElementById('arrowhead-size-value');
   const newGraphBtn = document.getElementById('new-graph-btn');
@@ -2402,7 +2401,7 @@ export function bindInteractions(elements, store, options = {}) {
       currentFileHandle = handle;
       store.replaceGraph(graph);
       resetCanvasView();
-      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
+      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
       store.setImportStatus('Hypernode opened.');
     } catch (error) {
       if (isAbortError(error)) return;
@@ -2444,12 +2443,14 @@ export function bindInteractions(elements, store, options = {}) {
         uiThemePreset: GRAPH_DEFAULTS.uiThemePreset,
         uiRadiusPreset: GRAPH_DEFAULTS.uiRadiusPreset,
         toolbarPosition: GRAPH_DEFAULTS.toolbarPosition,
+        toolbarOrientation: GRAPH_DEFAULTS.toolbarOrientation,
+        toastPosition: GRAPH_DEFAULTS.toastPosition,
+        metaPosition: GRAPH_DEFAULTS.metaPosition,
         backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
         anchorsMode: GRAPH_DEFAULTS.anchorsMode,
         arrowheads: GRAPH_DEFAULTS.arrowheads,
         arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
         showShortcutsUi: GRAPH_DEFAULTS.showShortcutsUi,
-        showToolbarShortcutHints: GRAPH_DEFAULTS.showToolbarShortcutHints,
         nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
       },
       nodes: [],
@@ -2458,7 +2459,7 @@ export function bindInteractions(elements, store, options = {}) {
     });
     resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
     store.setImportStatus('New hypernode ready.');
   }
 
@@ -2503,7 +2504,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   function openSettingsDialog() {
     if (!settingsDialog) return;
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
     settingsDialog.showModal();
   }
 
@@ -2589,7 +2590,6 @@ export function bindInteractions(elements, store, options = {}) {
 
   function syncShortcutUiFromState(state) {
     const showShortcutsUi = state.settings?.showShortcutsUi !== false;
-    const showToolbarShortcuts = showShortcutsUi && state.settings?.showToolbarShortcutHints === true;
     if (shortcutsBtn instanceof HTMLElement) {
       shortcutsBtn.hidden = !showShortcutsUi;
     }
@@ -2605,14 +2605,12 @@ export function bindInteractions(elements, store, options = {}) {
         return;
       }
       const baseLabel = config.label;
-      const hintVisible = showToolbarShortcuts && typeof config.shortcut === 'string' && config.shortcut.length > 0;
-      const formattedShortcut = formatShortcutLabel(config.shortcut, { compact: true });
-      const spokenShortcut = formatShortcutLabel(config.shortcut);
+      const hintVisible = false;
       hint.hidden = !hintVisible;
-      hint.textContent = hintVisible ? formattedShortcut : '';
+      hint.textContent = '';
       button.classList.toggle('toolbar__icon-btn--hinted', hintVisible);
-      button.title = hintVisible ? `${baseLabel} (${spokenShortcut})` : baseLabel;
-      button.setAttribute('aria-label', hintVisible ? `${baseLabel} (${spokenShortcut})` : baseLabel);
+      button.title = baseLabel;
+      button.setAttribute('aria-label', baseLabel);
     });
   }
 
@@ -2621,6 +2619,10 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function bindToolbar() {
+  bindDialogBackdropClose(aboutDialog);
+  bindDialogBackdropClose(shortcutsDialog);
+  bindDialogBackdropClose(settingsDialog);
+
   if (aboutBtn && aboutDialog) {
     aboutBtn.addEventListener('click', () => {
       if (aboutDialog.open) {
@@ -2716,17 +2718,34 @@ export function bindInteractions(elements, store, options = {}) {
     store.setShowShortcutsUi(target.checked);
   });
 
-  showToolbarShortcutsInput?.addEventListener('change', (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLInputElement)) return;
-    store.setShowToolbarShortcutHints(target.checked);
+  positionButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      const target = button.dataset.positionTarget;
+      const value = button.dataset.positionValue;
+      if (!target || !value || button.disabled) return;
+      const nextPlacement = resolvePlacementChange(store.getState().settings, target, value);
+      if (target === 'toolbar') {
+        store.setToolbarPosition(nextPlacement.toolbarPosition);
+        return;
+      }
+      if (target === 'toast') {
+        store.setToastPosition(nextPlacement.toastPosition);
+        store.setMetaPosition(nextPlacement.metaPosition);
+        return;
+      }
+      if (target === 'meta') {
+        store.setMetaPosition(nextPlacement.metaPosition);
+      }
+    });
   });
 
-  toolbarPositionInputs.forEach((input) => {
-    input.addEventListener('change', (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement) || !target.checked) return;
-      store.setToolbarPosition(target.value);
+  toolbarOrientationButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      const value = button.dataset.toolbarOrientation;
+      if (!value) return;
+      store.setToolbarOrientation(value);
     });
   });
 
@@ -3044,20 +3063,20 @@ export function bindInteractions(elements, store, options = {}) {
   store.subscribe((state) => {
     syncNodeColorButtonState(state, nodeColorBtn, nodeColorPopover);
     syncShortcutUiFromState(state);
-    syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
+    syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
   });
 
   resetAboutDialog();
   renderShortcutCatalog();
   filterShortcuts('');
-  syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
+  syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
   syncShortcutUiFromState(store.getState());
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
   if (options.shouldCreateStarter) {
     resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons);
   }
 }
 
@@ -3747,7 +3766,7 @@ function isAbortError(error) {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs = []) {
+function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons = [], toolbarOrientationButtons = []) {
   if (!settingsDialog) return;
   if (graphNameInput) {
     graphNameInput.value = state.name;
@@ -3755,15 +3774,7 @@ function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, show
   if (showShortcutsUiInput instanceof HTMLInputElement) {
     showShortcutsUiInput.checked = state.settings?.showShortcutsUi !== false;
   }
-  if (showToolbarShortcutsInput instanceof HTMLInputElement) {
-    showToolbarShortcutsInput.checked = state.settings?.showToolbarShortcutHints === true;
-    showToolbarShortcutsInput.disabled = state.settings?.showShortcutsUi === false;
-  }
-  toolbarPositionInputs.forEach((input) => {
-    if (input instanceof HTMLInputElement) {
-      input.checked = input.value === state.settings.toolbarPosition;
-    }
-  });
+  syncPositionPickers(state, settingsDialog, positionButtons, toolbarOrientationButtons);
 
   settingsDialog.querySelectorAll('input[name="ui-theme-preset"]').forEach((input) => {
     if (input instanceof HTMLInputElement) {
@@ -3803,6 +3814,55 @@ function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, show
     updateArrowheadSizeLabel(arrowheadSizeValue, step);
   }
 
+}
+
+function syncPositionPickers(state, settingsDialog, positionButtons, toolbarOrientationButtons = []) {
+  const placement = getAnchoredUiPlacement(state.settings);
+  const toolbarPicker = settingsDialog?.querySelector('[data-position-picker="toolbar"]');
+  const toastPicker = settingsDialog?.querySelector('[data-position-picker="toast"]');
+  const metaPicker = settingsDialog?.querySelector('[data-position-picker="meta"]');
+  if (toolbarPicker instanceof HTMLElement) {
+    toolbarPicker.dataset.activeValue = placement.toolbarPosition;
+  }
+  if (toastPicker instanceof HTMLElement) {
+    toastPicker.dataset.activeValue = placement.toastPosition;
+  }
+  if (metaPicker instanceof HTMLElement) {
+    metaPicker.dataset.activeValue = placement.metaPosition;
+  }
+
+  const unavailableToast = getUnavailableCornerPositions(state.settings, 'toast');
+  const unavailableMeta = getUnavailableCornerPositions(state.settings, 'meta');
+  positionButtons.forEach((button) => {
+    if (!(button instanceof HTMLButtonElement)) return;
+    const target = button.dataset.positionTarget;
+    const value = button.dataset.positionValue;
+    const isActive = (target === 'toolbar' && value === placement.toolbarPosition)
+      || (target === 'toast' && value === placement.toastPosition)
+      || (target === 'meta' && value === placement.metaPosition);
+    const unavailable = (target === 'toast' && unavailableToast.has(value))
+      || (target === 'meta' && unavailableMeta.has(value));
+    button.classList.toggle('is-active', isActive);
+    button.classList.toggle('is-unavailable', unavailable && !isActive);
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    button.disabled = unavailable && !isActive;
+  });
+
+  toolbarOrientationButtons.forEach((button) => {
+    if (!(button instanceof HTMLButtonElement)) return;
+    const isActive = button.dataset.toolbarOrientation === placement.toolbarOrientation;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
+function bindDialogBackdropClose(dialog) {
+  if (!(dialog instanceof HTMLDialogElement)) return;
+  dialog.addEventListener('click', (event) => {
+    if (isDialogBackdropTarget(dialog, event.target)) {
+      dialog.close();
+    }
+  });
 }
 
 function getThemePresetSequence() {

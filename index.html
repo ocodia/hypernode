@@ -74,9 +74,11 @@
         <div class="selection-controls" id="selection-controls-layer"></div>
       </div>
       <div id="focus-layer" class="focus-overlay" hidden></div>
-      <div id="import-status" class="toast" aria-live="polite" hidden></div>
+      <div id="toasts" class="toast" aria-live="polite" hidden></div>
       <div class="workspace-meta" aria-live="polite">
+        <span class="workspace-meta__icon" aria-hidden="true"><i class="bi bi-file-earmark-text"></i></span>
         <div class="workspace-meta__name" id="graph-title">Untitled hypernode</div>
+        <div class="workspace-meta__separator" aria-hidden="true">-</div>
         <div class="workspace-meta__coords" id="viewport-coordinates">x: 0  y: 0</div>
       </div>
     </main>
@@ -233,45 +235,45 @@
                   </span>
                 </span>
               </label>
-              <label class="settings-dialog__section settings-dialog__section--switch" for="show-toolbar-shortcuts-input">
-                <span class="settings-dialog__switch-row">
-                  <span class="settings-dialog__switch-copy">
-                    <span class="settings-dialog__switch-label">Show shortcuts on toolbar</span>
-                    <span class="settings-dialog__hint">Shows shortcut hints on toolbar buttons for actions that support keyboard access.</span>
-                  </span>
-                  <span class="settings-dialog__switch">
-                    <input id="show-toolbar-shortcuts-input" class="settings-dialog__switch-input" type="checkbox" />
-                    <span class="settings-dialog__switch-ui" aria-hidden="true"></span>
-                  </span>
-                </span>
-              </label>
               <fieldset class="settings-dialog__section">
-                <legend>Toolbar position</legend>
-                <p class="settings-dialog__hint">Places the main toolbar along the top, bottom, or side of the canvas.</p>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="toolbar-position" value="top-center" />
-                  Top centered
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="toolbar-position" value="top-left" />
-                  Top left
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="toolbar-position" value="bottom-center" />
-                  Bottom centered
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="toolbar-position" value="bottom-left" />
-                  Bottom left
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="toolbar-position" value="left-column" />
-                  Left side
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="toolbar-position" value="right-column" />
-                  Right side
-                </label>
+                <legend>Toolbar</legend>
+                <p class="settings-dialog__hint">Anchor the main toolbar to a corner. Conflicts auto-resolve to the nearest open slot.</p>
+                <div id="toolbar-position-picker" class="settings-dialog__position-picker" data-position-picker="toolbar" role="group" aria-label="Toolbar position">
+                  <div class="settings-dialog__position-screen">
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--top-left" data-position-target="toolbar" data-position-value="top-left" aria-label="Toolbar top left">Top left</button>
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--top-right" data-position-target="toolbar" data-position-value="top-right" aria-label="Toolbar top right">Top right</button>
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--bottom-left" data-position-target="toolbar" data-position-value="bottom-left" aria-label="Toolbar bottom left">Bottom left</button>
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--bottom-right" data-position-target="toolbar" data-position-value="bottom-right" aria-label="Toolbar bottom right">Bottom right</button>
+                  </div>
+                </div>
+                <div class="settings-dialog__orientation" role="group" aria-label="Toolbar orientation">
+                  <button type="button" class="settings-dialog__orientation-btn" data-toolbar-orientation="horizontal" aria-label="Horizontal toolbar buttons"><i class="bi bi-distribute-horizontal" aria-hidden="true"></i><span>Horizontal</span></button>
+                  <button type="button" class="settings-dialog__orientation-btn" data-toolbar-orientation="vertical" aria-label="Vertical toolbar buttons"><i class="bi bi-distribute-vertical" aria-hidden="true"></i><span>Vertical</span></button>
+                </div>
+              </fieldset>
+              <fieldset class="settings-dialog__section">
+                <legend>Notifications</legend>
+                <p class="settings-dialog__hint">Choose which corner shows status notifications.</p>
+                <div id="toast-position-picker" class="settings-dialog__position-picker" data-position-picker="toast" role="group" aria-label="Notification position">
+                  <div class="settings-dialog__position-screen">
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--top-left" data-position-target="toast" data-position-value="top-left" aria-label="Notifications top left">Top left</button>
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--top-right" data-position-target="toast" data-position-value="top-right" aria-label="Notifications top right">Top right</button>
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--bottom-left" data-position-target="toast" data-position-value="bottom-left" aria-label="Notifications bottom left">Bottom left</button>
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--bottom-right" data-position-target="toast" data-position-value="bottom-right" aria-label="Notifications bottom right">Bottom right</button>
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset class="settings-dialog__section">
+                <legend>Meta</legend>
+                <p class="settings-dialog__hint">Choose which corner shows the hypernode title and live coordinates.</p>
+                <div id="meta-position-picker" class="settings-dialog__position-picker" data-position-picker="meta" role="group" aria-label="Meta position">
+                  <div class="settings-dialog__position-screen">
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--top-left" data-position-target="meta" data-position-value="top-left" aria-label="Meta top left">Top left</button>
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--top-right" data-position-target="meta" data-position-value="top-right" aria-label="Meta top right">Top right</button>
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--bottom-left" data-position-target="meta" data-position-value="bottom-left" aria-label="Meta bottom left">Bottom left</button>
+                    <button type="button" class="settings-dialog__position-btn settings-dialog__position-btn--corner settings-dialog__position-btn--bottom-right" data-position-target="meta" data-position-value="bottom-right" aria-label="Meta bottom right">Bottom right</button>
+                  </div>
+                </div>
               </fieldset>
             </div>
           </details>

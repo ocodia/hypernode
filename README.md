@@ -41,7 +41,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Undo/redo via toolbar and keyboard shortcuts.
 - Auto-save hypernodes to browser storage.
 - Open/save hypernode JSON files with validation and status toast feedback.
-- Toasts render in the bottom-right corner with accent-highlighted borders and quick fade-out timing.
+- Toasts render in any screen corner, use accent-highlighted glass surfaces, and auto-resolve away from occupied toolbar/meta placements.
 - Start a new hypernode from the toolbar (with discard confirmation when existing hypernode data is present).
 - Built-in semantic design system for surfaces, buttons, inputs, dialogs, toolbar controls, nodes, and frames.
 - Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`) saved with the document.
@@ -54,17 +54,19 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
   - arrowheads visibility (`show` or `hide`)
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
   - shortcut UI visibility (`show` or `hide`)
-  - toolbar shortcut hints (`show` or `hide`)
-  - toolbar position (`top centered`, `top left`, `bottom centered`, `bottom left`, `left side`, or `right side`)
+  - toolbar position (`top left`, `top right`, `bottom left`, or `bottom right`)
+  - toolbar orientation (`horizontal` or `vertical`)
+  - toast position (`top left`, `top right`, `bottom left`, or `bottom right`)
+  - metadata position (`top left`, `top right`, `bottom left`, or `bottom right`)
   - hypernode name
 - Node color tool also sets the default color for newly created nodes.
 - Node color tool also applies to selected Frames (flat palette style) and still sets the default color for newly created nodes.
-- Hypernode name is shown in the bottom-left metadata chip and browser tab title, alongside live canvas coordinates.
+- Hypernode name is shown in a glassy metadata chip with a file icon and live canvas coordinates; its corner position is configurable and it also updates the browser tab title.
 - First-time Save suggests a filename based on the hypernode name.
 - Open/save toolbar actions use the File System Access API and are disabled in browsers that do not support it.
 - Installable PWA with offline app-shell caching.
 - Interaction-state cursor feedback for drag/connect workflows.
-- Searchable keyboard shortcuts dialog with key/action matching.
+- Searchable keyboard shortcuts dialog with key/action matching, including punctuation-light searches such as `comma`, `slash`, `?`, and `delete`.
 - About dialog with a toggleable guide wizard, keyboard shortcuts, and a GitHub link.
 - Visible focus states, keyboard-usable controls, and contrast-conscious presets across the themed UI.
 

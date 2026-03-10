@@ -51,13 +51,15 @@ export const GRAPH_DEFAULTS = {
   name: "Untitled hypernode",
   uiThemePreset: "blueprint",
   uiRadiusPreset: "rounded",
-  toolbarPosition: "top-center",
+  toolbarPosition: "top-left",
+  toolbarOrientation: "horizontal",
+  toastPosition: "bottom-right",
+  metaPosition: "bottom-left",
   backgroundStyle: "dots",
   anchorsMode: "auto",
   arrowheads: "shown",
   arrowheadSizeStep: 0,
   showShortcutsUi: true,
-  showToolbarShortcutHints: false,
   nodeColorDefault: null,
 };
 

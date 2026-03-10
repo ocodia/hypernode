@@ -82,7 +82,7 @@ The selected radius preset should apply consistently across:
 
 Current product layout:
 
-- floating toolbar with compact icon actions that can be placed top-center, top-left, bottom-center, bottom-left, left-column, or right-column
+- floating toolbar with compact icon actions that can be placed in any corner and switched between horizontal or vertical alignment
 - full-screen canvas workspace with separate frame, edge, node, and overlay-control layers
 - inline node and frame editing inside selected cards
 - floating node-color popover

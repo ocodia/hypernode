@@ -6,6 +6,13 @@ import {
   NODE_DEFAULTS,
   VIEWPORT_LIMITS,
 } from './constants.js';
+import {
+  getAnchoredUiPlacement,
+  isValidCornerPosition,
+  isValidToolbarOrientation,
+  isValidToolbarPosition,
+  normalizeToolbarPosition,
+} from './ui-placement.js';
 
 const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
 const BACKGROUND_STYLES = new Set(['dots', 'graph-paper']);
@@ -13,7 +20,6 @@ const ANCHORS_MODES = new Set(['auto', 'exact']);
 const ARROWHEADS_MODES = new Set(['shown', 'hidden']);
 const UI_THEME_PRESETS = new Set(['blueprint', 'fjord', 'slate', 'paper', 'ember', 'soft-black']);
 const UI_RADIUS_PRESETS = new Set(['sharp', 'soft', 'rounded', 'square']);
-const TOOLBAR_POSITIONS = new Set(['top-center', 'top-left', 'bottom-center', 'bottom-left', 'left-column', 'right-column']);
 const ARROWHEAD_SIZE_STEP_MIN = 0;
 const ARROWHEAD_SIZE_STEP_MAX = 9;
 const NODE_KINDS = new Set(['text', 'image']);
@@ -26,12 +32,14 @@ export function emptyGraphState() {
       uiThemePreset: GRAPH_DEFAULTS.uiThemePreset,
       uiRadiusPreset: GRAPH_DEFAULTS.uiRadiusPreset,
       toolbarPosition: GRAPH_DEFAULTS.toolbarPosition,
+      toolbarOrientation: GRAPH_DEFAULTS.toolbarOrientation,
+      toastPosition: GRAPH_DEFAULTS.toastPosition,
+      metaPosition: GRAPH_DEFAULTS.metaPosition,
       backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
       anchorsMode: GRAPH_DEFAULTS.anchorsMode,
       arrowheads: GRAPH_DEFAULTS.arrowheads,
       arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
       showShortcutsUi: GRAPH_DEFAULTS.showShortcutsUi,
-      showToolbarShortcutHints: GRAPH_DEFAULTS.showToolbarShortcutHints,
       nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
     },
     nodes: [],
@@ -165,7 +173,13 @@ export function validateGraphPayload(payload) {
   const hasValidUiRadiusPreset = payload.settings.uiRadiusPreset === undefined
     || normalizeUiRadiusPreset(payload.settings.uiRadiusPreset) !== null;
   const hasValidToolbarPosition = payload.settings.toolbarPosition === undefined
-    || isValidToolbarPosition(payload.settings.toolbarPosition);
+    || normalizeToolbarPosition(payload.settings.toolbarPosition, null) !== null;
+  const hasValidToolbarOrientation = payload.settings.toolbarOrientation === undefined
+    || isValidToolbarOrientation(payload.settings.toolbarOrientation);
+  const hasValidToastPosition = payload.settings.toastPosition === undefined
+    || isValidCornerPosition(payload.settings.toastPosition);
+  const hasValidMetaPosition = payload.settings.metaPosition === undefined
+    || isValidCornerPosition(payload.settings.metaPosition);
   const hasValidCoreSettings = isValidBackgroundStyle(payload.settings.backgroundStyle);
   const hasValidAnchorsMode = payload.settings.anchorsMode === undefined
     || isValidAnchorsMode(payload.settings.anchorsMode);
@@ -175,12 +189,10 @@ export function validateGraphPayload(payload) {
     || isValidArrowheadSizeStep(payload.settings.arrowheadSizeStep);
   const hasValidShowShortcutsUi = payload.settings.showShortcutsUi === undefined
     || typeof payload.settings.showShortcutsUi === 'boolean';
-  const hasValidShowToolbarShortcutHints = payload.settings.showToolbarShortcutHints === undefined
-    || typeof payload.settings.showToolbarShortcutHints === 'boolean';
   const hasValidNodeColorDefault = payload.settings.nodeColorDefault === undefined
     || payload.settings.nodeColorDefault === null
     || isValidNodeColorKey(payload.settings.nodeColorDefault);
-  if (!hasValidUiThemePreset || !hasValidUiRadiusPreset || !hasValidToolbarPosition || !hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidShowShortcutsUi || !hasValidShowToolbarShortcutHints || !hasValidNodeColorDefault) {
+  if (!hasValidUiThemePreset || !hasValidUiRadiusPreset || !hasValidToolbarPosition || !hasValidToolbarOrientation || !hasValidToastPosition || !hasValidMetaPosition || !hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidShowShortcutsUi || !hasValidNodeColorDefault) {
     return false;
   }
 
@@ -223,12 +235,19 @@ export function sanitizeGraphName(name) {
 }
 
 export function sanitizeGraphSettings(settings) {
-  return {
+  const sanitized = {
     uiThemePreset: normalizeUiThemePreset(settings?.uiThemePreset) ?? GRAPH_DEFAULTS.uiThemePreset,
     uiRadiusPreset: normalizeUiRadiusPreset(settings?.uiRadiusPreset) ?? GRAPH_DEFAULTS.uiRadiusPreset,
-    toolbarPosition: isValidToolbarPosition(settings?.toolbarPosition)
-      ? settings.toolbarPosition
-      : GRAPH_DEFAULTS.toolbarPosition,
+    toolbarPosition: normalizeToolbarPosition(settings?.toolbarPosition, GRAPH_DEFAULTS.toolbarPosition),
+    toolbarOrientation: isValidToolbarOrientation(settings?.toolbarOrientation)
+      ? settings.toolbarOrientation
+      : GRAPH_DEFAULTS.toolbarOrientation,
+    toastPosition: isValidCornerPosition(settings?.toastPosition)
+      ? settings.toastPosition
+      : GRAPH_DEFAULTS.toastPosition,
+    metaPosition: isValidCornerPosition(settings?.metaPosition)
+      ? settings.metaPosition
+      : GRAPH_DEFAULTS.metaPosition,
     backgroundStyle: isValidBackgroundStyle(settings?.backgroundStyle)
       ? settings.backgroundStyle
       : GRAPH_DEFAULTS.backgroundStyle,
@@ -242,10 +261,15 @@ export function sanitizeGraphSettings(settings) {
     showShortcutsUi: typeof settings?.showShortcutsUi === 'boolean'
       ? settings.showShortcutsUi
       : GRAPH_DEFAULTS.showShortcutsUi,
-    showToolbarShortcutHints: typeof settings?.showToolbarShortcutHints === 'boolean'
-      ? settings.showToolbarShortcutHints
-      : GRAPH_DEFAULTS.showToolbarShortcutHints,
     nodeColorDefault: sanitizeNodeColorKey(settings?.nodeColorDefault),
+  };
+  const resolvedPlacement = getAnchoredUiPlacement(sanitized);
+  return {
+    ...sanitized,
+    toolbarPosition: resolvedPlacement.toolbarPosition,
+    toolbarOrientation: resolvedPlacement.toolbarOrientation,
+    toastPosition: resolvedPlacement.toastPosition,
+    metaPosition: resolvedPlacement.metaPosition,
   };
 }
 
@@ -259,10 +283,6 @@ function sanitizeAnchor(anchor) {
 
 function isValidBackgroundStyle(value) {
   return typeof value === 'string' && BACKGROUND_STYLES.has(value);
-}
-
-function isValidToolbarPosition(value) {
-  return typeof value === 'string' && TOOLBAR_POSITIONS.has(value);
 }
 
 function isValidUiThemePreset(value) {

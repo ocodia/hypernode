@@ -17,7 +17,7 @@ const elements = {
   selectionControlsLayer: document.getElementById('selection-controls-layer'),
   focusLayer: document.getElementById('focus-layer'),
   selectionMarquee: document.getElementById('selection-marquee'),
-  importStatus: document.getElementById('import-status'),
+  toasts: document.getElementById('toasts'),
   settingsStatus: document.getElementById('settings-status'),
   graphTitle: document.getElementById('graph-title'),
   viewportCoordinates: document.getElementById('viewport-coordinates'),
@@ -35,11 +35,11 @@ store.subscribe((state) => {
   saveHandle = window.setTimeout(() => {
     saveGraphToStorage({
       name: state.name,
-    settings: state.settings,
-    nodes: state.nodes,
-    frames: state.frames,
-    edges: state.edges,
-  });
+      settings: state.settings,
+      nodes: state.nodes,
+      frames: state.frames,
+      edges: state.edges,
+    });
   }, 120);
 });
 
