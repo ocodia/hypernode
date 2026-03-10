@@ -1542,6 +1542,8 @@ export function bindInteractions(elements, store, options = {}) {
 
   function onWorkspaceWheel(event) {
     if (isTypingTarget(event.target)) return;
+    if (store.getState().ui.focusedNodeId) return;
+    if (!event.ctrlKey && shouldAllowNativeWheelScroll(event)) return;
     if (!event.ctrlKey && Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
     event.preventDefault();
 
@@ -1576,6 +1578,16 @@ export function bindInteractions(elements, store, options = {}) {
 
   function isDescriptionLinkTarget(target) {
     return target instanceof Element && Boolean(target.closest('.node__description a, .frame__description a'));
+  }
+
+  function shouldAllowNativeWheelScroll(event) {
+    const target = event.target;
+    if (!(target instanceof Element)) return false;
+    const scrollable = target.closest(
+      '.node__focus-value--description, .node__focus-body, .node__editor-textarea, .app-dialog__panel, .shortcuts-dialog__list',
+    );
+    if (!(scrollable instanceof HTMLElement)) return false;
+    return scrollable.scrollHeight > scrollable.clientHeight + 1;
   }
 
   function onNodePointerDown(event) {
@@ -2092,6 +2104,11 @@ export function bindInteractions(elements, store, options = {}) {
 
   canvas.addEventListener('dragenter', (event) => {
     if (!containsImageFile(event.dataTransfer) || store.getState().ui.focusedNodeId) return;
+    const imageTarget = getFocusImageTarget(event.target);
+    if (imageTarget) {
+      event.preventDefault();
+      return;
+    }
     canvasFileDragDepth += 1;
     setCanvasFileDropActive(true);
     event.preventDefault();
@@ -2099,9 +2116,14 @@ export function bindInteractions(elements, store, options = {}) {
 
   canvas.addEventListener('dragover', (event) => {
     if (!containsImageFile(event.dataTransfer) || store.getState().ui.focusedNodeId) return;
+    const imageTarget = getFocusImageTarget(event.target);
     event.preventDefault();
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'copy';
+    }
+    if (imageTarget) {
+      setCanvasFileDropActive(false);
+      return;
     }
     setCanvasFileDropActive(true);
   });
@@ -2118,10 +2140,15 @@ export function bindInteractions(elements, store, options = {}) {
   canvas.addEventListener('drop', (event) => {
     if (!containsImageFile(event.dataTransfer) || store.getState().ui.focusedNodeId) return;
     const file = getFirstImageFile(event.dataTransfer);
+    const imageTarget = getFocusImageTarget(event.target);
     canvasFileDragDepth = 0;
     setCanvasFileDropActive(false);
     if (!file) return;
     event.preventDefault();
+    if (imageTarget?.dataset?.nodeImagePick) {
+      void handleFocusedImageReplace(imageTarget.dataset.nodeImagePick, file);
+      return;
+    }
     const point = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
     void handleDroppedCanvasImage(file, point);
   });
@@ -3484,7 +3511,7 @@ function getNodeCenter(node) {
 
 function getFocusImageTarget(target) {
   if (!(target instanceof HTMLElement)) return null;
-  return target.closest('[data-focus-image-dropzone], .node__image-pane[data-node-image-pick]');
+  return target.closest('[data-focus-image-dropzone], .node__image-pane[data-node-image-pick], .node__image-dropzone[data-node-image-pick]');
 }
 
 function getNodeWidth(node) {

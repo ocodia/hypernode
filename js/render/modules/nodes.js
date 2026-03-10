@@ -114,15 +114,18 @@ export function buildNodeContentMarkup(node, options = {}) {
     ? `node__content node__content--focus${imageNode ? ' node__content--focus-image' : ''}`
     : 'node__content';
   const metaClass = focused ? 'node__meta node__meta--focus' : 'node__meta';
+  const imagePickerAttrs = focused && editing
+    ? ` data-node-image-pick="${node.id}" role="button" tabindex="0" aria-label="Replace image" title="Replace image"`
+    : '';
   const imageMarkup = hasImageData
     ? `
-      <div class="node__image-pane${focused ? ' node__image-pane--focus' : ''}"${focused ? ` data-node-image-pick="${node.id}" role="button" tabindex="0" aria-label="Replace image" title="Replace image"` : ''} style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
+      <div class="node__image-pane${focused ? ' node__image-pane--focus' : ''}"${imagePickerAttrs} style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
     `
     : '';
-  const focusImageDropzoneMarkup = focused
+  const imageDropzoneMarkup = editing
     ? `
       <button
-        class="node__image-dropzone${hasImageData ? ' node__image-dropzone--overlay' : ''}"
+        class="node__image-dropzone${focused && hasImageData ? ' node__image-dropzone--overlay' : ''}"
         type="button"
         data-focus-image-dropzone="${node.id}"
         data-node-image-pick="${node.id}"
@@ -134,49 +137,75 @@ export function buildNodeContentMarkup(node, options = {}) {
       </button>
     `
     : '';
-  const focusMediaMarkup = focused
+  const mediaMarkup = (editing || (focused && hasImageData))
     ? `
-      <div class="node__focus-media${imageNode ? ' node__focus-media--has-image' : ' node__focus-media--empty'}">
+      <div class="node__focus-media${imageNode ? ' node__focus-media--has-image' : ' node__focus-media--empty'}${editing && !focused ? ' node__focus-media--canvas' : ''}">
         ${hasImageData ? imageMarkup : ''}
-        ${focusImageDropzoneMarkup}
+        ${imageDropzoneMarkup}
+      </div>
+    `
+    : '';
+  const focusDoneButtonMarkup = focused
+    ? `
+      <div class="node__focus-actions">
+        <button class="node__focus-done-btn" type="button" data-node-focus-toggle="${node.id}" aria-label="Exit focus mode" title="Exit Focus">
+          <i class="bi bi-check-lg"></i>
+          <span>Done</span>
+        </button>
       </div>
     `
     : '';
 
   if (editing && focused) {
     return `
-      <div class="${contentClass}">
-        <div class="node__editor node__editor--focus" data-node-editor="${node.id}">
-          <label class="node__editor-label node__editor-label--focus node__editor-label--focus-title">
-            Name
-            <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" />
-          </label>
-          ${focusMediaMarkup}
-          <label class="node__editor-label node__editor-label--description node__editor-label--description-focus node__editor-label--focus node__editor-label--focus-description">
-            Description
-            <textarea class="node__editor-textarea node__editor-textarea--focus" data-node-edit-description="${node.id}">${escapeHTML(node.description)}</textarea>
-          </label>
+      <div class="${contentClass} node__content--focus-shell node__content--focus-shell--edit">
+        <div class="node__focus-body">
+          <div class="node__focus-layout node__focus-layout--edit" data-node-editor="${node.id}">
+            <div class="node__focus-text-column node__focus-text-column--edit">
+              <div class="node__editor-field node__editor-field--title node__focus-field node__focus-field--title">
+                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" />
+              </div>
+              <div class="node__editor-field node__editor-field--description node__focus-field node__focus-field--description">
+                <textarea class="node__editor-textarea node__editor-textarea--focus" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
+              </div>
+            </div>
+            <div class="node__focus-media-column node__focus-media-column--edit">
+              ${mediaMarkup}
+            </div>
+          </div>
         </div>
+        ${focusDoneButtonMarkup}
       </div>
     `;
   }
 
   if (!editing && focused) {
     return `
-      <div class="${contentClass}">
-        <div class="node__focus-fields">
-          <section class="node__focus-field node__focus-field--title">
-            <div class="node__focus-value node__focus-value--title">
-              <h3 class="node__title node__title--focus">${escapeHTML(node.title)}</h3>
+      <div class="${contentClass} node__content--focus-shell node__content--focus-shell--read">
+        <div class="node__focus-body">
+          <div class="node__focus-layout node__focus-layout--read">
+            <div class="node__focus-text-column node__focus-text-column--read">
+              <section class="node__focus-field node__focus-field--title">
+                <div class="node__focus-value node__focus-value--title">
+                  <h3 class="node__title node__title--focus">${escapeHTML(node.title)}</h3>
+                </div>
+              </section>
+              <section class="node__focus-field node__focus-field--description">
+                <div class="node__focus-value node__focus-value--description">
+                  ${node.description ? `<div class="node__description node__description--focus">${renderDescriptionMarkdown(node.description)}</div>` : '<div class="node__description node__description--focus node__description--empty">No description</div>'}
+                </div>
+              </section>
             </div>
-          </section>
-          <section class="node__focus-field node__focus-field--description">
-            <div class="node__focus-value node__focus-value--description">
-              ${node.description ? `<div class="node__description node__description--focus">${renderDescriptionMarkdown(node.description)}</div>` : '<div class="node__description node__description--focus node__description--empty">No description</div>'}
-            </div>
-          </section>
+            ${hasImageData ? `
+              <section class="node__focus-media-column node__focus-media-column--read">
+                <div class="node__focus-media node__focus-media--has-image">
+                  ${imageMarkup}
+                </div>
+              </section>
+            ` : ''}
+          </div>
         </div>
-        ${focusMediaMarkup}
+        ${focusDoneButtonMarkup}
       </div>
     `;
   }
@@ -185,17 +214,15 @@ export function buildNodeContentMarkup(node, options = {}) {
     editing
       ? `
       <div class="node__editor${focused ? ' node__editor--focus' : ''}" data-node-editor="${node.id}">
+        ${mediaMarkup}
         <div class="node__editor-fields">
-          <label class="node__editor-label${focused ? ' node__editor-label--focus' : ''}">
-            Name
-            <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" />
-          </label>
-          <label class="node__editor-label node__editor-label--description${focused ? ' node__editor-label--description-focus' : ''}${focused ? ' node__editor-label--focus' : ''}">
-            Description
-            <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}">${escapeHTML(node.description)}</textarea>
-          </label>
+          <div class="node__editor-field node__editor-field--title">
+            <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" />
+          </div>
+          <div class="node__editor-field node__editor-field--description">
+            <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
+          </div>
         </div>
-        ${focusMediaMarkup}
       </div>
     `
       : `
@@ -223,7 +250,6 @@ export function buildNodeContentMarkup(node, options = {}) {
             ${node.description ? `<div class="node__description">${renderDescriptionMarkdown(node.description)}</div>` : ''}
           </div>
         `}
-      ${focusMediaMarkup}
     `;
 
   return `<div class="${contentClass}">${content}</div>`;

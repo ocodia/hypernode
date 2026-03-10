@@ -179,7 +179,7 @@ export function renderFocusOverlay(focusLayer, state) {
         editingActive: state.ui.editingNodeId === node.id,
         starterActive,
         includeEdit: !starterActive,
-        includeFocus: !starterActive,
+        includeFocus: false,
         includeDelete: !starterActive,
         includeStyleControls: !starterActive,
         colorKey: node.colorKey || '',

@@ -29,7 +29,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Add image nodes from the toolbar or by dragging local image files onto the canvas (stored as base64 data URLs in the hypernode JSON payload).
 - Resize image nodes with preserved image aspect ratio, with title and description rendered below the image.
 - Single selected nodes show a mini toolbar above the node with `Edit`, `Focus`, color, border, and delete actions.
-- Single selected nodes also expose a `Focus` action for full-screen zen editing; Focus mode stays responsive across device sizes, keeps text readable/editable, and always shows a drop zone to add or replace a node image.
+- Single selected nodes also expose a `Focus` action for full-screen zen editing; Focus mode stays responsive across device sizes, uses placeholder-based node fields while editing, shows the image drop zone only in edit mode, and presents image-first scrollable reading for long descriptions.
 - Multi-select nodes with `Ctrl/Cmd + click` (additive).
 - Multi-select nodes with `Ctrl/Cmd + drag` marquee (touch/intersection hit rule).
 - Drag any selected node to move the full selected group together.

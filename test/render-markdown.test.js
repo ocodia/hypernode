@@ -75,7 +75,7 @@ test('renderers use markdown output in view mode and raw text in edit mode', () 
     selection: { type: 'node', id: 'n1' },
     ui: { editingNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
   });
-  assert.match(nodesLayer.innerHTML, /<textarea class="node__editor-textarea" data-node-edit-description="n1"># Title/);
+  assert.match(nodesLayer.innerHTML, /<textarea class="node__editor-textarea" data-node-edit-description="n1" placeholder="Description" aria-label="Description"># Title/);
 
   renderFrames(framesLayer, {
     nodes: [],
@@ -127,15 +127,23 @@ test('focus overlay renders constrained focused editor with image pane on the me
   assert.match(focusLayer.innerHTML, /bi-eye-fill/);
   assert.match(focusLayer.innerHTML, /Read/);
   assert.match(focusLayer.innerHTML, /(?:Ctrl|Cmd)\+Enter/);
-  assert.match(focusLayer.innerHTML, /Exit/);
-  assert.match(focusLayer.innerHTML, /Esc/);
+  assert.doesNotMatch(focusLayer.innerHTML, /node__tool-btn-label">Exit</);
+  assert.doesNotMatch(focusLayer.innerHTML, />Esc</);
   assert.match(focusLayer.innerHTML, /focus-overlay__panel node node--image is-editing/);
-  assert.match(focusLayer.innerHTML, /node__content node__content--focus node__content--focus-image/);
-  assert.match(focusLayer.innerHTML, /node__editor-label--description-focus/);
+  assert.match(focusLayer.innerHTML, /node__content node__content--focus node__content--focus-image node__content--focus-shell node__content--focus-shell--edit/);
+  assert.match(focusLayer.innerHTML, /node__focus-layout node__focus-layout--edit/);
+  assert.match(focusLayer.innerHTML, /node__focus-text-column node__focus-text-column--edit/);
   assert.match(focusLayer.innerHTML, /node__focus-media/);
   assert.match(focusLayer.innerHTML, /node__image-pane node__image-pane--focus/);
   assert.match(focusLayer.innerHTML, /data-focus-image-dropzone="n1"/);
   assert.match(focusLayer.innerHTML, /data-node-image-pick="n1"/);
+  assert.match(focusLayer.innerHTML, /placeholder="Name"/);
+  assert.match(focusLayer.innerHTML, /placeholder="Description"/);
+  assert.match(focusLayer.innerHTML, /data-node-focus-toggle="n1"/);
+  assert.match(focusLayer.innerHTML, />\s*<i class="bi bi-check-lg"><\/i>\s*<span>Done<\/span>/);
+  assert.match(focusLayer.innerHTML, /node__focus-text-column--edit[^]*data-node-edit-title="n1"[^]*data-node-edit-description="n1"/);
+  assert.match(focusLayer.innerHTML, /node__focus-media-column node__focus-media-column--edit[^]*node__focus-media/);
+  assert.match(focusLayer.innerHTML, /node__editor-textarea node__editor-textarea--focus/);
 });
 
 test('focus overlay reading mode uses enlarged labeled fields', () => {
@@ -156,12 +164,70 @@ test('focus overlay reading mode uses enlarged labeled fields', () => {
     ui: { focusedNodeId: 'n1', editingNodeId: null, edgeDraft: null, nodeMembershipPreview: {} },
   });
 
-  assert.match(focusLayer.innerHTML, /node__focus-fields/);
+  assert.match(focusLayer.innerHTML, /node__focus-text-column node__focus-text-column--read/);
   assert.doesNotMatch(focusLayer.innerHTML, /node__focus-label/);
   assert.match(focusLayer.innerHTML, /node__focus-value--description/);
   assert.match(focusLayer.innerHTML, /bi-pencil-fill/);
   assert.match(focusLayer.innerHTML, /Edit/);
   assert.match(focusLayer.innerHTML, /(?:Ctrl|Cmd)\+Enter/);
+  assert.doesNotMatch(focusLayer.innerHTML, /data-focus-image-dropzone/);
+  assert.match(focusLayer.innerHTML, /data-node-focus-toggle="n1"/);
+  assert.match(focusLayer.innerHTML, /<span>Done<\/span>/);
+  assert.match(focusLayer.innerHTML, /node__focus-value node__focus-value--description/);
+  assert.match(focusLayer.innerHTML, /node__content--focus-shell--read/);
+  assert.match(focusLayer.innerHTML, /node__focus-layout node__focus-layout--read/);
+  assert.match(focusLayer.innerHTML, /node__focus-text-column node__focus-text-column--read/);
+});
+
+test('focus overlay reading mode renders image before title and description', () => {
+  const focusLayer = { innerHTML: '', hidden: true };
+
+  renderFocusOverlay(focusLayer, {
+    nodes: [{
+      id: 'n1',
+      title: 'Readable Image Node',
+      description: 'Longer copy',
+      kind: 'image',
+      x: 0,
+      y: 0,
+      imageData: 'data:image/png;base64,abc',
+      imageAspectRatio: 1.5,
+    }],
+    frames: [],
+    edges: [],
+    selection: { type: 'node', id: 'n1' },
+    ui: { focusedNodeId: 'n1', editingNodeId: null, edgeDraft: null, nodeMembershipPreview: {} },
+  });
+
+  assert.match(focusLayer.innerHTML, /node__focus-layout[^]*node__focus-text-column[^]*node__focus-media-column/);
+  assert.match(focusLayer.innerHTML, /node__focus-value node__focus-value--description/);
+  assert.doesNotMatch(focusLayer.innerHTML, /data-focus-image-dropzone/);
+  assert.doesNotMatch(focusLayer.innerHTML, /data-node-image-pick="n1"/);
+});
+
+test('canvas node editing shows image dropzone above placeholder fields', () => {
+  const nodesLayer = { innerHTML: '' };
+
+  renderNodes(nodesLayer, {
+    nodes: [{
+      id: 'n1',
+      title: 'Image Node',
+      description: 'Body copy',
+      kind: 'image',
+      x: 0,
+      y: 0,
+      imageData: 'data:image/png;base64,abc',
+      imageAspectRatio: 1.5,
+    }],
+    frames: [],
+    edges: [],
+    selection: { type: 'node', id: 'n1' },
+    ui: { editingNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
+  });
+
+  assert.match(nodesLayer.innerHTML, /data-focus-image-dropzone="n1"[^]*data-node-edit-title="n1"[^]*data-node-edit-description="n1"/);
+  assert.match(nodesLayer.innerHTML, /placeholder="Name"/);
+  assert.match(nodesLayer.innerHTML, /placeholder="Description"/);
 });
 
 test('renderHypernodeMetadata updates name, viewport center coordinates, and document title', () => {
