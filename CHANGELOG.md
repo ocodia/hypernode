@@ -14,6 +14,8 @@ The format loosely follows Keep a Changelog. Entries summarize shipped user-visi
 ### Changed
 
 - Focus-mode deletion now requires `Ctrl/Cmd + Delete` confirmation instead of plain `Delete`.
+- Shortcut affordances can now be searched by key or action and hidden globally from graph settings without disabling the keyboard commands.
+- Added keyboard shortcuts for settings, shortcuts help, new/open graph, reset view, add-node/image/frame actions, theme toggle, and About, plus optional shortcut hints on the top toolbar.
 
 ## 2026-03-09
 

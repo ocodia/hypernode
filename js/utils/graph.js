@@ -24,6 +24,8 @@ export function emptyGraphState() {
       anchorsMode: GRAPH_DEFAULTS.anchorsMode,
       arrowheads: GRAPH_DEFAULTS.arrowheads,
       arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
+      showShortcutsUi: GRAPH_DEFAULTS.showShortcutsUi,
+      showToolbarShortcutHints: GRAPH_DEFAULTS.showToolbarShortcutHints,
       nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
     },
     nodes: [],
@@ -159,10 +161,14 @@ export function validateGraphPayload(payload) {
     || isValidArrowheadsMode(payload.settings.arrowheads);
   const hasValidArrowheadSizeStep = payload.settings.arrowheadSizeStep === undefined
     || isValidArrowheadSizeStep(payload.settings.arrowheadSizeStep);
+  const hasValidShowShortcutsUi = payload.settings.showShortcutsUi === undefined
+    || typeof payload.settings.showShortcutsUi === 'boolean';
+  const hasValidShowToolbarShortcutHints = payload.settings.showToolbarShortcutHints === undefined
+    || typeof payload.settings.showToolbarShortcutHints === 'boolean';
   const hasValidNodeColorDefault = payload.settings.nodeColorDefault === undefined
     || payload.settings.nodeColorDefault === null
     || isValidNodeColorKey(payload.settings.nodeColorDefault);
-  if (!hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidNodeColorDefault) {
+  if (!hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidShowShortcutsUi || !hasValidShowToolbarShortcutHints || !hasValidNodeColorDefault) {
     return false;
   }
 
@@ -216,6 +222,12 @@ export function sanitizeGraphSettings(settings) {
       ? settings.arrowheads
       : GRAPH_DEFAULTS.arrowheads,
     arrowheadSizeStep: sanitizeArrowheadSizeStep(settings?.arrowheadSizeStep),
+    showShortcutsUi: typeof settings?.showShortcutsUi === 'boolean'
+      ? settings.showShortcutsUi
+      : GRAPH_DEFAULTS.showShortcutsUi,
+    showToolbarShortcutHints: typeof settings?.showToolbarShortcutHints === 'boolean'
+      ? settings.showToolbarShortcutHints
+      : GRAPH_DEFAULTS.showToolbarShortcutHints,
     nodeColorDefault: sanitizeNodeColorKey(settings?.nodeColorDefault),
   };
 }

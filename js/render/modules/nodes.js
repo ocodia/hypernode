@@ -10,6 +10,7 @@ import {
   isImageNode,
 } from '../helpers.js';
 import { renderDescriptionMarkdown } from '../markdown.js';
+import { formatShortcutLabel } from '../../utils/shortcuts.js';
 
 export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const includeEdit = options.includeEdit !== false;
@@ -23,9 +24,9 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const editTitle = editingActive ? 'Reading Mode' : 'Edit Node';
   const editIcon = editingActive ? 'bi-eye-fill' : 'bi-pencil-fill';
   const showShortcuts = Boolean(options.showShortcuts);
-  const editShortcut = 'Ctrl/Cmd+Enter';
-  const focusShortcut = focusActive ? 'Esc' : 'Ctrl/Cmd+Alt+Enter';
-  const deleteShortcut = focusActive ? 'Ctrl/Cmd+Del' : 'Del';
+  const editShortcut = formatShortcutLabel('Ctrl/Cmd + Enter', { compact: true });
+  const focusShortcut = focusActive ? 'Esc' : formatShortcutLabel('Ctrl/Cmd + Alt + Enter', { compact: true });
+  const deleteShortcut = focusActive ? formatShortcutLabel('Ctrl/Cmd + Delete', { compact: true }) : 'Del';
 
   return `
     <div class="${toolbarClass}">
@@ -188,6 +189,7 @@ export function renderNodes(nodesLayer, state) {
   const singleSelectedNodeId = getSingleSelectedNodeId(state.selection);
   const editingNodeId = state.ui.editingNodeId;
   const draft = state.ui.edgeDraft;
+  const showShortcuts = state.settings?.showShortcutsUi !== false;
   const orderedNodes = [...state.nodes].sort((left, right) => {
     const leftPriority = getNodeStackPriority(left.id, selectedNodeIds, editingNodeId);
     const rightPriority = getNodeStackPriority(right.id, selectedNodeIds, editingNodeId);
@@ -221,7 +223,7 @@ export function renderNodes(nodesLayer, state) {
       const nodeColorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
       return `
         <article class="node ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
-          ${buildNodeToolbarMarkup(node.id)}
+          ${buildNodeToolbarMarkup(node.id, { showShortcuts })}
           ${buildNodeContentMarkup(node, { isEditing: editingNodeId === node.id })}
           <button class="node__resize node__resize--top-left" type="button" data-node-resize="${node.id}:top-left" aria-label="Resize from top left corner"></button>
           <button class="node__resize node__resize--top-right" type="button" data-node-resize="${node.id}:top-right" aria-label="Resize from top right corner"></button>

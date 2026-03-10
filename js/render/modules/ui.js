@@ -27,6 +27,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
   const controlBorderWidth = Math.min(2, Math.max(1.5, 1.5 / viewportZoom));
   const node = selectedNodeId ? state.nodes.find((item) => item.id === selectedNodeId) : null;
   const frame = selectedFrameId ? state.frames.find((item) => item.id === selectedFrameId) : null;
+  const showShortcuts = state.settings?.showShortcutsUi !== false;
 
   let markup = '';
 
@@ -80,7 +81,10 @@ export function renderSelectionControls(selectionControlsLayer, state) {
         style="transform: translate(${node.x}px, ${node.y}px); width: ${nodeSize.width}px; height: ${nodeSize.height}px; --selection-anchor-size: ${nodeAnchorSize}px; --selection-resize-size: ${nodeResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px;"
       >
         ${editingNodeId === node.id ? '' : `
-          ${buildNodeToolbarMarkup(node.id, { toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--node' })}
+          ${buildNodeToolbarMarkup(node.id, {
+            toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--node',
+            showShortcuts,
+          })}
           ${buildNodeOverlayControls(node.id)}
         `}
       </div>
@@ -117,7 +121,7 @@ export function renderFocusOverlay(focusLayer, state) {
         toolbarClass: 'node__toolbar node__toolbar--focus',
         focusActive: true,
         editingActive: state.ui.editingNodeId === node.id,
-        showShortcuts: true,
+        showShortcuts: state.settings?.showShortcutsUi !== false,
       })}
       <article class="focus-overlay__panel node ${node.kind === 'image' ? 'node--image' : ''}${state.ui.editingNodeId === node.id ? ' is-editing' : ''}" data-node-id="${node.id}"${colorAttr}>
         ${buildNodeContentMarkup(node, { isEditing: state.ui.editingNodeId === node.id, isFocused: true })}

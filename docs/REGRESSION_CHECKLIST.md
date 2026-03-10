@@ -86,5 +86,11 @@ Use this checklist before shipping interaction changes.
 ## UI/Polish Checks
 
 - [ ] Toggle keyboard hints on/off.
+- [ ] Open the shortcuts dialog and verify search matches both shortcut keys and action text.
+- [ ] Search for a nonsense term and verify the empty state appears.
+- [ ] Turn `Show shortcuts in UI` off and verify the shortcuts toolbar button disappears, inline shortcut hints disappear, and keyboard commands still work.
+- [ ] Turn `Show shortcuts in UI` off while the shortcuts dialog is open and verify the dialog closes.
+- [ ] Turn `Show shortcuts on toolbar` on and verify top-toolbar buttons with shortcuts show visible hints without overlapping icons.
+- [ ] Verify toolbar shortcut hints disappear when `Show shortcuts in UI` is off, even if `Show shortcuts on toolbar` remains enabled.
 - [ ] Open/close About dialog.
 - [ ] Toggle dark mode and reload page to verify theme persistence.

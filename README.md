@@ -45,6 +45,8 @@ It runs fully client-side with no backend and no account system. Hypernode data 
   - anchors mode (`auto-anchor` or `exact anchor`)
   - arrowheads visibility (`show` or `hide`)
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
+  - shortcut UI visibility (`show` or `hide`)
+  - toolbar shortcut hints (`show` or `hide`)
   - hypernode name
 - Node color tool also sets the default color for newly created nodes.
 - Node color tool also applies to selected Frames (flat palette style) and still sets the default color for newly created nodes.
@@ -53,21 +55,35 @@ It runs fully client-side with no backend and no account system. Hypernode data 
 - Open/save toolbar actions use the File System Access API and are disabled in browsers that do not support it.
 - Installable PWA with offline app-shell caching.
 - Interaction-state cursor feedback for drag/connect workflows.
+- Searchable keyboard shortcuts dialog with key/action matching.
 - About dialog with a toggleable guide wizard, keyboard shortcuts, and a GitHub link.
 - Dark mode toggle with persisted theme preference.
 
 ## Keyboard Shortcuts
 
+Use the shortcuts dialog to search by key combo or action name when shortcut UI is enabled.
+
 - `Delete` / `Backspace`: delete selected node/edge
+- `Ctrl/Cmd + Shift + H`: create a new hypernode
+- `Ctrl/Cmd + O`: open a hypernode file
+- `N`: add a text node
+- `Ctrl/Cmd + N`: add a text node at the current pointer position
+- `I`: add an image node
+- `F`: toggle frame draw mode
 - `Ctrl/Cmd + Delete` or `Ctrl/Cmd + Backspace`: delete the focused node from Focus mode after confirmation
 - `Ctrl/Cmd + Shift + Enter`: create a new node linked from the selected node
 - `Ctrl/Cmd + Arrow` (`Up`/`Down`/`Left`/`Right`): follow connected node in that direction, otherwise nearest
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
 - `Ctrl/Cmd + S`: save hypernode file
+- `Ctrl/Cmd + 0`: reset view
 - `Ctrl/Cmd + Enter`: toggle selected node/frame editor
 - `Ctrl/Cmd + Alt + Enter`: toggle Focus mode for the selected node
 - `Ctrl/Cmd + Click`: add a node to current node selection
+- `Ctrl/Cmd + ,`: open settings
+- `Ctrl/Cmd + /`: open keyboard shortcuts
+- `T`: toggle theme
+- `Shift + ?`: open About
 - `Escape`: exit Focus/node edit mode, cancel edge draft mode, or clear selection
 - `Escape`: also exits frame draw mode and frame edit mode
 

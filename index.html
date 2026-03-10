@@ -14,28 +14,28 @@
     <main class="workspace" id="workspace" aria-label="hypernode workspace">
       <div class="toolbar" aria-label="hypernode controls">
         <div class="toolbar__group" aria-label="Create">
-          <button id="new-graph-btn" class="toolbar__icon-btn" type="button" aria-label="New hypernode" title="New hypernode"><i class="bi bi-file-earmark-plus"></i></button>
-          <button id="add-node-btn" class="toolbar__icon-btn" type="button" aria-label="Add node" title="Add node"><i class="bi bi-plus-square"></i></button>
-          <button id="add-image-btn" class="toolbar__icon-btn" type="button" aria-label="Add image node" title="Add image node"><i class="bi bi-image"></i></button>
-          <button id="add-frame-btn" class="toolbar__icon-btn" type="button" aria-label="Draw frame" title="Draw frame"><i class="bi bi-bounding-box-circles"></i></button>
+          <button id="new-graph-btn" class="toolbar__icon-btn" type="button" aria-label="New hypernode" title="New hypernode"><i class="bi bi-file-earmark-plus"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="add-node-btn" class="toolbar__icon-btn" type="button" aria-label="Add node" title="Add node"><i class="bi bi-plus-square"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="add-image-btn" class="toolbar__icon-btn" type="button" aria-label="Add image node" title="Add image node"><i class="bi bi-image"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="add-frame-btn" class="toolbar__icon-btn" type="button" aria-label="Draw frame" title="Draw frame"><i class="bi bi-bounding-box-circles"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
         </div>
         <div class="toolbar__group" aria-label="File">
-          <button id="open-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Open hypernode" title="Open hypernode"><i class="bi bi-folder2-open"></i></button>
-          <button id="save-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Save hypernode" title="Save hypernode"><i class="bi bi-floppy"></i></button>
+          <button id="open-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Open hypernode" title="Open hypernode"><i class="bi bi-folder2-open"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="save-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Save hypernode" title="Save hypernode"><i class="bi bi-floppy"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
         </div>
         <div class="toolbar__group" aria-label="History and view">
-          <button id="undo-btn" class="toolbar__icon-btn" type="button" aria-label="Undo" title="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>
-          <button id="redo-btn" class="toolbar__icon-btn" type="button" aria-label="Redo" title="Redo"><i class="bi bi-arrow-clockwise"></i></button>
-          <button id="reset-view-btn" class="toolbar__icon-btn" type="button" aria-label="Reset view" title="Reset view"><i class="bi bi-aspect-ratio"></i></button>
+          <button id="undo-btn" class="toolbar__icon-btn" type="button" aria-label="Undo" title="Undo"><i class="bi bi-arrow-counterclockwise"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="redo-btn" class="toolbar__icon-btn" type="button" aria-label="Redo" title="Redo"><i class="bi bi-arrow-clockwise"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="reset-view-btn" class="toolbar__icon-btn" type="button" aria-label="Reset view" title="Reset view"><i class="bi bi-aspect-ratio"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
         </div>
         <div class="toolbar__group" aria-label="Style and settings">
-          <button id="node-color-btn" class="toolbar__icon-btn" type="button" aria-label="Color selected nodes" title="Color selected nodes" aria-haspopup="dialog" aria-expanded="false" aria-controls="node-color-popover" disabled><i class="bi bi-palette"></i></button>
-          <button id="settings-btn" class="toolbar__icon-btn" type="button" aria-label="Hypernode settings" title="Hypernode settings"><i class="bi bi-sliders2"></i></button>
-          <button id="theme-toggle-btn" class="toolbar__icon-btn" type="button" aria-label="Enable dark mode" title="Enable dark mode"><i class="bi bi-moon-stars"></i></button>
+          <button id="node-color-btn" class="toolbar__icon-btn" type="button" aria-label="Color selected nodes" title="Color selected nodes" aria-haspopup="dialog" aria-expanded="false" aria-controls="node-color-popover" disabled><i class="bi bi-palette"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="settings-btn" class="toolbar__icon-btn" type="button" aria-label="Hypernode settings" title="Hypernode settings"><i class="bi bi-sliders2"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="theme-toggle-btn" class="toolbar__icon-btn" type="button" aria-label="Enable dark mode" title="Enable dark mode"><i class="bi bi-moon-stars"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
         </div>
         <div class="toolbar__group" aria-label="Help">
-          <button id="shortcuts-btn" class="toolbar__icon-btn" type="button" aria-label="Keyboard shortcuts" title="Keyboard shortcuts"><i class="bi bi-command"></i></button>
-          <button id="about-btn" class="toolbar__icon-btn" type="button" aria-label="About hypernode" title="About hypernode"><i class="bi bi-question-circle"></i></button>
+          <button id="shortcuts-btn" class="toolbar__icon-btn" type="button" aria-label="Keyboard shortcuts" title="Keyboard shortcuts"><i class="bi bi-command"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="about-btn" class="toolbar__icon-btn" type="button" aria-label="About hypernode" title="About hypernode"><i class="bi bi-question-circle"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
         </div>
         <div id="node-color-popover" class="toolbar__popover" role="dialog" aria-label="Node color palette" hidden>
           <p class="toolbar__popover-title">Node Colors</p>
@@ -144,52 +144,7 @@
           <i class="bi bi-search" aria-hidden="true"></i>
           <input id="shortcuts-search-input" type="search" placeholder="Search shortcuts" aria-label="Search shortcuts" />
         </label>
-        <div class="shortcuts-dialog__list" id="shortcuts-list" role="list">
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="delete backspace delete selected node edge">
-            <div class="shortcuts-dialog__keys"><kbd>Delete</kbd><kbd>Backspace</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Delete selection</h3><p>Deletes the selected node or edge outside Zen mode.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd delete backspace zen focused confirm">
-            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Delete</kbd><kbd>Ctrl/Cmd + Backspace</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Delete in Zen mode</h3><p>Deletes the focused node in Zen mode after confirmation.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd shift enter linked node create">
-            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Shift + Enter</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Create linked node</h3><p>Adds a new node linked from the current selection.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd arrow up down left right directional navigation follow connected">
-            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Arrow</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Directional navigation</h3><p>Follows a connected node in that direction, otherwise the nearest candidate.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd z undo">
-            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Z</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Undo</h3><p>Reverts the last change.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd y shift z redo">
-            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Y</kbd><kbd>Ctrl/Cmd + Shift + Z</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Redo</h3><p>Reapplies the last undone change.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd s save hypernode file">
-            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + S</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Save hypernode</h3><p>Saves the current hypernode file.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd enter toggle editor node frame">
-            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Enter</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Toggle editor</h3><p>Toggles the selected node or frame editor.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd alt enter zen focus mode">
-            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Alt + Enter</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Toggle Zen mode</h3><p>Enters or exits Zen mode for the selected node.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="ctrl cmd click multi select add node selection">
-            <div class="shortcuts-dialog__keys"><kbd>Ctrl/Cmd + Click</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Add to selection</h3><p>Adds a node to the current multi-selection.</p></div>
-          </article>
-          <article class="shortcuts-dialog__item" role="listitem" data-shortcut-search="escape esc cancel clear selection exit zen edit connect frame draw">
-            <div class="shortcuts-dialog__keys"><kbd>Esc</kbd></div>
-            <div class="shortcuts-dialog__meta"><h3>Cancel or exit</h3><p>Exits Zen or edit mode, cancels connect or frame draw, or clears selection.</p></div>
-          </article>
-        </div>
+        <div class="shortcuts-dialog__list" id="shortcuts-list" role="list"></div>
         <p id="shortcuts-empty-state" class="shortcuts-dialog__empty" hidden>No shortcuts match that search.</p>
       </article>
     </dialog>
@@ -205,6 +160,20 @@
         <div class="settings-dialog__section">
           <label class="settings-dialog__label" for="graph-name-input">Hypernode name</label>
           <input id="graph-name-input" class="settings-dialog__input" type="text" maxlength="120" />
+        </div>
+        <div class="settings-dialog__section">
+          <label class="settings-dialog__option" for="show-shortcuts-ui-input">
+            <input id="show-shortcuts-ui-input" type="checkbox" />
+            Show shortcuts in UI
+          </label>
+          <p class="settings-dialog__hint">Controls inline shortcut hints and the keyboard shortcuts button/dialog. Keyboard commands still work when hidden.</p>
+        </div>
+        <div class="settings-dialog__section">
+          <label class="settings-dialog__option" for="show-toolbar-shortcuts-input">
+            <input id="show-toolbar-shortcuts-input" type="checkbox" />
+            Show shortcuts on toolbar
+          </label>
+          <p class="settings-dialog__hint">Shows shortcut hints on the top toolbar buttons for actions that support keyboard access.</p>
         </div>
         <fieldset class="settings-dialog__section">
           <legend>Background style</legend>

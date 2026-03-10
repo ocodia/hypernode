@@ -332,7 +332,7 @@ As a user, I want hypernode-wide controls in one place so I can adjust presentat
 
 Acceptance criteria:
 
-- Settings dialog exposes hypernode name, background style, anchors mode, arrowhead visibility, and arrowhead size.
+- Settings dialog exposes hypernode name, background style, anchors mode, arrowhead visibility, arrowhead size, a `Show shortcuts in UI` toggle, and a `Show shortcuts on toolbar` toggle.
 - Changing a setting updates the current hypernode immediately.
 - Hypernode name updates the metadata chip and browser tab title.
 - Settings remain available without leaving the canvas workflow.
@@ -347,6 +347,18 @@ Acceptance criteria:
 - Opening a valid hypernode JSON file restores persisted settings.
 - Saving a hypernode JSON file writes the current settings into the file.
 - Invalid settings payloads are rejected before replacing the current hypernode.
+
+### US-33: Search keyboard shortcuts
+
+As a user, I want the keyboard shortcuts dialog to be searchable so I can find commands by key or action quickly.
+
+Acceptance criteria:
+
+- The shortcuts dialog renders from the current shortcut catalog rather than duplicated static markup.
+- Searching matches against both displayed shortcut keys and action descriptions.
+- A clear empty state appears when no shortcuts match the query.
+- Turning off shortcut UI hides shortcut affordances in the UI without disabling the actual keyboard commands.
+- Toolbar shortcut hints can be shown independently when shortcut UI is enabled.
 
 ### US-31: Navigate the graph with directional shortcuts
 

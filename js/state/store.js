@@ -851,6 +851,22 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setShowShortcutsUi(showShortcutsUi) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, showShortcutsUi }).showShortcutsUi;
+    if (state.settings.showShortcutsUi === nextValue) return;
+    pushHistory('set-show-shortcuts-ui');
+    state.settings.showShortcutsUi = nextValue;
+    notify();
+  }
+
+  function setShowToolbarShortcutHints(showToolbarShortcutHints) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, showToolbarShortcutHints }).showToolbarShortcutHints;
+    if (state.settings.showToolbarShortcutHints === nextValue) return;
+    pushHistory('set-show-toolbar-shortcut-hints');
+    state.settings.showToolbarShortcutHints = nextValue;
+    notify();
+  }
+
   function deleteEdge(id) {
     const index = state.edges.findIndex((edge) => edge.id === id);
     if (index === -1) return;
@@ -1072,6 +1088,8 @@ export function createStore(initialGraph = null) {
     setAnchorsMode,
     setArrowheads,
     setArrowheadSizeStep,
+    setShowShortcutsUi,
+    setShowToolbarShortcutHints,
     setNodeColorDefault,
     replaceGraph,
     setViewport,

@@ -22,6 +22,8 @@ Theme preference is not part of the hypernode payload. It is stored separately i
     "anchorsMode": "auto",
     "arrowheads": "shown",
     "arrowheadSizeStep": 0,
+    "showShortcutsUi": true,
+    "showToolbarShortcutHints": false,
     "nodeColorDefault": null
   },
   "nodes": [],
@@ -48,6 +50,8 @@ Invalid payloads are rejected before import or restore is applied.
   "anchorsMode": "auto | exact",
   "arrowheads": "shown | hidden",
   "arrowheadSizeStep": 0,
+  "showShortcutsUi": "true | false",
+  "showToolbarShortcutHints": "true | false",
   "nodeColorDefault": "sage | sky | amber | rose | slate | teal | violet | peach | mint | indigo | null"
 }
 ```
@@ -58,6 +62,8 @@ Rules:
 - `anchorsMode` must be `auto` or `exact`
 - `arrowheads` must be `shown` or `hidden`
 - `arrowheadSizeStep` is sanitized to an integer in the inclusive range `0..9`
+- `showShortcutsUi` must be a boolean and defaults to `true` when missing or invalid
+- `showToolbarShortcutHints` must be a boolean and defaults to `false` when missing or invalid
 - `nodeColorDefault` may be `null` or one of the curated palette keys
 
 Fallback behavior:
@@ -184,6 +190,8 @@ Sanitization behavior:
 Payload validation rejects graphs when any of the following are true:
 
 - `settings` contains invalid enum values or an out-of-range arrowhead size step
+- `settings.showShortcutsUi` is present but not a boolean
+- `settings.showToolbarShortcutHints` is present but not a boolean
 - `settings.nodeColorDefault` is not `null` and not a valid palette key
 - `frames` contains duplicate frame ids
 - `nodes` contains duplicate node ids

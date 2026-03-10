@@ -53,6 +53,8 @@ export const GRAPH_DEFAULTS = {
   anchorsMode: "auto",
   arrowheads: "shown",
   arrowheadSizeStep: 0,
+  showShortcutsUi: true,
+  showToolbarShortcutHints: false,
   nodeColorDefault: null,
 };
 

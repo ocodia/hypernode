@@ -411,8 +411,11 @@ textarea:focus-visible {
   height: 34px;
   min-width: 34px;
   min-height: 34px;
-  display: inline-grid;
-  place-items: center;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 0;
   border-color: transparent;
   background: transparent;
@@ -420,9 +423,29 @@ textarea:focus-visible {
   text-align: center;
 }
 
+.toolbar__icon-btn--hinted {
+  width: auto;
+  height: 34px;
+  min-width: 34px;
+  padding: 0 8px;
+}
+
 .toolbar__icon-btn .bi {
   font-size: 0.96rem;
   line-height: 1;
+}
+
+.toolbar__shortcut-hint {
+  display: inline-block;
+  font-size: 0.64rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.toolbar__shortcut-hint[hidden] {
+  display: none;
 }
 
 .toolbar__icon-btn:hover,

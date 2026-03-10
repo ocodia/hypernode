@@ -9,6 +9,7 @@ import {
   VIEWPORT_LIMITS,
 } from '../utils/constants.js';
 import { openGraphFile, saveGraphFile, supportsFileSystemAccess } from '../persistence/file.js';
+import { formatShortcutLabel } from '../utils/shortcuts.js';
 import { bindCanvasInteractions } from './binders/canvas.js';
 import { bindEdgeInteractions } from './binders/edges.js';
 import { bindFrameInteractions } from './binders/frames.js';
@@ -17,6 +18,175 @@ import { bindNodeInteractions } from './binders/nodes.js';
 import { bindToolbarInteractions } from './binders/toolbar.js';
 
 const THEME_STORAGE_KEY = 'hypernode.theme.v1';
+const SHORTCUT_CATALOG = [
+  {
+    id: 'new-graph',
+    keys: ['Ctrl/Cmd + Shift + H'],
+    title: 'New hypernode',
+    description: 'Starts a new hypernode after confirming any discard.',
+    searchTokens: ['new', 'graph', 'file', 'create'],
+  },
+  {
+    id: 'open-graph',
+    keys: ['Ctrl/Cmd + O'],
+    title: 'Open hypernode',
+    description: 'Opens a hypernode file when the browser supports file access.',
+    searchTokens: ['open', 'graph', 'file', 'import'],
+  },
+  {
+    id: 'add-node',
+    keys: ['N', 'Ctrl/Cmd + N'],
+    title: 'Add node',
+    description: 'Creates a new text node; Ctrl/Cmd + N places it at the current pointer position.',
+    searchTokens: ['node', 'create', 'text', 'toolbar', 'pointer', 'mouse', 'cursor'],
+  },
+  {
+    id: 'add-image-node',
+    keys: ['I'],
+    title: 'Add image node',
+    description: 'Opens the image picker and adds a new image node.',
+    searchTokens: ['image', 'media', 'create', 'toolbar'],
+  },
+  {
+    id: 'draw-frame',
+    keys: ['F'],
+    title: 'Toggle frame draw',
+    description: 'Turns frame drawing mode on or off.',
+    searchTokens: ['frame', 'draw', 'toggle', 'group'],
+  },
+  {
+    id: 'delete-selection',
+    keys: ['Delete', 'Backspace'],
+    title: 'Delete selection',
+    description: 'Deletes the selected node or edge outside Zen mode.',
+    searchTokens: ['delete', 'selected', 'node', 'edge', 'remove'],
+  },
+  {
+    id: 'delete-focus',
+    keys: ['Ctrl/Cmd + Delete', 'Ctrl/Cmd + Backspace'],
+    title: 'Delete in Zen mode',
+    description: 'Deletes the focused node in Zen mode after confirmation.',
+    searchTokens: ['zen', 'focus', 'focused', 'confirm', 'remove'],
+  },
+  {
+    id: 'create-linked-node',
+    keys: ['Ctrl/Cmd + Shift + Enter'],
+    title: 'Create linked node',
+    description: 'Adds a new node linked from the current selection.',
+    searchTokens: ['linked', 'node', 'create', 'connection', 'follow-up'],
+  },
+  {
+    id: 'directional-navigation',
+    keys: ['Ctrl/Cmd + Arrow'],
+    title: 'Directional navigation',
+    description: 'Follows a connected node in that direction, otherwise the nearest candidate.',
+    searchTokens: ['up', 'down', 'left', 'right', 'follow', 'connected', 'graph'],
+  },
+  {
+    id: 'undo',
+    keys: ['Ctrl/Cmd + Z'],
+    title: 'Undo',
+    description: 'Reverts the last change.',
+    searchTokens: ['undo', 'revert', 'history'],
+  },
+  {
+    id: 'redo',
+    keys: ['Ctrl/Cmd + Y', 'Ctrl/Cmd + Shift + Z'],
+    title: 'Redo',
+    description: 'Reapplies the last undone change.',
+    searchTokens: ['redo', 'history', 'repeat'],
+  },
+  {
+    id: 'save',
+    keys: ['Ctrl/Cmd + S'],
+    title: 'Save hypernode',
+    description: 'Saves the current hypernode file.',
+    searchTokens: ['save', 'file', 'export'],
+  },
+  {
+    id: 'reset-view',
+    keys: ['Ctrl/Cmd + 0'],
+    title: 'Reset view',
+    description: 'Resets pan and zoom to the default canvas view.',
+    searchTokens: ['reset', 'view', 'zoom', 'pan', 'center'],
+  },
+  {
+    id: 'toggle-editor',
+    keys: ['Ctrl/Cmd + Enter'],
+    title: 'Toggle editor',
+    description: 'Toggles the selected node or frame editor.',
+    searchTokens: ['edit', 'editor', 'node', 'frame', 'read'],
+  },
+  {
+    id: 'toggle-zen',
+    keys: ['Ctrl/Cmd + Alt + Enter'],
+    title: 'Toggle Zen mode',
+    description: 'Enters or exits Zen mode for the selected node.',
+    searchTokens: ['zen', 'focus', 'fullscreen', 'node'],
+  },
+  {
+    id: 'add-to-selection',
+    keys: ['Ctrl/Cmd + Click'],
+    title: 'Add to selection',
+    description: 'Adds a node to the current multi-selection.',
+    searchTokens: ['multi-select', 'selection', 'additive', 'node'],
+  },
+  {
+    id: 'open-settings',
+    keys: ['Ctrl/Cmd + ,'],
+    title: 'Open settings',
+    description: 'Opens the hypernode settings dialog.',
+    searchTokens: ['settings', 'preferences', 'dialog'],
+  },
+  {
+    id: 'open-shortcuts',
+    keys: ['Ctrl/Cmd + /'],
+    title: 'Open keyboard shortcuts',
+    description: 'Opens the keyboard shortcuts dialog.',
+    searchTokens: ['shortcuts', 'help', 'keys', 'dialog'],
+  },
+  {
+    id: 'toggle-theme',
+    keys: ['T'],
+    title: 'Toggle theme',
+    description: 'Switches between light and dark mode.',
+    searchTokens: ['theme', 'dark', 'light', 'appearance'],
+  },
+  {
+    id: 'open-about',
+    keys: ['Shift + ?'],
+    title: 'Open about',
+    description: 'Opens the about dialog and guide.',
+    searchTokens: ['about', 'help', 'guide', 'info'],
+  },
+  {
+    id: 'cancel-exit',
+    keys: ['Esc'],
+    title: 'Cancel or exit',
+    description: 'Exits Zen or edit mode, cancels connect or frame draw, or clears selection.',
+    searchTokens: ['escape', 'cancel', 'clear', 'selection', 'frame', 'draw', 'connect'],
+  },
+];
+
+const TOOLBAR_SHORTCUTS = {
+  'new-graph-btn': { label: 'New hypernode', shortcut: 'Ctrl/Cmd+Shift+H' },
+  'add-node-btn': { label: 'Add node', shortcut: 'N' },
+  'add-image-btn': { label: 'Add image node', shortcut: 'I' },
+  'add-frame-btn': { label: 'Draw frame', shortcut: 'F' },
+  'open-graph-btn': { label: 'Open hypernode', shortcut: 'Ctrl/Cmd+O' },
+  'save-graph-btn': { label: 'Save hypernode', shortcut: 'Ctrl/Cmd+S' },
+  'undo-btn': { label: 'Undo', shortcut: 'Ctrl/Cmd+Z' },
+  'redo-btn': { label: 'Redo', shortcut: 'Ctrl/Cmd+Y' },
+  'reset-view-btn': { label: 'Reset view', shortcut: 'Ctrl/Cmd+0' },
+  'settings-btn': { label: 'Hypernode settings', shortcut: 'Ctrl/Cmd+,' },
+  'theme-toggle-btn': { label: 'Toggle theme', shortcut: 'T' },
+  'shortcuts-btn': { label: 'Keyboard shortcuts', shortcut: 'Ctrl/Cmd+/' },
+  'about-btn': { label: 'About hypernode', shortcut: 'Shift+?' },
+};
+
+function normalizeShortcutSearchText(value) {
+  return String(value ?? '').trim().toLowerCase();
+}
 
 export function bindInteractions(elements, store, options = {}) {
   const {
@@ -51,6 +221,7 @@ export function bindInteractions(elements, store, options = {}) {
   let canvasFileDragDepth = 0;
   let focusImageDragDepth = 0;
   let aboutSlideIndex = 0;
+  let lastCanvasPointerClient = null;
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -355,10 +526,36 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function getStarterNodePoint(viewport = store.getState().viewport) {
+    const center = getCanvasCenterGraphPoint(viewport);
     return {
-      x: Math.round((96 - viewport.panX) / viewport.zoom),
-      y: Math.round((96 - viewport.panY) / viewport.zoom),
+      x: Math.round(center.x - (NODE_DEFAULTS.width / 2)),
+      y: Math.round(center.y - (NODE_DEFAULTS.height / 2)),
     };
+  }
+
+  function getCanvasCenterGraphPoint(viewport = store.getState().viewport) {
+    const rect = typeof canvas?.getBoundingClientRect === 'function'
+      ? canvas.getBoundingClientRect()
+      : { left: 0, top: 0, width: 0, height: 0 };
+    return toGraphPoint(rect.left + (rect.width / 2), rect.top + (rect.height / 2), canvas, viewport);
+  }
+
+  function resetCanvasView() {
+    const rect = typeof canvas?.getBoundingClientRect === 'function'
+      ? canvas.getBoundingClientRect()
+      : { width: 0, height: 0 };
+    store.setViewport({
+      panX: Math.round(rect.width / 2),
+      panY: Math.round(rect.height / 2),
+      zoom: VIEWPORT_LIMITS.defaultZoom,
+    });
+  }
+
+  function getLastPointerGraphPoint(viewport = store.getState().viewport) {
+    if (!lastCanvasPointerClient) {
+      return getCanvasCenterGraphPoint(viewport);
+    }
+    return toGraphPoint(lastCanvasPointerClient.clientX, lastCanvasPointerClient.clientY, canvas, viewport);
   }
 
   function createStarterHypernode() {
@@ -2133,6 +2330,22 @@ export function bindInteractions(elements, store, options = {}) {
     }
   });
 
+  canvas?.addEventListener('pointermove', (event) => {
+    const rect = typeof canvas.getBoundingClientRect === 'function'
+      ? canvas.getBoundingClientRect()
+      : null;
+    if (!rect) return;
+    const withinCanvas = event.clientX >= rect.left
+      && event.clientX <= rect.right
+      && event.clientY >= rect.top
+      && event.clientY <= rect.bottom;
+    if (!withinCanvas) return;
+    lastCanvasPointerClient = {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    };
+  });
+
   const aboutDialog = document.getElementById('about-dialog');
   const aboutBtn = document.getElementById('about-btn');
   const aboutCloseBtn = document.getElementById('about-close-btn');
@@ -2150,6 +2363,8 @@ export function bindInteractions(elements, store, options = {}) {
   const settingsBtn = document.getElementById('settings-btn');
   const settingsCloseBtn = document.getElementById('settings-close-btn');
   const graphNameInput = document.getElementById('graph-name-input');
+  const showShortcutsUiInput = document.getElementById('show-shortcuts-ui-input');
+  const showToolbarShortcutsInput = document.getElementById('show-toolbar-shortcuts-input');
   const arrowheadSizeRange = document.getElementById('arrowhead-size-range');
   const arrowheadSizeValue = document.getElementById('arrowhead-size-value');
   const themeToggleBtn = document.getElementById('theme-toggle-btn');
@@ -2158,6 +2373,11 @@ export function bindInteractions(elements, store, options = {}) {
   const saveGraphBtn = document.getElementById('save-graph-btn');
   const nodeColorBtn = document.getElementById('node-color-btn');
   const nodeColorPopover = document.getElementById('node-color-popover');
+  const toolbarShortcutButtons = Object.entries(TOOLBAR_SHORTCUTS).map(([id, config]) => ({
+    button: document.getElementById(id),
+    hint: document.getElementById(id)?.querySelector('.toolbar__shortcut-hint'),
+    config,
+  }));
 
   function hasGraphData() {
     const state = store.getState();
@@ -2183,8 +2403,8 @@ export function bindInteractions(elements, store, options = {}) {
       const { handle, graph } = await openGraphFile();
       currentFileHandle = handle;
       store.replaceGraph(graph);
-      store.resetView();
-      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
+      resetCanvasView();
+      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
       store.setImportStatus('Hypernode opened.');
     } catch (error) {
       if (isAbortError(error)) return;
@@ -2227,15 +2447,17 @@ export function bindInteractions(elements, store, options = {}) {
         anchorsMode: GRAPH_DEFAULTS.anchorsMode,
         arrowheads: GRAPH_DEFAULTS.arrowheads,
         arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
+        showShortcutsUi: GRAPH_DEFAULTS.showShortcutsUi,
+        showToolbarShortcutHints: GRAPH_DEFAULTS.showToolbarShortcutHints,
         nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
       },
       nodes: [],
       frames: [],
       edges: [],
     });
-    store.resetView();
+    resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
     store.setImportStatus('New hypernode ready.');
   }
 
@@ -2253,6 +2475,49 @@ export function bindInteractions(elements, store, options = {}) {
     } catch {
       store.setImportStatus('Image add failed. Try another file.');
     }
+  }
+
+  function handleAddNode() {
+    const { viewport } = store.getState();
+    createNodeInEditMode({ x: (120 - viewport.panX) / viewport.zoom, y: (120 - viewport.panY) / viewport.zoom });
+  }
+
+  function handleAddNodeAtPointer() {
+    createNodeInEditMode(getLastPointerGraphPoint(store.getState().viewport));
+  }
+
+  function openShortcutsDialog() {
+    if (!shortcutsDialog) return;
+    if (store.getState().settings?.showShortcutsUi === false) return;
+    renderShortcutCatalog();
+    if (shortcutsSearchInput instanceof HTMLInputElement) {
+      shortcutsSearchInput.value = '';
+    }
+    filterShortcuts('');
+    shortcutsDialog.showModal();
+    window.requestAnimationFrame(() => {
+      shortcutsSearchInput?.focus({ preventScroll: true });
+    });
+  }
+
+  function openSettingsDialog() {
+    if (!settingsDialog) return;
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
+    settingsDialog.showModal();
+  }
+
+  function openAboutDialog() {
+    if (!aboutDialog) return;
+    resetAboutDialog();
+    aboutDialog.showModal();
+  }
+
+  function toggleThemePreference() {
+    const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(nextTheme, themeToggleBtn);
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    syncShortcutUiFromState(store.getState());
   }
 
   function setAboutSlide(nextIndex) {
@@ -2282,12 +2547,12 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function filterShortcuts(query) {
-    const normalized = String(query || '').trim().toLowerCase();
+    const normalized = normalizeShortcutSearchText(query);
     const items = shortcutsList?.querySelectorAll('[data-shortcut-search]');
     if (!items?.length) return;
     let visibleCount = 0;
     items.forEach((item) => {
-      const haystack = `${item.dataset.shortcutSearch || ''} ${item.textContent || ''}`.toLowerCase();
+      const haystack = normalizeShortcutSearchText(item.dataset.shortcutSearch || '');
       const visible = !normalized || haystack.includes(normalized);
       item.hidden = !visible;
       if (visible) {
@@ -2297,6 +2562,56 @@ export function bindInteractions(elements, store, options = {}) {
     if (shortcutsEmptyState instanceof HTMLElement) {
       shortcutsEmptyState.hidden = visibleCount > 0;
     }
+  }
+
+  function renderShortcutCatalog() {
+    if (!(shortcutsList instanceof HTMLElement)) return;
+    shortcutsList.innerHTML = SHORTCUT_CATALOG.map((shortcut) => {
+      const searchText = normalizeShortcutSearchText([
+        shortcut.title,
+        shortcut.description,
+        ...shortcut.keys,
+        ...shortcut.keys.map((key) => formatShortcutLabel(key)),
+        ...(Array.isArray(shortcut.searchTokens) ? shortcut.searchTokens : []),
+      ].join(' '));
+      return `
+        <article class="shortcuts-dialog__item" role="listitem" data-shortcut-id="${shortcut.id}" data-shortcut-search="${searchText}">
+          <div class="shortcuts-dialog__keys">${shortcut.keys.map((key) => `<kbd>${formatShortcutLabel(key)}</kbd>`).join('')}</div>
+          <div class="shortcuts-dialog__meta"><h3>${shortcut.title}</h3><p>${shortcut.description}</p></div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  function syncShortcutUiFromState(state) {
+    const showShortcutsUi = state.settings?.showShortcutsUi !== false;
+    const showToolbarShortcuts = showShortcutsUi && state.settings?.showToolbarShortcutHints === true;
+    if (shortcutsBtn instanceof HTMLElement) {
+      shortcutsBtn.hidden = !showShortcutsUi;
+    }
+    if (!showShortcutsUi && shortcutsDialog?.open) {
+      shortcutsDialog.close();
+    }
+    toolbarShortcutButtons.forEach(({ button, hint, config }) => {
+      if (!(button instanceof HTMLButtonElement) || !(hint instanceof HTMLElement)) return;
+      if (!canUseFileSystemAccess && (button.id === 'open-graph-btn' || button.id === 'save-graph-btn')) {
+        hint.hidden = true;
+        hint.textContent = '';
+        button.classList.remove('toolbar__icon-btn--hinted');
+        return;
+      }
+      const baseLabel = button.id === 'theme-toggle-btn'
+        ? (document.documentElement.dataset.theme === 'dark' ? 'Enable light mode' : 'Enable dark mode')
+        : config.label;
+      const hintVisible = showToolbarShortcuts && typeof config.shortcut === 'string' && config.shortcut.length > 0;
+      const formattedShortcut = formatShortcutLabel(config.shortcut, { compact: true });
+      const spokenShortcut = formatShortcutLabel(config.shortcut);
+      hint.hidden = !hintVisible;
+      hint.textContent = hintVisible ? formattedShortcut : '';
+      button.classList.toggle('toolbar__icon-btn--hinted', hintVisible);
+      button.title = hintVisible ? `${baseLabel} (${spokenShortcut})` : baseLabel;
+      button.setAttribute('aria-label', hintVisible ? `${baseLabel} (${spokenShortcut})` : baseLabel);
+    });
   }
 
   function resetAboutDialog() {
@@ -2309,8 +2624,7 @@ export function bindInteractions(elements, store, options = {}) {
       if (aboutDialog.open) {
         aboutDialog.close();
       } else {
-        resetAboutDialog();
-        aboutDialog.showModal();
+        openAboutDialog();
       }
     });
   }
@@ -2329,14 +2643,7 @@ export function bindInteractions(elements, store, options = {}) {
       shortcutsDialog.close();
       return;
     }
-    filterShortcuts('');
-    if (shortcutsSearchInput instanceof HTMLInputElement) {
-      shortcutsSearchInput.value = '';
-    }
-    shortcutsDialog.showModal();
-    window.requestAnimationFrame(() => {
-      shortcutsSearchInput?.focus({ preventScroll: true });
-    });
+    openShortcutsDialog();
   });
 
   shortcutsCloseBtn?.addEventListener('click', () => {
@@ -2368,8 +2675,7 @@ export function bindInteractions(elements, store, options = {}) {
       if (settingsDialog.open) {
         settingsDialog.close();
       } else {
-        syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
-        settingsDialog.showModal();
+        openSettingsDialog();
       }
     });
   }
@@ -2390,6 +2696,18 @@ export function bindInteractions(elements, store, options = {}) {
     if (event.key !== 'Enter') return;
     event.preventDefault();
     graphNameInput.blur();
+  });
+
+  showShortcutsUiInput?.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    store.setShowShortcutsUi(target.checked);
+  });
+
+  showToolbarShortcutsInput?.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    store.setShowToolbarShortcutHints(target.checked);
   });
 
   settingsDialog?.querySelectorAll('input[name="background-style"]').forEach((input) => {
@@ -2431,10 +2749,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', () => {
-      const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      applyTheme(nextTheme, themeToggleBtn);
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+      toggleThemePreference();
     });
   }
 
@@ -2476,10 +2791,7 @@ export function bindInteractions(elements, store, options = {}) {
     });
   }
 
-  document.getElementById('add-node-btn')?.addEventListener('click', () => {
-    const { viewport } = store.getState();
-    createNodeInEditMode({ x: (120 - viewport.panX) / viewport.zoom, y: (120 - viewport.panY) / viewport.zoom });
-  });
+  document.getElementById('add-node-btn')?.addEventListener('click', handleAddNode);
 
   document.getElementById('add-image-btn')?.addEventListener('click', () => {
     void handleAddImageNode();
@@ -2489,7 +2801,7 @@ export function bindInteractions(elements, store, options = {}) {
     setFrameDrawMode(!isFrameDrawMode);
   });
 
-  document.getElementById('reset-view-btn')?.addEventListener('click', () => store.resetView());
+  document.getElementById('reset-view-btn')?.addEventListener('click', resetCanvasView);
   document.getElementById('undo-btn')?.addEventListener('click', () => store.undo());
   document.getElementById('redo-btn')?.addEventListener('click', () => store.redo());
 
@@ -2534,6 +2846,36 @@ export function bindInteractions(elements, store, options = {}) {
     }
     if (isTypingTarget(event.target)) return;
 
+    if (ctrlOrCmd && event.shiftKey && !event.altKey && event.key.toLowerCase() === 'h') {
+      event.preventDefault();
+      handleNewGraph();
+      return;
+    }
+
+    if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'n') {
+      event.preventDefault();
+      handleAddNodeAtPointer();
+      return;
+    }
+
+    if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'o') {
+      event.preventDefault();
+      void handleOpenGraph();
+      return;
+    }
+
+    if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key === ',') {
+      event.preventDefault();
+      openSettingsDialog();
+      return;
+    }
+
+    if (ctrlOrCmd && !event.altKey && (event.key === '/' || event.key === '?')) {
+      event.preventDefault();
+      openShortcutsDialog();
+      return;
+    }
+
     if (ctrlOrCmd && event.key.toLowerCase() === 'z' && !event.shiftKey) {
       event.preventDefault();
       store.undo();
@@ -2552,6 +2894,12 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
+    if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key === '0') {
+      event.preventDefault();
+      resetCanvasView();
+      return;
+    }
+
     if (ctrlOrCmd && !event.shiftKey && event.key === 'Enter') {
       event.preventDefault();
       toggleSelectedEditor();
@@ -2567,6 +2915,36 @@ export function bindInteractions(elements, store, options = {}) {
     if (ctrlOrCmd && isDirectionalArrowKey(event.key)) {
       event.preventDefault();
       selectDirectionalNode(event.key);
+      return;
+    }
+
+    if (!ctrlOrCmd && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'n') {
+      event.preventDefault();
+      handleAddNode();
+      return;
+    }
+
+    if (!ctrlOrCmd && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'i') {
+      event.preventDefault();
+      void handleAddImageNode();
+      return;
+    }
+
+    if (!ctrlOrCmd && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'f') {
+      event.preventDefault();
+      setFrameDrawMode(!isFrameDrawMode);
+      return;
+    }
+
+    if (!ctrlOrCmd && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 't') {
+      event.preventDefault();
+      toggleThemePreference();
+      return;
+    }
+
+    if (!ctrlOrCmd && !event.altKey && event.shiftKey && event.key === '?') {
+      event.preventDefault();
+      openAboutDialog();
       return;
     }
 
@@ -2641,15 +3019,20 @@ export function bindInteractions(elements, store, options = {}) {
 
   store.subscribe((state) => {
     syncNodeColorButtonState(state, nodeColorBtn, nodeColorPopover);
+    syncShortcutUiFromState(state);
+    syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
   });
 
   resetAboutDialog();
+  renderShortcutCatalog();
   filterShortcuts('');
+  syncShortcutUiFromState(store.getState());
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
   if (options.shouldCreateStarter) {
+    resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
   }
 }
 
@@ -3351,10 +3734,17 @@ function applyTheme(theme, toggleButton) {
   }
 }
 
-function syncSettingsDialogFromState(state, settingsDialog, graphNameInput) {
+function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput) {
   if (!settingsDialog) return;
   if (graphNameInput) {
     graphNameInput.value = state.name;
+  }
+  if (showShortcutsUiInput instanceof HTMLInputElement) {
+    showShortcutsUiInput.checked = state.settings?.showShortcutsUi !== false;
+  }
+  if (showToolbarShortcutsInput instanceof HTMLInputElement) {
+    showToolbarShortcutsInput.checked = state.settings?.showToolbarShortcutHints === true;
+    showToolbarShortcutsInput.disabled = state.settings?.showShortcutsUi === false;
   }
 
   settingsDialog.querySelectorAll('input[name="background-style"]').forEach((input) => {

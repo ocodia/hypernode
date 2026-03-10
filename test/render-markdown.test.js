@@ -126,7 +126,7 @@ test('focus overlay renders constrained focused editor with image pane on the me
   assert.match(focusLayer.innerHTML, /data-node-edit-open="n1"/);
   assert.match(focusLayer.innerHTML, /bi-eye-fill/);
   assert.match(focusLayer.innerHTML, /Read/);
-  assert.match(focusLayer.innerHTML, /Ctrl\/Cmd\+Enter/);
+  assert.match(focusLayer.innerHTML, /(?:Ctrl|Cmd)\+Enter/);
   assert.match(focusLayer.innerHTML, /Exit/);
   assert.match(focusLayer.innerHTML, /Esc/);
   assert.match(focusLayer.innerHTML, /focus-overlay__panel node node--image is-editing/);
@@ -161,7 +161,7 @@ test('focus overlay reading mode uses enlarged labeled fields', () => {
   assert.match(focusLayer.innerHTML, /node__focus-value--description/);
   assert.match(focusLayer.innerHTML, /bi-pencil-fill/);
   assert.match(focusLayer.innerHTML, /Edit/);
-  assert.match(focusLayer.innerHTML, /Ctrl\/Cmd\+Enter/);
+  assert.match(focusLayer.innerHTML, /(?:Ctrl|Cmd)\+Enter/);
 });
 
 test('renderHypernodeMetadata updates name, viewport center coordinates, and document title', () => {
