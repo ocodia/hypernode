@@ -224,6 +224,29 @@ test('focus overlay reading mode uses enlarged labeled fields', () => {
   assert.match(focusLayer.innerHTML, /node__focus-text-column node__focus-text-column--read/);
 });
 
+test('starter node focus overlay hides the start button and uses Begin as the action label', () => {
+  const focusLayer = { innerHTML: '', hidden: true };
+
+  renderFocusOverlay(focusLayer, {
+    nodes: [{
+      id: 'n1',
+      title: 'Starter Node',
+      description: '',
+      kind: 'text',
+      x: 0,
+      y: 0,
+    }],
+    frames: [],
+    edges: [],
+    selection: { type: 'node', id: 'n1' },
+    ui: { focusedNodeId: 'n1', editingNodeId: 'n1', starterNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
+  });
+
+  assert.doesNotMatch(focusLayer.innerHTML, /data-node-start="n1"/);
+  assert.match(focusLayer.innerHTML, /<span>Begin<\/span>/);
+  assert.doesNotMatch(focusLayer.innerHTML, /<span>Done<\/span>/);
+});
+
 test('focus overlay reading mode renders image before title and description', () => {
   const focusLayer = { innerHTML: '', hidden: true };
 

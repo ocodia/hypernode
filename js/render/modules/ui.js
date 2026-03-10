@@ -190,6 +190,7 @@ export function renderFocusOverlay(focusLayer, state) {
         ${buildNodeContentMarkup(node, {
           isEditing: state.ui.editingNodeId === node.id,
           isFocused: true,
+          starterActive,
         })}
       </article>
     </div>

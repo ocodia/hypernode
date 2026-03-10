@@ -22,7 +22,6 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const includeDelete = options.includeDelete !== false;
   const includeStyleControls = options.includeStyleControls !== false;
   const focusActive = Boolean(options.focusActive);
-  const starterActive = Boolean(options.starterActive);
   const toolbarClass = options.toolbarClass || 'node__toolbar';
   const targetIds = Array.isArray(options.targetIds) && options.targetIds.length ? options.targetIds : [nodeId];
   const targetEntity = options.targetEntity || (targetIds.length > 1 ? 'nodes' : 'node');
@@ -46,14 +45,6 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   return `
     <div class="${toolbarClass}" data-toolbar-entity="${targetEntity}" data-toolbar-target-ids="${escapeAttr(targetIds.join(','))}"${toolbarStyle}>
       ${selectionCountLabel}
-      ${starterActive ? `
-        <button class="node__tool-btn entity-toolbar__btn node__tool-btn--primary" type="button" data-node-start="${nodeId}" aria-label="Start hypernode" title="Start hypernode">
-          <i class="bi bi-play-fill"></i>
-          <span class="node__tool-btn-copy">
-            <span class="node__tool-btn-label">Start</span>
-          </span>
-        </button>
-      ` : ''}
       ${includeEdit ? `
         <button class="node__tool-btn entity-toolbar__btn" type="button" data-node-edit-open="${nodeId}" aria-label="${editLabel}" title="${editTitle}" aria-pressed="${editingActive ? 'true' : 'false'}">
           <i class="bi ${editIcon}"></i>
@@ -108,6 +99,7 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
 export function buildNodeContentMarkup(node, options = {}) {
   const editing = Boolean(options.isEditing);
   const focused = Boolean(options.isFocused);
+  const starterActive = Boolean(options.starterActive);
   const imageKind = node.kind === 'image';
   const imageNode = isImageNode(node);
   const hasImageData = typeof node.imageData === 'string' && node.imageData.startsWith('data:image/');
@@ -164,9 +156,9 @@ export function buildNodeContentMarkup(node, options = {}) {
   const focusDoneButtonMarkup = focused
     ? `
       <div class="node__focus-actions">
-        <button class="node__focus-done-btn" type="button" data-node-focus-toggle="${node.id}" aria-label="Exit focus mode" title="Exit Focus">
+        <button class="node__focus-done-btn" type="button" data-node-focus-toggle="${node.id}" aria-label="${starterActive ? 'Begin hypernode' : 'Exit focus mode'}" title="${starterActive ? 'Begin hypernode' : 'Exit Focus'}">
           <i class="bi bi-check-lg"></i>
-          <span>Done</span>
+          <span>${starterActive ? 'Begin' : 'Done'}</span>
         </button>
       </div>
     `
@@ -179,7 +171,7 @@ export function buildNodeContentMarkup(node, options = {}) {
           <div class="node__focus-layout node__focus-layout--edit" data-node-editor="${node.id}">
             <div class="node__focus-text-column node__focus-text-column--edit">
               <div class="node__editor-field node__editor-field--title node__focus-field node__focus-field--title">
-                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" />
+                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" />
               </div>
               <div class="node__editor-field node__editor-field--description node__focus-field node__focus-field--description">
                 <textarea class="node__editor-textarea node__editor-textarea--focus" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
@@ -235,7 +227,7 @@ export function buildNodeContentMarkup(node, options = {}) {
             <div class="node__editor-layout node__editor-layout--canvas-image">
               <div class="node__editor-fields node__editor-fields--canvas-image">
                 <div class="node__editor-field node__editor-field--title">
-                  <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" />
+                  <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" />
                 </div>
                 <div class="node__editor-field node__editor-field--description">
                   <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
@@ -248,7 +240,7 @@ export function buildNodeContentMarkup(node, options = {}) {
             ${mediaMarkup}
             <div class="node__editor-fields">
               <div class="node__editor-field node__editor-field--title">
-                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" />
+                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" />
               </div>
               <div class="node__editor-field node__editor-field--description">
                 <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
