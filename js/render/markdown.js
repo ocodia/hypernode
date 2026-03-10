@@ -67,7 +67,7 @@ export function renderDescriptionMarkdown(text) {
       paragraphLines.push(line.trim());
       index += 1;
     }
-    blocks.push(`<p>${renderInlineMarkdown(paragraphLines.join(' '))}</p>`);
+    blocks.push(`<p>${paragraphLines.map((line) => renderInlineMarkdown(line.trim())).join('<br>')}</p>`);
   }
 
   return blocks.join('');
