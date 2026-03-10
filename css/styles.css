@@ -931,10 +931,10 @@ select:focus-visible {
   align-items: center;
   gap: 6px;
   padding: 4px;
-  border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface) 95%, transparent);
-  box-shadow: var(--overlay-shadow);
+  background: var(--toolbar-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   opacity: 0;
   pointer-events: none;
   transform: translateY(calc(-100% - 6px));
@@ -968,10 +968,10 @@ select:focus-visible {
   left: 0;
   min-width: 180px;
   padding: 10px;
-  border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  box-shadow: var(--overlay-shadow);
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   z-index: 40;
 }
 
@@ -1076,7 +1076,7 @@ select:focus-visible {
   place-items: center;
   padding: 0;
   border: 1px solid transparent;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  background: transparent;
   box-shadow: none;
   border-radius: var(--radius-xs);
   text-align: center;
