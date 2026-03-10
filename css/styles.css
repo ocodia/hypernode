@@ -464,6 +464,10 @@ select:focus-visible {
     var(--bg-major-offset-x) var(--bg-major-offset-y);
 }
 
+.canvas[data-background-style="blank"] {
+  background-image: none;
+}
+
 .canvas[data-background-style="dots"] {
   background-image: radial-gradient(
     circle at var(--bg-dot-origin) var(--bg-dot-origin),
@@ -1800,6 +1804,21 @@ select:focus-visible {
   align-items: center;
   justify-content: center;
   color: color-mix(in srgb, var(--text) 72%, var(--accent));
+}
+
+.workspace-meta__icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+}
+
+.workspace-meta__icon-btn:hover,
+.workspace-meta__icon-btn:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .workspace-meta__separator {
@@ -3337,6 +3356,34 @@ kbd {
   border: 0;
   background: transparent;
   padding: 6px 2px 2px;
+}
+
+.rename-dialog {
+  width: min(460px, calc(100vw - 24px));
+  max-width: none;
+}
+
+.rename-dialog__article {
+  display: grid;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  gap: 16px;
+}
+
+.rename-dialog__body {
+  overflow: visible;
+}
+
+.rename-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.rename-dialog__actions button {
+  min-width: 96px;
+  text-align: center;
 }
 
 .settings-dialog__section--spacious {

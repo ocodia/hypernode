@@ -285,7 +285,6 @@ export function renderNodes(nodesLayer, state) {
   const singleSelectedNodeId = getSingleSelectedNodeId(state.selection);
   const editingNodeId = state.ui.editingNodeId;
   const draft = state.ui.edgeDraft;
-  const showShortcuts = state.settings?.showShortcutsUi !== false;
   const orderedNodes = [...state.nodes].sort((left, right) => {
     const leftPriority = getNodeStackPriority(left.id, selectedNodeIds, editingNodeId);
     const rightPriority = getNodeStackPriority(right.id, selectedNodeIds, editingNodeId);
@@ -320,7 +319,7 @@ export function renderNodes(nodesLayer, state) {
       return `
         <article class="node ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
           ${buildNodeToolbarMarkup(node.id, {
-            showShortcuts,
+            showShortcuts: true,
             colorKey: node.colorKey || '',
             borderWidth: node.borderWidth || 1,
             borderStyle: node.borderStyle || 'solid',

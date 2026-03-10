@@ -1,7 +1,12 @@
 import { createStore } from './state/store.js';
 import { createRenderer } from './render/renderer.js';
 import { bindInteractions } from './interaction/bindings.js';
-import { loadGraphFromStorage, saveGraphToStorage } from './persistence/storage.js';
+import {
+  loadAppSettingsFromStorage,
+  loadGraphFromStorage,
+  saveAppSettingsToStorage,
+  saveGraphToStorage,
+} from './persistence/storage.js';
 
 const elements = {
   workspace: document.getElementById('workspace'),
@@ -24,7 +29,8 @@ const elements = {
 };
 
 const initialGraph = loadGraphFromStorage();
-const store = createStore(initialGraph);
+const initialSettings = loadAppSettingsFromStorage() ?? initialGraph?.settings ?? null;
+const store = createStore(initialGraph, initialSettings);
 const renderer = createRenderer(elements, store);
 
 let saveHandle = null;
@@ -35,11 +41,11 @@ store.subscribe((state) => {
   saveHandle = window.setTimeout(() => {
     saveGraphToStorage({
       name: state.name,
-      settings: state.settings,
       nodes: state.nodes,
       frames: state.frames,
       edges: state.edges,
     });
+    saveAppSettingsToStorage(state.settings);
   }, 120);
 });
 

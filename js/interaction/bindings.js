@@ -2580,9 +2580,13 @@ export function bindInteractions(elements, store, options = {}) {
   const settingsDialog = document.getElementById('settings-dialog');
   const settingsBtn = document.getElementById('settings-btn');
   const settingsCloseBtn = document.getElementById('settings-close-btn');
-  const graphNameInput = document.getElementById('graph-name-input');
   const settingsTabSelect = document.getElementById('settings-tab-select');
-  const showShortcutsUiInput = document.getElementById('show-shortcuts-ui-input');
+  const renameGraphTrigger = document.getElementById('graph-rename-trigger');
+  const renameGraphDialog = document.getElementById('rename-graph-dialog');
+  const renameGraphInput = document.getElementById('rename-graph-input');
+  const renameGraphCloseBtn = document.getElementById('rename-graph-close-btn');
+  const renameGraphCancelBtn = document.getElementById('rename-graph-cancel-btn');
+  const renameGraphSubmitBtn = document.getElementById('rename-graph-submit-btn');
   const settingsTabButtons = settingsDialog?.querySelectorAll('[data-settings-tab]') ?? [];
   const settingsPanels = settingsDialog?.querySelectorAll('[data-settings-panel]') ?? [];
   const positionButtons = settingsDialog?.querySelectorAll('[data-position-target][data-position-value]') ?? [];
@@ -2624,7 +2628,7 @@ export function bindInteractions(elements, store, options = {}) {
       store.clearStarterNode();
       store.replaceGraph(graph);
       resetCanvasView();
-      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+      syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
       store.setImportStatus('Hypernode opened.');
     } catch (error) {
       if (isAbortError(error)) return;
@@ -2642,7 +2646,6 @@ export function bindInteractions(elements, store, options = {}) {
       const state = store.getState();
       currentFileHandle = await saveGraphFile({
         name: state.name,
-        settings: state.settings,
         nodes: state.nodes,
         frames: state.frames,
         edges: state.edges,
@@ -2663,27 +2666,13 @@ export function bindInteractions(elements, store, options = {}) {
     store.clearStarterNode();
     store.replaceGraph({
       name: GRAPH_DEFAULTS.name,
-      settings: {
-        uiThemePreset: GRAPH_DEFAULTS.uiThemePreset,
-        uiRadiusPreset: GRAPH_DEFAULTS.uiRadiusPreset,
-        toolbarPosition: GRAPH_DEFAULTS.toolbarPosition,
-        toolbarOrientation: GRAPH_DEFAULTS.toolbarOrientation,
-        toastPosition: GRAPH_DEFAULTS.toastPosition,
-        metaPosition: GRAPH_DEFAULTS.metaPosition,
-        backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
-        anchorsMode: GRAPH_DEFAULTS.anchorsMode,
-        arrowheads: GRAPH_DEFAULTS.arrowheads,
-        arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
-        showShortcutsUi: GRAPH_DEFAULTS.showShortcutsUi,
-        nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
-      },
       nodes: [],
       frames: [],
       edges: [],
     });
     resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   }
 
   async function handleAddImageNode() {
@@ -2727,7 +2716,6 @@ export function bindInteractions(elements, store, options = {}) {
 
   function openShortcutsDialog() {
     if (!shortcutsDialog) return;
-    if (store.getState().settings?.showShortcutsUi === false) return;
     renderShortcutCatalog();
     if (shortcutsSearchInput instanceof HTMLInputElement) {
       shortcutsSearchInput.value = '';
@@ -2741,8 +2729,27 @@ export function bindInteractions(elements, store, options = {}) {
 
   function openSettingsDialog() {
     if (!settingsDialog) return;
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
     settingsDialog.showModal();
+  }
+
+  function openRenameGraphDialog() {
+    if (!renameGraphDialog) return;
+    if (renameGraphInput instanceof HTMLInputElement) {
+      renameGraphInput.value = store.getState().name;
+    }
+    renameGraphDialog.showModal();
+    window.requestAnimationFrame(() => {
+      renameGraphInput?.focus({ preventScroll: true });
+      renameGraphInput?.select();
+    });
+  }
+
+  function submitRenameGraph() {
+    if (!(renameGraphInput instanceof HTMLInputElement)) return;
+    store.clearStarterNode();
+    store.setGraphName(renameGraphInput.value);
+    renameGraphDialog?.close();
   }
 
   function openAboutDialog() {
@@ -2812,8 +2819,8 @@ export function bindInteractions(elements, store, options = {}) {
     const availableTabIds = Array.from(settingsTabButtons)
       .map((button) => button instanceof HTMLElement ? button.dataset.settingsTab : null)
       .filter(Boolean);
-    const requestedTabId = typeof nextTabId === 'string' && nextTabId ? nextTabId : 'general';
-    const tabId = availableTabIds.includes(requestedTabId) ? requestedTabId : (availableTabIds[0] || 'general');
+    const requestedTabId = typeof nextTabId === 'string' && nextTabId ? nextTabId : 'appearance';
+    const tabId = availableTabIds.includes(requestedTabId) ? requestedTabId : (availableTabIds[0] || 'appearance');
     settingsTabButtons.forEach((button) => {
       if (!(button instanceof HTMLButtonElement)) return;
       const active = button.dataset.settingsTab === tabId;
@@ -2859,14 +2866,7 @@ export function bindInteractions(elements, store, options = {}) {
     shortcutsList._shortcutSearchIndex = searchIndex;
   }
 
-  function syncShortcutUiFromState(state) {
-    const showShortcutsUi = state.settings?.showShortcutsUi !== false;
-    if (shortcutsBtn instanceof HTMLElement) {
-      shortcutsBtn.hidden = !showShortcutsUi;
-    }
-    if (!showShortcutsUi && shortcutsDialog?.open) {
-      shortcutsDialog.close();
-    }
+  function syncShortcutUiFromState() {
     toolbarShortcutButtons.forEach(({ button, hint, config }) => {
       if (!(button instanceof HTMLButtonElement) || !(hint instanceof HTMLElement)) return;
       if (!canUseFileSystemAccess && (button.id === 'open-graph-btn' || button.id === 'save-graph-btn')) {
@@ -2893,6 +2893,7 @@ export function bindInteractions(elements, store, options = {}) {
   bindDialogBackdropClose(aboutDialog);
   bindDialogBackdropClose(shortcutsDialog);
   bindDialogBackdropClose(settingsDialog);
+  bindDialogBackdropClose(renameGraphDialog);
 
   if (aboutBtn && aboutDialog) {
     aboutBtn.addEventListener('click', () => {
@@ -2985,21 +2986,30 @@ export function bindInteractions(elements, store, options = {}) {
     setActiveSettingsTab(settingsTabSelect.value, { focusButton: false });
   });
 
-  graphNameInput?.addEventListener('change', () => {
-    store.clearStarterNode();
-    store.setGraphName(graphNameInput.value);
-  });
-
-  graphNameInput?.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter') return;
+  renameGraphTrigger?.addEventListener('dblclick', (event) => {
     event.preventDefault();
-    graphNameInput.blur();
+    openRenameGraphDialog();
   });
 
-  showShortcutsUiInput?.addEventListener('change', (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLInputElement)) return;
-    store.setShowShortcutsUi(target.checked);
+  renameGraphCloseBtn?.addEventListener('click', () => {
+    if (renameGraphDialog?.open) {
+      renameGraphDialog.close();
+    }
+  });
+
+  renameGraphCancelBtn?.addEventListener('click', () => {
+    if (renameGraphDialog?.open) {
+      renameGraphDialog.close();
+    }
+  });
+
+  renameGraphSubmitBtn?.addEventListener('click', submitRenameGraph);
+
+  renameGraphInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      submitRenameGraph();
+    }
   });
 
   positionButtons.forEach((button) => {
@@ -3126,7 +3136,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   function bindKeyboard() {
   document.addEventListener('keydown', (event) => {
-    if (aboutDialog?.open || shortcutsDialog?.open || settingsDialog?.open) return;
+    if (aboutDialog?.open || shortcutsDialog?.open || settingsDialog?.open || renameGraphDialog?.open) return;
     if (event.key === 'Escape' && openToolbarPopoverEl) {
       event.preventDefault();
       closeToolbarPopover();
@@ -3324,21 +3334,21 @@ export function bindInteractions(elements, store, options = {}) {
     if (openToolbarPopoverEl && !document.body.contains(openToolbarPopoverEl)) {
       openToolbarPopoverEl = null;
     }
-    syncShortcutUiFromState(state);
-    syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    syncShortcutUiFromState();
+    syncSettingsDialogFromState(state, settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   });
 
   resetAboutDialog();
   renderShortcutCatalog();
   filterShortcuts('');
-  syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
-  syncShortcutUiFromState(store.getState());
+  syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+  syncShortcutUiFromState();
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
   if (options.shouldCreateStarter) {
     resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   }
 }
 
@@ -4033,8 +4043,6 @@ function isAbortError(error) {
 function syncSettingsDialogFromState(
   state,
   settingsDialog,
-  graphNameInput,
-  showShortcutsUiInput,
   positionButtons = [],
   toolbarOrientationButtons = [],
   settingsTabSelect = null,
@@ -4042,12 +4050,9 @@ function syncSettingsDialogFromState(
   settingsPanels = [],
 ) {
   if (!settingsDialog) return;
-  if (graphNameInput) {
-    graphNameInput.value = state.name;
-  }
   const activeTab = Array.from(settingsTabButtons)
     .find((button) => button instanceof HTMLElement && button.classList.contains('is-active'))
-    ?.dataset?.settingsTab || settingsTabSelect?.value || 'general';
+    ?.dataset?.settingsTab || settingsTabSelect?.value || 'appearance';
   settingsTabButtons.forEach((button) => {
     if (!(button instanceof HTMLButtonElement)) return;
     const active = button.dataset.settingsTab === activeTab;
@@ -4063,9 +4068,6 @@ function syncSettingsDialogFromState(
   });
   if (settingsTabSelect instanceof HTMLSelectElement) {
     settingsTabSelect.value = activeTab;
-  }
-  if (showShortcutsUiInput instanceof HTMLInputElement) {
-    showShortcutsUiInput.checked = state.settings?.showShortcutsUi !== false;
   }
   syncPositionPickers(state, settingsDialog, positionButtons, toolbarOrientationButtons);
 

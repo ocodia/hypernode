@@ -1,4 +1,5 @@
 import {
+  APP_SETTINGS_DEFAULTS,
   FRAME_DEFAULTS,
   GRAPH_DEFAULTS,
   IMAGE_NODE_DEFAULTS,
@@ -15,7 +16,7 @@ import {
 } from './ui-placement.js';
 
 const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
-const BACKGROUND_STYLES = new Set(['dots', 'graph-paper']);
+const BACKGROUND_STYLES = new Set(['blank', 'dots', 'graph-paper']);
 const ANCHORS_MODES = new Set(['auto', 'exact']);
 const ARROWHEADS_MODES = new Set(['shown', 'hidden']);
 const UI_THEME_PRESETS = new Set(['blueprint', 'fjord', 'slate', 'paper', 'ember', 'soft-black']);
@@ -28,20 +29,7 @@ const FRAME_BORDER_STYLES = new Set(['solid', 'dashed', 'dotted']);
 export function emptyGraphState() {
   return {
     name: GRAPH_DEFAULTS.name,
-    settings: {
-      uiThemePreset: GRAPH_DEFAULTS.uiThemePreset,
-      uiRadiusPreset: GRAPH_DEFAULTS.uiRadiusPreset,
-      toolbarPosition: GRAPH_DEFAULTS.toolbarPosition,
-      toolbarOrientation: GRAPH_DEFAULTS.toolbarOrientation,
-      toastPosition: GRAPH_DEFAULTS.toastPosition,
-      metaPosition: GRAPH_DEFAULTS.metaPosition,
-      backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
-      anchorsMode: GRAPH_DEFAULTS.anchorsMode,
-      arrowheads: GRAPH_DEFAULTS.arrowheads,
-      arrowheadSizeStep: GRAPH_DEFAULTS.arrowheadSizeStep,
-      showShortcutsUi: GRAPH_DEFAULTS.showShortcutsUi,
-      nodeColorDefault: GRAPH_DEFAULTS.nodeColorDefault,
-    },
+    settings: sanitizeAppSettings(),
     nodes: [],
     frames: [],
     edges: [],
@@ -165,7 +153,7 @@ export function sanitizeEdge(edge) {
 }
 
 export function validateGraphPayload(payload) {
-  if (!payload || typeof payload.name !== 'string' || !payload.settings || !Array.isArray(payload.nodes) || !Array.isArray(payload.edges)) {
+  if (!payload || typeof payload.name !== 'string' || !Array.isArray(payload.nodes) || !Array.isArray(payload.edges)) {
     return false;
   }
 
@@ -173,31 +161,31 @@ export function validateGraphPayload(payload) {
     return false;
   }
 
-  const hasValidUiThemePreset = payload.settings.uiThemePreset === undefined
-    || normalizeUiThemePreset(payload.settings.uiThemePreset) !== null;
-  const hasValidUiRadiusPreset = payload.settings.uiRadiusPreset === undefined
-    || normalizeUiRadiusPreset(payload.settings.uiRadiusPreset) !== null;
-  const hasValidToolbarPosition = payload.settings.toolbarPosition === undefined
-    || normalizeToolbarPosition(payload.settings.toolbarPosition, null) !== null;
-  const hasValidToolbarOrientation = payload.settings.toolbarOrientation === undefined
-    || isValidToolbarOrientation(payload.settings.toolbarOrientation);
-  const hasValidToastPosition = payload.settings.toastPosition === undefined
-    || isValidCornerPosition(payload.settings.toastPosition);
-  const hasValidMetaPosition = payload.settings.metaPosition === undefined
-    || isValidCornerPosition(payload.settings.metaPosition);
-  const hasValidCoreSettings = isValidBackgroundStyle(payload.settings.backgroundStyle);
-  const hasValidAnchorsMode = payload.settings.anchorsMode === undefined
-    || isValidAnchorsMode(payload.settings.anchorsMode);
-  const hasValidArrowheadsMode = payload.settings.arrowheads === undefined
-    || isValidArrowheadsMode(payload.settings.arrowheads);
-  const hasValidArrowheadSizeStep = payload.settings.arrowheadSizeStep === undefined
-    || isValidArrowheadSizeStep(payload.settings.arrowheadSizeStep);
-  const hasValidShowShortcutsUi = payload.settings.showShortcutsUi === undefined
-    || typeof payload.settings.showShortcutsUi === 'boolean';
-  const hasValidNodeColorDefault = payload.settings.nodeColorDefault === undefined
-    || payload.settings.nodeColorDefault === null
-    || isValidNodeColorKey(payload.settings.nodeColorDefault);
-  if (!hasValidUiThemePreset || !hasValidUiRadiusPreset || !hasValidToolbarPosition || !hasValidToolbarOrientation || !hasValidToastPosition || !hasValidMetaPosition || !hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidShowShortcutsUi || !hasValidNodeColorDefault) {
+  const settings = payload.settings ?? {};
+  const hasValidUiThemePreset = settings.uiThemePreset === undefined
+    || normalizeUiThemePreset(settings.uiThemePreset) !== null;
+  const hasValidUiRadiusPreset = settings.uiRadiusPreset === undefined
+    || normalizeUiRadiusPreset(settings.uiRadiusPreset) !== null;
+  const hasValidToolbarPosition = settings.toolbarPosition === undefined
+    || normalizeToolbarPosition(settings.toolbarPosition, null) !== null;
+  const hasValidToolbarOrientation = settings.toolbarOrientation === undefined
+    || isValidToolbarOrientation(settings.toolbarOrientation);
+  const hasValidToastPosition = settings.toastPosition === undefined
+    || isValidCornerPosition(settings.toastPosition);
+  const hasValidMetaPosition = settings.metaPosition === undefined
+    || isValidCornerPosition(settings.metaPosition);
+  const hasValidCoreSettings = settings.backgroundStyle === undefined
+    || isValidBackgroundStyle(settings.backgroundStyle);
+  const hasValidAnchorsMode = settings.anchorsMode === undefined
+    || isValidAnchorsMode(settings.anchorsMode);
+  const hasValidArrowheadsMode = settings.arrowheads === undefined
+    || isValidArrowheadsMode(settings.arrowheads);
+  const hasValidArrowheadSizeStep = settings.arrowheadSizeStep === undefined
+    || isValidArrowheadSizeStep(settings.arrowheadSizeStep);
+  const hasValidNodeColorDefault = settings.nodeColorDefault === undefined
+    || settings.nodeColorDefault === null
+    || isValidNodeColorKey(settings.nodeColorDefault);
+  if (!hasValidUiThemePreset || !hasValidUiRadiusPreset || !hasValidToolbarPosition || !hasValidToolbarOrientation || !hasValidToastPosition || !hasValidMetaPosition || !hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidNodeColorDefault) {
     return false;
   }
 
@@ -239,33 +227,30 @@ export function sanitizeGraphName(name) {
   return text || GRAPH_DEFAULTS.name;
 }
 
-export function sanitizeGraphSettings(settings) {
+export function sanitizeAppSettings(settings) {
   const sanitized = {
-    uiThemePreset: normalizeUiThemePreset(settings?.uiThemePreset) ?? GRAPH_DEFAULTS.uiThemePreset,
-    uiRadiusPreset: normalizeUiRadiusPreset(settings?.uiRadiusPreset) ?? GRAPH_DEFAULTS.uiRadiusPreset,
-    toolbarPosition: normalizeToolbarPosition(settings?.toolbarPosition, GRAPH_DEFAULTS.toolbarPosition),
+    uiThemePreset: normalizeUiThemePreset(settings?.uiThemePreset) ?? APP_SETTINGS_DEFAULTS.uiThemePreset,
+    uiRadiusPreset: normalizeUiRadiusPreset(settings?.uiRadiusPreset) ?? APP_SETTINGS_DEFAULTS.uiRadiusPreset,
+    toolbarPosition: normalizeToolbarPosition(settings?.toolbarPosition, APP_SETTINGS_DEFAULTS.toolbarPosition),
     toolbarOrientation: isValidToolbarOrientation(settings?.toolbarOrientation)
       ? settings.toolbarOrientation
-      : GRAPH_DEFAULTS.toolbarOrientation,
+      : APP_SETTINGS_DEFAULTS.toolbarOrientation,
     toastPosition: isValidCornerPosition(settings?.toastPosition)
       ? settings.toastPosition
-      : GRAPH_DEFAULTS.toastPosition,
+      : APP_SETTINGS_DEFAULTS.toastPosition,
     metaPosition: isValidCornerPosition(settings?.metaPosition)
       ? settings.metaPosition
-      : GRAPH_DEFAULTS.metaPosition,
+      : APP_SETTINGS_DEFAULTS.metaPosition,
     backgroundStyle: isValidBackgroundStyle(settings?.backgroundStyle)
       ? settings.backgroundStyle
-      : GRAPH_DEFAULTS.backgroundStyle,
+      : APP_SETTINGS_DEFAULTS.backgroundStyle,
     anchorsMode: isValidAnchorsMode(settings?.anchorsMode)
       ? settings.anchorsMode
-      : GRAPH_DEFAULTS.anchorsMode,
+      : APP_SETTINGS_DEFAULTS.anchorsMode,
     arrowheads: isValidArrowheadsMode(settings?.arrowheads)
       ? settings.arrowheads
-      : GRAPH_DEFAULTS.arrowheads,
+      : APP_SETTINGS_DEFAULTS.arrowheads,
     arrowheadSizeStep: sanitizeArrowheadSizeStep(settings?.arrowheadSizeStep),
-    showShortcutsUi: typeof settings?.showShortcutsUi === 'boolean'
-      ? settings.showShortcutsUi
-      : GRAPH_DEFAULTS.showShortcutsUi,
     nodeColorDefault: sanitizeNodeColorKey(settings?.nodeColorDefault),
   };
   const resolvedPlacement = getAnchoredUiPlacement(sanitized);
@@ -335,7 +320,7 @@ function isValidArrowheadSizeStep(value) {
 function sanitizeArrowheadSizeStep(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) {
-    return GRAPH_DEFAULTS.arrowheadSizeStep;
+    return APP_SETTINGS_DEFAULTS.arrowheadSizeStep;
   }
   const rounded = Math.round(numeric);
   if (rounded < ARROWHEAD_SIZE_STEP_MIN) return ARROWHEAD_SIZE_STEP_MIN;

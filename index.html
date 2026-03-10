@@ -59,7 +59,9 @@
       <div id="focus-layer" class="focus-overlay" hidden></div>
       <div id="toasts" class="toast" aria-live="polite" hidden></div>
       <div class="workspace-meta" aria-live="polite">
-        <span class="workspace-meta__icon" aria-hidden="true"><i class="bi bi-file-earmark-text"></i></span>
+        <button id="graph-rename-trigger" class="workspace-meta__icon workspace-meta__icon-btn" type="button" aria-label="Rename hypernode">
+          <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+        </button>
         <div class="workspace-meta__name" id="graph-title">Untitled hypernode</div>
         <div class="workspace-meta__separator" aria-hidden="true">-</div>
         <div class="workspace-meta__coords" id="viewport-coordinates">x: 0  y: 0</div>
@@ -152,29 +154,21 @@
           <div class="settings-dialog__nav">
             <label class="settings-dialog__tab-select-label" for="settings-tab-select">Section</label>
             <select id="settings-tab-select" class="settings-dialog__tab-select" aria-label="Settings section">
-              <option value="general">General</option>
               <option value="appearance">Appearance</option>
               <option value="interface">Interface</option>
               <option value="canvas">Canvas</option>
             </select>
             <div class="settings-dialog__tabs" role="tablist" aria-label="Settings sections">
-              <button type="button" class="settings-dialog__tab is-active" id="settings-tab-general" role="tab" aria-selected="true" aria-controls="settings-panel-general" data-settings-tab="general">General</button>
-              <button type="button" class="settings-dialog__tab" id="settings-tab-appearance" role="tab" aria-selected="false" aria-controls="settings-panel-appearance" data-settings-tab="appearance" tabindex="-1">Appearance</button>
+              <button type="button" class="settings-dialog__tab is-active" id="settings-tab-appearance" role="tab" aria-selected="true" aria-controls="settings-panel-appearance" data-settings-tab="appearance">Appearance</button>
               <button type="button" class="settings-dialog__tab" id="settings-tab-interface" role="tab" aria-selected="false" aria-controls="settings-panel-interface" data-settings-tab="interface" tabindex="-1">Interface</button>
               <button type="button" class="settings-dialog__tab" id="settings-tab-canvas" role="tab" aria-selected="false" aria-controls="settings-panel-canvas" data-settings-tab="canvas" tabindex="-1">Canvas</button>
             </div>
           </div>
           <div class="settings-dialog__panels">
-            <section class="settings-dialog__panel is-active" id="settings-panel-general" role="tabpanel" aria-labelledby="settings-tab-general" data-settings-panel="general">
-              <div class="settings-dialog__section settings-dialog__section--plain">
-                <label class="settings-dialog__label" for="graph-name-input">Name</label>
-                <input id="graph-name-input" class="settings-dialog__input" type="text" maxlength="120" />
-              </div>
-            </section>
-            <section class="settings-dialog__panel" id="settings-panel-appearance" role="tabpanel" aria-labelledby="settings-tab-appearance" data-settings-panel="appearance" hidden>
+            <section class="settings-dialog__panel is-active" id="settings-panel-appearance" role="tabpanel" aria-labelledby="settings-tab-appearance" data-settings-panel="appearance">
               <fieldset class="settings-dialog__section settings-dialog__section--spacious">
                 <legend>Theme</legend>
-                <p class="settings-dialog__hint">Document-level UI presets apply to dialogs, controls, nodes, frames, and focus surfaces.</p>
+                <p class="settings-dialog__hint">System-wide UI presets apply immediately and become the default for the next hypernode.</p>
                 <label class="settings-dialog__option">
                   <input type="radio" name="ui-theme-preset" value="blueprint" />
                   Blueprint
@@ -218,18 +212,6 @@
               </fieldset>
             </section>
             <section class="settings-dialog__panel" id="settings-panel-interface" role="tabpanel" aria-labelledby="settings-tab-interface" data-settings-panel="interface" hidden>
-              <label class="settings-dialog__section settings-dialog__section--switch" for="show-shortcuts-ui-input">
-                <span class="settings-dialog__switch-row">
-                  <span class="settings-dialog__switch-copy">
-                    <span class="settings-dialog__switch-label">Show shortcuts in UI</span>
-                    <span class="settings-dialog__hint">Controls inline shortcut hints and the keyboard shortcuts button/dialog. Keyboard commands still work when hidden.</span>
-                  </span>
-                  <span class="settings-dialog__switch">
-                    <input id="show-shortcuts-ui-input" class="settings-dialog__switch-input" type="checkbox" />
-                    <span class="settings-dialog__switch-ui" aria-hidden="true"></span>
-                  </span>
-                </span>
-              </label>
               <fieldset class="settings-dialog__section">
                 <legend>Toolbar</legend>
                 <p class="settings-dialog__hint">Anchor the main toolbar to a corner. Conflicts auto-resolve to the nearest open slot.</p>
@@ -274,6 +256,10 @@
             <section class="settings-dialog__panel" id="settings-panel-canvas" role="tabpanel" aria-labelledby="settings-tab-canvas" data-settings-panel="canvas" hidden>
               <fieldset class="settings-dialog__section">
                 <legend>Background</legend>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="background-style" value="blank" />
+                  Blank
+                </label>
                 <label class="settings-dialog__option">
                   <input type="radio" name="background-style" value="dots" />
                   Dots
@@ -320,6 +306,27 @@
                 <p id="arrowhead-size-value" class="settings-dialog__hint">Level 1 (100%)</p>
               </fieldset>
             </section>
+          </div>
+        </div>
+      </article>
+    </dialog>
+    <dialog id="rename-graph-dialog" class="app-dialog rename-dialog">
+      <article class="app-dialog__article rename-dialog__article">
+        <header class="about-dialog__header">
+          <div class="about-dialog__titlebar">
+            <span class="about-dialog__title-icon" aria-hidden="true"><i class="bi bi-input-cursor-text"></i></span>
+            <h2>Rename Hypernode</h2>
+          </div>
+          <button id="rename-graph-close-btn" type="button" aria-label="Close rename dialog"><i class="bi bi-x-lg"></i></button>
+        </header>
+        <div class="app-dialog__body rename-dialog__body">
+          <label class="settings-dialog__section settings-dialog__section--plain" for="rename-graph-input">
+            <span class="settings-dialog__label">Name</span>
+            <input id="rename-graph-input" class="settings-dialog__input" type="text" maxlength="120" />
+          </label>
+          <div class="rename-dialog__actions">
+            <button id="rename-graph-cancel-btn" class="app-dialog__secondary-btn" type="button">Cancel</button>
+            <button id="rename-graph-submit-btn" class="app-dialog__primary-btn" type="button">Rename</button>
           </div>
         </div>
       </article>

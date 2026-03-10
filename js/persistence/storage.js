@@ -1,5 +1,5 @@
-import { STORAGE_KEY } from '../utils/constants.js';
-import { validateGraphPayload } from '../utils/graph.js';
+import { SETTINGS_STORAGE_KEY, STORAGE_KEY } from '../utils/constants.js';
+import { sanitizeAppSettings, validateGraphPayload } from '../utils/graph.js';
 
 export function loadGraphFromStorage() {
   try {
@@ -16,10 +16,23 @@ export function loadGraphFromStorage() {
 export function saveGraphToStorage(graph) {
   const payload = JSON.stringify({
     name: graph.name,
-    settings: graph.settings,
     nodes: graph.nodes,
     frames: graph.frames,
     edges: graph.edges,
   });
   localStorage.setItem(STORAGE_KEY, payload);
+}
+
+export function loadAppSettingsFromStorage() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return null;
+    return sanitizeAppSettings(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+export function saveAppSettingsToStorage(settings) {
+  localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(sanitizeAppSettings(settings)));
 }

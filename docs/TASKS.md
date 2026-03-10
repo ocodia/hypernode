@@ -81,28 +81,28 @@ Last updated: 2026-03-07
   - `auto-anchor` uses nearest anchor between nodes for create/reconnect/render
   - `exact anchor` keeps the committed start/destination anchors fixed as nodes move
   - applies consistently across create and reconnect flows
-  - persists in graph payload and survives reload/open/save/new + undo/redo (`FR-11`, `FR-15`, `NFR-1`)
+  - persists as a system-wide default and survives reload/open/save/new without entering document undo/redo (`FR-11`, `FR-15`, `NFR-1`)
 - [x] Add graph naming:
-  - editable graph name field in Settings
+  - editable graph name from canvas metadata
   - show graph name in the app title/header so users can confirm active graph
   - persist graph name in `localStorage` and graph file payload
 - [x] Add edge arrowheads setting:
   - `Arrowheads` toggle (`show` / `hide`) in Settings
   - renders on committed edges only (not draft preview)
   - arrowheads point toward destination anchors and rotate with edge approach angle
-  - persists in graph payload and survives reload/open/save/new + undo/redo
+  - persists as a system-wide default and survives reload/open/save/new without entering document undo/redo
 - [x] Add arrowhead size control:
   - range slider with `10` levels
   - level `1` keeps current baseline size (`100%`)
   - each level increases size by `20%` (up to `280%`)
-  - persists in graph payload and survives reload/open/save/new + undo/redo
-- [ ] Add regression checks for settings persistence across:
+  - persists as a system-wide default and survives reload/open/save/new without entering document undo/redo
+- [ ] Add regression checks for system-wide settings persistence across:
   - reload
   - open/save/new graph flows
   - undo/redo interactions involving edge reconnection behavior
   - undo/redo interactions involving arrowheads toggle and size slider
 - [ ] Add regression checks for zoom-aware background behavior:
-  - verify both background styles at zoom levels `0.35`, `1.0`, and `2.5`
+  - verify `blank`, `dots`, and `graph paper` at zoom levels `0.35`, `1.0`, and `2.5`
   - verify style switching while zoomed/panned preserves alignment
   - verify reset view restores expected baseline spacing/alignment behavior
   - at `0.35`, minor lines/dots are visibly reduced while major grid remains readable
@@ -118,7 +118,7 @@ Last updated: 2026-03-07
 4. Implement dark mode.
 5. Implement File System Access API open/save/new graph workflow and replace import/export UI actions.
 6. Add Settings button and settings panel shell.
-7. Implement background style options (graph paper/dots) with persistence.
+7. Implement background style options (`blank`/`graph paper`/`dots`) with persistence.
 8. Implement zoom-aware, world-locked background pattern scaling (grid/dots) and run targeted regression checks.
 9. Implement consolidated Anchors mode (auto-anchor vs exact anchor).
 10. Implement graph naming and surface it in app title/header.

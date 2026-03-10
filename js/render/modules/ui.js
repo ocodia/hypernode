@@ -30,8 +30,6 @@ export function renderSelectionControls(selectionControlsLayer, state) {
   const node = selectedNodeId ? state.nodes.find((item) => item.id === selectedNodeId) : null;
   const frame = selectedFrameId ? state.frames.find((item) => item.id === selectedFrameId) : null;
   const selectedNodeIds = getSelectedNodeIds(state.selection);
-  const showShortcuts = state.settings?.showShortcutsUi !== false;
-
   let markup = '';
 
   if (frame) {
@@ -108,7 +106,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
           colorKey: uniformColorKey,
           borderWidth: uniformBorderWidth,
           borderStyle: uniformBorderStyle,
-          showShortcuts,
+          showShortcuts: true,
         })}
       </div>
     `;
@@ -135,7 +133,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
         ${buildNodeToolbarMarkup(node.id, {
           toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--node',
           editingActive: editingNodeId === node.id,
-          showShortcuts,
+          showShortcuts: true,
           colorKey: node.colorKey || '',
           borderWidth: node.borderWidth || 1,
           borderStyle: node.borderStyle || 'solid',
@@ -184,7 +182,7 @@ export function renderFocusOverlay(focusLayer, state) {
         colorKey: node.colorKey || '',
         borderWidth: node.borderWidth || 1,
         borderStyle: node.borderStyle || 'solid',
-        showShortcuts: state.settings?.showShortcutsUi !== false,
+        showShortcuts: true,
       })}
       <article class="focus-overlay__panel node ${node.kind === 'image' ? 'node--image' : ''}${state.ui.editingNodeId === node.id ? ' is-editing' : ''}" data-node-id="${node.id}"${colorAttr} style="${focusPanelStyle}">
         ${buildNodeContentMarkup(node, {

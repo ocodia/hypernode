@@ -1,4 +1,5 @@
 export const STORAGE_KEY = "hypernode.graph.v2";
+export const SETTINGS_STORAGE_KEY = "hypernode.settings.v1";
 export const VIEWPORT_LIMITS = {
   minZoom: 0.35,
   maxZoom: 2.5,
@@ -53,6 +54,9 @@ export const NODE_COLOR_KEYS = [
 
 export const GRAPH_DEFAULTS = {
   name: "Untitled hypernode",
+};
+
+export const APP_SETTINGS_DEFAULTS = {
   uiThemePreset: "blueprint",
   uiRadiusPreset: "rounded",
   toolbarPosition: "top-left",
@@ -63,7 +67,6 @@ export const GRAPH_DEFAULTS = {
   anchorsMode: "auto",
   arrowheads: "shown",
   arrowheadSizeStep: 0,
-  showShortcutsUi: true,
   nodeColorDefault: null,
 };
 

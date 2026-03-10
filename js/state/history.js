@@ -4,7 +4,6 @@ export function createHistoryManager(state) {
   function snapshot() {
     return {
       name: state.name,
-      settings: structuredClone(state.settings),
       nodes: structuredClone(state.nodes),
       frames: structuredClone(state.frames),
       edges: structuredClone(state.edges),

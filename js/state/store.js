@@ -5,7 +5,7 @@ import {
   sanitizeEdge,
   sanitizeFrame,
   sanitizeGraphName,
-  sanitizeGraphSettings,
+  sanitizeAppSettings,
   sanitizeNode,
 } from '../utils/graph.js';
 import {
@@ -32,11 +32,11 @@ import {
 import { createHistoryManager } from './history.js';
 import { clearTransientUiState } from './ui.js';
 
-export function createStore(initialGraph = null) {
+export function createStore(initialGraph = null, initialSettings = null) {
   const state = emptyGraphState();
+  state.settings = sanitizeAppSettings(initialSettings);
   if (initialGraph) {
     state.name = sanitizeGraphName(initialGraph.name);
-    state.settings = sanitizeGraphSettings(initialGraph.settings);
     state.frames = (Array.isArray(initialGraph.frames) ? initialGraph.frames : []).map(sanitizeFrame);
     const frameIds = new Set(state.frames.map((frame) => frame.id));
     state.nodes = initialGraph.nodes.map((node) => sanitizeNode(node, frameIds));
@@ -907,101 +907,53 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
-  function setBackgroundStyle(backgroundStyle) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, backgroundStyle }).backgroundStyle;
-    if (state.settings.backgroundStyle === nextValue) return;
-    pushHistory('set-background-style');
-    state.settings.backgroundStyle = nextValue;
+  function updateAppSettings(partialSettings) {
+    const nextSettings = sanitizeAppSettings({ ...state.settings, ...partialSettings });
+    const changed = Object.keys(nextSettings).some((key) => state.settings[key] !== nextSettings[key]);
+    if (!changed) return false;
+    state.settings = nextSettings;
     notify();
+    return true;
+  }
+
+  function setBackgroundStyle(backgroundStyle) {
+    updateAppSettings({ backgroundStyle });
   }
 
   function setUiThemePreset(uiThemePreset) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, uiThemePreset }).uiThemePreset;
-    if (state.settings.uiThemePreset === nextValue) return;
-    pushHistory('set-ui-theme-preset');
-    state.settings.uiThemePreset = nextValue;
-    notify();
+    updateAppSettings({ uiThemePreset });
   }
 
   function setUiRadiusPreset(uiRadiusPreset) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, uiRadiusPreset }).uiRadiusPreset;
-    if (state.settings.uiRadiusPreset === nextValue) return;
-    pushHistory('set-ui-radius-preset');
-    state.settings.uiRadiusPreset = nextValue;
-    notify();
+    updateAppSettings({ uiRadiusPreset });
   }
 
   function setToolbarPosition(toolbarPosition) {
-    const nextSettings = sanitizeGraphSettings({ ...state.settings, toolbarPosition });
-    const unchanged = state.settings.toolbarPosition === nextSettings.toolbarPosition
-      && state.settings.toolbarOrientation === nextSettings.toolbarOrientation
-      && state.settings.toastPosition === nextSettings.toastPosition
-      && state.settings.metaPosition === nextSettings.metaPosition;
-    if (unchanged) return;
-    pushHistory('set-toolbar-position');
-    state.settings.toolbarPosition = nextSettings.toolbarPosition;
-    state.settings.toastPosition = nextSettings.toastPosition;
-    state.settings.metaPosition = nextSettings.metaPosition;
-    notify();
+    updateAppSettings({ toolbarPosition });
   }
 
   function setToolbarOrientation(toolbarOrientation) {
-    const nextSettings = sanitizeGraphSettings({ ...state.settings, toolbarOrientation });
-    if (state.settings.toolbarOrientation === nextSettings.toolbarOrientation) return;
-    pushHistory('set-toolbar-orientation');
-    state.settings.toolbarOrientation = nextSettings.toolbarOrientation;
-    notify();
+    updateAppSettings({ toolbarOrientation });
   }
 
   function setToastPosition(toastPosition) {
-    const nextSettings = sanitizeGraphSettings({ ...state.settings, toastPosition });
-    const unchanged = state.settings.toastPosition === nextSettings.toastPosition
-      && state.settings.metaPosition === nextSettings.metaPosition;
-    if (unchanged) return;
-    pushHistory('set-toast-position');
-    state.settings.toastPosition = nextSettings.toastPosition;
-    state.settings.metaPosition = nextSettings.metaPosition;
-    notify();
+    updateAppSettings({ toastPosition });
   }
 
   function setMetaPosition(metaPosition) {
-    const nextSettings = sanitizeGraphSettings({ ...state.settings, metaPosition });
-    if (state.settings.metaPosition === nextSettings.metaPosition) return;
-    pushHistory('set-meta-position');
-    state.settings.metaPosition = nextSettings.metaPosition;
-    notify();
+    updateAppSettings({ metaPosition });
   }
 
   function setAnchorsMode(anchorsMode) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, anchorsMode }).anchorsMode;
-    if (state.settings.anchorsMode === nextValue) return;
-    pushHistory('set-anchors-mode');
-    state.settings.anchorsMode = nextValue;
-    notify();
+    updateAppSettings({ anchorsMode });
   }
 
   function setArrowheads(arrowheads) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, arrowheads }).arrowheads;
-    if (state.settings.arrowheads === nextValue) return;
-    pushHistory('set-arrowheads');
-    state.settings.arrowheads = nextValue;
-    notify();
+    updateAppSettings({ arrowheads });
   }
 
   function setArrowheadSizeStep(arrowheadSizeStep) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, arrowheadSizeStep }).arrowheadSizeStep;
-    if (state.settings.arrowheadSizeStep === nextValue) return;
-    pushHistory('set-arrowhead-size-step');
-    state.settings.arrowheadSizeStep = nextValue;
-    notify();
-  }
-
-  function setShowShortcutsUi(showShortcutsUi) {
-    const nextValue = sanitizeGraphSettings({ ...state.settings, showShortcutsUi }).showShortcutsUi;
-    if (state.settings.showShortcutsUi === nextValue) return;
-    pushHistory('set-show-shortcuts-ui');
-    state.settings.showShortcutsUi = nextValue;
-    notify();
+    updateAppSettings({ arrowheadSizeStep });
   }
 
   function deleteEdge(id) {
@@ -1017,7 +969,6 @@ export function createStore(initialGraph = null) {
   function replaceGraph(graph) {
     pushHistory('import-graph');
     state.name = sanitizeGraphName(graph.name);
-    state.settings = sanitizeGraphSettings(graph.settings);
     state.frames = (Array.isArray(graph.frames) ? graph.frames : []).map(sanitizeFrame);
     const frameIds = new Set(state.frames.map((frame) => frame.id));
     state.nodes = graph.nodes.map((node) => sanitizeNode(node, frameIds));
@@ -1030,9 +981,7 @@ export function createStore(initialGraph = null) {
   function setNodeColorDefault(colorKey) {
     const nextValue = sanitizeColorKey(colorKey);
     if ((state.settings.nodeColorDefault || null) === nextValue) return;
-    pushHistory('set-node-color-default');
-    state.settings.nodeColorDefault = nextValue;
-    notify();
+    updateAppSettings({ nodeColorDefault: nextValue });
   }
 
   function setViewport(next) {
@@ -1103,7 +1052,6 @@ export function createStore(initialGraph = null) {
 
   function restoreSnapshot(data) {
     state.name = data.name;
-    state.settings = data.settings;
     state.nodes = data.nodes;
     state.frames = Array.isArray(data.frames) ? data.frames : [];
     state.edges = data.edges;
@@ -1237,7 +1185,6 @@ export function createStore(initialGraph = null) {
     setAnchorsMode,
     setArrowheads,
     setArrowheadSizeStep,
-    setShowShortcutsUi,
     setNodeColorDefault,
     replaceGraph,
     setViewport,

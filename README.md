@@ -4,7 +4,7 @@ hypernode is a lightweight browser-based editor for building connected thinking 
 
 It runs fully client-side with no backend and no account system. Hypernode data autosaves in `localStorage`, and can be opened or saved as hypernode files backed by JSON.
 
-Hypernode includes a lightweight built-in design system for surfaces, buttons, dialogs, inputs, and canvas objects. Appearance is preset-driven, saved with each hypernode, and includes a shared radius scale that applies across controls, nodes, and frames.
+Hypernode includes a lightweight built-in design system for surfaces, buttons, dialogs, inputs, and canvas objects. Appearance is preset-driven, stored as system-wide defaults, and includes a shared radius scale that applies across controls, nodes, and frames.
 
 ## Current Features
 
@@ -50,21 +50,19 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Shared UI radius presets (`sharp`, `soft`, `rounded`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
 - Full-screen settings, about, and keyboard shortcuts dialogs with responsive layouts.
 - Theme-aware custom scrollbars across dialogs, focus views, and editor panes that inherit the active preset and radius scale.
-- Settings menu for:
+- Settings menu for system-wide defaults:
   - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `soft-black`)
   - UI radius preset (`sharp`, `soft`, or `rounded`)
-  - hypernode background style (`dots` or `graph paper`)
+  - hypernode background style (`blank`, `dots`, or `graph paper`)
   - anchors mode (`auto-anchor` or `exact anchor`)
   - arrowheads visibility (`show` or `hide`)
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
-  - shortcut UI visibility (`show` or `hide`)
   - toolbar position (`top left`, `top right`, `bottom left`, or `bottom right`)
   - toolbar orientation (`horizontal` or `vertical`)
   - toast position (`top left`, `top right`, `bottom left`, or `bottom right`)
   - metadata position (`top left`, `top right`, `bottom left`, or `bottom right`)
-  - hypernode name
 - Toolbar color picks affect only the current node or frame selection and do not change the default color for newly created nodes.
-- Hypernode name is shown in a glassy metadata chip with a file icon and live canvas coordinates; its corner position is configurable and it also updates the browser tab title.
+- Hypernode name is shown in a glassy metadata chip with a file icon and live canvas coordinates; its corner position is configurable, the browser tab title stays in sync, and double-clicking the file icon opens a rename modal.
 - First-time Save suggests a filename based on the hypernode name.
 - Open/save toolbar actions use the File System Access API and are disabled in browsers that do not support it.
 - Installable PWA with offline app-shell caching.
@@ -75,7 +73,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 
 ## Keyboard Shortcuts
 
-Use the shortcuts dialog to search by key combo or action name when shortcut UI is enabled.
+Use the shortcuts dialog to search by key combo or action name.
 
 - `Delete` / `Backspace`: delete selected node/edge
 - `Ctrl/Cmd + Shift + H`: create a new hypernode
