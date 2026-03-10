@@ -108,6 +108,7 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
 export function buildNodeContentMarkup(node, options = {}) {
   const editing = Boolean(options.isEditing);
   const focused = Boolean(options.isFocused);
+  const imageKind = node.kind === 'image';
   const imageNode = isImageNode(node);
   const hasImageData = typeof node.imageData === 'string' && node.imageData.startsWith('data:image/');
   const contentClass = focused
@@ -214,15 +215,31 @@ export function buildNodeContentMarkup(node, options = {}) {
     editing
       ? `
       <div class="node__editor${focused ? ' node__editor--focus' : ''}" data-node-editor="${node.id}">
-        ${mediaMarkup}
-        <div class="node__editor-fields">
-          <div class="node__editor-field node__editor-field--title">
-            <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" />
-          </div>
-          <div class="node__editor-field node__editor-field--description">
-            <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
-          </div>
-        </div>
+        ${imageKind
+          ? `
+            <div class="node__editor-layout node__editor-layout--canvas-image">
+              <div class="node__editor-fields node__editor-fields--canvas-image">
+                <div class="node__editor-field node__editor-field--title">
+                  <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" />
+                </div>
+                <div class="node__editor-field node__editor-field--description">
+                  <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
+                </div>
+              </div>
+              ${mediaMarkup}
+            </div>
+          `
+          : `
+            ${mediaMarkup}
+            <div class="node__editor-fields">
+              <div class="node__editor-field node__editor-field--title">
+                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" />
+              </div>
+              <div class="node__editor-field node__editor-field--description">
+                <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
+              </div>
+            </div>
+          `}
       </div>
     `
       : `

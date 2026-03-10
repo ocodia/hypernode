@@ -2014,6 +2014,37 @@ select:focus-visible {
   min-height: 0;
 }
 
+.node__editor-layout--canvas-image {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: inline-size;
+}
+
+.node__editor-layout--canvas-image .node__focus-media {
+  order: 1;
+  min-height: 0;
+}
+
+.node__editor-layout--canvas-image .node__editor-fields--canvas-image {
+  order: 2;
+}
+
+.node__editor-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.node__editor-fields--canvas-image {
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .node__editor-input,
 .node__editor-textarea {
   border: 1px solid var(--node-editor-border);
@@ -2036,6 +2067,66 @@ select:focus-visible {
   min-height: 0;
   resize: none;
   overflow: auto;
+}
+
+.node__editor-layout--canvas-image .node__editor-field--description {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.node__editor-layout--canvas-image .node__editor-textarea {
+  max-height: 100%;
+}
+
+.node__editor-layout--canvas-image .node__image-pane {
+  width: 100%;
+  min-height: 120px;
+  height: 100%;
+  background-size: contain;
+}
+
+.node__editor-layout--canvas-image .node__focus-media--has-image {
+  min-height: 120px;
+}
+
+.node__editor-layout--canvas-image .node__focus-media--empty,
+.node__editor-layout--canvas-image .node__focus-media--empty .node__image-dropzone {
+  min-height: 132px;
+}
+
+.node__editor-layout--canvas-image .node__image-dropzone {
+  min-height: 132px;
+  align-content: center;
+}
+
+@container (min-width: 360px) {
+  .node__editor-layout--canvas-image {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(132px, 0.9fr);
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .node__editor-layout--canvas-image .node__editor-fields--canvas-image {
+    order: 1;
+  }
+
+  .node__editor-layout--canvas-image .node__focus-media {
+    order: 2;
+    height: 100%;
+  }
+
+  .node__editor-layout--canvas-image .node__focus-media--has-image,
+  .node__editor-layout--canvas-image .node__focus-media--empty,
+  .node__editor-layout--canvas-image .node__focus-media--empty .node__image-dropzone {
+    min-height: 100%;
+  }
+
+  .node__editor-layout--canvas-image .node__image-pane {
+    min-height: 100%;
+    background-size: cover;
+  }
 }
 
 @media (max-width: 700px) {

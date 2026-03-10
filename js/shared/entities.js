@@ -18,9 +18,6 @@ export function getNodeWidth(node) {
 export function getNodeHeight(node) {
   const height = Number(node?.height);
   if (Number.isFinite(height) && height > 0) return height;
-  if (node?.kind === IMAGE_NODE_DEFAULTS.kind && Number(node?.imageAspectRatio) > 0) {
-    return (getNodeWidth(node) / Number(node.imageAspectRatio)) + IMAGE_NODE_DEFAULTS.metaHeight;
-  }
   return NODE_DEFAULTS.height;
 }
 

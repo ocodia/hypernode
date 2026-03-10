@@ -1702,9 +1702,7 @@ export function bindInteractions(elements, store, options = {}) {
         resizeSession.moved = true;
       }
 
-      const next = resizeSession.isImageNode
-        ? computeImageResizedRect(resizeSession, dx)
-        : computeResizedRect(resizeSession, dx, dy);
+      const next = computeResizedRect(resizeSession, dx, dy);
       store.resizeNode(resizeSession.nodeId, next, { skipHistory: true });
       return;
     }
@@ -3522,9 +3520,6 @@ function getNodeWidth(node) {
 function getNodeHeight(node) {
   const height = Number(node?.height);
   if (Number.isFinite(height) && height > 0) return height;
-  if (node?.kind === IMAGE_NODE_DEFAULTS.kind && Number(node?.imageAspectRatio) > 0) {
-    return (getNodeWidth(node) / Number(node.imageAspectRatio)) + IMAGE_NODE_DEFAULTS.metaHeight;
-  }
   return NODE_DEFAULTS.height;
 }
 

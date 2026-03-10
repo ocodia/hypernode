@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { getNodeHeight } from '../js/shared/entities.js';
 import { renderDescriptionMarkdown } from '../js/render/markdown.js';
 import { renderFrames } from '../js/render/modules/frames.js';
 import { renderNodes } from '../js/render/modules/nodes.js';
@@ -225,9 +226,47 @@ test('canvas node editing shows image dropzone above placeholder fields', () => 
     ui: { editingNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
   });
 
-  assert.match(nodesLayer.innerHTML, /data-focus-image-dropzone="n1"[^]*data-node-edit-title="n1"[^]*data-node-edit-description="n1"/);
+  assert.match(nodesLayer.innerHTML, /node__editor-layout node__editor-layout--canvas-image/);
+  assert.match(nodesLayer.innerHTML, /node__editor-fields node__editor-fields--canvas-image/);
+  assert.match(nodesLayer.innerHTML, /node__focus-media node__focus-media--has-image node__focus-media--canvas/);
+  assert.match(nodesLayer.innerHTML, /data-node-edit-title="n1"[^]*data-node-edit-description="n1"[^]*data-focus-image-dropzone="n1"/);
   assert.match(nodesLayer.innerHTML, /placeholder="Name"/);
   assert.match(nodesLayer.innerHTML, /placeholder="Description"/);
+});
+
+test('canvas image node editing without image data renders media slot with fields', () => {
+  const nodesLayer = { innerHTML: '' };
+
+  renderNodes(nodesLayer, {
+    nodes: [{
+      id: 'n1',
+      title: 'Image Node',
+      description: '',
+      kind: 'image',
+      x: 0,
+      y: 0,
+    }],
+    frames: [],
+    edges: [],
+    selection: { type: 'node', id: 'n1' },
+    ui: { editingNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
+  });
+
+  assert.match(nodesLayer.innerHTML, /node__editor-layout node__editor-layout--canvas-image/);
+  assert.match(nodesLayer.innerHTML, /node__focus-media node__focus-media--empty node__focus-media--canvas/);
+  assert.match(nodesLayer.innerHTML, /data-focus-image-dropzone="n1"/);
+  assert.match(nodesLayer.innerHTML, /placeholder="Name"/);
+  assert.match(nodesLayer.innerHTML, /placeholder="Description"/);
+});
+
+test('image nodes without explicit height no longer derive height from image aspect ratio', () => {
+  assert.equal(getNodeHeight({
+    id: 'n1',
+    kind: 'image',
+    width: 320,
+    imageAspectRatio: 1.5,
+    imageData: 'data:image/png;base64,abc',
+  }), 80);
 });
 
 test('renderHypernodeMetadata updates name, viewport center coordinates, and document title', () => {
