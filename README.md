@@ -4,12 +4,14 @@ hypernode is a lightweight browser-based editor for building connected thinking 
 
 It runs fully client-side with no backend and no account system. Hypernode data autosaves in `localStorage`, and can be opened or saved as hypernode files backed by JSON.
 
+Hypernode includes a lightweight built-in design system for surfaces, buttons, dialogs, inputs, and canvas objects. Appearance is preset-driven, saved with each hypernode, and includes a shared radius scale that applies across controls, nodes, and frames.
+
 ## Current Features
 
 - Fresh hypernodes start with a starter node already open in Zen edit mode, with the title focused and seeded to the current date.
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
 - Edit node title/description inline from the selected-node mini toolbar, with description display supporting basic markdown (headers, paragraphs, lists, links, emphasis, inline code).
-- Color selected node backgrounds from a toolbar palette (10 curated colors + reset) with legible text and complementary selected highlights in light/dark themes.
+- Color selected node backgrounds from a toolbar palette (10 curated colors + reset) with legible text and complementary selected highlights.
 - Delete selected nodes with `Delete`/`Backspace`, or with `Ctrl/Cmd + Delete` plus confirmation while in Focus mode.
 - Create edges from text and image node anchor points (top/right/bottom/left).
 - Resize selected nodes from corner handles (top-left/top-right/bottom-right/bottom-left).
@@ -40,7 +42,12 @@ It runs fully client-side with no backend and no account system. Hypernode data 
 - Auto-save hypernodes to browser storage.
 - Open/save hypernode JSON files with validation and status toast feedback.
 - Start a new hypernode from the toolbar (with discard confirmation when existing hypernode data is present).
+- Built-in semantic design system for surfaces, buttons, inputs, dialogs, toolbar controls, nodes, and frames.
+- Curated hypernode-level UI theme presets (`graphite` and `paper`) saved with the document.
+- Shared UI radius presets (`sharp`, `soft`, `rounded`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
 - Settings menu for:
+  - UI theme preset (`graphite` or `paper`)
+  - UI radius preset (`sharp`, `soft`, or `rounded`)
   - hypernode background style (`dots` or `graph paper`)
   - anchors mode (`auto-anchor` or `exact anchor`)
   - arrowheads visibility (`show` or `hide`)
@@ -57,7 +64,7 @@ It runs fully client-side with no backend and no account system. Hypernode data 
 - Interaction-state cursor feedback for drag/connect workflows.
 - Searchable keyboard shortcuts dialog with key/action matching.
 - About dialog with a toggleable guide wizard, keyboard shortcuts, and a GitHub link.
-- Dark mode toggle with persisted theme preference.
+- Visible focus states, keyboard-usable controls, and contrast-conscious presets across the themed UI.
 
 ## Keyboard Shortcuts
 
@@ -96,6 +103,41 @@ Use the shortcuts dialog to search by key combo or action name when shortcut UI 
 - `localStorage` (persistence)
 
 No frameworks or backend services are used.
+
+## Design System
+
+Hypernode uses a small semantic design system instead of ad hoc component styling. The system is designed to stay lightweight and canvas-first while keeping the rest of the interface consistent and accessible.
+
+Core semantic tokens include:
+
+- `surface`
+- `surface-muted`
+- `surface-raised`
+- `border`
+- `text`
+- `text-muted`
+- `accent`
+- `accent-contrast`
+- `focus-ring`
+- `danger`
+- `success`
+
+These tokens are applied across:
+
+- toolbar controls
+- dialogs and popovers
+- buttons, inputs, and toggles
+- metadata chips and pills
+- nodes, frames, and image wells
+
+Appearance stays preset-driven:
+
+- UI theme presets: `graphite`, `paper`
+- UI radius presets: `sharp`, `soft`, `rounded`
+
+The selected radius preset applies to standard UI controls and canvas objects alike, including nodes and frames.
+
+If the product also exposes a local theme toggle or system color-mode preference, that preference is secondary to the hypernode's saved appearance preset and should not override it.
 
 ## Project Structure
 
@@ -144,6 +186,7 @@ Version 1 includes the core hypernode editor loop:
 - undo/redo
 - local persistence
 - hypernode JSON file open/save
+- hypernode-level appearance presets and shared UI radius presets
 
 ## Out of Scope (v1)
 
@@ -169,7 +212,7 @@ For each new feature PR, update docs as part of the same change set (do not defe
 1. **Update requirements first** (`docs/REQUIREMENTS.md`): add or adjust FR/NFR entries that define behavior and constraints.
 2. **Update user-facing behavior** (`README.md`): update feature list, shortcuts, settings/options, and compatibility notes.
 3. **Cross-check UI copy** against `index.html` labels and dialog text so docs match what users see.
-4. **Verify persistence impact**: if graph shape/settings/storage keys change, document migration/compatibility notes.
+4. **Verify persistence impact**: if graph shape/settings/storage keys change, document migration/compatibility notes, including appearance preset defaults for older files.
 5. **Run a lightweight docs audit before merge**: confirm every new toolbar control, shortcut, setting, and workflow is represented in README and requirements.
 
 Recommended PR checklist item:

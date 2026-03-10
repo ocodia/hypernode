@@ -40,6 +40,13 @@ export function createRenderer(elements, _store) {
   function render(state) {
     applyViewport(viewportElements, state.viewport);
     canvas.dataset.backgroundStyle = state.settings.backgroundStyle;
+    document.documentElement.dataset.uiTheme = state.settings.uiThemePreset;
+    document.documentElement.dataset.uiRadius = state.settings.uiRadiusPreset;
+    document.documentElement.dataset.theme = state.settings.uiThemePreset === 'graphite' ? 'dark' : 'light';
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta instanceof HTMLMetaElement) {
+      themeMeta.content = state.settings.uiThemePreset === 'graphite' ? '#0f172a' : '#f4f7fb';
+    }
     renderFrames(framesLayer, state);
     renderNodes(nodesLayer, state);
     renderEdges(edgeElements, state);

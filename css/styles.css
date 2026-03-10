@@ -1,47 +1,129 @@
 :root {
-  --bg: #eef2f7;
-  --grid-dot: #d6deea;
-  --panel: #ffffff;
-  --toolbar-bg: #ffffff7a;
-  --panel-border: #dde3ec;
-  --text: #1f2a37;
-  --muted: #64748b;
-  --accent: #3b82f6;
-  --edge: #9fb2cc;
-  --edge-selected: #2563eb;
   --surface: #ffffff;
-  --surface-soft: #f8fafc;
+  --surface-muted: #f8fafc;
+  --surface-raised: #ffffff;
+  --border: #dde3ec;
+  --text: #1f2a37;
+  --text-muted: #64748b;
+  --accent: #3b82f6;
+  --accent-contrast: #eff6ff;
+  --focus-ring: #2563eb;
+  --danger: #b91c1c;
   --danger-soft: #fff1f2;
   --danger-border: #fecaca;
-  --danger-text: #b91c1c;
+  --success: #2f855a;
+  --bg: #eef2f7;
+  --grid-dot: #d6deea;
+  --panel: color-mix(in srgb, var(--surface-raised) 98%, transparent);
+  --toolbar-bg: rgba(255, 255, 255, 0.82);
+  --panel-border: var(--border);
+  --muted: var(--text-muted);
+  --edge: #9fb2cc;
+  --edge-selected: var(--focus-ring);
+  --surface-soft: var(--surface-muted);
+  --danger-text: var(--danger);
   --draft-stroke: #6b7f99;
   --endpoint-stroke: #8ea3c1;
   --endpoint-fill: #f8fbff;
   --overlay-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   --node-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+  --graph-anchor-radius: 999px;
+  --graph-resize-radius: 3px;
 }
 
-[data-theme="dark"] {
+[data-ui-theme="paper"] {
+  --surface: #ffffff;
+  --surface-muted: #f5f7fb;
+  --surface-raised: #ffffff;
+  --border: #d9e1ec;
+  --text: #182330;
+  --text-muted: #607185;
+  --accent: #2563eb;
+  --accent-contrast: #eef4ff;
+  --focus-ring: #1d4ed8;
+  --danger: #b42318;
+  --danger-soft: #fff1f2;
+  --danger-border: #fecaca;
+  --success: #1f7a4d;
+  --bg: #f4f7fb;
+  --grid-dot: #d5deea;
+  --panel: color-mix(in srgb, var(--surface-raised) 98%, transparent);
+  --toolbar-bg: rgba(255, 255, 255, 0.82);
+  --panel-border: var(--border);
+  --muted: var(--text-muted);
+  --edge: #92a8c5;
+  --edge-selected: var(--focus-ring);
+  --surface-soft: var(--surface-muted);
+  --danger-text: var(--danger);
+  --draft-stroke: #6b7f99;
+  --endpoint-stroke: #8ea3c1;
+  --endpoint-fill: #f8fbff;
+  --overlay-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  --node-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+[data-ui-theme="graphite"] {
   --bg: #0f172a;
-  --grid-dot: #23324a;
-  --panel: #101826;
-  --toolbar-bg: rgba(16, 24, 38, 0.82);
-  --panel-border: #2b3a52;
-  --text: #e2e8f0;
-  --muted: #94a3b8;
-  --accent: #60a5fa;
-  --edge: #5c779a;
-  --edge-selected: #93c5fd;
   --surface: #131d2e;
-  --surface-soft: #172338;
+  --surface-muted: #172338;
+  --surface-raised: #101826;
+  --border: #2b3a52;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent: #60a5fa;
+  --accent-contrast: #132238;
+  --focus-ring: #93c5fd;
+  --danger: #fecaca;
+  --success: #86efac;
+  --grid-dot: #23324a;
+  --panel: color-mix(in srgb, var(--surface-raised) 98%, transparent);
+  --toolbar-bg: rgba(16, 24, 38, 0.82);
+  --panel-border: var(--border);
+  --muted: var(--text-muted);
+  --edge: #5c779a;
+  --edge-selected: var(--focus-ring);
+  --surface-soft: var(--surface-muted);
   --danger-soft: #3c1a20;
   --danger-border: #7f1d1d;
-  --danger-text: #fecaca;
+  --danger-text: var(--danger);
   --draft-stroke: #9fb2cc;
   --endpoint-stroke: #9fb2cc;
   --endpoint-fill: #111d2f;
   --overlay-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
   --node-shadow: 0 10px 26px rgba(0, 0, 0, 0.42);
+}
+
+[data-ui-radius="sharp"] {
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-pill: 0px;
+}
+
+[data-ui-radius="soft"] {
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: 12px;
+}
+
+[data-ui-radius="rounded"] {
+  --radius-xs: 10px;
+  --radius-sm: 14px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
 }
 
 * {
@@ -58,6 +140,9 @@ body {
   color: var(--text);
   background: var(--bg);
   overflow: hidden;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
 }
 
 button,
@@ -68,7 +153,7 @@ textarea {
 
 .panel {
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 16px;
   background: rgba(252, 253, 255, 0.95);
   backdrop-filter: blur(6px);
@@ -91,7 +176,7 @@ button {
   background: var(--surface);
   color: var(--text);
   padding: 8px 10px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
 }
@@ -102,8 +187,9 @@ button:hover {
 
 button:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--accent);
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -149,7 +235,7 @@ textarea:focus-visible {
   display: grid;
   place-items: center;
   border: 2px dashed color-mix(in srgb, var(--accent) 56%, transparent);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface) 74%, transparent), color-mix(in srgb, var(--surface-soft) 84%, transparent));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-border) 55%, transparent);
@@ -183,7 +269,7 @@ textarea:focus-visible {
   position: absolute;
   border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
   background: color-mix(in srgb, var(--accent) 18%, transparent);
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   pointer-events: none;
   z-index: 6;
 }
@@ -385,7 +471,7 @@ textarea:focus-visible {
   z-index: 20;
   padding: 8px 10px;
   background: var(--toolbar-bg);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   backdrop-filter: blur(10px);
 }
 
@@ -419,7 +505,7 @@ textarea:focus-visible {
   padding: 0;
   border-color: transparent;
   background: transparent;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   text-align: center;
 }
 
@@ -473,7 +559,7 @@ textarea:focus-visible {
   bottom: 4px;
   width: 11px;
   height: 11px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid color-mix(in srgb, var(--panel) 65%, #000000 35%);
   background: var(--active-node-swatch, transparent);
 }
@@ -524,7 +610,7 @@ textarea:focus-visible {
   left: 0;
   padding: 10px;
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
   box-shadow: var(--overlay-shadow);
 }
@@ -547,7 +633,7 @@ textarea:focus-visible {
   height: 28px;
   min-width: 28px;
   min-height: 28px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32);
   padding: 0;
@@ -561,7 +647,7 @@ textarea:focus-visible {
 .node-color-picker__reset {
   grid-column: 1 / -1;
   text-align: center;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   padding: 6px 8px;
 }
 
@@ -615,7 +701,7 @@ textarea:focus-visible {
   --node-selected-border: var(--accent);
   position: absolute;
   width: 210px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--node-border);
   background: var(--node-bg);
   color: var(--node-text);
@@ -635,7 +721,7 @@ textarea:focus-visible {
   gap: 6px;
   padding: 4px;
   border: 1px solid var(--panel-border);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface) 95%, transparent);
   box-shadow: var(--overlay-shadow);
   opacity: 0;
@@ -663,7 +749,7 @@ textarea:focus-visible {
   padding: 0;
   border-color: transparent;
   background: transparent;
-  border-radius: 7px;
+  border-radius: var(--radius-xs);
   text-align: center;
 }
 
@@ -738,7 +824,7 @@ textarea:focus-visible {
   min-height: min(720px, calc(100vh - 116px));
   max-height: calc(100vh - 116px);
   padding: 36px 36px 30px;
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   overflow: auto;
   box-shadow:
     0 28px 70px rgba(15, 23, 42, 0.28),
@@ -885,7 +971,7 @@ textarea:focus-visible {
   font-size: 1.08rem;
   line-height: 1.65;
   padding: 13px 15px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .node__editor--focus .node__editor-input {
@@ -975,7 +1061,7 @@ textarea:focus-visible {
   min-width: 0;
   min-height: 220px;
   max-height: min(72vh, 760px);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--node-border) 65%, transparent);
 }
 
@@ -985,7 +1071,7 @@ textarea:focus-visible {
   width: 100%;
   padding: 14px 16px;
   border: 1px dashed color-mix(in srgb, var(--accent) 48%, var(--panel-border));
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--surface-soft) 82%, transparent);
   color: var(--node-text);
   text-align: left;
@@ -1030,7 +1116,7 @@ textarea:focus-visible {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: var(--frame-border-width, 1px) var(--frame-border-style, solid) var(--frame-border);
   background: var(--frame-bg);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--frame-border) 28%, transparent);
@@ -1093,7 +1179,7 @@ textarea:focus-visible {
 
 .frame__description code {
   padding: 0.05rem 0.25rem;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--surface) 78%, transparent);
   color: var(--text);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -1126,7 +1212,7 @@ textarea:focus-visible {
 .frame__editor-input,
 .frame__editor-textarea {
   border: 1px solid var(--panel-border);
-  border-radius: 7px;
+  border-radius: var(--radius-xs);
   background: var(--surface);
   color: var(--text);
   padding: 6px 7px;
@@ -1147,7 +1233,7 @@ textarea:focus-visible {
   pointer-events: none;
   transform: translateY(calc(-100% - 8px));
   border: 1px solid var(--panel-border);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   padding: 4px;
   background: color-mix(in srgb, var(--surface) 95%, transparent);
   box-shadow: var(--overlay-shadow);
@@ -1198,7 +1284,7 @@ textarea:focus-visible {
   padding: 0;
   border-color: transparent;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   display: inline-grid;
   place-items: center;
 }
@@ -1212,7 +1298,7 @@ textarea:focus-visible {
   flex-direction: column;
   gap: 4px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--panel) 94%, transparent);
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
   box-shadow: var(--overlay-shadow);
@@ -1236,7 +1322,7 @@ textarea:focus-visible {
   position: absolute;
   width: 13px;
   height: 13px;
-  border-radius: 999px;
+  border-radius: var(--graph-resize-radius);
   border: 1.5px solid var(--endpoint-stroke);
   background: var(--endpoint-fill);
   opacity: 0;
@@ -1291,7 +1377,7 @@ textarea:focus-visible {
   position: absolute;
   width: var(--graph-anchor-size);
   height: var(--graph-anchor-size);
-  border-radius: 999px;
+  border-radius: var(--graph-anchor-radius);
   border: var(--graph-control-border-width) solid var(--endpoint-stroke);
   background: var(--endpoint-fill);
   opacity: 0;
@@ -1341,7 +1427,7 @@ textarea:focus-visible {
 
 .frame__draft {
   position: absolute;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 1px dashed color-mix(in srgb, var(--accent) 72%, transparent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   pointer-events: none;
@@ -1388,7 +1474,7 @@ textarea:focus-visible {
 .node--image .node__image-pane {
   width: 100%;
   aspect-ratio: var(--node-image-aspect-ratio, 16 / 9);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   border: 1px solid var(--panel-border);
   background-color: color-mix(in srgb, var(--surface-soft) 80%, transparent);
   background-position: center;
@@ -1499,7 +1585,7 @@ textarea:focus-visible {
 
 .node__description code {
   padding: 0.08rem 0.28rem;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--surface-soft) 80%, transparent);
   color: var(--node-text);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -1557,7 +1643,7 @@ textarea:focus-visible {
 .node__editor-input,
 .node__editor-textarea {
   border: 1px solid var(--node-editor-border);
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   padding: 7px 8px;
   color: var(--node-text);
   width: 100%;
@@ -1592,7 +1678,7 @@ textarea:focus-visible {
     min-height: calc(100vh - 32px);
     max-height: calc(100vh - 32px);
     padding: 20px;
-    border-radius: 20px;
+    border-radius: var(--radius-lg);
   }
 
   .node__content--focus-image,
@@ -1926,7 +2012,7 @@ textarea:focus-visible {
   height: 14px;
   appearance: none;
   padding: 0;
-  border-radius: 999px;
+  border-radius: var(--graph-resize-radius);
   border: 1.5px solid var(--endpoint-stroke);
   background: var(--endpoint-fill);
   box-shadow: 0 0 0 1px rgba(159, 178, 204, 0.22);
@@ -1987,7 +2073,7 @@ textarea:focus-visible {
   padding: 0;
   line-height: 0;
   aspect-ratio: 1 / 1;
-  border-radius: 999px;
+  border-radius: var(--graph-anchor-radius);
   border: var(--graph-control-border-width) solid var(--endpoint-stroke);
   background: var(--endpoint-fill);
   box-shadow: 0 0 0 1px rgba(159, 178, 204, 0.22);
@@ -2081,7 +2167,7 @@ textarea:focus-visible {
   min-height: 1px;
   max-width: min(560px, calc(100vw - 24px));
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--panel-border);
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   box-shadow: var(--overlay-shadow);
@@ -2146,7 +2232,7 @@ textarea:focus-visible {
 
 kbd {
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
-  border-radius: 7px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--surface-soft) 84%, var(--surface));
   color: color-mix(in srgb, var(--text) 88%, var(--muted));
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -2157,7 +2243,7 @@ kbd {
 
 .about-dialog {
   border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--panel) 98%, transparent);
   color: var(--text);
   width: min(620px, calc(100vw - 24px));
@@ -2195,7 +2281,7 @@ kbd {
   height: 28px;
   display: inline-grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   color: color-mix(in srgb, var(--text) 76%, var(--accent));
   background: color-mix(in srgb, var(--surface-soft) 92%, transparent);
   border: 1px solid color-mix(in srgb, var(--panel-border) 86%, transparent);
@@ -2236,7 +2322,7 @@ kbd {
   display: grid;
   gap: 18px;
   padding: 22px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
 }
@@ -2314,7 +2400,7 @@ kbd {
   min-height: 36px;
   display: inline-grid;
   place-items: center;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   text-align: center;
 }
 
@@ -2330,7 +2416,7 @@ kbd {
   min-width: 10px;
   min-height: 10px;
   padding: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border-color: transparent;
   background: color-mix(in srgb, var(--panel-border) 94%, transparent);
 }
@@ -2354,7 +2440,7 @@ kbd {
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--surface) 98%, transparent);
 }
 
@@ -2386,7 +2472,7 @@ kbd {
   gap: 14px;
   align-items: start;
   padding: 16px 18px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
 }
@@ -2416,7 +2502,7 @@ kbd {
 .shortcuts-dialog__empty {
   margin: 0;
   padding: 18px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 1px dashed color-mix(in srgb, var(--panel-border) 90%, transparent);
   color: var(--muted);
   text-align: center;
@@ -2428,7 +2514,7 @@ kbd {
   padding: 18px 20px;
   display: grid;
   gap: 12px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
 }
@@ -2481,7 +2567,7 @@ kbd {
   padding: 0;
   border-color: transparent;
   background: transparent;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   text-align: center;
 }
 
@@ -2493,15 +2579,82 @@ kbd {
 
 .settings-dialog__section {
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   margin: 0;
   padding: 14px;
   background: color-mix(in srgb, var(--surface) 96%, transparent);
 }
 
-.settings-dialog article {
+.settings-dialog__section--plain {
+  border: 0;
+  background: transparent;
+  padding: 6px 2px 2px;
+}
+
+.settings-dialog__section--spacious {
+  padding-top: 18px;
+}
+
+.settings-dialog__article {
   display: grid;
   gap: 14px;
+  max-height: min(80vh, 760px);
+}
+
+.settings-dialog__accordion {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-dialog__group {
+  border: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface) 98%, transparent);
+  overflow: hidden;
+}
+
+.settings-dialog__group[open] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.settings-dialog__summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 18px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.settings-dialog__summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-dialog__summary::after {
+  content: "\f282";
+  font-family: "bootstrap-icons";
+  font-size: 0.85rem;
+  color: var(--muted);
+  transition: transform 160ms ease;
+}
+
+.settings-dialog__group[open] .settings-dialog__summary::after {
+  transform: rotate(180deg);
+}
+
+.settings-dialog__group + .settings-dialog__group {
+  margin-top: 0;
+}
+
+.settings-dialog__panel {
+  display: grid;
+  gap: 12px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--panel-border) 86%, transparent);
 }
 
 .settings-dialog__section legend {
@@ -2524,10 +2677,14 @@ kbd {
 .settings-dialog__input {
   width: 100%;
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
   background: var(--surface);
   color: var(--text);
+}
+
+.settings-dialog__section--plain .settings-dialog__input {
+  border-color: color-mix(in srgb, var(--panel-border) 82%, transparent);
 }
 
 .settings-dialog__input[type="range"] {
@@ -2545,11 +2702,113 @@ kbd {
   margin: 8px 0;
 }
 
+.settings-dialog__switch-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.settings-dialog__section--switch {
+  display: block;
+  cursor: pointer;
+}
+
+.settings-dialog__switch-copy {
+  min-width: 0;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 8px;
+}
+
+.settings-dialog__switch-label {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.settings-dialog__switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  min-width: 46px;
+  height: 28px;
+}
+
+.settings-dialog__switch-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.settings-dialog__switch-ui {
+  position: relative;
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-soft) 72%, var(--surface));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--panel-border) 90%, transparent),
+    inset 0 10px 18px rgba(255, 255, 255, 0.05);
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.settings-dialog__switch-ui::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.28),
+    0 2px 8px rgba(15, 23, 42, 0.18);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.settings-dialog__switch-input:checked + .settings-dialog__switch-ui {
+  background: color-mix(in srgb, var(--accent) 82%, white 18%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 58%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.settings-dialog__switch-input:checked + .settings-dialog__switch-ui::after {
+  transform: translateX(18px);
+}
+
+.settings-dialog__switch-input:focus-visible + .settings-dialog__switch-ui {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.settings-dialog__switch-input:disabled + .settings-dialog__switch-ui {
+  opacity: 0.45;
+}
+
 .settings-dialog__hint {
   margin: 0 0 8px;
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.5;
+}
+
+.settings-dialog__section--switch .settings-dialog__hint {
+  margin: 0;
 }
 
 :root {

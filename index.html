@@ -31,7 +31,7 @@
         <div class="toolbar__group" aria-label="Style and settings">
           <button id="node-color-btn" class="toolbar__icon-btn" type="button" aria-label="Color selected nodes" title="Color selected nodes" aria-haspopup="dialog" aria-expanded="false" aria-controls="node-color-popover" disabled><i class="bi bi-palette"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
           <button id="settings-btn" class="toolbar__icon-btn" type="button" aria-label="Hypernode settings" title="Hypernode settings"><i class="bi bi-sliders2"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
-          <button id="theme-toggle-btn" class="toolbar__icon-btn" type="button" aria-label="Enable dark mode" title="Enable dark mode"><i class="bi bi-moon-stars"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="theme-toggle-btn" class="toolbar__icon-btn" type="button" aria-label="Switch to paper theme" title="Switch to paper theme"><i class="bi bi-sun"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
         </div>
         <div class="toolbar__group" aria-label="Help">
           <button id="shortcuts-btn" class="toolbar__icon-btn" type="button" aria-label="Keyboard shortcuts" title="Keyboard shortcuts"><i class="bi bi-command"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
@@ -149,79 +149,142 @@
       </article>
     </dialog>
     <dialog id="settings-dialog" class="about-dialog settings-dialog">
-      <article>
+      <article class="about-dialog__article settings-dialog__article">
         <header class="about-dialog__header">
           <div class="about-dialog__titlebar">
             <span class="about-dialog__title-icon" aria-hidden="true"><i class="bi bi-sliders2"></i></span>
-            <h2>Hypernode Settings</h2>
+            <h2>Settings</h2>
           </div>
           <button id="settings-close-btn" type="button" aria-label="Close settings dialog"><i class="bi bi-x-lg"></i></button>
         </header>
-        <div class="settings-dialog__section">
-          <label class="settings-dialog__label" for="graph-name-input">Hypernode name</label>
-          <input id="graph-name-input" class="settings-dialog__input" type="text" maxlength="120" />
+        <div class="settings-dialog__accordion">
+          <details class="settings-dialog__group" open>
+            <summary class="settings-dialog__summary">General</summary>
+            <div class="settings-dialog__panel">
+              <div class="settings-dialog__section settings-dialog__section--plain">
+                <label class="settings-dialog__label" for="graph-name-input">Name</label>
+                <input id="graph-name-input" class="settings-dialog__input" type="text" maxlength="120" />
+              </div>
+            </div>
+          </details>
+
+          <details class="settings-dialog__group">
+            <summary class="settings-dialog__summary">Appearance</summary>
+            <div class="settings-dialog__panel">
+              <fieldset class="settings-dialog__section settings-dialog__section--spacious">
+                <legend>Theme</legend>
+                <p class="settings-dialog__hint">Document-level UI presets apply to dialogs, controls, nodes, frames, and focus surfaces.</p>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="ui-theme-preset" value="graphite" />
+                  Graphite
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="ui-theme-preset" value="paper" />
+                  Paper
+                </label>
+              </fieldset>
+              <fieldset class="settings-dialog__section">
+                <legend>Surface</legend>
+                <p class="settings-dialog__hint">Controls the global shape language for UI surfaces, nodes, and frames.</p>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="ui-radius-preset" value="sharp" />
+                  Sharp
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="ui-radius-preset" value="soft" />
+                  Soft
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="ui-radius-preset" value="rounded" />
+                  Rounded
+                </label>
+              </fieldset>
+            </div>
+          </details>
+
+          <details class="settings-dialog__group">
+            <summary class="settings-dialog__summary">Interface</summary>
+            <div class="settings-dialog__panel">
+              <label class="settings-dialog__section settings-dialog__section--switch" for="show-shortcuts-ui-input">
+                <span class="settings-dialog__switch-row">
+                  <span class="settings-dialog__switch-copy">
+                    <span class="settings-dialog__switch-label">Show shortcuts in UI</span>
+                    <span class="settings-dialog__hint">Controls inline shortcut hints and the keyboard shortcuts button/dialog. Keyboard commands still work when hidden.</span>
+                  </span>
+                  <span class="settings-dialog__switch">
+                    <input id="show-shortcuts-ui-input" class="settings-dialog__switch-input" type="checkbox" />
+                    <span class="settings-dialog__switch-ui" aria-hidden="true"></span>
+                  </span>
+                </span>
+              </label>
+              <label class="settings-dialog__section settings-dialog__section--switch" for="show-toolbar-shortcuts-input">
+                <span class="settings-dialog__switch-row">
+                  <span class="settings-dialog__switch-copy">
+                    <span class="settings-dialog__switch-label">Show shortcuts on toolbar</span>
+                    <span class="settings-dialog__hint">Shows shortcut hints on the top toolbar buttons for actions that support keyboard access.</span>
+                  </span>
+                  <span class="settings-dialog__switch">
+                    <input id="show-toolbar-shortcuts-input" class="settings-dialog__switch-input" type="checkbox" />
+                    <span class="settings-dialog__switch-ui" aria-hidden="true"></span>
+                  </span>
+                </span>
+              </label>
+            </div>
+          </details>
+
+          <details class="settings-dialog__group">
+            <summary class="settings-dialog__summary">Canvas</summary>
+            <div class="settings-dialog__panel">
+              <fieldset class="settings-dialog__section">
+                <legend>Background</legend>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="background-style" value="dots" />
+                  Dots
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="background-style" value="graph-paper" />
+                  Graph paper
+                </label>
+              </fieldset>
+              <fieldset class="settings-dialog__section">
+                <legend>Anchors</legend>
+                <p class="settings-dialog__hint">Controls how edge endpoints are chosen and whether they stay fixed as nodes move.</p>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="anchors-mode" value="auto" />
+                  Auto-anchor
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="anchors-mode" value="exact" />
+                  Exact anchor
+                </label>
+              </fieldset>
+              <fieldset class="settings-dialog__section">
+                <legend>Arrowheads</legend>
+                <p class="settings-dialog__hint">Controls whether committed edges render direction arrowheads.</p>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="arrowheads" value="shown" />
+                  Show
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="arrowheads" value="hidden" />
+                  Hide
+                </label>
+                <label class="settings-dialog__label" for="arrowhead-size-range">Arrowhead size</label>
+                <input
+                  id="arrowhead-size-range"
+                  class="settings-dialog__input"
+                  type="range"
+                  min="0"
+                  max="9"
+                  step="1"
+                  value="0"
+                  aria-describedby="arrowhead-size-value"
+                />
+                <p id="arrowhead-size-value" class="settings-dialog__hint">Level 1 (100%)</p>
+              </fieldset>
+            </div>
+          </details>
         </div>
-        <div class="settings-dialog__section">
-          <label class="settings-dialog__option" for="show-shortcuts-ui-input">
-            <input id="show-shortcuts-ui-input" type="checkbox" />
-            Show shortcuts in UI
-          </label>
-          <p class="settings-dialog__hint">Controls inline shortcut hints and the keyboard shortcuts button/dialog. Keyboard commands still work when hidden.</p>
-        </div>
-        <div class="settings-dialog__section">
-          <label class="settings-dialog__option" for="show-toolbar-shortcuts-input">
-            <input id="show-toolbar-shortcuts-input" type="checkbox" />
-            Show shortcuts on toolbar
-          </label>
-          <p class="settings-dialog__hint">Shows shortcut hints on the top toolbar buttons for actions that support keyboard access.</p>
-        </div>
-        <fieldset class="settings-dialog__section">
-          <legend>Background style</legend>
-          <label class="settings-dialog__option">
-            <input type="radio" name="background-style" value="dots" />
-            Dots
-          </label>
-          <label class="settings-dialog__option">
-            <input type="radio" name="background-style" value="graph-paper" />
-            Graph paper
-          </label>
-        </fieldset>
-        <fieldset class="settings-dialog__section">
-          <legend>Anchors</legend>
-          <p class="settings-dialog__hint">Controls how edge endpoints are chosen and whether they stay fixed as nodes move.</p>
-          <label class="settings-dialog__option">
-            <input type="radio" name="anchors-mode" value="auto" />
-            Auto-anchor
-          </label>
-          <label class="settings-dialog__option">
-            <input type="radio" name="anchors-mode" value="exact" />
-            Exact anchor
-          </label>
-        </fieldset>
-        <fieldset class="settings-dialog__section">
-          <legend>Arrowheads</legend>
-          <p class="settings-dialog__hint">Controls whether committed edges render direction arrowheads.</p>
-          <label class="settings-dialog__option">
-            <input type="radio" name="arrowheads" value="shown" />
-            Show
-          </label>
-          <label class="settings-dialog__option">
-            <input type="radio" name="arrowheads" value="hidden" />
-            Hide
-          </label>
-          <label class="settings-dialog__label" for="arrowhead-size-range">Arrowhead size</label>
-          <input
-            id="arrowhead-size-range"
-            class="settings-dialog__input"
-            type="range"
-            min="0"
-            max="9"
-            step="1"
-            value="0"
-            aria-describedby="arrowhead-size-value"
-          />
-          <p id="arrowhead-size-value" class="settings-dialog__hint">Level 1 (100%)</p>
-        </fieldset>
       </article>
     </dialog>
 

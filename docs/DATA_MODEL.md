@@ -10,7 +10,9 @@ The same top-level shape is used for:
 - import validation
 - export serialization
 
-Theme preference is not part of the hypernode payload. It is stored separately in browser storage under its own key.
+Hypernode appearance is part of the hypernode payload. UI theme and radius selections are stored in graph settings so each document can carry its own presentation.
+
+If the app also keeps a local color-mode preference outside the graph payload, that preference is secondary and must not override an explicit hypernode appearance preset.
 
 ## Canonical Hypernode Payload
 
@@ -18,6 +20,8 @@ Theme preference is not part of the hypernode payload. It is stored separately i
 {
   "name": "Untitled hypernode",
   "settings": {
+    "uiThemePreset": "graphite",
+    "uiRadiusPreset": "rounded",
     "backgroundStyle": "dots",
     "anchorsMode": "auto",
     "arrowheads": "shown",
@@ -46,6 +50,8 @@ Invalid payloads are rejected before import or restore is applied.
 
 ```json
 {
+  "uiThemePreset": "graphite | paper",
+  "uiRadiusPreset": "sharp | soft | rounded",
   "backgroundStyle": "dots | graph-paper",
   "anchorsMode": "auto | exact",
   "arrowheads": "shown | hidden",
@@ -58,6 +64,8 @@ Invalid payloads are rejected before import or restore is applied.
 
 Rules:
 
+- `uiThemePreset` must be `graphite` or `paper`
+- `uiRadiusPreset` must be `sharp`, `soft`, or `rounded`
 - `backgroundStyle` must be `dots` or `graph-paper`
 - `anchorsMode` must be `auto` or `exact`
 - `arrowheads` must be `shown` or `hidden`
@@ -66,10 +74,17 @@ Rules:
 - `showToolbarShortcutHints` must be a boolean and defaults to `false` when missing or invalid
 - `nodeColorDefault` may be `null` or one of the curated palette keys
 
+Defaults:
+
+- `uiThemePreset` defaults to `graphite` when missing or invalid
+- `uiRadiusPreset` defaults to `rounded` when missing or invalid
+- legacy `uiRadiusPreset: "square"` is migrated to `soft`
+
 Fallback behavior:
 
 - invalid or missing settings values are sanitized back to hypernode defaults when loaded into app state
 - payload validation rejects invalid setting enum values and invalid color keys before import/restore succeeds
+- older hypernode files that predate these fields fall back to `graphite` and `rounded`
 
 ## Nodes
 
@@ -190,6 +205,8 @@ Sanitization behavior:
 Payload validation rejects graphs when any of the following are true:
 
 - `settings` contains invalid enum values or an out-of-range arrowhead size step
+- `settings.uiThemePreset` is not a supported preset
+- `settings.uiRadiusPreset` is not a supported preset
 - `settings.showShortcutsUi` is present but not a boolean
 - `settings.showToolbarShortcutHints` is present but not a boolean
 - `settings.nodeColorDefault` is not `null` and not a valid palette key
@@ -206,4 +223,4 @@ Payload validation rejects graphs when any of the following are true:
 - Hypernode autosave is stored under the hypernode storage key as `{ name, settings, nodes, frames, edges }`
 - Hypernode export writes the same shape as formatted JSON
 - Hypernode import accepts only payloads that pass validation for the same shape
-- Theme preference is persisted separately from hypernode data and is not included in exported files
+- Hypernode appearance presets are persisted with graph settings and are included in exported files

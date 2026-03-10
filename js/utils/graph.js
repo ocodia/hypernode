@@ -11,6 +11,8 @@ const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
 const BACKGROUND_STYLES = new Set(['dots', 'graph-paper']);
 const ANCHORS_MODES = new Set(['auto', 'exact']);
 const ARROWHEADS_MODES = new Set(['shown', 'hidden']);
+const UI_THEME_PRESETS = new Set(['graphite', 'paper']);
+const UI_RADIUS_PRESETS = new Set(['sharp', 'soft', 'rounded', 'square']);
 const ARROWHEAD_SIZE_STEP_MIN = 0;
 const ARROWHEAD_SIZE_STEP_MAX = 9;
 const NODE_KINDS = new Set(['text', 'image']);
@@ -20,6 +22,8 @@ export function emptyGraphState() {
   return {
     name: GRAPH_DEFAULTS.name,
     settings: {
+      uiThemePreset: GRAPH_DEFAULTS.uiThemePreset,
+      uiRadiusPreset: GRAPH_DEFAULTS.uiRadiusPreset,
       backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
       anchorsMode: GRAPH_DEFAULTS.anchorsMode,
       arrowheads: GRAPH_DEFAULTS.arrowheads,
@@ -154,6 +158,10 @@ export function validateGraphPayload(payload) {
     return false;
   }
 
+  const hasValidUiThemePreset = payload.settings.uiThemePreset === undefined
+    || isValidUiThemePreset(payload.settings.uiThemePreset);
+  const hasValidUiRadiusPreset = payload.settings.uiRadiusPreset === undefined
+    || normalizeUiRadiusPreset(payload.settings.uiRadiusPreset) !== null;
   const hasValidCoreSettings = isValidBackgroundStyle(payload.settings.backgroundStyle);
   const hasValidAnchorsMode = payload.settings.anchorsMode === undefined
     || isValidAnchorsMode(payload.settings.anchorsMode);
@@ -168,7 +176,7 @@ export function validateGraphPayload(payload) {
   const hasValidNodeColorDefault = payload.settings.nodeColorDefault === undefined
     || payload.settings.nodeColorDefault === null
     || isValidNodeColorKey(payload.settings.nodeColorDefault);
-  if (!hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidShowShortcutsUi || !hasValidShowToolbarShortcutHints || !hasValidNodeColorDefault) {
+  if (!hasValidUiThemePreset || !hasValidUiRadiusPreset || !hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidShowShortcutsUi || !hasValidShowToolbarShortcutHints || !hasValidNodeColorDefault) {
     return false;
   }
 
@@ -212,6 +220,10 @@ export function sanitizeGraphName(name) {
 
 export function sanitizeGraphSettings(settings) {
   return {
+    uiThemePreset: isValidUiThemePreset(settings?.uiThemePreset)
+      ? settings.uiThemePreset
+      : GRAPH_DEFAULTS.uiThemePreset,
+    uiRadiusPreset: normalizeUiRadiusPreset(settings?.uiRadiusPreset) ?? GRAPH_DEFAULTS.uiRadiusPreset,
     backgroundStyle: isValidBackgroundStyle(settings?.backgroundStyle)
       ? settings.backgroundStyle
       : GRAPH_DEFAULTS.backgroundStyle,
@@ -242,6 +254,24 @@ function sanitizeAnchor(anchor) {
 
 function isValidBackgroundStyle(value) {
   return typeof value === 'string' && BACKGROUND_STYLES.has(value);
+}
+
+function isValidUiThemePreset(value) {
+  return typeof value === 'string' && UI_THEME_PRESETS.has(value);
+}
+
+function isValidUiRadiusPreset(value) {
+  return typeof value === 'string' && UI_RADIUS_PRESETS.has(value);
+}
+
+function normalizeUiRadiusPreset(value) {
+  if (!isValidUiRadiusPreset(value)) {
+    return null;
+  }
+  if (value === 'square') {
+    return 'soft';
+  }
+  return value;
 }
 
 function isValidAnchorsMode(value) {

@@ -827,6 +827,22 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setUiThemePreset(uiThemePreset) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, uiThemePreset }).uiThemePreset;
+    if (state.settings.uiThemePreset === nextValue) return;
+    pushHistory('set-ui-theme-preset');
+    state.settings.uiThemePreset = nextValue;
+    notify();
+  }
+
+  function setUiRadiusPreset(uiRadiusPreset) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, uiRadiusPreset }).uiRadiusPreset;
+    if (state.settings.uiRadiusPreset === nextValue) return;
+    pushHistory('set-ui-radius-preset');
+    state.settings.uiRadiusPreset = nextValue;
+    notify();
+  }
+
   function setAnchorsMode(anchorsMode) {
     const nextValue = sanitizeGraphSettings({ ...state.settings, anchorsMode }).anchorsMode;
     if (state.settings.anchorsMode === nextValue) return;
@@ -1084,6 +1100,8 @@ export function createStore(initialGraph = null) {
     reconnectEdge,
     deleteEdge,
     setGraphName,
+    setUiThemePreset,
+    setUiRadiusPreset,
     setBackgroundStyle,
     setAnchorsMode,
     setArrowheads,

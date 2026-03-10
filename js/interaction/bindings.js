@@ -17,7 +17,6 @@ import { bindKeyboardInteractions } from './binders/keyboard.js';
 import { bindNodeInteractions } from './binders/nodes.js';
 import { bindToolbarInteractions } from './binders/toolbar.js';
 
-const THEME_STORAGE_KEY = 'hypernode.theme.v1';
 const SHORTCUT_CATALOG = [
   {
     id: 'new-graph',
@@ -148,9 +147,9 @@ const SHORTCUT_CATALOG = [
   {
     id: 'toggle-theme',
     keys: ['T'],
-    title: 'Toggle theme',
-    description: 'Switches between light and dark mode.',
-    searchTokens: ['theme', 'dark', 'light', 'appearance'],
+    title: 'Toggle document theme',
+    description: 'Switches the current hypernode between the graphite and paper presets.',
+    searchTokens: ['theme', 'appearance', 'graphite', 'paper', 'preset'],
   },
   {
     id: 'open-about',
@@ -179,7 +178,7 @@ const TOOLBAR_SHORTCUTS = {
   'redo-btn': { label: 'Redo', shortcut: 'Ctrl/Cmd+Y' },
   'reset-view-btn': { label: 'Reset view', shortcut: 'Ctrl/Cmd+0' },
   'settings-btn': { label: 'Hypernode settings', shortcut: 'Ctrl/Cmd+,' },
-  'theme-toggle-btn': { label: 'Toggle theme', shortcut: 'T' },
+  'theme-toggle-btn': { label: 'Toggle document theme', shortcut: 'T' },
   'shortcuts-btn': { label: 'Keyboard shortcuts', shortcut: 'Ctrl/Cmd+/' },
   'about-btn': { label: 'About hypernode', shortcut: 'Shift+?' },
 };
@@ -2443,6 +2442,8 @@ export function bindInteractions(elements, store, options = {}) {
     store.replaceGraph({
       name: GRAPH_DEFAULTS.name,
       settings: {
+        uiThemePreset: GRAPH_DEFAULTS.uiThemePreset,
+        uiRadiusPreset: GRAPH_DEFAULTS.uiRadiusPreset,
         backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
         anchorsMode: GRAPH_DEFAULTS.anchorsMode,
         arrowheads: GRAPH_DEFAULTS.arrowheads,
@@ -2513,11 +2514,9 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function toggleThemePreference() {
-    const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    applyTheme(nextTheme, themeToggleBtn);
-    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    syncShortcutUiFromState(store.getState());
+    const currentThemePreset = store.getState().settings?.uiThemePreset === 'paper' ? 'paper' : 'graphite';
+    const nextThemePreset = currentThemePreset === 'graphite' ? 'paper' : 'graphite';
+    store.setUiThemePreset(nextThemePreset);
   }
 
   function setAboutSlide(nextIndex) {
@@ -2601,7 +2600,7 @@ export function bindInteractions(elements, store, options = {}) {
         return;
       }
       const baseLabel = button.id === 'theme-toggle-btn'
-        ? (document.documentElement.dataset.theme === 'dark' ? 'Enable light mode' : 'Enable dark mode')
+        ? getThemeToggleButtonCopy(state.settings?.uiThemePreset).label
         : config.label;
       const hintVisible = showToolbarShortcuts && typeof config.shortcut === 'string' && config.shortcut.length > 0;
       const formattedShortcut = formatShortcutLabel(config.shortcut, { compact: true });
@@ -2688,6 +2687,16 @@ export function bindInteractions(elements, store, options = {}) {
     });
   }
 
+  settingsDialog?.querySelectorAll('.settings-dialog__group').forEach((group) => {
+    group.addEventListener('toggle', () => {
+      if (!(group instanceof HTMLDetailsElement) || !group.open) return;
+      settingsDialog.querySelectorAll('.settings-dialog__group').forEach((otherGroup) => {
+        if (!(otherGroup instanceof HTMLDetailsElement) || otherGroup === group) return;
+        otherGroup.open = false;
+      });
+    });
+  });
+
   graphNameInput?.addEventListener('change', () => {
     store.setGraphName(graphNameInput.value);
   });
@@ -2740,12 +2749,21 @@ export function bindInteractions(elements, store, options = {}) {
     store.setArrowheadSizeStep(nextStep);
   });
 
-  const preferredDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  const initialTheme = storedTheme === 'dark' || storedTheme === 'light'
-    ? storedTheme
-    : (preferredDark ? 'dark' : 'light');
-  applyTheme(initialTheme, themeToggleBtn);
+  settingsDialog?.querySelectorAll('input[name="ui-theme-preset"]').forEach((input) => {
+    input.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || !target.checked) return;
+      store.setUiThemePreset(target.value);
+    });
+  });
+
+  settingsDialog?.querySelectorAll('input[name="ui-radius-preset"]').forEach((input) => {
+    input.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || !target.checked) return;
+      store.setUiRadiusPreset(target.value);
+    });
+  });
 
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', () => {
@@ -3026,6 +3044,7 @@ export function bindInteractions(elements, store, options = {}) {
   resetAboutDialog();
   renderShortcutCatalog();
   filterShortcuts('');
+  syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
   syncShortcutUiFromState(store.getState());
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
@@ -3722,18 +3741,6 @@ function isAbortError(error) {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-function applyTheme(theme, toggleButton) {
-  const isDark = theme === 'dark';
-  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
-  if (toggleButton) {
-    toggleButton.innerHTML = isDark
-      ? '<i class="bi bi-sun"></i>'
-      : '<i class="bi bi-moon-stars"></i>';
-    toggleButton.setAttribute('aria-label', isDark ? 'Enable light mode' : 'Enable dark mode');
-    toggleButton.setAttribute('title', isDark ? 'Enable Light Mode' : 'Enable Dark Mode');
-  }
-}
-
 function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput) {
   if (!settingsDialog) return;
   if (graphNameInput) {
@@ -3746,6 +3753,18 @@ function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, show
     showToolbarShortcutsInput.checked = state.settings?.showToolbarShortcutHints === true;
     showToolbarShortcutsInput.disabled = state.settings?.showShortcutsUi === false;
   }
+
+  settingsDialog.querySelectorAll('input[name="ui-theme-preset"]').forEach((input) => {
+    if (input instanceof HTMLInputElement) {
+      input.checked = input.value === state.settings.uiThemePreset;
+    }
+  });
+
+  settingsDialog.querySelectorAll('input[name="ui-radius-preset"]').forEach((input) => {
+    if (input instanceof HTMLInputElement) {
+      input.checked = input.value === state.settings.uiRadiusPreset;
+    }
+  });
 
   settingsDialog.querySelectorAll('input[name="background-style"]').forEach((input) => {
     if (input instanceof HTMLInputElement) {
@@ -3772,6 +3791,35 @@ function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, show
     arrowheadSizeRange.value = String(step);
     updateArrowheadSizeLabel(arrowheadSizeValue, step);
   }
+
+  syncThemeToggleButton(state.settings?.uiThemePreset, document.getElementById('theme-toggle-btn'));
+}
+
+function syncThemeToggleButton(uiThemePreset, toggleButton) {
+  if (!(toggleButton instanceof HTMLButtonElement)) return;
+  const { icon, label, title } = getThemeToggleButtonCopy(uiThemePreset);
+  const iconEl = toggleButton.querySelector('.bi');
+  if (iconEl instanceof HTMLElement) {
+    iconEl.className = `bi ${icon}`;
+  }
+  toggleButton.setAttribute('aria-label', label);
+  toggleButton.setAttribute('title', title);
+}
+
+function getThemeToggleButtonCopy(uiThemePreset) {
+  const currentPreset = uiThemePreset === 'paper' ? 'paper' : 'graphite';
+  if (currentPreset === 'paper') {
+    return {
+      icon: 'bi-moon-stars',
+      label: 'Switch to graphite theme',
+      title: 'Switch to Graphite Theme',
+    };
+  }
+  return {
+    icon: 'bi-sun',
+    label: 'Switch to paper theme',
+    title: 'Switch to Paper Theme',
+  };
 }
 
 function updateArrowheadSizeLabel(labelEl, step) {

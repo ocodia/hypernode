@@ -332,10 +332,32 @@ As a user, I want hypernode-wide controls in one place so I can adjust presentat
 
 Acceptance criteria:
 
-- Settings dialog exposes hypernode name, background style, anchors mode, arrowhead visibility, arrowhead size, a `Show shortcuts in UI` toggle, and a `Show shortcuts on toolbar` toggle.
+- Settings dialog exposes hypernode name, UI theme preset, UI radius preset, background style, anchors mode, arrowhead visibility, arrowhead size, a `Show shortcuts in UI` toggle, and a `Show shortcuts on toolbar` toggle.
 - Changing a setting updates the current hypernode immediately.
 - Hypernode name updates the metadata chip and browser tab title.
 - Settings remain available without leaving the canvas workflow.
+
+### US-29a: Choose a UI theme preset per hypernode
+
+As a user, I want to choose a curated appearance preset so each hypernode can have a consistent UI look without manual color tuning.
+
+Acceptance criteria:
+
+- Settings expose UI theme presets `graphite` and `paper`.
+- Choosing a preset updates shared UI surfaces, controls, dialogs, nodes, and frames.
+- The node/frame annotation palette remains available and distinct from the document UI theme.
+- Focus states and text contrast remain readable across all supported presets.
+
+### US-29b: Choose a shared radius preset
+
+As a user, I want to adjust the global radius style so the hypernode can feel more boxy or more rounded.
+
+Acceptance criteria:
+
+- Settings expose radius presets `sharp`, `soft`, and `rounded`.
+- Changing the preset updates buttons, inputs, dialogs, nodes, frames, image wells, and selection chrome consistently.
+- Nodes and frames visibly inherit the same radius language as the surrounding application UI.
+- Changing the radius preset updates the current hypernode immediately.
 
 ### US-30: Persist settings through autosave and file round-trips
 
@@ -347,6 +369,7 @@ Acceptance criteria:
 - Opening a valid hypernode JSON file restores persisted settings.
 - Saving a hypernode JSON file writes the current settings into the file.
 - Invalid settings payloads are rejected before replacing the current hypernode.
+- UI theme preset and UI radius preset round-trip with the same persistence guarantees as the other graph settings.
 
 ### US-33: Search keyboard shortcuts
 
@@ -390,3 +413,4 @@ Version 1 is complete when:
 - persistence and file flows are safe
 - undo/redo are reliable for core actions
 - UI remains lightweight and canvas-first
+- appearance presets and radius presets persist consistently with the hypernode document

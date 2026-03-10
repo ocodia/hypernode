@@ -49,6 +49,8 @@ export const NODE_COLOR_KEYS = [
 
 export const GRAPH_DEFAULTS = {
   name: "Untitled hypernode",
+  uiThemePreset: "graphite",
+  uiRadiusPreset: "rounded",
   backgroundStyle: "dots",
   anchorsMode: "auto",
   arrowheads: "shown",

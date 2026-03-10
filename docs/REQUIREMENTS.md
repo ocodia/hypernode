@@ -106,13 +106,19 @@ FR-28
 The node color palette must allow applying a color to selected nodes and setting the default color used for newly created nodes.
 
 FR-29
-Graph settings must include graph name, background style, anchors mode, arrowhead visibility, arrowhead size, shortcut UI visibility, and toolbar shortcut hint visibility.
+Graph settings must include graph name, UI theme preset, UI radius preset, background style, anchors mode, arrowhead visibility, arrowhead size, shortcut UI visibility, and toolbar shortcut hint visibility.
 
 FR-29a
 The shortcuts dialog must support search by shortcut keys and action text.
 
 FR-30
-The app must provide a theme toggle (light/dark) and persist the user theme preference locally.
+The app must provide hypernode-level appearance presets and persist the selected UI theme preset and UI radius preset with the graph document.
+
+FR-30a
+The UI theme preset must apply semantic design tokens across shared UI primitives and canvas objects, including dialogs, toolbar controls, nodes, frames, and image wells.
+
+FR-30b
+The UI radius preset must apply a shared radius scale across controls, dialogs, cards, nodes, frames, image wells, and selection chrome.
 
 FR-31
 Users must be able to create, edit, move, resize, and delete Frames.
@@ -175,7 +181,13 @@ All graph data processing must occur client-side.
 ### Accessibility
 
 NFR-9
-Interactive controls must provide visible focus states.
+Interactive controls must provide visible focus states across all appearance presets.
 
 NFR-10
 Core editing actions should be keyboard-accessible where practical.
+
+NFR-11
+Themed surfaces, text, and control states must maintain accessible contrast across the supported UI theme presets.
+
+NFR-12
+Nodes, frames, dialogs, inputs, and toolbar controls must inherit the shared radius system consistently for each supported radius preset.
