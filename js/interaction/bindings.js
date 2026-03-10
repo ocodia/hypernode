@@ -400,7 +400,12 @@ export function bindInteractions(elements, store, options = {}) {
     const node = getNode(parsed.nodeId, state);
     if (!node) return;
 
-    const nodeEl = event.target.closest('[data-node-id]');
+    const escapedNodeId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+      ? CSS.escape(parsed.nodeId)
+      : parsed.nodeId;
+    const nodeEl = document.querySelector(`#nodes-layer > [data-node-id="${escapedNodeId}"]`)
+      || event.target.closest('#nodes-layer > [data-node-id]')
+      || event.target.closest('.selection-controls__group--node[data-node-id]');
     const initialWidth = Number(node.width) > 0
       ? Number(node.width)
       : (nodeEl?.offsetWidth || NODE_DEFAULTS.width);
