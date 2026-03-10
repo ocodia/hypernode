@@ -2036,13 +2036,25 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1 1 auto;
   min-height: 0;
 }
 
 .node__editor-fields--canvas-image {
   gap: 12px;
+  min-height: 0;
+}
+
+.node__editor-field--title {
+  flex: 0 0 auto;
+}
+
+.node__editor-field--description {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
 }
 
 .node__editor-input,
@@ -2064,15 +2076,10 @@ select:focus-visible {
 
 .node__editor-textarea {
   flex: 1 1 auto;
+  height: 100%;
   min-height: 0;
   resize: none;
   overflow: auto;
-}
-
-.node__editor-layout--canvas-image .node__editor-field--description {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
 }
 
 .node__editor-layout--canvas-image .node__editor-textarea {
