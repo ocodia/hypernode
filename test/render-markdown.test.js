@@ -51,7 +51,7 @@ test('renderDescriptionMarkdown renders safe links and drops unsafe urls', () =>
 test('renderDescriptionMarkdown supports mixed content and malformed links remain text', () => {
   assert.equal(
     renderDescriptionMarkdown('Line one\nline two\n\n- item with [link](https://example.net/) and `code`\n\n[broken](notaurl)'),
-    '<p>Line one line two</p><ul><li>item with <a href="https://example.net/" target="_blank" rel="noopener noreferrer">link</a> and <code>code</code></li></ul><p>broken</p>',
+    '<p>Line one<br>line two</p><ul><li>item with <a href="https://example.net/" target="_blank" rel="noopener noreferrer">link</a> and <code>code</code></li></ul><p>broken</p>',
   );
 });
 
@@ -129,7 +129,7 @@ test('canvas inline edit keeps the single-node overlay toolbar visible', () => {
       selection: { type: 'node', id: 'n1' },
       ui: { editingNodeId: 'n1', focusedNodeId: null, editingFrameId: null, edgeDraft: null },
       viewport: { zoom: 1, panX: 0, panY: 0 },
-      settings: { showShortcutsUi: true },
+      settings: {},
     });
 
     assert.match(selectionControlsLayer.innerHTML, /selection-controls__toolbar--node/);

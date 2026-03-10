@@ -5,7 +5,6 @@ import {
   sanitizeEdge,
   sanitizeFrame,
   sanitizeGraphName,
-  sanitizeAppSettings,
   sanitizeNode,
 } from '../utils/graph.js';
 import {
@@ -30,11 +29,13 @@ import {
   normalizeNodeSelection,
 } from '../shared/selection.js';
 import { createHistoryManager } from './history.js';
+import { createMutationTools } from './store-mutations.js';
+import { getInitialSettings, getResolvedSettings, settingsChanged } from './store-settings.js';
 import { clearTransientUiState } from './ui.js';
 
 export function createStore(initialGraph = null, initialSettings = null) {
   const state = emptyGraphState();
-  state.settings = sanitizeAppSettings(initialSettings);
+  state.settings = getInitialSettings(initialGraph, initialSettings);
   if (initialGraph) {
     state.name = sanitizeGraphName(initialGraph.name);
     state.frames = (Array.isArray(initialGraph.frames) ? initialGraph.frames : []).map(sanitizeFrame);
@@ -47,6 +48,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   const listeners = new Set();
   let importStatusTimeoutHandle = null;
   const { snapshot, pushHistory } = createHistoryManager(state);
+  const { applyStateChange } = createMutationTools({ notify, pushHistory, syncAutoAnchorsForAllEdges });
 
   function notify() {
     for (const listener of listeners) {
@@ -391,7 +393,6 @@ export function createStore(initialGraph = null, initialSettings = null) {
     height = null,
     frameId = null,
   }, options = {}) {
-    if (!options.skipHistory) pushHistory('add-node');
     const resolvedColorKey = options.colorKey !== undefined
       ? sanitizeColorKey(options.colorKey)
       : sanitizeColorKey(state.settings.nodeColorDefault);
@@ -416,9 +417,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
       }
     }
 
-    state.nodes.push(node);
-    state.selection = { type: 'node', id: node.id };
-    notify();
+    applyStateChange('add-node', () => {
+      state.nodes.push(node);
+      state.selection = { type: 'node', id: node.id };
+    }, { skipHistory: options.skipHistory });
     return node;
   }
 
@@ -431,8 +433,6 @@ export function createStore(initialGraph = null, initialSettings = null) {
     description = '',
     colorKey = null,
   }, options = {}) {
-    if (!options.skipHistory) pushHistory('add-frame');
-
     const frame = sanitizeFrame({
       id: createId('frame'),
       title,
@@ -444,20 +444,21 @@ export function createStore(initialGraph = null, initialSettings = null) {
       colorKey,
     });
 
-    state.frames.push(frame);
+    applyStateChange('add-frame', () => {
+      state.frames.push(frame);
 
-    if (options.assignOverlaps !== false) {
-      for (const node of state.nodes) {
-        if (node.frameId) continue;
-        const area = getNodeFrameOverlapArea(node, frame);
-        if (area > 0) {
-          node.frameId = frame.id;
+      if (options.assignOverlaps !== false) {
+        for (const node of state.nodes) {
+          if (node.frameId) continue;
+          const area = getNodeFrameOverlapArea(node, frame);
+          if (area > 0) {
+            node.frameId = frame.id;
+          }
         }
       }
-    }
 
-    state.selection = { type: 'frame', id: frame.id };
-    notify();
+      state.selection = { type: 'frame', id: frame.id };
+    }, { skipHistory: options.skipHistory });
     return frame;
   }
   function updateNode(id, patch, options = {}) {
@@ -938,64 +939,59 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function setGraphName(name) {
     const nextName = sanitizeGraphName(name);
     if (state.name === nextName) return;
-    pushHistory('set-graph-name');
-    state.name = nextName;
-    notify();
+    applyStateChange('set-graph-name', () => {
+      state.name = nextName;
+    });
   }
 
-  function updateAppSettings(partialSettings) {
-    const nextSettings = sanitizeAppSettings({ ...state.settings, ...partialSettings });
-    const changed = Object.keys(nextSettings).some((key) => state.settings[key] !== nextSettings[key]);
+  function updateAppSettings(partialSettings, options = {}) {
+    const nextSettings = getResolvedSettings(state.settings, partialSettings);
+    const changed = settingsChanged(state.settings, nextSettings);
     if (!changed) return false;
-    state.settings = nextSettings;
-    notify();
+    applyStateChange(options.actionLabel ?? 'update-settings', () => {
+      state.settings = nextSettings;
+    }, { skipAnchorSync: !options.syncAnchors, skipHistory: options.skipHistory });
     return true;
   }
 
   function setBackgroundStyle(backgroundStyle) {
-    updateAppSettings({ backgroundStyle });
+    updateAppSettings({ backgroundStyle }, { actionLabel: 'set-background-style' });
   }
 
   function setUiThemePreset(uiThemePreset) {
-    updateAppSettings({ uiThemePreset });
+    updateAppSettings({ uiThemePreset }, { actionLabel: 'set-ui-theme-preset' });
   }
 
   function setUiRadiusPreset(uiRadiusPreset) {
-    updateAppSettings({ uiRadiusPreset });
+    updateAppSettings({ uiRadiusPreset }, { actionLabel: 'set-ui-radius-preset' });
   }
 
   function setToolbarPosition(toolbarPosition) {
-    updateAppSettings({ toolbarPosition });
+    updateAppSettings({ toolbarPosition }, { actionLabel: 'set-toolbar-position' });
   }
 
   function setToolbarOrientation(toolbarOrientation) {
-    updateAppSettings({ toolbarOrientation });
+    updateAppSettings({ toolbarOrientation }, { actionLabel: 'set-toolbar-orientation' });
   }
 
   function setToastPosition(toastPosition) {
-    updateAppSettings({ toastPosition });
+    updateAppSettings({ toastPosition }, { actionLabel: 'set-toast-position' });
   }
 
   function setMetaPosition(metaPosition) {
-    updateAppSettings({ metaPosition });
+    updateAppSettings({ metaPosition }, { actionLabel: 'set-meta-position' });
   }
 
   function setAnchorsMode(anchorsMode) {
-    const nextSettings = sanitizeAppSettings({ ...state.settings, anchorsMode });
-    const changed = Object.keys(nextSettings).some((key) => state.settings[key] !== nextSettings[key]);
-    if (!changed) return false;
-    state.settings = nextSettings;
-    syncAutoAnchorsForAllEdges();
-    notify();
-    return true;
+    return updateAppSettings({ anchorsMode }, { actionLabel: 'set-anchors-mode', syncAnchors: true });
   }
 
   function setArrowheads(arrowheads) {
-    updateAppSettings({ arrowheads });
+    updateAppSettings({ arrowheads }, { actionLabel: 'set-arrowheads' });
   }
 
   function setArrowheadSizeStep(arrowheadSizeStep) {
-    updateAppSettings({ arrowheadSizeStep });
+    updateAppSettings({ arrowheadSizeStep }, { actionLabel: 'set-arrowhead-size-step' });
   }
 
   function deleteEdge(id) {
@@ -1011,7 +1007,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function replaceGraph(graph) {
     pushHistory('import-graph');
     state.name = sanitizeGraphName(graph.name);
-    state.settings = sanitizeAppSettings(graph.settings ?? state.settings);
+    state.settings = getInitialSettings(graph, null);
     state.frames = (Array.isArray(graph.frames) ? graph.frames : []).map(sanitizeFrame);
     const frameIds = new Set(state.frames.map((frame) => frame.id));
     state.nodes = graph.nodes.map((node) => sanitizeNode(node, frameIds));
@@ -1025,7 +1021,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function setNodeColorDefault(colorKey) {
     const nextValue = sanitizeColorKey(colorKey);
     if ((state.settings.nodeColorDefault || null) === nextValue) return;
-    updateAppSettings({ nodeColorDefault: nextValue });
+    updateAppSettings({ nodeColorDefault: nextValue }, { actionLabel: 'set-node-color-default' });
   }
 
   function setViewport(next) {
@@ -1096,6 +1092,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
 
   function restoreSnapshot(data) {
     state.name = data.name;
+    state.settings = getResolvedSettings({}, data.settings);
     state.nodes = data.nodes;
     state.frames = Array.isArray(data.frames) ? data.frames : [];
     state.edges = data.edges;

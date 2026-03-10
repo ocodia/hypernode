@@ -3,28 +3,7 @@ import assert from 'node:assert/strict';
 
 import { createStore } from '../js/state/store.js';
 
-test('setShowShortcutsUi updates state and undo/redo restores it', () => {
-  const store = createStore({
-    name: 'Graph',
-    settings: {},
-    nodes: [],
-    frames: [],
-    edges: [],
-  });
-
-  assert.equal(store.getState().settings.showShortcutsUi, true);
-
-  store.setShowShortcutsUi(false);
-  assert.equal(store.getState().settings.showShortcutsUi, false);
-
-  store.undo();
-  assert.equal(store.getState().settings.showShortcutsUi, true);
-
-  store.redo();
-  assert.equal(store.getState().settings.showShortcutsUi, false);
-});
-
-test('setToastPosition updates state, resolves conflicts, and undo/redo restores it', () => {
+test('setToastPosition resolves conflicts and undo/redo restores settings', () => {
   const store = createStore({
     name: 'Graph',
     settings: {
@@ -94,7 +73,7 @@ test('setToolbarOrientation updates state and undo/redo restores it', () => {
   assert.equal(store.getState().settings.toolbarOrientation, 'vertical');
 });
 
-test('replaceGraph restores persisted showShortcutsUi from imported graph', () => {
+test('replaceGraph restores persisted settings from imported graph', () => {
   const store = createStore({
     name: 'Graph',
     settings: {},
@@ -114,7 +93,8 @@ test('replaceGraph restores persisted showShortcutsUi from imported graph', () =
       toolbarOrientation: 'vertical',
       toastPosition: 'top-right',
       metaPosition: 'bottom-left',
-      showShortcutsUi: false,
+      uiThemePreset: 'chalkboard',
+      uiRadiusPreset: 'soft',
       nodeColorDefault: null,
     },
     nodes: [],
@@ -128,5 +108,25 @@ test('replaceGraph restores persisted showShortcutsUi from imported graph', () =
   assert.equal(state.settings.toolbarOrientation, 'vertical');
   assert.equal(state.settings.toastPosition, 'top-right');
   assert.equal(state.settings.metaPosition, 'bottom-left');
-  assert.equal(state.settings.showShortcutsUi, false);
+  assert.equal(state.settings.uiThemePreset, 'chalkboard');
+  assert.equal(state.settings.uiRadiusPreset, 'soft');
+});
+
+test('createStore uses graph settings when explicit app settings are not provided', () => {
+  const store = createStore({
+    name: 'Graph',
+    settings: {
+      uiThemePreset: 'chalkboard',
+      uiRadiusPreset: 'soft',
+      toolbarPosition: 'bottom-right',
+    },
+    nodes: [],
+    frames: [],
+    edges: [],
+  });
+
+  const { settings } = store.getState();
+  assert.equal(settings.uiThemePreset, 'chalkboard');
+  assert.equal(settings.uiRadiusPreset, 'soft');
+  assert.equal(settings.toolbarPosition, 'bottom-right');
 });

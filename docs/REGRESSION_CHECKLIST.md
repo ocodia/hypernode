@@ -95,13 +95,11 @@ Use this checklist before shipping interaction changes.
 - [ ] Toggle keyboard hints on/off.
 - [ ] Open the shortcuts dialog and verify search matches both shortcut keys and action text.
 - [ ] Search for a nonsense term and verify the empty state appears.
-- [ ] Turn `Show shortcuts in UI` off and verify the shortcuts toolbar button disappears, inline shortcut hints disappear, and keyboard commands still work.
-- [ ] Turn `Show shortcuts in UI` off while the shortcuts dialog is open and verify the dialog closes.
 - [ ] Switch `Toolbar position` through all four corners and verify the toolbar stays clickable and aligned after each change.
 - [ ] Toggle `Toolbar orientation` between horizontal and vertical and verify button layout updates without breaking click targets.
 - [ ] Reload page and verify `Toolbar position` persists.
 - [ ] Save, reopen, and create a new graph; confirm toolbar position round-trips for save/open and resets to `Top left` for a new graph.
 - [ ] Trigger file/theme/image toasts and verify they appear in the bottom-right with accent-highlighted borders and disappear quickly.
 - [ ] Open/close About dialog.
-- [ ] Toggle dark mode and reload page to verify theme persistence.
+- [ ] Change the UI theme preset and reload page to verify theme persistence.
 - [ ] Zoom until a single-node toolbar would collide with toolbar/meta/toast chrome and verify top/bottom auto-placement still avoids obstructions.

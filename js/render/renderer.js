@@ -2,16 +2,8 @@ import { renderEdges, renderDraftEdge } from './modules/edges.js';
 import { renderFrames } from './modules/frames.js';
 import { renderNodes } from './modules/nodes.js';
 import { renderFocusOverlay, renderHypernodeMetadata, renderImportStatus, renderSelectionControls } from './modules/ui.js';
+import { THEME_META } from './theme-meta.js';
 import { applyViewport } from './modules/viewport.js';
-
-const THEME_META = {
-  blueprint: { mode: 'dark', color: '#0f172a' },
-  fjord: { mode: 'dark', color: '#0d1b24' },
-  slate: { mode: 'light', color: '#e6e9ed' },
-  paper: { mode: 'light', color: '#f4f7fb' },
-  ember: { mode: 'light', color: '#f3eadf' },
-  chalkboard: { mode: 'dark', color: '#121315' },
-};
 
 export function createRenderer(elements, _store) {
   void _store;

@@ -112,7 +112,7 @@ FR-28a
 Canvas selection toolbars must remain usable across the supported zoom range by keeping their click targets effectively screen-space sized while staying attached to the selected node/frame bounds.
 
 FR-29
-Graph settings must include graph name, UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, arrowhead size, and shortcut UI visibility.
+Graph settings must include graph name, UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, and arrowhead size.
 
 FR-29a
 The shortcuts dialog must support search by shortcut keys and action text.

@@ -332,7 +332,7 @@ As a user, I want hypernode-wide controls in one place so I can adjust presentat
 
 Acceptance criteria:
 
-- Settings dialog exposes hypernode name, UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, arrowhead size, and a `Show shortcuts in UI` toggle.
+- Settings dialog exposes hypernode name, UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, and arrowhead size.
 - Changing a setting updates the current hypernode immediately.
 - Hypernode name updates the metadata chip and browser tab title.
 - Settings remain available without leaving the canvas workflow.
@@ -343,7 +343,7 @@ As a user, I want to choose a curated appearance preset so each hypernode can ha
 
 Acceptance criteria:
 
-- Settings expose UI theme presets `blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`.
+- Settings expose UI theme presets `blueprint`, `fjord`, `slate`, `paper`, `ember`, and `chalkboard`.
 - Choosing a preset updates shared UI surfaces, controls, dialogs, nodes, and frames.
 - The node/frame annotation palette remains available and distinct from the document UI theme.
 - Focus states and text contrast remain readable across all supported presets.

@@ -1,6 +1,6 @@
 # TASKS
 
-Last updated: 2026-03-07
+Last updated: 2026-03-10
 
 ## Completed So Far
 
@@ -23,6 +23,18 @@ Last updated: 2026-03-07
 - [x] Node corner resize with selected-only handles, min clamp (`160x96`), undo/redo, and persistence
 - [x] Selected-node mini toolbar with `Edit` and `Delete` actions
 - [x] Image nodes with base64-backed JSON payloads, anchor connectivity, and aspect-ratio-locked resizing
+- [x] Settings/history baseline cleanup:
+  - graph settings load from persisted document state
+  - autosave preserves `{ name, settings, nodes, frames, edges }`
+  - settings mutations participate in undo/redo
+- [x] Refactor groundwork:
+  - extracted state settings/mutation helpers
+  - extracted renderer theme metadata
+  - extracted interaction shortcut/theme config
+- [x] Documentation alignment:
+  - current theme list is `blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`
+  - current radius presets are `sharp`, `soft`, `rounded`
+  - removed legacy alias language from the active contract
 
 ## Remaining Work
 
@@ -78,10 +90,10 @@ Last updated: 2026-03-07
   - dots use smooth linear visibility changes from low zoom (`0.35`) to high zoom (`2.5`)
   - behavior updates continuously as zoom changes without breaking world-locked alignment
 - [x] Consolidate anchor behavior into a single `Anchors` setting:
-  - `auto-anchor` uses nearest anchor between nodes for create/reconnect/render
-  - `exact anchor` keeps the committed start/destination anchors fixed as nodes move
+  - `auto` uses nearest anchor between nodes for create/reconnect/render
+  - `exact` keeps the committed start/destination anchors fixed as nodes move
   - applies consistently across create and reconnect flows
-  - persists as a system-wide default and survives reload/open/save/new without entering document undo/redo (`FR-11`, `FR-15`, `NFR-1`)
+  - persists with the document and also survives reload/open/save/new (`FR-11`, `FR-15`, `NFR-1`)
 - [x] Add graph naming:
   - editable graph name from canvas metadata
   - show graph name in the app title/header so users can confirm active graph
@@ -90,13 +102,13 @@ Last updated: 2026-03-07
   - `Arrowheads` toggle (`show` / `hide`) in Settings
   - renders on committed edges only (not draft preview)
   - arrowheads point toward destination anchors and rotate with edge approach angle
-  - persists as a system-wide default and survives reload/open/save/new without entering document undo/redo
+  - persists with the document and survives reload/open/save/new without breaking undo/redo
 - [x] Add arrowhead size control:
   - range slider with `10` levels
   - level `1` keeps current baseline size (`100%`)
   - each level increases size by `20%` (up to `280%`)
-  - persists as a system-wide default and survives reload/open/save/new without entering document undo/redo
-- [ ] Add regression checks for system-wide settings persistence across:
+  - persists with the document and survives reload/open/save/new without breaking undo/redo
+- [ ] Add regression checks for settings persistence across:
   - reload
   - open/save/new graph flows
   - undo/redo interactions involving edge reconnection behavior
@@ -120,6 +132,6 @@ Last updated: 2026-03-07
 6. Add Settings button and settings panel shell.
 7. Implement background style options (`blank`/`graph paper`/`dots`) with persistence.
 8. Implement zoom-aware, world-locked background pattern scaling (grid/dots) and run targeted regression checks.
-9. Implement consolidated Anchors mode (auto-anchor vs exact anchor).
+9. Implement consolidated Anchors mode (`auto` vs `exact`).
 10. Implement graph naming and surface it in app title/header.
 11. Run settings-focused regression pass across persistence and file workflows.

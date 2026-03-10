@@ -4,7 +4,7 @@ hypernode is a lightweight browser-based editor for building connected thinking 
 
 It runs fully client-side with no backend and no account system. Hypernode data autosaves in `localStorage`, and can be opened or saved as hypernode files backed by JSON.
 
-Hypernode includes a lightweight built-in design system for surfaces, buttons, dialogs, inputs, and canvas objects. Appearance is preset-driven, stored as system-wide defaults, and includes a shared radius scale that applies across controls, nodes, and frames.
+Hypernode includes a lightweight built-in design system for surfaces, buttons, dialogs, inputs, and canvas objects. Appearance is preset-driven, stored with the document, and includes a shared radius scale that applies across controls, nodes, and frames.
 
 ## Current Features
 
@@ -47,15 +47,15 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Toasts render in any screen corner, use accent-highlighted glass surfaces, and auto-resolve away from occupied toolbar/meta placements.
 - Start a new hypernode from the toolbar (with discard confirmation when existing hypernode data is present).
 - Built-in semantic design system for surfaces, buttons, inputs, dialogs, toolbar controls, nodes, and frames.
-- Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `Chalkboard`) saved with the document.
-- Shared UI radius presets (`sharp`, `soft`, `round`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
+- Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `chalkboard`) saved with the document.
+- Shared UI radius presets (`sharp`, `soft`, `rounded`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
 - Full-screen settings, about, and keyboard shortcuts dialogs with responsive layouts.
 - Theme-aware custom scrollbars across dialogs, focus views, and editor panes that inherit the active preset and radius scale.
-- Settings menu for system-wide defaults:
-  - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `Chalkboard`)
-  - UI radius preset (`sharp`, `soft`, or `round`)
-  - hypernode background style (`blank`, `dots`, or `graph paper`)
-  - anchors mode (`auto-anchor` or `exact anchor`) where auto-anchor keeps each edge's stored anchor points synced to the currently resolved connection sides as nodes and frames move
+- Settings menu for document-level defaults:
+  - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `chalkboard`)
+  - UI radius preset (`sharp`, `soft`, or `rounded`)
+  - hypernode background style (`blank`, `dots`, or `graph-paper`)
+  - anchors mode (`auto` or `exact`) where `auto` keeps each edge's stored anchor points synced to the currently resolved connection sides as nodes and frames move
   - arrowheads visibility (`show` or `hide`)
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
   - toolbar position (`top left`, `top right`, `bottom left`, or `bottom right`)
@@ -138,8 +138,8 @@ These tokens are applied across:
 
 Appearance stays preset-driven:
 
-- UI theme presets: `blueprint`, `fjord`, `slate`, `paper`, `ember`, `Chalkboard`
-- UI radius presets: `sharp`, `soft`, `round`
+- UI theme presets: `blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`
+- UI radius presets: `sharp`, `soft`, `rounded`
 
 The selected radius preset applies to standard UI controls and canvas objects alike, including nodes and frames.
 
@@ -181,6 +181,14 @@ python -m http.server
 
 Then open the URL shown by your server (commonly `http://localhost:3000` or `http://localhost:8000`).
 
+For checks:
+
+```bash
+npm install
+npm test
+npm run lint
+```
+
 ## Version 1 Scope
 
 Version 1 includes the core hypernode editor loop:
@@ -218,7 +226,7 @@ For each new feature PR, update docs as part of the same change set (do not defe
 1. **Update requirements first** (`docs/REQUIREMENTS.md`): add or adjust FR/NFR entries that define behavior and constraints.
 2. **Update user-facing behavior** (`README.md`): update feature list, shortcuts, settings/options, and compatibility notes.
 3. **Cross-check UI copy** against `index.html` labels and dialog text so docs match what users see.
-4. **Verify persistence impact**: if graph shape/settings/storage keys change, document migration/compatibility notes, including appearance preset defaults for older files.
+4. **Verify persistence impact**: if graph shape/settings/storage keys change, document the exact current contract in `docs/DATA_MODEL.md`.
 5. **Run a lightweight docs audit before merge**: confirm every new toolbar control, shortcut, setting, and workflow is represented in README and requirements.
 
 Recommended PR checklist item:
@@ -226,6 +234,12 @@ Recommended PR checklist item:
 - [ ] Requirements updated (if behavior changed)
 - [ ] README updated (if user-visible behavior changed)
 - [ ] Any new shortcut/settings/file-format behavior documented
+
+## Contributor Notes
+
+- `docs/DATA_MODEL.md` is the source of truth for persisted settings enums and defaults.
+- `js/state/store.js` is the source of truth for the public store API used by rendering and interactions.
+- `docs/REGRESSION_CHECKLIST.md` is the source of truth for manual interaction regression coverage.
 
 ## License
 

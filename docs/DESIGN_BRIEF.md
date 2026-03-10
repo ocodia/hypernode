@@ -109,7 +109,7 @@ Curated appearance presets:
 - `slate` (soft grey palette)
 - `paper`
 - `ember`
-- `soft-black`
+- `chalkboard`
 
 ## Canvas
 
@@ -175,7 +175,7 @@ The settings panel should reflect graph-level controls that affect behavior or b
 - UI theme preset
 - UI radius preset
 - background style
-- anchors mode (`Auto-anchor` or `Exact anchor`)
+- anchors mode (`Auto` or `Exact`)
 - arrowhead visibility (`Show` or `Hide`)
 - arrowhead size slider
 
@@ -210,7 +210,7 @@ Ensure:
 - visible keyboard focus outlines driven by the shared `focus-ring` token
 - adequate contrast for text, surfaces, states, and controls across all presets
 - keyboard support for delete, undo, redo, save, edit toggle, linked-node creation, directional navigation, and escape behavior
-- themed controls remain readable and operable across `blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`
+- themed controls remain readable and operable across `blueprint`, `fjord`, `slate`, `paper`, `ember`, and `chalkboard`
 
 ## Persistence and Compatibility
 

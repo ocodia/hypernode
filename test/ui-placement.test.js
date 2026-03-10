@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 
 import { getAnchoredUiPlacement, normalizeToolbarPosition, resolvePlacementChange } from '../js/utils/ui-placement.js';
 
-test('normalizeToolbarPosition migrates legacy toolbar positions', () => {
+test('normalizeToolbarPosition only accepts current toolbar positions', () => {
+  assert.equal(normalizeToolbarPosition('top-left', 'bottom-right'), 'top-left');
   assert.equal(normalizeToolbarPosition('top-center', 'top-left'), 'top-left');
-  assert.equal(normalizeToolbarPosition('bottom-center', 'top-left'), 'bottom-right');
   assert.equal(normalizeToolbarPosition('left-column', 'top-left'), 'top-left');
 });
 

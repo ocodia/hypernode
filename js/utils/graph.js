@@ -20,7 +20,7 @@ const BACKGROUND_STYLES = new Set(['blank', 'dots', 'graph-paper']);
 const ANCHORS_MODES = new Set(['auto', 'exact']);
 const ARROWHEADS_MODES = new Set(['shown', 'hidden']);
 const UI_THEME_PRESETS = new Set(['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard']);
-const UI_RADIUS_PRESETS = new Set(['sharp', 'soft', 'rounded', 'square']);
+const UI_RADIUS_PRESETS = new Set(['sharp', 'soft', 'rounded']);
 const ARROWHEAD_SIZE_STEP_MIN = 0;
 const ARROWHEAD_SIZE_STEP_MAX = 9;
 const NODE_KINDS = new Set(['text', 'image']);
@@ -163,11 +163,11 @@ export function validateGraphPayload(payload) {
 
   const settings = payload.settings ?? {};
   const hasValidUiThemePreset = settings.uiThemePreset === undefined
-    || normalizeUiThemePreset(settings.uiThemePreset) !== null;
+    || isValidUiThemePreset(settings.uiThemePreset);
   const hasValidUiRadiusPreset = settings.uiRadiusPreset === undefined
-    || normalizeUiRadiusPreset(settings.uiRadiusPreset) !== null;
+    || isValidUiRadiusPreset(settings.uiRadiusPreset);
   const hasValidToolbarPosition = settings.toolbarPosition === undefined
-    || normalizeToolbarPosition(settings.toolbarPosition, null) !== null;
+    || isValidToolbarPosition(settings.toolbarPosition);
   const hasValidToolbarOrientation = settings.toolbarOrientation === undefined
     || isValidToolbarOrientation(settings.toolbarOrientation);
   const hasValidToastPosition = settings.toastPosition === undefined
@@ -229,8 +229,8 @@ export function sanitizeGraphName(name) {
 
 export function sanitizeAppSettings(settings) {
   const sanitized = {
-    uiThemePreset: normalizeUiThemePreset(settings?.uiThemePreset) ?? APP_SETTINGS_DEFAULTS.uiThemePreset,
-    uiRadiusPreset: normalizeUiRadiusPreset(settings?.uiRadiusPreset) ?? APP_SETTINGS_DEFAULTS.uiRadiusPreset,
+    uiThemePreset: isValidUiThemePreset(settings?.uiThemePreset) ? settings.uiThemePreset : APP_SETTINGS_DEFAULTS.uiThemePreset,
+    uiRadiusPreset: isValidUiRadiusPreset(settings?.uiRadiusPreset) ? settings.uiRadiusPreset : APP_SETTINGS_DEFAULTS.uiRadiusPreset,
     toolbarPosition: normalizeToolbarPosition(settings?.toolbarPosition, APP_SETTINGS_DEFAULTS.toolbarPosition),
     toolbarOrientation: isValidToolbarOrientation(settings?.toolbarOrientation)
       ? settings.toolbarOrientation
@@ -279,28 +279,8 @@ function isValidUiThemePreset(value) {
   return typeof value === 'string' && UI_THEME_PRESETS.has(value);
 }
 
-function normalizeUiThemePreset(value) {
-  if (value === 'graphite') {
-    return 'blueprint';
-  }
-  if (value === 'mist') {
-    return 'slate';
-  }
-  return isValidUiThemePreset(value) ? value : null;
-}
-
 function isValidUiRadiusPreset(value) {
   return typeof value === 'string' && UI_RADIUS_PRESETS.has(value);
-}
-
-function normalizeUiRadiusPreset(value) {
-  if (!isValidUiRadiusPreset(value)) {
-    return null;
-  }
-  if (value === 'square') {
-    return 'soft';
-  }
-  return value;
 }
 
 function isValidAnchorsMode(value) {

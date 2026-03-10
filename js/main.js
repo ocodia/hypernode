@@ -41,6 +41,7 @@ store.subscribe((state) => {
   saveHandle = window.setTimeout(() => {
     saveGraphToStorage({
       name: state.name,
+      settings: state.settings,
       nodes: state.nodes,
       frames: state.frames,
       edges: state.edges,

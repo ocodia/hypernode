@@ -50,6 +50,7 @@ test('history manager snapshots and clears future on push', () => {
   history.pushHistory('change');
   assert.equal(state.history.past.length, 1);
   assert.equal(state.history.future.length, 0);
+  assert.deepEqual(history.snapshot().settings, { backgroundStyle: 'dots' });
   assert.deepEqual(history.snapshot().selection, { type: 'node', id: 'node-1' });
 });
 

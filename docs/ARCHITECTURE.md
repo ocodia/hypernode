@@ -1,158 +1,99 @@
 # Hypernode - Architecture
 
-## Architecture Goals
+## Goals
 
-- simple modules
-- maintainable code
-- offline operation
-- browser-native stack
+- keep the browser-native stack small
+- keep feature logic readable and testable
+- separate persistence, state, rendering, and interaction concerns
+- preserve offline-first behavior
 
-## Technology Stack
+## Runtime Shape
 
-- HTML
-- CSS
-- JavaScript ES modules
-- SVG (edge rendering and edge controls)
-- `localStorage` for persistence
+Hypernode is a single-page, fully client-side canvas app.
 
-No backend services are used.
+- HTML layers render frames, nodes, focus UI, and selection controls
+- SVG layers render committed edges, edge drafts, and edge overlay controls
+- a single central store owns graph data, settings, selection, viewport state, transient UI state, and history
+- rendering is subscriber-driven from the store
 
-## Rendering Model
+## Main Modules
 
-Hybrid rendering:
+### Entry
 
-- Nodes: HTML elements in `#nodes-layer`
-- Frames: HTML elements in `#frames-layer` (background container layer)
-- Edges: SVG paths in `#edges-group`
-- Edge controls (selected edge endpoints/delete control): SVG overlay in `#edge-overlay-group`
-- Edge draft preview: SVG in `#edge-draft-group`
+- `js/main.js`
+  - loads saved graph/settings
+  - creates the store and renderer
+  - binds interactions
+  - autosaves `{ name, settings, nodes, frames, edges }`
 
-All layers share the same viewport transform.
+### State
 
-## Project Structure
+- `js/state/store.js`
+  - public store API used by the rest of the app
+- `js/state/history.js`
+  - bounded snapshot history for undo/redo
+- `js/state/store-settings.js`
+  - initial settings resolution and settings comparison helpers
+- `js/state/store-mutations.js`
+  - shared mutation wrapper for history, anchor sync, and notify
+- `js/state/ui.js`
+  - transient UI-state reset helpers
 
-```text
-css/
-  styles.css
-docs/
-js/
-  main.js
-  shared/
-  interaction/
-    bindings.js
-    binders/
-  persistence/
-    file.js
-    storage.js
-  render/
-    renderer.js
-    modules/
-  state/
-    store.js
-    history.js
-    ui.js
-  utils/
-    constants.js
-    graph.js
-    id.js
-index.html
-```
+### Rendering
 
-## Core Modules
+- `js/render/renderer.js`
+  - orchestration only
+- `js/render/theme-meta.js`
+  - theme-color metadata config
+- `js/render/modules/*`
+  - viewport, frames, nodes, edges, and overlay UI rendering
+- `js/render/markdown.js`
+  - sanitized limited-markdown rendering
 
-### State (`js/state/store.js`)
+### Interaction
 
-Stores:
+- `js/interaction/bindings.js`
+  - interaction composition root
+- `js/interaction/config.js`
+  - keyboard shortcut catalog and toolbar shortcut metadata
+- `js/interaction/binders/*`
+  - event-registration shells by surface
 
-- `nodes`, `edges`
-- `frames`
-- graph metadata (`name`, `settings`)
-- `selection`
-- `viewport` (`panX`, `panY`, `zoom`)
-- UI state (`edgeDraft`, `edgeTwangId`, `editingNodeId`, `isPanning`, `isDragging`, `isConnecting`, `importStatus`)
-  - includes frame UI state (`editingFrameId`, `isDrawingFrame`, `frameDraft`)
-  - includes resize interaction state (`isResizing`)
-- undo/redo history
+### Persistence
 
-Delegates pure concerns to focused helpers:
+- `js/persistence/storage.js`
+  - localStorage load/save
+- `js/persistence/file.js`
+  - file open/save using the File System Access API when available
 
-- `js/state/history.js` for snapshots and history stack bookkeeping
-- `js/state/ui.js` for transient UI resets
-- `js/shared/*` for selection/entity math reused outside the store
+### Shared / Utils
 
-### Rendering (`js/render/renderer.js`)
+- `js/shared/*`
+  - anchor resolution, selection normalization, sizing, overlap, and math helpers
+- `js/utils/*`
+  - constants, graph sanitization/validation, placement logic, shortcut formatting/search, dialogs, ids
 
-Responsible for orchestrating focused render modules:
+## Data Boundaries
 
-- `modules/viewport.js` for viewport/background transforms
-- `modules/frames.js` for frame markup
-- `modules/nodes.js` for node markup
-- `modules/edges.js` for committed/draft edge SVG
-- `modules/ui.js` for overlays, metadata, and toast UI
-
-Description markdown rendering is handled in the render layer so persisted node/frame descriptions remain plain strings while display markup is generated at render time from a sanitized limited markdown subset.
-
-### Interaction (`js/interaction/bindings.js`)
-
-Responsible for coordinating shared interaction state and delegating listener registration to feature binders:
-
-- `binders/canvas.js` for canvas navigation and frame-draw entry
-- `binders/nodes.js` for node and selection-control events
-- `binders/frames.js` for frame events
-- `binders/edges.js` for edge hit/endpoint events
-- `binders/toolbar.js` and `binders/keyboard.js` for chrome actions and shortcuts
-
-### Persistence (`js/persistence`)
-
-- `storage.js`: load/save graph in `localStorage`
-- `file.js`: import/export validated graph JSON files
-
-### Utilities (`js/utils`)
-
-- constants
-- graph sanitization/validation
-- id generation
-
-### Shared Domain Helpers (`js/shared`)
-
-- math helpers
-- entity sizing, lookup, and overlap helpers
-- anchor resolution helpers
-- selection normalization/comparison helpers
-
-## Data Model
-
-The canonical persisted graph format, field rules, and validation constraints are documented in [DATA_MODEL.md](/c:/Users/Paul/source/repos/hypernode/docs/DATA_MODEL.md).
-
-At a high level, the graph payload contains:
+Canonical persisted graph payload:
 
 - `name`
 - `settings`
-  - `backgroundStyle`
-  - `anchorsMode`
-  - `arrowheads`
-  - `arrowheadSizeStep`
-  - `nodeColorDefault`
 - `nodes`
 - `frames`
 - `edges`
 
-## State Management
+The canonical field rules live in [DATA_MODEL.md](/home/paul/Repos/hypernode/docs/DATA_MODEL.md).
 
-The app uses a single central store with explicit mutation methods and subscriber-based rendering.
+## History And Undo
 
-History snapshots are bounded (past stack capped at 100).
+- history snapshots are capped at 100 entries
+- settings mutations are included in undo/redo
+- snapshots include `name`, `settings`, `nodes`, `frames`, `edges`, and `selection`
+- transient interaction state is cleared on restore
 
-## Import/Export and Storage
+## Notes For Contributors
 
-- Autosave writes `{ name, settings, nodes, frames, edges }` to `localStorage`.
-- Startup loads saved graph if valid.
-- Import validates the full graph payload before replace.
-- Export writes formatted JSON file.
-- Theme preference is stored separately from graph JSON and graph autosave.
-
-## Constraints
-
-- No framework dependency.
-- Keep top-level entry modules thin and feature-specific code in focused submodules.
-- Prefer clear direct logic over abstraction-heavy patterns.
+- `docs/DATA_MODEL.md` is the source of truth for persisted settings enums/defaults
+- `js/state/store.js` is the source of truth for the public store API
+- `docs/REGRESSION_CHECKLIST.md` is the source of truth for manual interaction coverage

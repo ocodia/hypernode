@@ -2,13 +2,6 @@ const CORNER_POSITIONS = ['top-left', 'top-right', 'bottom-right', 'bottom-left'
 const TOOLBAR_POSITIONS = [...CORNER_POSITIONS];
 const TOOLBAR_ORIENTATIONS = ['horizontal', 'vertical'];
 
-const LEGACY_TOOLBAR_POSITION_MAP = {
-  'top-center': 'top-left',
-  'bottom-center': 'bottom-right',
-  'left-column': 'top-left',
-  'right-column': 'top-right',
-};
-
 const CLOCKWISE_BY_CORNER = {
   'top-left': ['top-left', 'top-right', 'bottom-right', 'bottom-left'],
   'top-right': ['top-right', 'bottom-right', 'bottom-left', 'top-left'],
@@ -30,9 +23,6 @@ export function isValidToolbarOrientation(value) {
 
 export function normalizeToolbarPosition(value, fallback) {
   if (isValidToolbarPosition(value)) return value;
-  if (typeof value === 'string' && LEGACY_TOOLBAR_POSITION_MAP[value]) {
-    return LEGACY_TOOLBAR_POSITION_MAP[value];
-  }
   return fallback;
 }
 
