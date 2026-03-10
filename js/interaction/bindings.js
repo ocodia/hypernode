@@ -1684,7 +1684,8 @@ export function bindInteractions(elements, store, options = {}) {
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl) return;
     const nodeId = nodeEl.dataset.nodeId;
-    openNodeFocus(nodeId);
+    store.setSelection({ type: 'node', id: nodeId });
+    openNodeEditor(nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
     event.stopPropagation();
     event.preventDefault();
   }
@@ -1760,7 +1761,8 @@ export function bindInteractions(elements, store, options = {}) {
     store.clearFrameMembershipPreview();
     endDragSession(event.pointerId);
     if (!wasMoved && sessionNodeId && consumeNodeDoublePress(sessionNodeId)) {
-      openNodeFocus(sessionNodeId);
+      store.setSelection({ type: 'node', id: sessionNodeId });
+      openNodeEditor(sessionNodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
     }
   }
 
@@ -1873,7 +1875,8 @@ export function bindInteractions(elements, store, options = {}) {
 
     const nodeEl = event.target.closest('[data-node-id]');
     if (nodeEl && event.detail >= 2 && !isTypingTarget(event.target)) {
-      openNodeFocus(nodeEl.dataset.nodeId);
+      store.setSelection({ type: 'node', id: nodeEl.dataset.nodeId });
+      openNodeEditor(nodeEl.dataset.nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
       event.stopPropagation();
       event.preventDefault();
       return;
@@ -2013,7 +2016,8 @@ export function bindInteractions(elements, store, options = {}) {
     const nodeGroupEl = event.target.closest('.selection-controls__group--node[data-node-id]');
     const clickedToolbarControl = event.target.closest('[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-resize], [data-node-anchor], [data-toolbar-popover-toggle], [data-toolbar-popover]');
     if (nodeGroupEl && !clickedToolbarControl && event.detail >= 2) {
-      openNodeFocus(nodeGroupEl.dataset.nodeId);
+      store.setSelection({ type: 'node', id: nodeGroupEl.dataset.nodeId });
+      openNodeEditor(nodeGroupEl.dataset.nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
       event.stopPropagation();
       event.preventDefault();
       return;
@@ -2094,7 +2098,8 @@ export function bindInteractions(elements, store, options = {}) {
     if (!nodeGroupEl) return;
     const nodeId = nodeGroupEl.dataset.nodeId;
     if (!nodeId) return;
-    openNodeFocus(nodeId);
+    store.setSelection({ type: 'node', id: nodeId });
+    openNodeEditor(nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
     event.stopPropagation();
     event.preventDefault();
   }
