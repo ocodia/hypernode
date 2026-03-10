@@ -181,6 +181,7 @@ test('focus overlay renders constrained focused editor with image pane on the me
   assert.match(focusLayer.innerHTML, /node__image-pane node__image-pane--focus/);
   assert.match(focusLayer.innerHTML, /data-focus-image-dropzone="n1"/);
   assert.match(focusLayer.innerHTML, /data-node-image-pick="n1"/);
+  assert.match(focusLayer.innerHTML, /data-node-image-remove="n1"/);
   assert.match(focusLayer.innerHTML, /placeholder="Name"/);
   assert.match(focusLayer.innerHTML, /placeholder="Description"/);
   assert.match(focusLayer.innerHTML, /data-node-focus-toggle="n1"/);
@@ -275,6 +276,7 @@ test('canvas node editing shows image without add or replace controls', () => {
   assert.match(nodesLayer.innerHTML, /data-node-edit-title="n1"[^]*data-node-edit-description="n1"[^]*node__image-pane/);
   assert.doesNotMatch(nodesLayer.innerHTML, /data-focus-image-dropzone="n1"/);
   assert.doesNotMatch(nodesLayer.innerHTML, /data-node-image-pick="n1"/);
+  assert.doesNotMatch(nodesLayer.innerHTML, /data-node-image-remove="n1"/);
   assert.match(nodesLayer.innerHTML, /placeholder="Name"/);
   assert.match(nodesLayer.innerHTML, /placeholder="Description"/);
 });

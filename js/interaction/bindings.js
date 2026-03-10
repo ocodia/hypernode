@@ -1858,6 +1858,16 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
+    const imageRemoveEl = event.target.closest('[data-node-image-remove]');
+    if (imageRemoveEl && clickedFocusLayer) {
+      const nodeId = imageRemoveEl.dataset.nodeImageRemove;
+      if (nodeId) {
+        store.updateNode(nodeId, { kind: 'text' });
+      }
+      event.stopPropagation();
+      return;
+    }
+
     const nodeEl = event.target.closest('[data-node-id]');
     if (nodeEl && event.detail >= 2 && !isTypingTarget(event.target)) {
       openNodeFocus(nodeEl.dataset.nodeId);

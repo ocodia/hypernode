@@ -123,6 +123,20 @@ export function buildNodeContentMarkup(node, options = {}) {
       <div class="node__image-pane${focused ? ' node__image-pane--focus' : ''}"${imagePickerAttrs} style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
     `
     : '';
+  const imageRemoveButtonMarkup = focused && editing && hasImageData
+    ? `
+      <button
+        class="node__image-remove-btn"
+        type="button"
+        data-node-image-remove="${node.id}"
+        aria-label="Remove image"
+        title="Remove image"
+      >
+        <i class="bi bi-trash"></i>
+        <span>Remove image</span>
+      </button>
+    `
+    : '';
   const imageDropzoneMarkup = focused && editing
     ? `
       <button
@@ -142,6 +156,7 @@ export function buildNodeContentMarkup(node, options = {}) {
     ? `
       <div class="node__focus-media${imageNode ? ' node__focus-media--has-image' : ' node__focus-media--empty'}${editing && !focused ? ' node__focus-media--canvas' : ''}">
         ${hasImageData ? imageMarkup : ''}
+        ${imageRemoveButtonMarkup}
         ${imageDropzoneMarkup}
       </div>
     `

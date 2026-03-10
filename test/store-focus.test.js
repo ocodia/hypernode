@@ -99,3 +99,35 @@ test('updating a focused image node can replace image payload and size', () => {
   assert.equal(state.nodes[0].height, 224);
   assert.equal(state.ui.focusedNodeId, 'n1');
 });
+
+test('removing an image from a focused editing node converts it to text and preserves focus', () => {
+  const store = createStore({
+    name: 'Graph',
+    settings: {},
+    nodes: [
+      { id: 'n1', title: 'Image', description: 'Body copy', kind: 'image', x: 0, y: 0, imageData: 'data:image/png;base64,abc', imageAspectRatio: 1.5, width: 210, height: 204, colorKey: 'sky', borderWidth: 2, borderStyle: 'dashed' },
+    ],
+    frames: [],
+    edges: [],
+  });
+
+  store.setSelection({ type: 'node', id: 'n1' });
+  store.setFocusedNode('n1');
+  store.setEditingNode('n1');
+  store.updateNode('n1', { kind: 'text' }, { skipHistory: true });
+
+  const state = store.getState();
+  const node = state.nodes[0];
+  assert.equal(node.kind, 'text');
+  assert.equal(node.title, 'Image');
+  assert.equal(node.description, 'Body copy');
+  assert.equal(node.width, 210);
+  assert.equal(node.height, 204);
+  assert.equal(node.colorKey, 'sky');
+  assert.equal(node.borderWidth, 2);
+  assert.equal(node.borderStyle, 'dashed');
+  assert.equal(node.imageData, undefined);
+  assert.equal(node.imageAspectRatio, undefined);
+  assert.equal(state.ui.focusedNodeId, 'n1');
+  assert.equal(state.ui.editingNodeId, 'n1');
+});
