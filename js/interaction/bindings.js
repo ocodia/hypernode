@@ -1827,7 +1827,10 @@ export function bindInteractions(elements, store, options = {}) {
     const focusEl = event.target.closest('[data-node-focus-toggle]');
     if (focusEl) {
       const nodeId = focusEl.dataset.nodeFocusToggle;
-      if (store.getState().ui.focusedNodeId === nodeId) {
+      const starterActive = store.getState().ui.starterNodeId === nodeId;
+      if (starterActive && store.getState().ui.focusedNodeId === nodeId) {
+        commitStarterHypernode(nodeId);
+      } else if (store.getState().ui.focusedNodeId === nodeId) {
         closeNodeFocus();
       } else {
         openNodeFocus(nodeId);
@@ -2046,7 +2049,10 @@ export function bindInteractions(elements, store, options = {}) {
     if (nodeFocusEl) {
       const nodeId = nodeFocusEl.dataset.nodeFocusToggle;
       store.setSelection({ type: 'node', id: nodeId });
-      if (store.getState().ui.focusedNodeId === nodeId) {
+      const starterActive = store.getState().ui.starterNodeId === nodeId;
+      if (starterActive && store.getState().ui.focusedNodeId === nodeId) {
+        commitStarterHypernode(nodeId);
+      } else if (store.getState().ui.focusedNodeId === nodeId) {
         closeNodeFocus();
       } else {
         openNodeFocus(nodeId);
@@ -2678,7 +2684,6 @@ export function bindInteractions(elements, store, options = {}) {
     resetCanvasView();
     createStarterHypernode();
     syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
-    store.setImportStatus('New hypernode ready.');
   }
 
   async function handleAddImageNode() {
@@ -2712,6 +2717,7 @@ export function bindInteractions(elements, store, options = {}) {
     store.setGraphName(title);
     store.clearStarterNode();
     closeNodeFocus();
+    store.setImportStatus('New hypernode started.');
     return true;
   }
 
@@ -3063,7 +3069,6 @@ export function bindInteractions(elements, store, options = {}) {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || !target.checked) return;
       store.setUiThemePreset(target.value);
-      showThemeToast(store, target.value);
     });
   });
 

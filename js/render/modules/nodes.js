@@ -171,7 +171,7 @@ export function buildNodeContentMarkup(node, options = {}) {
           <div class="node__focus-layout node__focus-layout--edit" data-node-editor="${node.id}">
             <div class="node__focus-text-column node__focus-text-column--edit">
               <div class="node__editor-field node__editor-field--title node__focus-field node__focus-field--title">
-                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" />
+                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" data-1p-ignore="true" />
               </div>
               <div class="node__editor-field node__editor-field--description node__focus-field node__focus-field--description">
                 <textarea class="node__editor-textarea node__editor-textarea--focus" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
@@ -227,7 +227,7 @@ export function buildNodeContentMarkup(node, options = {}) {
             <div class="node__editor-layout node__editor-layout--canvas-image">
               <div class="node__editor-fields node__editor-fields--canvas-image">
                 <div class="node__editor-field node__editor-field--title">
-                  <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" />
+                  <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" data-1p-ignore="true" />
                 </div>
                 <div class="node__editor-field node__editor-field--description">
                   <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
@@ -240,7 +240,7 @@ export function buildNodeContentMarkup(node, options = {}) {
             ${mediaMarkup}
             <div class="node__editor-fields">
               <div class="node__editor-field node__editor-field--title">
-                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" />
+                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" data-1p-ignore="true" />
               </div>
               <div class="node__editor-field node__editor-field--description">
                 <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
