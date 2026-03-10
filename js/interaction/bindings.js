@@ -1841,7 +1841,8 @@ export function bindInteractions(elements, store, options = {}) {
     }
 
     const imagePickEl = event.target.closest('[data-node-image-pick]');
-    if (imagePickEl) {
+    const clickedFocusLayer = event.currentTarget === focusLayer;
+    if (imagePickEl && clickedFocusLayer) {
       const nodeId = imagePickEl.dataset.nodeImagePick;
       void pickImageFile().then((file) => {
         if (!file || !nodeId) return;

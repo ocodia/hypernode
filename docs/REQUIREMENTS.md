@@ -156,6 +156,7 @@ Users must be able to drag a local image file onto the canvas to create an image
 FR-38
 Focused image nodes must provide a zen-mode drop zone that accepts a local image file and replaces the node image in place.
 The drop zone must be visible in zen edit mode and hidden in zen read mode.
+Canvas inline node editing must not expose an image drop zone or other in-place image-add affordance for existing nodes.
 
 FR-39
 Node title and description editors must use placeholders as their visible affordance in both canvas edit mode and zen edit mode.

@@ -123,7 +123,7 @@ export function buildNodeContentMarkup(node, options = {}) {
       <div class="node__image-pane${focused ? ' node__image-pane--focus' : ''}"${imagePickerAttrs} style="background-image: url('${escapeCssUrl(node.imageData)}'); --node-image-aspect-ratio: ${escapeAttr(node.imageAspectRatio)};"></div>
     `
     : '';
-  const imageDropzoneMarkup = editing
+  const imageDropzoneMarkup = focused && editing
     ? `
       <button
         class="node__image-dropzone${focused && hasImageData ? ' node__image-dropzone--overlay' : ''}"
@@ -138,7 +138,7 @@ export function buildNodeContentMarkup(node, options = {}) {
       </button>
     `
     : '';
-  const mediaMarkup = (editing || (focused && hasImageData))
+  const mediaMarkup = ((focused && editing) || hasImageData)
     ? `
       <div class="node__focus-media${imageNode ? ' node__focus-media--has-image' : ' node__focus-media--empty'}${editing && !focused ? ' node__focus-media--canvas' : ''}">
         ${hasImageData ? imageMarkup : ''}
@@ -215,7 +215,7 @@ export function buildNodeContentMarkup(node, options = {}) {
     editing
       ? `
       <div class="node__editor${focused ? ' node__editor--focus' : ''}" data-node-editor="${node.id}">
-        ${imageKind
+        ${imageKind && hasImageData
           ? `
             <div class="node__editor-layout node__editor-layout--canvas-image">
               <div class="node__editor-fields node__editor-fields--canvas-image">

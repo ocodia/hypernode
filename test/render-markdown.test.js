@@ -206,7 +206,7 @@ test('focus overlay reading mode renders image before title and description', ()
   assert.doesNotMatch(focusLayer.innerHTML, /data-node-image-pick="n1"/);
 });
 
-test('canvas node editing shows image dropzone above placeholder fields', () => {
+test('canvas node editing shows image without add or replace controls', () => {
   const nodesLayer = { innerHTML: '' };
 
   renderNodes(nodesLayer, {
@@ -229,12 +229,14 @@ test('canvas node editing shows image dropzone above placeholder fields', () => 
   assert.match(nodesLayer.innerHTML, /node__editor-layout node__editor-layout--canvas-image/);
   assert.match(nodesLayer.innerHTML, /node__editor-fields node__editor-fields--canvas-image/);
   assert.match(nodesLayer.innerHTML, /node__focus-media node__focus-media--has-image node__focus-media--canvas/);
-  assert.match(nodesLayer.innerHTML, /data-node-edit-title="n1"[^]*data-node-edit-description="n1"[^]*data-focus-image-dropzone="n1"/);
+  assert.match(nodesLayer.innerHTML, /data-node-edit-title="n1"[^]*data-node-edit-description="n1"[^]*node__image-pane/);
+  assert.doesNotMatch(nodesLayer.innerHTML, /data-focus-image-dropzone="n1"/);
+  assert.doesNotMatch(nodesLayer.innerHTML, /data-node-image-pick="n1"/);
   assert.match(nodesLayer.innerHTML, /placeholder="Name"/);
   assert.match(nodesLayer.innerHTML, /placeholder="Description"/);
 });
 
-test('canvas image node editing without image data renders media slot with fields', () => {
+test('canvas image node editing without image data renders text-only fields', () => {
   const nodesLayer = { innerHTML: '' };
 
   renderNodes(nodesLayer, {
@@ -252,9 +254,10 @@ test('canvas image node editing without image data renders media slot with field
     ui: { editingNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
   });
 
-  assert.match(nodesLayer.innerHTML, /node__editor-layout node__editor-layout--canvas-image/);
-  assert.match(nodesLayer.innerHTML, /node__focus-media node__focus-media--empty node__focus-media--canvas/);
-  assert.match(nodesLayer.innerHTML, /data-focus-image-dropzone="n1"/);
+  assert.doesNotMatch(nodesLayer.innerHTML, /node__editor-layout node__editor-layout--canvas-image/);
+  assert.doesNotMatch(nodesLayer.innerHTML, /node__focus-media/);
+  assert.doesNotMatch(nodesLayer.innerHTML, /data-focus-image-dropzone="n1"/);
+  assert.doesNotMatch(nodesLayer.innerHTML, /data-node-image-pick="n1"/);
   assert.match(nodesLayer.innerHTML, /placeholder="Name"/);
   assert.match(nodesLayer.innerHTML, /placeholder="Description"/);
 });
