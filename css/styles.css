@@ -965,6 +965,7 @@ select:focus-visible {
 .entity-toolbar__popover {
   position: absolute;
   top: calc(100% + 10px);
+  bottom: auto;
   left: 0;
   min-width: 180px;
   padding: 10px;
@@ -977,6 +978,16 @@ select:focus-visible {
 
 .entity-toolbar__popover[hidden] {
   display: none;
+}
+
+.entity-toolbar__popover[data-toolbar-popover-side="top"] {
+  top: auto;
+  bottom: calc(100% + 10px);
+}
+
+.entity-toolbar__popover[data-toolbar-popover-side="bottom"] {
+  top: calc(100% + 10px);
+  bottom: auto;
 }
 
 .entity-toolbar__popover-title {
@@ -2783,10 +2794,19 @@ select:focus-visible {
 .selection-controls__toolbar {
   opacity: 1;
   pointer-events: auto;
+  transition: none;
 }
 
 .selection-controls__toolbar--node {
-  transform: translateY(calc(-100% - 10px));
+  top: 0;
+  left: 50%;
+  right: auto;
+  transform: translate(calc(-50% + var(--toolbar-shift-x, 0px)), calc(-100% - 10px));
+}
+
+.selection-controls__toolbar--node[data-toolbar-placement="bottom"] {
+  top: 100%;
+  transform: translate(calc(-50% + var(--toolbar-shift-x, 0px)), 10px);
 }
 
 .selection-controls__toolbar--frame {

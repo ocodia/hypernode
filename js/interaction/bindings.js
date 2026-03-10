@@ -214,6 +214,7 @@ export function bindInteractions(elements, store, options = {}) {
   let activeLiveEditFrameId = null;
   let editorFocusLock = null;
   let openToolbarPopoverEl = null;
+  let toolbarPlacementFrame = 0;
   let lastNodePress = { id: null, at: 0 };
   let canvasFileDragDepth = 0;
   let focusImageDragDepth = 0;
@@ -1258,6 +1259,9 @@ export function bindInteractions(elements, store, options = {}) {
     const triggerEl = controlEl?.querySelector('[data-toolbar-popover-toggle]');
     openToolbarPopoverEl.hidden = true;
     openToolbarPopoverEl.style.left = '';
+    openToolbarPopoverEl.style.top = '';
+    openToolbarPopoverEl.style.bottom = '';
+    delete openToolbarPopoverEl.dataset.toolbarPopoverSide;
     if (triggerEl instanceof HTMLElement) {
       triggerEl.setAttribute('aria-expanded', 'false');
     }
@@ -1273,10 +1277,22 @@ export function bindInteractions(elements, store, options = {}) {
     closeToolbarPopover();
     popoverEl.hidden = false;
     triggerEl.setAttribute('aria-expanded', 'true');
+    const viewportGutter = 12;
     const controlRect = triggerEl.parentElement?.getBoundingClientRect?.();
     const triggerRect = triggerEl.getBoundingClientRect();
+    const preferredSide = triggerEl.closest('[data-toolbar-placement]')?.dataset?.toolbarPlacement === 'bottom'
+      ? 'top'
+      : 'bottom';
+    const popoverHeight = popoverEl.offsetHeight;
+    const fitsBottom = controlRect ? ((window.innerHeight - viewportGutter - controlRect.bottom) >= popoverHeight) : true;
+    const fitsTop = controlRect ? ((controlRect.top - viewportGutter) >= popoverHeight) : true;
+    const verticalSide = preferredSide === 'top'
+      ? (fitsTop || !fitsBottom ? 'top' : 'bottom')
+      : (fitsBottom || !fitsTop ? 'bottom' : 'top');
+    popoverEl.dataset.toolbarPopoverSide = verticalSide;
+    popoverEl.style.top = verticalSide === 'top' ? 'auto' : '';
+    popoverEl.style.bottom = verticalSide === 'top' ? 'calc(100% + 10px)' : '';
     if (controlRect) {
-      const viewportGutter = 12;
       const popoverWidth = popoverEl.offsetWidth;
       const preferredLeft = (triggerRect.left - controlRect.left) - ((popoverWidth - triggerRect.width) / 2);
       const absoluteMinLeft = viewportGutter - controlRect.left;
@@ -1285,6 +1301,87 @@ export function bindInteractions(elements, store, options = {}) {
       popoverEl.style.left = `${left}px`;
     }
     openToolbarPopoverEl = popoverEl;
+  }
+
+  function scheduleSingleNodeToolbarPlacement() {
+    if (toolbarPlacementFrame) {
+      window.cancelAnimationFrame(toolbarPlacementFrame);
+    }
+    toolbarPlacementFrame = window.requestAnimationFrame(() => {
+      toolbarPlacementFrame = 0;
+      applySingleNodeToolbarPlacement();
+    });
+  }
+
+  function applySingleNodeToolbarPlacement() {
+    const toolbarEl = selectionControlsLayer?.querySelector('.selection-controls__toolbar--node[data-toolbar-entity="node"]');
+    const groupEl = toolbarEl?.closest('.selection-controls__group--node[data-node-id]');
+    if (!(toolbarEl instanceof HTMLElement) || !(groupEl instanceof HTMLElement) || !(workspace instanceof HTMLElement)) {
+      return;
+    }
+
+    toolbarEl.dataset.toolbarPlacement = 'top';
+    toolbarEl.style.setProperty('--toolbar-shift-x', '0px');
+
+    const workspaceRect = workspace.getBoundingClientRect();
+    const groupRect = groupEl.getBoundingClientRect();
+    const toolbarRect = toolbarEl.getBoundingClientRect();
+    if (!workspaceRect.width || !workspaceRect.height || !toolbarRect.width || !toolbarRect.height) {
+      return;
+    }
+
+    const horizontalGutter = 12;
+    const verticalGutter = 12;
+    const gap = 10;
+    const centerX = groupRect.left + (groupRect.width / 2);
+    const rawLeft = centerX - (toolbarRect.width / 2);
+    const clampedLeft = Math.max(
+      workspaceRect.left + horizontalGutter,
+      Math.min(rawLeft, workspaceRect.right - horizontalGutter - toolbarRect.width),
+    );
+    const shiftX = clampedLeft - rawLeft;
+
+    const topRect = {
+      left: clampedLeft,
+      right: clampedLeft + toolbarRect.width,
+      top: groupRect.top - gap - toolbarRect.height,
+      bottom: groupRect.top - gap,
+    };
+    const bottomRect = {
+      left: clampedLeft,
+      right: clampedLeft + toolbarRect.width,
+      top: groupRect.bottom + gap,
+      bottom: groupRect.bottom + gap + toolbarRect.height,
+    };
+
+    const obstructionRects = Array.from(document.querySelectorAll('.toolbar, .workspace-meta, .toast.is-visible, .selection-controls__toolbar, .entity-toolbar__popover:not([hidden])'))
+      .filter((element) => element instanceof HTMLElement && element !== toolbarEl && !toolbarEl.contains(element) && !element.contains(toolbarEl))
+      .map((element) => element.getBoundingClientRect())
+      .filter((rect) => rect.width > 0 && rect.height > 0);
+
+    const intersectsObstruction = (candidateRect) => obstructionRects.some((rect) => {
+      return candidateRect.left < rect.right
+        && candidateRect.right > rect.left
+        && candidateRect.top < rect.bottom
+        && candidateRect.bottom > rect.top;
+    });
+
+    const topFitsViewport = topRect.top >= workspaceRect.top + verticalGutter;
+    const bottomFitsViewport = bottomRect.bottom <= workspaceRect.bottom - verticalGutter;
+    const topBlocked = intersectsObstruction(topRect);
+    const bottomBlocked = intersectsObstruction(bottomRect);
+
+    let placement = 'top';
+    if (!(topFitsViewport && !topBlocked) && (bottomFitsViewport && !bottomBlocked)) {
+      placement = 'bottom';
+    } else if (!(topFitsViewport && !topBlocked) && !(bottomFitsViewport && !bottomBlocked)) {
+      const topSpace = groupRect.top - workspaceRect.top;
+      const bottomSpace = workspaceRect.bottom - groupRect.bottom;
+      placement = bottomSpace > topSpace ? 'bottom' : 'top';
+    }
+
+    toolbarEl.dataset.toolbarPlacement = placement;
+    toolbarEl.style.setProperty('--toolbar-shift-x', `${Math.round(shiftX)}px`);
   }
 
   function getToolbarContext(target) {
@@ -3341,6 +3438,7 @@ export function bindInteractions(elements, store, options = {}) {
     }
     syncShortcutUiFromState();
     syncSettingsDialogFromState(state, settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    scheduleSingleNodeToolbarPlacement();
   });
 
   resetAboutDialog();
@@ -3349,12 +3447,16 @@ export function bindInteractions(elements, store, options = {}) {
   resetCanvasView();
   syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
   syncShortcutUiFromState();
+  scheduleSingleNodeToolbarPlacement();
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
   if (options.shouldCreateStarter) {
     createStarterHypernode();
     syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    scheduleSingleNodeToolbarPlacement();
   }
+
+  window.addEventListener('resize', scheduleSingleNodeToolbarPlacement);
 }
 
 function isAdditiveModifier(event) {

@@ -132,6 +132,8 @@ export function renderSelectionControls(selectionControlsLayer, state) {
       >
         ${buildNodeToolbarMarkup(node.id, {
           toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--node',
+          toolbarStyle: 'left: 50%;',
+          toolbarPlacement: 'top',
           editingActive: editingNodeId === node.id,
           showShortcuts: true,
           colorKey: node.colorKey || '',

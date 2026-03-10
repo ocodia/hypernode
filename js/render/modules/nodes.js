@@ -35,6 +35,7 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const editIcon = editingActive ? 'bi-eye-fill' : 'bi-pencil-fill';
   const showShortcuts = Boolean(options.showShortcuts);
   const toolbarStyle = options.toolbarStyle ? ` style="${escapeAttr(options.toolbarStyle)}"` : '';
+  const toolbarPlacement = options.toolbarPlacement === 'bottom' ? 'bottom' : 'top';
   const selectionCountLabel = targetEntity === 'nodes' && targetIds.length > 1
     ? `<div class="entity-toolbar__selection-count" aria-label="${targetIds.length} nodes selected">${targetIds.length} selected</div>`
     : '';
@@ -43,7 +44,7 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const deleteShortcut = focusActive ? formatShortcutLabel('Ctrl/Cmd + Delete', { compact: true }) : 'Del';
 
   return `
-    <div class="${toolbarClass}" data-toolbar-entity="${targetEntity}" data-toolbar-target-ids="${escapeAttr(targetIds.join(','))}"${toolbarStyle}>
+    <div class="${toolbarClass}" data-toolbar-entity="${targetEntity}" data-toolbar-target-ids="${escapeAttr(targetIds.join(','))}" data-toolbar-placement="${toolbarPlacement}"${toolbarStyle}>
       ${selectionCountLabel}
       ${includeEdit ? `
         <button class="node__tool-btn entity-toolbar__btn" type="button" data-node-edit-open="${nodeId}" aria-label="${editLabel}" title="${editTitle}" aria-pressed="${editingActive ? 'true' : 'false'}">
