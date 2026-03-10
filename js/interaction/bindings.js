@@ -2986,7 +2986,7 @@ export function bindInteractions(elements, store, options = {}) {
     setActiveSettingsTab(settingsTabSelect.value, { focusButton: false });
   });
 
-  renameGraphTrigger?.addEventListener('dblclick', (event) => {
+  renameGraphTrigger?.addEventListener('click', (event) => {
     event.preventDefault();
     openRenameGraphDialog();
   });

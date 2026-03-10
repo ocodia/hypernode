@@ -1778,8 +1778,6 @@ select:focus-visible {
   padding: 10px 14px;
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--panel) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--panel-border) 88%, transparent);
-  box-shadow: var(--overlay-shadow);
   backdrop-filter: blur(10px);
 }
 
@@ -1810,9 +1808,10 @@ select:focus-visible {
   width: 32px;
   height: 32px;
   padding: 0;
+  border-color: transparent;
   border-radius: var(--radius-sm);
   text-align: center;
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  background: transparent;
 }
 
 .workspace-meta__icon-btn:hover,
@@ -3038,6 +3037,11 @@ kbd {
 }
 
 #about-dialog .about-dialog__title-icon {
+  background: transparent;
+  border-color: transparent;
+}
+
+.rename-dialog .about-dialog__title-icon {
   background: transparent;
   border-color: transparent;
 }
