@@ -51,6 +51,7 @@ export const GRAPH_DEFAULTS = {
   name: "Untitled hypernode",
   uiThemePreset: "blueprint",
   uiRadiusPreset: "rounded",
+  toolbarPosition: "top-center",
   backgroundStyle: "dots",
   anchorsMode: "auto",
   arrowheads: "shown",

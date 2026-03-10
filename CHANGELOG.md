@@ -18,6 +18,8 @@ The format loosely follows Keep a Changelog. Entries summarize shipped user-visi
 - Shortcut affordances can now be searched by key or action and hidden globally from graph settings without disabling the keyboard commands.
 - Added keyboard shortcuts for settings, shortcuts help, new/open graph, reset view, add-node/image/frame actions, theme toggle, and About, plus optional shortcut hints on the top toolbar.
 - `graphite` was renamed to `blueprint`, `mist` was replaced by `slate`, and theme cycling now rotates through all curated presets from the toolbar button and `T` shortcut.
+- Toasts are now standardized in the bottom-right with accent-highlighted styling and faster fade-out timing.
+- The main toolbar can now be repositioned from graph settings to top, bottom, or side-column layouts.
 
 ## 2026-03-09
 

@@ -18,6 +18,7 @@ const elements = {
   focusLayer: document.getElementById('focus-layer'),
   selectionMarquee: document.getElementById('selection-marquee'),
   importStatus: document.getElementById('import-status'),
+  settingsStatus: document.getElementById('settings-status'),
   graphTitle: document.getElementById('graph-title'),
   viewportCoordinates: document.getElementById('viewport-coordinates'),
 };

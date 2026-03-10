@@ -90,7 +90,11 @@ Use this checklist before shipping interaction changes.
 - [ ] Search for a nonsense term and verify the empty state appears.
 - [ ] Turn `Show shortcuts in UI` off and verify the shortcuts toolbar button disappears, inline shortcut hints disappear, and keyboard commands still work.
 - [ ] Turn `Show shortcuts in UI` off while the shortcuts dialog is open and verify the dialog closes.
-- [ ] Turn `Show shortcuts on toolbar` on and verify top-toolbar buttons with shortcuts show visible hints without overlapping icons.
+- [ ] Turn `Show shortcuts on toolbar` on and verify toolbar buttons with shortcuts show visible hints without overlapping icons.
 - [ ] Verify toolbar shortcut hints disappear when `Show shortcuts in UI` is off, even if `Show shortcuts on toolbar` remains enabled.
+- [ ] Switch `Toolbar position` through all six options and verify the toolbar stays clickable and aligned after each change.
+- [ ] Reload page and verify `Toolbar position` persists.
+- [ ] Save, reopen, and create a new graph; confirm toolbar position round-trips for save/open and resets to `Top centered` for a new graph.
+- [ ] Trigger file/theme/image toasts and verify they appear in the bottom-right with accent-highlighted borders and disappear quickly.
 - [ ] Open/close About dialog.
 - [ ] Toggle dark mode and reload page to verify theme persistence.

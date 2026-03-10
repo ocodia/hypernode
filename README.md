@@ -41,6 +41,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Undo/redo via toolbar and keyboard shortcuts.
 - Auto-save hypernodes to browser storage.
 - Open/save hypernode JSON files with validation and status toast feedback.
+- Toasts render in the bottom-right corner with accent-highlighted borders and quick fade-out timing.
 - Start a new hypernode from the toolbar (with discard confirmation when existing hypernode data is present).
 - Built-in semantic design system for surfaces, buttons, inputs, dialogs, toolbar controls, nodes, and frames.
 - Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`) saved with the document.
@@ -54,6 +55,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
   - shortcut UI visibility (`show` or `hide`)
   - toolbar shortcut hints (`show` or `hide`)
+  - toolbar position (`top centered`, `top left`, `bottom centered`, `bottom left`, `left side`, or `right side`)
   - hypernode name
 - Node color tool also sets the default color for newly created nodes.
 - Node color tool also applies to selected Frames (flat palette style) and still sets the default color for newly created nodes.

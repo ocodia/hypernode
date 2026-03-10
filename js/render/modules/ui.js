@@ -133,27 +133,68 @@ export function renderFocusOverlay(focusLayer, state) {
   }
 }
 
-export function renderImportStatus(importStatus, state) {
+export function renderImportStatus(importStatus, secondaryImportStatus, state) {
   const message = state.ui.importStatus;
   const text = typeof message === 'string'
     ? String(message || '').trim()
     : [message?.title, message?.description].map((value) => String(value || '').trim()).filter(Boolean).join(' ').trim();
+  const markup = buildToastMarkup(message, text);
+  renderToastTarget(importStatus, markup, text);
+  renderToastTarget(secondaryImportStatus, markup, text);
+}
+
+function buildToastMarkup(message, fallbackText) {
   if (message && typeof message === 'object') {
     const title = escapeHtml(String(message.title || '').trim());
-    const icon = String(message.icon || '').trim();
+    const icon = String(message.icon || '').trim() || inferToastIcon(title, String(message.description || '').trim());
     const description = escapeHtml(String(message.description || '').trim());
-    importStatus.innerHTML = `
+    return `
       <span class="toast__content">
-        ${icon ? `<span class="toast__icon" aria-hidden="true"><i class="bi ${icon}"></i></span>` : ''}
+        <span class="toast__icon" aria-hidden="true"><i class="bi ${icon}"></i></span>
         <span class="toast__title">${title}</span>
         ${description ? `<span class="toast__description">${description}</span>` : ''}
       </span>
     `;
-  } else {
-    importStatus.textContent = text;
   }
-  importStatus.hidden = !text;
-  importStatus.classList.toggle('is-visible', Boolean(text));
+  const icon = inferToastIcon(fallbackText, '');
+  return `
+    <span class="toast__content">
+      <span class="toast__icon" aria-hidden="true"><i class="bi ${icon}"></i></span>
+      <span class="toast__title">${escapeHtml(fallbackText)}</span>
+    </span>
+  `;
+}
+
+function renderToastTarget(target, markup, text) {
+  if (!(target instanceof HTMLElement)) return;
+  if (target.__toastHideTimer) {
+    window.clearTimeout(target.__toastHideTimer);
+    target.__toastHideTimer = null;
+  }
+  if (text) {
+    target.innerHTML = markup;
+    target.hidden = false;
+    target.classList.add('is-visible');
+    return;
+  }
+  target.classList.remove('is-visible');
+  target.__toastHideTimer = window.setTimeout(() => {
+    target.hidden = true;
+    target.innerHTML = '';
+    target.__toastHideTimer = null;
+  }, 120);
+}
+
+function inferToastIcon(title, description) {
+  const haystack = `${String(title || '')} ${String(description || '')}`.toLowerCase();
+  if (haystack.includes('theme')) return 'bi-palette';
+  if (haystack.includes('fail') || haystack.includes('invalid') || haystack.includes('unavailable') || haystack.includes('error')) {
+    return 'bi-exclamation-triangle';
+  }
+  if (haystack.includes('save') || haystack.includes('open') || haystack.includes('ready') || haystack.includes('updated')) {
+    return 'bi-check-circle';
+  }
+  return 'bi-info-circle';
 }
 
 export function renderHypernodeMetadata(graphTitle, viewportCoordinates, canvas, state) {

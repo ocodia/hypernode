@@ -156,6 +156,7 @@
           </div>
           <button id="settings-close-btn" type="button" aria-label="Close settings dialog"><i class="bi bi-x-lg"></i></button>
         </header>
+        <div id="settings-status" class="toast toast--dialog" aria-live="polite" hidden></div>
         <div class="settings-dialog__accordion">
           <details class="settings-dialog__group" open>
             <summary class="settings-dialog__summary">General</summary>
@@ -236,7 +237,7 @@
                 <span class="settings-dialog__switch-row">
                   <span class="settings-dialog__switch-copy">
                     <span class="settings-dialog__switch-label">Show shortcuts on toolbar</span>
-                    <span class="settings-dialog__hint">Shows shortcut hints on the top toolbar buttons for actions that support keyboard access.</span>
+                    <span class="settings-dialog__hint">Shows shortcut hints on toolbar buttons for actions that support keyboard access.</span>
                   </span>
                   <span class="settings-dialog__switch">
                     <input id="show-toolbar-shortcuts-input" class="settings-dialog__switch-input" type="checkbox" />
@@ -244,6 +245,34 @@
                   </span>
                 </span>
               </label>
+              <fieldset class="settings-dialog__section">
+                <legend>Toolbar position</legend>
+                <p class="settings-dialog__hint">Places the main toolbar along the top, bottom, or side of the canvas.</p>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="toolbar-position" value="top-center" />
+                  Top centered
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="toolbar-position" value="top-left" />
+                  Top left
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="toolbar-position" value="bottom-center" />
+                  Bottom centered
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="toolbar-position" value="bottom-left" />
+                  Bottom left
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="toolbar-position" value="left-column" />
+                  Left side
+                </label>
+                <label class="settings-dialog__option">
+                  <input type="radio" name="toolbar-position" value="right-column" />
+                  Right side
+                </label>
+              </fieldset>
             </div>
           </details>
 

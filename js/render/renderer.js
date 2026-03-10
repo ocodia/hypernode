@@ -28,6 +28,7 @@ export function createRenderer(elements, _store) {
     selectionControlsLayer,
     focusLayer,
     importStatus,
+    settingsStatus,
     graphTitle,
     viewportCoordinates,
     selectionMarquee,
@@ -51,6 +52,7 @@ export function createRenderer(elements, _store) {
     canvas.dataset.backgroundStyle = state.settings.backgroundStyle;
     document.documentElement.dataset.uiTheme = state.settings.uiThemePreset;
     document.documentElement.dataset.uiRadius = state.settings.uiRadiusPreset;
+    workspace.dataset.toolbarPosition = state.settings.toolbarPosition;
     const themeMetaConfig = THEME_META[state.settings.uiThemePreset] ?? THEME_META.blueprint;
     document.documentElement.dataset.theme = themeMetaConfig.mode;
     const themeMeta = document.querySelector('meta[name="theme-color"]');
@@ -63,7 +65,7 @@ export function createRenderer(elements, _store) {
     renderDraftEdge(edgeDraftGroup, state);
     renderSelectionControls(selectionControlsLayer, state);
     renderFocusOverlay(focusLayer, state);
-    renderImportStatus(importStatus, state);
+    renderImportStatus(importStatus, settingsStatus, state);
     renderHypernodeMetadata(graphTitle, viewportCoordinates, canvas, state);
     canvas.classList.toggle('is-panning', Boolean(state.ui.isPanning));
     canvas.classList.toggle('is-dragging', Boolean(state.ui.isDragging));

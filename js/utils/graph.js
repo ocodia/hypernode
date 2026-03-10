@@ -13,6 +13,7 @@ const ANCHORS_MODES = new Set(['auto', 'exact']);
 const ARROWHEADS_MODES = new Set(['shown', 'hidden']);
 const UI_THEME_PRESETS = new Set(['blueprint', 'fjord', 'slate', 'paper', 'ember', 'soft-black']);
 const UI_RADIUS_PRESETS = new Set(['sharp', 'soft', 'rounded', 'square']);
+const TOOLBAR_POSITIONS = new Set(['top-center', 'top-left', 'bottom-center', 'bottom-left', 'left-column', 'right-column']);
 const ARROWHEAD_SIZE_STEP_MIN = 0;
 const ARROWHEAD_SIZE_STEP_MAX = 9;
 const NODE_KINDS = new Set(['text', 'image']);
@@ -24,6 +25,7 @@ export function emptyGraphState() {
     settings: {
       uiThemePreset: GRAPH_DEFAULTS.uiThemePreset,
       uiRadiusPreset: GRAPH_DEFAULTS.uiRadiusPreset,
+      toolbarPosition: GRAPH_DEFAULTS.toolbarPosition,
       backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
       anchorsMode: GRAPH_DEFAULTS.anchorsMode,
       arrowheads: GRAPH_DEFAULTS.arrowheads,
@@ -162,6 +164,8 @@ export function validateGraphPayload(payload) {
     || normalizeUiThemePreset(payload.settings.uiThemePreset) !== null;
   const hasValidUiRadiusPreset = payload.settings.uiRadiusPreset === undefined
     || normalizeUiRadiusPreset(payload.settings.uiRadiusPreset) !== null;
+  const hasValidToolbarPosition = payload.settings.toolbarPosition === undefined
+    || isValidToolbarPosition(payload.settings.toolbarPosition);
   const hasValidCoreSettings = isValidBackgroundStyle(payload.settings.backgroundStyle);
   const hasValidAnchorsMode = payload.settings.anchorsMode === undefined
     || isValidAnchorsMode(payload.settings.anchorsMode);
@@ -176,7 +180,7 @@ export function validateGraphPayload(payload) {
   const hasValidNodeColorDefault = payload.settings.nodeColorDefault === undefined
     || payload.settings.nodeColorDefault === null
     || isValidNodeColorKey(payload.settings.nodeColorDefault);
-  if (!hasValidUiThemePreset || !hasValidUiRadiusPreset || !hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidShowShortcutsUi || !hasValidShowToolbarShortcutHints || !hasValidNodeColorDefault) {
+  if (!hasValidUiThemePreset || !hasValidUiRadiusPreset || !hasValidToolbarPosition || !hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidShowShortcutsUi || !hasValidShowToolbarShortcutHints || !hasValidNodeColorDefault) {
     return false;
   }
 
@@ -222,6 +226,9 @@ export function sanitizeGraphSettings(settings) {
   return {
     uiThemePreset: normalizeUiThemePreset(settings?.uiThemePreset) ?? GRAPH_DEFAULTS.uiThemePreset,
     uiRadiusPreset: normalizeUiRadiusPreset(settings?.uiRadiusPreset) ?? GRAPH_DEFAULTS.uiRadiusPreset,
+    toolbarPosition: isValidToolbarPosition(settings?.toolbarPosition)
+      ? settings.toolbarPosition
+      : GRAPH_DEFAULTS.toolbarPosition,
     backgroundStyle: isValidBackgroundStyle(settings?.backgroundStyle)
       ? settings.backgroundStyle
       : GRAPH_DEFAULTS.backgroundStyle,
@@ -252,6 +259,10 @@ function sanitizeAnchor(anchor) {
 
 function isValidBackgroundStyle(value) {
   return typeof value === 'string' && BACKGROUND_STYLES.has(value);
+}
+
+function isValidToolbarPosition(value) {
+  return typeof value === 'string' && TOOLBAR_POSITIONS.has(value);
 }
 
 function isValidUiThemePreset(value) {

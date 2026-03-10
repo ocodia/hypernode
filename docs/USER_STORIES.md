@@ -332,7 +332,7 @@ As a user, I want hypernode-wide controls in one place so I can adjust presentat
 
 Acceptance criteria:
 
-- Settings dialog exposes hypernode name, UI theme preset, UI radius preset, background style, anchors mode, arrowhead visibility, arrowhead size, a `Show shortcuts in UI` toggle, and a `Show shortcuts on toolbar` toggle.
+- Settings dialog exposes hypernode name, UI theme preset, UI radius preset, toolbar position, background style, anchors mode, arrowhead visibility, arrowhead size, a `Show shortcuts in UI` toggle, and a `Show shortcuts on toolbar` toggle.
 - Changing a setting updates the current hypernode immediately.
 - Hypernode name updates the metadata chip and browser tab title.
 - Settings remain available without leaving the canvas workflow.
@@ -369,7 +369,7 @@ Acceptance criteria:
 - Opening a valid hypernode JSON file restores persisted settings.
 - Saving a hypernode JSON file writes the current settings into the file.
 - Invalid settings payloads are rejected before replacing the current hypernode.
-- UI theme preset and UI radius preset round-trip with the same persistence guarantees as the other graph settings.
+- UI theme preset, UI radius preset, and toolbar position round-trip with the same persistence guarantees as the other graph settings.
 
 ### US-33: Search keyboard shortcuts
 

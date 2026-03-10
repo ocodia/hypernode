@@ -2363,6 +2363,7 @@ export function bindInteractions(elements, store, options = {}) {
   const graphNameInput = document.getElementById('graph-name-input');
   const showShortcutsUiInput = document.getElementById('show-shortcuts-ui-input');
   const showToolbarShortcutsInput = document.getElementById('show-toolbar-shortcuts-input');
+  const toolbarPositionInputs = settingsDialog?.querySelectorAll('input[name="toolbar-position"]') ?? [];
   const arrowheadSizeRange = document.getElementById('arrowhead-size-range');
   const arrowheadSizeValue = document.getElementById('arrowhead-size-value');
   const newGraphBtn = document.getElementById('new-graph-btn');
@@ -2401,7 +2402,7 @@ export function bindInteractions(elements, store, options = {}) {
       currentFileHandle = handle;
       store.replaceGraph(graph);
       resetCanvasView();
-      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
+      syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
       store.setImportStatus('Hypernode opened.');
     } catch (error) {
       if (isAbortError(error)) return;
@@ -2424,7 +2425,7 @@ export function bindInteractions(elements, store, options = {}) {
         frames: state.frames,
         edges: state.edges,
       }, currentFileHandle);
-      store.setImportStatus('Hypernode saved.');
+      store.setImportStatus('Saved');
     } catch (error) {
       if (isAbortError(error)) return;
       store.setImportStatus('Save failed. Check file permissions and try again.');
@@ -2442,6 +2443,7 @@ export function bindInteractions(elements, store, options = {}) {
       settings: {
         uiThemePreset: GRAPH_DEFAULTS.uiThemePreset,
         uiRadiusPreset: GRAPH_DEFAULTS.uiRadiusPreset,
+        toolbarPosition: GRAPH_DEFAULTS.toolbarPosition,
         backgroundStyle: GRAPH_DEFAULTS.backgroundStyle,
         anchorsMode: GRAPH_DEFAULTS.anchorsMode,
         arrowheads: GRAPH_DEFAULTS.arrowheads,
@@ -2456,7 +2458,7 @@ export function bindInteractions(elements, store, options = {}) {
     });
     resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
     store.setImportStatus('New hypernode ready.');
   }
 
@@ -2501,7 +2503,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   function openSettingsDialog() {
     if (!settingsDialog) return;
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
     settingsDialog.showModal();
   }
 
@@ -2519,7 +2521,7 @@ export function bindInteractions(elements, store, options = {}) {
     const currentIndex = presetSequence.indexOf(currentThemePreset);
     const nextThemePreset = presetSequence[(currentIndex + 1) % presetSequence.length];
     store.setUiThemePreset(nextThemePreset);
-    showThemeToast(nextThemePreset);
+    showThemeToast(store, nextThemePreset);
   }
 
   function setAboutSlide(nextIndex) {
@@ -2720,6 +2722,14 @@ export function bindInteractions(elements, store, options = {}) {
     store.setShowToolbarShortcutHints(target.checked);
   });
 
+  toolbarPositionInputs.forEach((input) => {
+    input.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || !target.checked) return;
+      store.setToolbarPosition(target.value);
+    });
+  });
+
   settingsDialog?.querySelectorAll('input[name="background-style"]').forEach((input) => {
     input.addEventListener('change', (event) => {
       const target = event.target;
@@ -2755,7 +2765,7 @@ export function bindInteractions(elements, store, options = {}) {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || !target.checked) return;
       store.setUiThemePreset(target.value);
-      showThemeToast(target.value);
+      showThemeToast(store, target.value);
     });
   });
 
@@ -3034,20 +3044,20 @@ export function bindInteractions(elements, store, options = {}) {
   store.subscribe((state) => {
     syncNodeColorButtonState(state, nodeColorBtn, nodeColorPopover);
     syncShortcutUiFromState(state);
-    syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
+    syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
   });
 
   resetAboutDialog();
   renderShortcutCatalog();
   filterShortcuts('');
-  syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
+  syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
   syncShortcutUiFromState(store.getState());
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
   if (options.shouldCreateStarter) {
     resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput);
+    syncSettingsDialogFromState(store.getState(), settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs);
   }
 }
 
@@ -3737,7 +3747,7 @@ function isAbortError(error) {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput) {
+function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, showShortcutsUiInput, showToolbarShortcutsInput, toolbarPositionInputs = []) {
   if (!settingsDialog) return;
   if (graphNameInput) {
     graphNameInput.value = state.name;
@@ -3749,6 +3759,11 @@ function syncSettingsDialogFromState(state, settingsDialog, graphNameInput, show
     showToolbarShortcutsInput.checked = state.settings?.showToolbarShortcutHints === true;
     showToolbarShortcutsInput.disabled = state.settings?.showShortcutsUi === false;
   }
+  toolbarPositionInputs.forEach((input) => {
+    if (input instanceof HTMLInputElement) {
+      input.checked = input.value === state.settings.toolbarPosition;
+    }
+  });
 
   settingsDialog.querySelectorAll('input[name="ui-theme-preset"]').forEach((input) => {
     if (input instanceof HTMLInputElement) {
@@ -3817,13 +3832,9 @@ function getThemePresetPresentation(uiThemePreset) {
   };
 }
 
-function showThemeToast(uiThemePreset) {
-  const { icon, title } = getThemePresetPresentation(uiThemePreset);
-  store.setImportStatus({
-    icon,
-    title,
-    description: 'theme',
-  });
+function showThemeToast(store, uiThemePreset) {
+  const { title } = getThemePresetPresentation(uiThemePreset);
+  store.setImportStatus(`${title} theme`);
 }
 
 function updateArrowheadSizeLabel(labelEl, step) {

@@ -22,6 +22,7 @@ If the app also keeps a local color-mode preference outside the graph payload, t
   "settings": {
     "uiThemePreset": "blueprint",
     "uiRadiusPreset": "rounded",
+    "toolbarPosition": "top-center",
     "backgroundStyle": "dots",
     "anchorsMode": "auto",
     "arrowheads": "shown",
@@ -52,6 +53,7 @@ Invalid payloads are rejected before import or restore is applied.
 {
   "uiThemePreset": "blueprint | fjord | slate | paper | ember | soft-black",
   "uiRadiusPreset": "sharp | soft | rounded",
+  "toolbarPosition": "top-center | top-left | bottom-center | bottom-left | left-column | right-column",
   "backgroundStyle": "dots | graph-paper",
   "anchorsMode": "auto | exact",
   "arrowheads": "shown | hidden",
@@ -66,6 +68,7 @@ Rules:
 
 - `uiThemePreset` must be `blueprint`, `fjord`, `slate`, `paper`, `ember`, or `soft-black`
 - `uiRadiusPreset` must be `sharp`, `soft`, or `rounded`
+- `toolbarPosition` must be `top-center`, `top-left`, `bottom-center`, `bottom-left`, `left-column`, or `right-column`
 - `backgroundStyle` must be `dots` or `graph-paper`
 - `anchorsMode` must be `auto` or `exact`
 - `arrowheads` must be `shown` or `hidden`
@@ -78,6 +81,7 @@ Defaults:
 
 - `uiThemePreset` defaults to `blueprint` when missing or invalid
 - `uiRadiusPreset` defaults to `rounded` when missing or invalid
+- `toolbarPosition` defaults to `top-center` when missing or invalid
 - legacy `uiRadiusPreset: "square"` is migrated to `soft`
 
 Fallback behavior:
@@ -209,6 +213,7 @@ Payload validation rejects graphs when any of the following are true:
 - `settings` contains invalid enum values or an out-of-range arrowhead size step
 - `settings.uiThemePreset` is not a supported preset
 - `settings.uiRadiusPreset` is not a supported preset
+- `settings.toolbarPosition` is not a supported position
 - `settings.showShortcutsUi` is present but not a boolean
 - `settings.showToolbarShortcutHints` is present but not a boolean
 - `settings.nodeColorDefault` is not `null` and not a valid palette key

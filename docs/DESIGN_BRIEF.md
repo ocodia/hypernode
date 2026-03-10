@@ -82,12 +82,12 @@ The selected radius preset should apply consistently across:
 
 Current product layout:
 
-- floating top toolbar with graph title and compact icon actions
+- floating toolbar with compact icon actions that can be placed top-center, top-left, bottom-center, bottom-left, left-column, or right-column
 - full-screen canvas workspace with separate frame, edge, node, and overlay-control layers
 - inline node and frame editing inside selected cards
 - floating node-color popover
 - modal settings and about dialogs
-- transient toast feedback for file and persistence workflows
+- transient bottom-right toast feedback for file and persistence workflows
 
 The canvas should remain the dominant visual surface.
 

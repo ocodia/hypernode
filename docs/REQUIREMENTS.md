@@ -106,7 +106,7 @@ FR-28
 The node color palette must allow applying a color to selected nodes and setting the default color used for newly created nodes.
 
 FR-29
-Graph settings must include graph name, UI theme preset, UI radius preset, background style, anchors mode, arrowhead visibility, arrowhead size, shortcut UI visibility, and toolbar shortcut hint visibility.
+Graph settings must include graph name, UI theme preset, UI radius preset, toolbar position, background style, anchors mode, arrowhead visibility, arrowhead size, shortcut UI visibility, and toolbar shortcut hint visibility.
 
 FR-29a
 The shortcuts dialog must support search by shortcut keys and action text.

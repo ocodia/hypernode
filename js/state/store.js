@@ -79,7 +79,7 @@ export function createStore(initialGraph = null) {
       if (!getImportStatusText(state.ui.importStatus)) return;
       state.ui.importStatus = '';
       notify();
-    }, 5000);
+    }, 2200);
   }
 
   function setEdgeDraft(draft) {
@@ -843,6 +843,14 @@ export function createStore(initialGraph = null) {
     notify();
   }
 
+  function setToolbarPosition(toolbarPosition) {
+    const nextValue = sanitizeGraphSettings({ ...state.settings, toolbarPosition }).toolbarPosition;
+    if (state.settings.toolbarPosition === nextValue) return;
+    pushHistory('set-toolbar-position');
+    state.settings.toolbarPosition = nextValue;
+    notify();
+  }
+
   function setAnchorsMode(anchorsMode) {
     const nextValue = sanitizeGraphSettings({ ...state.settings, anchorsMode }).anchorsMode;
     if (state.settings.anchorsMode === nextValue) return;
@@ -1102,6 +1110,7 @@ export function createStore(initialGraph = null) {
     setGraphName,
     setUiThemePreset,
     setUiRadiusPreset,
+    setToolbarPosition,
     setBackgroundStyle,
     setAnchorsMode,
     setArrowheads,

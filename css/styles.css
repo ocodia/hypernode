@@ -601,6 +601,35 @@ select:focus-visible {
   backdrop-filter: blur(10px);
 }
 
+.workspace[data-toolbar-position="top-left"] .toolbar,
+.workspace[data-toolbar-position="bottom-left"] .toolbar,
+.workspace[data-toolbar-position="left-column"] .toolbar {
+  left: 12px;
+  transform: none;
+}
+
+.workspace[data-toolbar-position="bottom-center"] .toolbar,
+.workspace[data-toolbar-position="bottom-left"] .toolbar {
+  top: auto;
+  bottom: 12px;
+}
+
+.workspace[data-toolbar-position="left-column"] .toolbar,
+.workspace[data-toolbar-position="right-column"] .toolbar {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 10px 8px;
+}
+
+.workspace[data-toolbar-position="right-column"] .toolbar {
+  left: auto;
+  right: 12px;
+}
+
 .toolbar__group {
   display: flex;
   align-items: center;
@@ -611,6 +640,21 @@ select:focus-visible {
 .toolbar__group + .toolbar__group {
   border-left: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
   padding-left: 10px;
+}
+
+.workspace[data-toolbar-position="left-column"] .toolbar__group,
+.workspace[data-toolbar-position="right-column"] .toolbar__group {
+  flex-direction: column;
+  justify-content: center;
+  padding: 0;
+}
+
+.workspace[data-toolbar-position="left-column"] .toolbar__group + .toolbar__group,
+.workspace[data-toolbar-position="right-column"] .toolbar__group + .toolbar__group {
+  border-left: 0;
+  border-top: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
+  padding-left: 0;
+  padding-top: 8px;
 }
 
 .toolbar__icon-btn:disabled {
@@ -739,6 +783,27 @@ select:focus-visible {
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
   box-shadow: var(--overlay-shadow);
+}
+
+.workspace[data-toolbar-position="bottom-center"] .toolbar__popover,
+.workspace[data-toolbar-position="bottom-left"] .toolbar__popover {
+  top: auto;
+  bottom: calc(100% + 10px);
+}
+
+.workspace[data-toolbar-position="left-column"] .toolbar__popover,
+.workspace[data-toolbar-position="right-column"] .toolbar__popover {
+  top: 0;
+  bottom: auto;
+}
+
+.workspace[data-toolbar-position="left-column"] .toolbar__popover {
+  left: calc(100% + 10px);
+}
+
+.workspace[data-toolbar-position="right-column"] .toolbar__popover {
+  left: auto;
+  right: calc(100% + 10px);
 }
 
 .toolbar__popover-title {
@@ -908,7 +973,6 @@ select:focus-visible {
 
 .workspace.is-focus-mode .toolbar,
 .workspace.is-focus-mode .canvas,
-.workspace.is-focus-mode .toast,
 .workspace.is-focus-mode .workspace-meta {
   filter: blur(1.5px) saturate(0.85);
   opacity: 0.28;
@@ -2286,26 +2350,43 @@ select:focus-visible {
 
 .toast {
   position: absolute;
-  left: 50%;
-  top: 16px;
-  transform: translateX(-50%);
+  right: 16px;
+  bottom: 16px;
   z-index: 40;
   min-height: 1px;
   max-width: min(560px, calc(100vw - 24px));
   padding: 10px 14px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--panel-border);
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-  box-shadow: var(--overlay-shadow);
+  border: 1px solid color-mix(in srgb, var(--accent) 52%, var(--panel-border));
+  background: color-mix(in srgb, var(--surface) 68%, transparent);
+  backdrop-filter: blur(14px) saturate(1.08);
+  -webkit-backdrop-filter: blur(14px) saturate(1.08);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent),
+    var(--overlay-shadow);
   color: var(--text);
   font-size: 0.86rem;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 160ms ease;
+  transform: translateY(6px);
+  transition:
+    opacity 110ms ease,
+    transform 110ms ease;
+}
+
+.toast--dialog {
+  position: sticky;
+  right: auto;
+  bottom: 0;
+  margin: 0 0 12px auto;
+  width: fit-content;
+  max-width: min(100%, 420px);
+  z-index: 1;
 }
 
 .toast.is-visible {
   opacity: 1;
+  transform: translateY(0);
 }
 
 .toast__content {
@@ -2315,13 +2396,9 @@ select:focus-visible {
 }
 
 .toast__icon {
-  width: 28px;
-  height: 28px;
-  display: inline-grid;
-  place-items: center;
-  border-radius: var(--radius-xs);
-  border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
-  background: color-mix(in srgb, var(--surface-soft) 88%, var(--surface));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: color-mix(in srgb, var(--text) 72%, var(--accent));
   flex: 0 0 auto;
 }
@@ -2334,6 +2411,10 @@ select:focus-visible {
 .toast__title {
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+
+.toast__description {
+  color: var(--muted);
 }
 
 .canvas.is-file-drop-active {
@@ -2999,6 +3080,24 @@ kbd {
     justify-content: center;
   }
 
+  .workspace[data-toolbar-position="bottom-center"] .toolbar,
+  .workspace[data-toolbar-position="bottom-left"] .toolbar {
+    top: auto;
+    bottom: 12px;
+  }
+
+  .workspace[data-toolbar-position="left-column"] .toolbar,
+  .workspace[data-toolbar-position="right-column"] .toolbar {
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    flex-direction: row;
+    transform: none;
+    align-items: center;
+    justify-content: center;
+  }
+
   .toolbar__group {
     flex-wrap: wrap;
     justify-content: center;
@@ -3006,6 +3105,34 @@ kbd {
 
   .toolbar__group + .toolbar__group {
     padding-left: 6px;
+  }
+
+  .workspace[data-toolbar-position="left-column"] .toolbar__group,
+  .workspace[data-toolbar-position="right-column"] .toolbar__group {
+    flex-direction: row;
+    padding: 0 2px;
+  }
+
+  .workspace[data-toolbar-position="left-column"] .toolbar__group + .toolbar__group,
+  .workspace[data-toolbar-position="right-column"] .toolbar__group + .toolbar__group {
+    border-top: 0;
+    border-left: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
+    padding-top: 0;
+    padding-left: 6px;
+  }
+
+  .workspace[data-toolbar-position="left-column"] .toolbar__popover,
+  .workspace[data-toolbar-position="right-column"] .toolbar__popover {
+    top: auto;
+    bottom: calc(100% + 10px);
+    left: 0;
+    right: auto;
+  }
+
+  .toast {
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100vw - 24px);
   }
 
   .workspace-meta {
