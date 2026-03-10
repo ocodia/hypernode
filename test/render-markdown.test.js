@@ -5,7 +5,7 @@ import { getNodeHeight } from '../js/shared/entities.js';
 import { renderDescriptionMarkdown } from '../js/render/markdown.js';
 import { renderFrames } from '../js/render/modules/frames.js';
 import { renderNodes } from '../js/render/modules/nodes.js';
-import { renderFocusOverlay, renderHypernodeMetadata } from '../js/render/modules/ui.js';
+import { renderFocusOverlay, renderHypernodeMetadata, renderSelectionControls } from '../js/render/modules/ui.js';
 
 test('renderDescriptionMarkdown escapes raw html', () => {
   assert.equal(renderDescriptionMarkdown('<script>alert(1)</script>'), '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
@@ -99,6 +99,49 @@ test('single selected node renders focus toolbar action', () => {
   });
 
   assert.match(nodesLayer.innerHTML, /data-node-focus-toggle="n1"/);
+});
+
+test('canvas inline edit keeps the single-node overlay toolbar visible', () => {
+  const previousHTMLElement = globalThis.HTMLElement;
+  const previousDocument = globalThis.document;
+  class MockHTMLElement {
+    constructor() {
+      this.innerHTML = '';
+    }
+  }
+  globalThis.HTMLElement = MockHTMLElement;
+
+  try {
+    const selectionControlsLayer = new MockHTMLElement();
+    globalThis.document = {
+      querySelectorAll() {
+        return [];
+      },
+      getElementById() {
+        return null;
+      },
+    };
+
+    renderSelectionControls(selectionControlsLayer, {
+      nodes: [{ id: 'n1', title: 'Node', description: '', kind: 'text', x: 0, y: 0 }],
+      frames: [],
+      edges: [],
+      selection: { type: 'node', id: 'n1' },
+      ui: { editingNodeId: 'n1', focusedNodeId: null, editingFrameId: null, edgeDraft: null },
+      viewport: { zoom: 1, panX: 0, panY: 0 },
+      settings: { showShortcutsUi: true },
+    });
+
+    assert.match(selectionControlsLayer.innerHTML, /selection-controls__toolbar--node/);
+    assert.match(selectionControlsLayer.innerHTML, /data-node-focus-toggle="n1"/);
+    assert.match(selectionControlsLayer.innerHTML, /data-node-edit-open="n1"/);
+    assert.match(selectionControlsLayer.innerHTML, /node__tool-btn-label">Read</);
+    assert.match(selectionControlsLayer.innerHTML, /bi-eye-fill/);
+    assert.equal((selectionControlsLayer.innerHTML.match(/selection-controls__toolbar--node/g) || []).length, 1);
+  } finally {
+    globalThis.HTMLElement = previousHTMLElement;
+    globalThis.document = previousDocument;
+  }
 });
 
 test('focus overlay renders constrained focused editor with image pane on the media side', () => {

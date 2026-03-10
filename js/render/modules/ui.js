@@ -132,16 +132,15 @@ export function renderSelectionControls(selectionControlsLayer, state) {
         ${colorAttr}
         style="transform: translate(${node.x}px, ${node.y}px); width: ${nodeSize.width}px; height: ${nodeSize.height}px; --selection-anchor-size: ${nodeAnchorSize}px; --selection-resize-size: ${nodeResizeSize}px; --selection-control-border-width: ${controlBorderWidth}px;"
       >
-        ${editingNodeId === node.id ? '' : `
-          ${buildNodeToolbarMarkup(node.id, {
-            toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--node',
-            showShortcuts,
-            colorKey: node.colorKey || '',
-            borderWidth: node.borderWidth || 1,
-            borderStyle: node.borderStyle || 'solid',
-          })}
-          ${buildNodeOverlayControls(node.id)}
-        `}
+        ${buildNodeToolbarMarkup(node.id, {
+          toolbarClass: 'node__toolbar selection-controls__toolbar selection-controls__toolbar--node',
+          editingActive: editingNodeId === node.id,
+          showShortcuts,
+          colorKey: node.colorKey || '',
+          borderWidth: node.borderWidth || 1,
+          borderStyle: node.borderStyle || 'solid',
+        })}
+        ${buildNodeOverlayControls(node.id)}
       </div>
     `;
   }

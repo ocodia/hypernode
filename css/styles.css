@@ -1009,7 +1009,7 @@ select:focus-visible {
   background: var(--active-node-swatch, var(--accent));
 }
 
-.node.is-single-selected:not(.is-editing) .node__toolbar {
+.node.is-single-selected .node__toolbar {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(calc(-100% - 10px));

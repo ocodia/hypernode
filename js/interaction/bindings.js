@@ -1675,6 +1675,7 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function onNodeDoubleClick(event) {
+    if (isTypingTarget(event.target)) return;
     const nodeEl = event.target.closest('[data-node-id]');
     if (!nodeEl) return;
     const nodeId = nodeEl.dataset.nodeId;
@@ -1800,7 +1801,7 @@ export function bindInteractions(elements, store, options = {}) {
     if (openEl) {
       const nodeId = openEl.dataset.nodeEditOpen;
       store.setSelection({ type: 'node', id: nodeId });
-      if (store.getState().ui.focusedNodeId === nodeId && store.getState().ui.editingNodeId === nodeId) {
+      if (store.getState().ui.editingNodeId === nodeId) {
         closeNodeEditor(nodeId);
       } else {
         openNodeEditor(nodeId);
@@ -1852,19 +1853,20 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-node-editor]')) {
-      event.stopPropagation();
-      return;
-    }
-
     const nodeEl = event.target.closest('[data-node-id]');
-    if (!nodeEl) return;
-    if (event.detail >= 2) {
+    if (nodeEl && event.detail >= 2 && !isTypingTarget(event.target)) {
       openNodeFocus(nodeEl.dataset.nodeId);
       event.stopPropagation();
       event.preventDefault();
       return;
     }
+
+    if (event.target.closest('[data-node-editor]')) {
+      event.stopPropagation();
+      return;
+    }
+
+    if (!nodeEl) return;
     if (isAdditiveModifier(event)) {
       store.toggleNodeInSelection(nodeEl.dataset.nodeId);
       event.stopPropagation();
@@ -2007,7 +2009,7 @@ export function bindInteractions(elements, store, options = {}) {
     if (nodeOpenEl) {
       const nodeId = nodeOpenEl.dataset.nodeEditOpen;
       store.setSelection({ type: 'node', id: nodeId });
-      if (store.getState().ui.focusedNodeId === nodeId && store.getState().ui.editingNodeId === nodeId) {
+      if (store.getState().ui.editingNodeId === nodeId) {
         closeNodeEditor(nodeId);
       } else {
         openNodeEditor(nodeId);
