@@ -46,13 +46,13 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Toasts render in any screen corner, use accent-highlighted glass surfaces, and auto-resolve away from occupied toolbar/meta placements.
 - Start a new hypernode from the toolbar (with discard confirmation when existing hypernode data is present).
 - Built-in semantic design system for surfaces, buttons, inputs, dialogs, toolbar controls, nodes, and frames.
-- Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `soft-black`) saved with the document.
-- Shared UI radius presets (`sharp`, `soft`, `rounded`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
+- Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `Chalkboard`) saved with the document.
+- Shared UI radius presets (`sharp`, `soft`, `round`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
 - Full-screen settings, about, and keyboard shortcuts dialogs with responsive layouts.
 - Theme-aware custom scrollbars across dialogs, focus views, and editor panes that inherit the active preset and radius scale.
 - Settings menu for system-wide defaults:
-  - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `soft-black`)
-  - UI radius preset (`sharp`, `soft`, or `rounded`)
+  - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `Chalkboard`)
+  - UI radius preset (`sharp`, `soft`, or `round`)
   - hypernode background style (`blank`, `dots`, or `graph paper`)
   - anchors mode (`auto-anchor` or `exact anchor`)
   - arrowheads visibility (`show` or `hide`)
@@ -137,8 +137,8 @@ These tokens are applied across:
 
 Appearance stays preset-driven:
 
-- UI theme presets: `blueprint`, `fjord`, `slate`, `paper`, `ember`, `soft-black`
-- UI radius presets: `sharp`, `soft`, `rounded`
+- UI theme presets: `blueprint`, `fjord`, `slate`, `paper`, `ember`, `Chalkboard`
+- UI radius presets: `sharp`, `soft`, `round`
 
 The selected radius preset applies to standard UI controls and canvas objects alike, including nodes and frames.
 

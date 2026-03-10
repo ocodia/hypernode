@@ -202,7 +202,7 @@
   --node-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
 }
 
-[data-ui-theme="soft-black"] {
+[data-ui-theme="chalkboard"] {
   --bg: #121315;
   --surface: #181a1d;
   --surface-muted: #1e2125;
@@ -2828,13 +2828,9 @@ select:focus-visible {
   max-width: min(560px, calc(100vw - 24px));
   padding: 10px 14px;
   border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--accent) 52%, var(--panel-border));
-  background: color-mix(in srgb, var(--surface) 68%, transparent);
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
   backdrop-filter: blur(14px) saturate(1.08);
   -webkit-backdrop-filter: blur(14px) saturate(1.08);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent),
-    var(--overlay-shadow);
   color: var(--text);
   font-size: 0.86rem;
   opacity: 0;

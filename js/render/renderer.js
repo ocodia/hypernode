@@ -10,7 +10,7 @@ const THEME_META = {
   slate: { mode: 'light', color: '#e6e9ed' },
   paper: { mode: 'light', color: '#f4f7fb' },
   ember: { mode: 'light', color: '#f3eadf' },
-  'soft-black': { mode: 'dark', color: '#121315' },
+  chalkboard: { mode: 'dark', color: '#121315' },
 };
 
 export function createRenderer(elements, _store) {

@@ -152,7 +152,7 @@ const SHORTCUT_CATALOG = [
     keys: ['T'],
     title: 'Toggle document theme',
     description: 'Cycles the current hypernode through the curated theme presets.',
-    searchTokens: ['theme', 'appearance', 'blueprint', 'graphite', 'fjord', 'slate', 'mist', 'paper', 'ember', 'soft black', 'preset'],
+    searchTokens: ['theme', 'appearance', 'blueprint', 'graphite', 'fjord', 'slate', 'mist', 'paper', 'ember', 'soft black', 'chalkboard', 'preset'],
   },
   {
     id: 'open-about',
@@ -4160,7 +4160,7 @@ function bindDialogBackdropClose(dialog) {
 }
 
 function getThemePresetSequence() {
-  return ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'soft-black'];
+  return ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard'];
 }
 
 function getThemePresetPresentation(uiThemePreset) {
@@ -4170,7 +4170,7 @@ function getThemePresetPresentation(uiThemePreset) {
     slate: 'Slate',
     paper: 'Paper',
     ember: 'Ember',
-    'soft-black': 'Soft Black',
+    chalkboard: 'Chalkboard',
   };
   const iconByPreset = {
     blueprint: 'bi-moon-stars',
@@ -4178,7 +4178,7 @@ function getThemePresetPresentation(uiThemePreset) {
     slate: 'bi-cloud-fog2',
     paper: 'bi-sun',
     ember: 'bi-brightness-alt-high',
-    'soft-black': 'bi-circle-half',
+    chalkboard: 'bi-circle-half',
   };
   return {
     icon: iconByPreset[uiThemePreset] || iconByPreset.blueprint,
