@@ -1,32 +1,32 @@
 :root {
-  --surface: #ffffff;
-  --surface-muted: #f8fafc;
-  --surface-raised: #ffffff;
-  --border: #dde3ec;
-  --text: #1f2a37;
-  --text-muted: #64748b;
-  --accent: #3b82f6;
-  --accent-contrast: #eff6ff;
-  --focus-ring: #2563eb;
-  --danger: #b91c1c;
-  --danger-soft: #fff1f2;
-  --danger-border: #fecaca;
-  --success: #2f855a;
-  --bg: #eef2f7;
-  --grid-dot: #d6deea;
+  --surface: #123039;
+  --surface-muted: #183d47;
+  --surface-raised: #102a32;
+  --border: #2b5661;
+  --text: #ddf0f1;
+  --text-muted: #91adb2;
+  --accent: #59b7bf;
+  --accent-contrast: #10292f;
+  --focus-ring: #82d6dc;
+  --danger: #ffd1c4;
+  --danger-soft: #472722;
+  --danger-border: #91544a;
+  --success: #90e0be;
+  --bg: #0f2329;
+  --grid-dot: #244750;
   --panel: color-mix(in srgb, var(--surface-raised) 98%, transparent);
-  --toolbar-bg: rgba(255, 255, 255, 0.82);
+  --toolbar-bg: rgba(16, 42, 50, 0.84);
   --panel-border: var(--border);
   --muted: var(--text-muted);
-  --edge: #9fb2cc;
+  --edge: #5f949b;
   --edge-selected: var(--focus-ring);
   --surface-soft: var(--surface-muted);
   --danger-text: var(--danger);
-  --draft-stroke: #6b7f99;
-  --endpoint-stroke: #8ea3c1;
-  --endpoint-fill: #f8fbff;
-  --overlay-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-  --node-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  --draft-stroke: #8bb8bd;
+  --endpoint-stroke: #8bb8bd;
+  --endpoint-fill: #112d35;
+  --overlay-shadow: 0 12px 30px rgba(0, 0, 0, 0.42);
+  --node-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
   --scrollbar-size: 12px;
   --scrollbar-radius: var(--radius-pill);
   --scrollbar-track: color-mix(in srgb, var(--surface-soft) 76%, transparent);
@@ -148,9 +148,6 @@ body {
   color: var(--text);
   background: var(--bg);
   overflow: hidden;
-  transition:
-    background-color 180ms ease,
-    color 180ms ease;
 }
 
 button,
@@ -4342,4 +4339,3 @@ kbd {
   margin: 5px 8px;
   background: color-mix(in srgb, var(--panel-border) 60%, transparent);
 }
-

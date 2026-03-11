@@ -1,17 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-ui-theme="tidepool" data-ui-radius="soft">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f172a" />
-    <title>hypernode</title>
+    <meta name="theme-color" content="#0f2329" />
+    <title>hypernode: Untitled</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/app-icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./icons/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
   <body>
-    <main class="workspace" id="workspace" aria-label="hypernode workspace">
+    <main class="workspace" id="workspace" aria-label="hypernode workspace" hidden>
       <div class="toolbar" aria-label="hypernode controls">
         <div class="toolbar__group" aria-label="Create">
           <button id="new-graph-btn" class="toolbar__icon-btn" type="button" aria-label="New hypernode" title="New hypernode"><i class="bi bi-file-earmark-plus"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
@@ -62,7 +62,7 @@
         <button id="graph-rename-trigger" class="workspace-meta__icon workspace-meta__icon-btn" type="button" aria-label="Rename hypernode">
           <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
         </button>
-        <div class="workspace-meta__name" id="graph-title">Untitled hypernode</div>
+        <div class="workspace-meta__name" id="graph-title">Untitled</div>
         <div class="workspace-meta__separator" aria-hidden="true">-</div>
         <div class="workspace-meta__coords" id="viewport-coordinates">x: 0  y: 0</div>
       </div>

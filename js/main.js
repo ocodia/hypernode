@@ -51,6 +51,9 @@ store.subscribe((state) => {
 
 bindInteractions(elements, store);
 renderer.render(store.getState());
+if (elements.workspace instanceof HTMLElement) {
+  elements.workspace.hidden = false;
+}
 registerServiceWorker();
 
 function registerServiceWorker() {
