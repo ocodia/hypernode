@@ -1690,12 +1690,9 @@ select:focus-visible {
   border-color: var(--frame-selected-border);
 }
 
-.frames[data-frame-editing-active] {
-  z-index: 6;
-}
-
-.frame.is-editing {
-  z-index: 1;
+.frame.is-editing .frame__meta {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .frame__editor {
@@ -1755,6 +1752,15 @@ select:focus-visible {
     opacity 120ms ease,
     transform 120ms ease;
   z-index: 20;
+}
+
+.selection-controls__frame-meta {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  margin-top: 8px;
+  z-index: 25;
 }
 
 .frame.is-selected .frame__toolbar {

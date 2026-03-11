@@ -7,6 +7,29 @@ import {
 } from '../helpers.js';
 import { renderDescriptionMarkdown } from '../markdown.js';
 
+export function buildFrameMetaMarkup(frame, options = {}) {
+  const editingActive = Boolean(options.editingActive);
+  if (editingActive) {
+    return `
+      <div class="frame__editor" data-frame-editor="${frame.id}">
+        <label class="frame__editor-label">
+          Name
+          <input class="frame__editor-input" data-frame-edit-title="${frame.id}" value="${escapeAttr(frame.title)}" maxlength="80" />
+        </label>
+        <label class="frame__editor-label">
+          Description
+          <textarea class="frame__editor-textarea" data-frame-edit-description="${frame.id}">${escapeHTML(frame.description)}</textarea>
+        </label>
+      </div>
+    `;
+  }
+
+  return `
+    <h3 class="frame__title">${escapeHTML(frame.title)}</h3>
+    ${frame.description ? `<div class="frame__description">${renderDescriptionMarkdown(frame.description)}</div>` : ''}
+  `;
+}
+
 export function buildFrameToolbarMarkup(frameId, options = {}) {
   const toolbarClass = options.toolbarClass || 'frame__toolbar';
   const colorKey = typeof options.colorKey === 'string' ? options.colorKey : '';
@@ -75,23 +98,9 @@ export function renderFrames(framesLayer, state) {
           : '';
       const frameColorAttr = typeof frame.colorKey === 'string' ? ` data-frame-color="${frame.colorKey}"` : '';
       const frameStyle = `transform: translate(${frame.x}px, ${frame.y}px); width: ${frame.width}px; height: ${frame.height}px; --frame-border-width: ${frame.borderWidth || 1}px; --frame-border-style: ${escapeAttr(frame.borderStyle || 'solid')};`;
-      const meta = editingFrameId === frame.id
-        ? `
-          <div class="frame__editor" data-frame-editor="${frame.id}">
-            <label class="frame__editor-label">
-              Name
-              <input class="frame__editor-input" data-frame-edit-title="${frame.id}" value="${escapeAttr(frame.title)}" maxlength="80" />
-            </label>
-            <label class="frame__editor-label">
-              Description
-              <textarea class="frame__editor-textarea" data-frame-edit-description="${frame.id}">${escapeHTML(frame.description)}</textarea>
-            </label>
-          </div>
-        `
-        : `
-          <h3 class="frame__title">${escapeHTML(frame.title)}</h3>
-          ${frame.description ? `<div class="frame__description">${renderDescriptionMarkdown(frame.description)}</div>` : ''}
-        `;
+      const meta = buildFrameMetaMarkup(frame, {
+        editingActive: editingFrameId === frame.id,
+      });
       return `
         <article class="frame ${selectedClass} ${overlayControlsClass} ${editingClass} ${connectClass} ${membershipPreviewClass}" data-frame-id="${frame.id}"${frameColorAttr} style="${frameStyle}">
           <div class="frame__box"></div>
@@ -120,10 +129,6 @@ export function renderFrames(framesLayer, state) {
   const draftMarkup = frameDraft
     ? `<div class="frame__draft" style="left:${frameDraft.x}px;top:${frameDraft.y}px;width:${frameDraft.width}px;height:${frameDraft.height}px;"></div>`
     : '';
-
-  if (typeof framesLayer?.toggleAttribute === 'function') {
-    framesLayer.toggleAttribute('data-frame-editing-active', Boolean(editingFrameId));
-  }
 
   framesLayer.innerHTML = `${framesMarkup}${draftMarkup}`;
 }

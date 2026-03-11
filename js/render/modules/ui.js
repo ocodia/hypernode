@@ -12,7 +12,7 @@ import {
   resolveEdgeAnchor,
   straightLineMidpoint,
 } from "../helpers.js";
-import { buildFrameToolbarMarkup } from "./frames.js";
+import { buildFrameMetaMarkup, buildFrameToolbarMarkup } from "./frames.js";
 import { buildNodeContentMarkup, buildNodeToolbarMarkup } from "./nodes.js";
 import { buildEdgeToolbarMarkup, buildMultiEdgeToolbarMarkup } from "./edges.js";
 
@@ -216,6 +216,11 @@ export function renderSelectionControls(selectionControlsLayer, state) {
           borderStyle: frame.borderStyle || "solid",
           editingActive: editingFrameId === frame.id,
         })}
+        ${editingFrameId === frame.id ? `
+          <div class="frame__meta selection-controls__frame-meta">
+            ${buildFrameMetaMarkup(frame, { editingActive: true })}
+          </div>
+        ` : ""}
         ${buildFrameOverlayControls(frame.id, { includeResize: editingFrameId !== frame.id })}
       </div>
     `;

@@ -1114,9 +1114,11 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function focusFrameTitleInput(frameId, retries = 2) {
-    const titleInput = framesLayer.querySelector(
-      `[data-frame-edit-title="${frameId}"]`,
-    );
+    const titleInput =
+      selectionControlsLayer?.querySelector?.(
+        `[data-frame-edit-title="${frameId}"]`,
+      ) ||
+      framesLayer.querySelector(`[data-frame-edit-title="${frameId}"]`);
     if (!titleInput) {
       if (retries > 0) {
         window.requestAnimationFrame(() =>
@@ -2487,6 +2489,11 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
+    if (event.target.closest("[data-frame-editor]")) {
+      event.stopPropagation();
+      return;
+    }
+
     const nodeOpenEl = event.target.closest("[data-node-edit-open]");
     if (nodeOpenEl) {
       const nodeId = nodeOpenEl.dataset.nodeEditOpen;
@@ -2579,7 +2586,12 @@ export function bindInteractions(elements, store, options = {}) {
     event.preventDefault();
   }
 
+  function onSelectionControlsKeyDown(event) {
+    onFrameKeyDown(event);
+  }
+
   function onSelectionControlsInput(event) {
+    onFrameInput(event);
     handleToolbarInput(event);
   }
 
@@ -2602,6 +2614,7 @@ export function bindInteractions(elements, store, options = {}) {
       onSelectionControlsPointerDown,
       onSelectionControlsClick,
       onSelectionControlsDoubleClick,
+      onSelectionControlsKeyDown,
       onSelectionControlsInput,
       onSelectionControlsChange,
     },
