@@ -1110,7 +1110,7 @@ select:focus-visible {
   display: flex;
   align-items: stretch;
   justify-content: center;
-  padding: 18px;
+  padding: 10px;
 }
 
 .focus-overlay[hidden] {
@@ -1164,8 +1164,8 @@ select:focus-visible {
   gap: 8px;
   right: auto;
   margin-left: auto;
-  margin-bottom: 16px;
-  padding: 0 0 6px;
+  margin-bottom: 10px;
+  padding: 0;
   width: fit-content;
   max-width: 100%;
   border: 0;

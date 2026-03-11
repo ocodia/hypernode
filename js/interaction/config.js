@@ -15,9 +15,9 @@ export const SHORTCUT_CATALOG = [
   },
   {
     id: 'add-node',
-    keys: ['N', 'Ctrl/Cmd + N'],
+    keys: ['N'],
     title: 'Add node',
-    description: 'Creates a new text node; Ctrl/Cmd + N places it at the current pointer position.',
+    description: 'Creates a new text node at the current pointer position.',
     searchTokens: ['node', 'create', 'text', 'toolbar', 'pointer', 'mouse', 'cursor'],
   },
   {

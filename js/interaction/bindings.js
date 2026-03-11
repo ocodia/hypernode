@@ -1813,7 +1813,7 @@ export function bindInteractions(elements, store, options = {}) {
         {
           label: "Add Node",
           icon: "bi-plus-square",
-          shortcut: `${ctrlLabel}N`,
+          shortcut: "N",
           action: () => createNodeInEditMode(point),
         },
         {
@@ -3404,11 +3404,7 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function handleAddNode() {
-    const { viewport } = store.getState();
-    createNodeInEditMode({
-      x: (120 - viewport.panX) / viewport.zoom,
-      y: (120 - viewport.panY) / viewport.zoom,
-    });
+    handleAddNodeAtPointer();
   }
 
   function commitStarterHypernode(nodeId) {
@@ -3988,17 +3984,6 @@ export function bindInteractions(elements, store, options = {}) {
       ) {
         event.preventDefault();
         handleNewGraph();
-        return;
-      }
-
-      if (
-        ctrlOrCmd &&
-        !event.shiftKey &&
-        !event.altKey &&
-        event.key.toLowerCase() === "n"
-      ) {
-        event.preventDefault();
-        handleAddNodeAtPointer();
         return;
       }
 

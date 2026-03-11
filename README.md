@@ -81,8 +81,7 @@ Use the shortcuts dialog to search by key combo or action name.
 - `Delete` / `Backspace`: delete selected node/edge
 - `Ctrl/Cmd + Shift + H`: create a new hypernode
 - `Ctrl/Cmd + O`: open a hypernode file
-- `N`: add a text node
-- `Ctrl/Cmd + N`: add a text node at the current pointer position
+- `N`: add a text node at the current pointer position
 - `I`: add an image node
 - `F`: toggle frame draw mode
 - `Ctrl/Cmd + Delete` or `Ctrl/Cmd + Backspace`: delete the focused node from Focus mode after confirmation
