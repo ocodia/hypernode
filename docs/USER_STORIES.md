@@ -332,7 +332,7 @@ As a user, I want hypernode-wide controls in one place so I can adjust presentat
 
 Acceptance criteria:
 
-- Settings dialog exposes hypernode name, UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, and arrowhead size.
+- Settings dialog exposes hypernode name, a unified theme settings list, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, and arrowhead size.
 - Changing a setting updates the current hypernode immediately.
 - Hypernode name updates the metadata chip and browser tab title.
 - Settings remain available without leaving the canvas workflow.
@@ -343,10 +343,21 @@ As a user, I want to choose a curated appearance preset so each hypernode can ha
 
 Acceptance criteria:
 
-- Settings expose UI theme presets `blueprint`, `fjord`, `slate`, `paper`, `ember`, and `chalkboard`.
+- Settings expose UI theme presets `blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`, `citrine`, `canopy`, `tidepool`, and `dusk`.
 - Choosing a preset updates shared UI surfaces, controls, dialogs, nodes, and frames.
 - The node/frame annotation palette remains available and distinct from the document UI theme.
 - Focus states and text contrast remain readable across all supported presets.
+
+### US-29c: Control which themes participate in keyboard theme cycling
+
+As a user, I want to enable only the themes I care about so the `T` shortcut cycles through a smaller, cleaner set.
+
+Acceptance criteria:
+
+- Settings expose an enabled-state control for every installed theme preset in the same list as the active theme selector.
+- `T` cycles only through enabled themes, in registry order.
+- At least one theme always remains enabled.
+- Disabling the active theme immediately switches the hypernode to the first remaining enabled theme.
 
 ### US-29b: Choose a shared radius preset
 
@@ -369,7 +380,7 @@ Acceptance criteria:
 - Opening a valid hypernode JSON file restores persisted settings.
 - Saving a hypernode JSON file writes the current settings into the file.
 - Invalid settings payloads are rejected before replacing the current hypernode.
-- UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, and metadata position round-trip with the same persistence guarantees as the other graph settings.
+- UI theme preset, enabled theme presets, UI radius preset, toolbar position, toolbar orientation, toast position, and metadata position round-trip with the same persistence guarantees as the other graph settings.
 
 ### US-33: Search keyboard shortcuts
 

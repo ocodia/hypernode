@@ -15,6 +15,7 @@ The persisted graph shape is:
   "name": "Untitled hypernode",
   "settings": {
     "uiThemePreset": "blueprint",
+    "enabledThemePresets": ["blueprint", "fjord", "slate", "paper", "ember", "chalkboard", "citrine", "canopy", "tidepool", "dusk"],
     "uiRadiusPreset": "rounded",
     "toolbarPosition": "top-left",
     "toolbarOrientation": "horizontal",
@@ -38,7 +39,8 @@ Current valid values:
 
 ```json
 {
-  "uiThemePreset": "blueprint | fjord | slate | paper | ember | chalkboard",
+  "uiThemePreset": "blueprint | fjord | slate | paper | ember | chalkboard | citrine | canopy | tidepool | dusk",
+  "enabledThemePresets": "[blueprint | fjord | slate | paper | ember | chalkboard | citrine | canopy | tidepool | dusk, ...]",
   "uiRadiusPreset": "sharp | soft | rounded",
   "toolbarPosition": "top-left | top-right | bottom-left | bottom-right",
   "toolbarOrientation": "horizontal | vertical",
@@ -55,6 +57,7 @@ Current valid values:
 Defaults:
 
 - `uiThemePreset`: `blueprint`
+- `enabledThemePresets`: all installed theme preset ids, in registry order
 - `uiRadiusPreset`: `rounded`
 - `toolbarPosition`: `top-left`
 - `toolbarOrientation`: `horizontal`
@@ -70,6 +73,8 @@ Validation rules:
 
 - invalid enum values are rejected during payload validation
 - invalid or missing settings sanitize back to the defaults above when loaded into app state
+- `enabledThemePresets` deduplicates invalid entries and falls back to the full installed registry if empty
+- if `uiThemePreset` is not included in `enabledThemePresets`, app state sanitization rehomes the active theme to the first enabled preset
 - no legacy aliases are supported in the current contract
 
 ## Nodes

@@ -112,7 +112,7 @@ FR-28a
 Canvas selection toolbars must remain usable across the supported zoom range by keeping their click targets effectively screen-space sized while staying attached to the selected node/frame bounds.
 
 FR-29
-Graph settings must include graph name, UI theme preset, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, and arrowhead size.
+Graph settings must include graph name, UI theme preset, enabled theme presets, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, and arrowhead size.
 
 FR-29a
 The shortcuts dialog must support search by shortcut keys and action text.
@@ -131,6 +131,12 @@ The app must provide hypernode-level appearance presets and persist the selected
 
 FR-30a
 The UI theme preset must apply semantic design tokens across shared UI primitives and canvas objects, including dialogs, toolbar controls, nodes, frames, and image wells.
+
+FR-30aa
+Installed UI theme presets must come from a canonical registry-backed theme definition model rather than CSS alias selectors or duplicated settings markup.
+
+FR-30ab
+Users must be able to enable or disable individual UI theme presets for keyboard theme cycling, and the `T` shortcut must skip disabled themes while preserving registry order among enabled themes.
 
 FR-30b
 The UI radius preset must apply a shared radius scale across controls, dialogs, cards, nodes, frames, image wells, and selection chrome.

@@ -110,6 +110,12 @@ Curated appearance presets:
 - `paper`
 - `ember`
 - `chalkboard`
+- `citrine`
+- `canopy`
+- `tidepool`
+- `dusk`
+
+Theme presets should remain canonical ids in a shared registry rather than CSS alias names. Future installable themes should plug into that registry and inherit the same semantic token contract.
 
 ## Canvas
 
@@ -172,7 +178,7 @@ This palette system sits alongside the document-level UI theme presets rather th
 The settings panel should reflect graph-level controls that affect behavior or broad presentation:
 
 - graph name
-- UI theme preset
+- unified UI theme list with active theme selection and enabled-theme toggles for the `T` shortcut cycle
 - UI radius preset
 - background style
 - anchors mode (`Auto` or `Exact`)
@@ -210,13 +216,14 @@ Ensure:
 - visible keyboard focus outlines driven by the shared `focus-ring` token
 - adequate contrast for text, surfaces, states, and controls across all presets
 - keyboard support for delete, undo, redo, save, edit toggle, linked-node creation, directional navigation, and escape behavior
-- themed controls remain readable and operable across `blueprint`, `fjord`, `slate`, `paper`, `ember`, and `chalkboard`
+- themed controls remain readable and operable across `blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`, `citrine`, `canopy`, `tidepool`, and `dusk`
 
 ## Persistence and Compatibility
 
 Hypernode appearance should be document-level state:
 
 - UI theme preset is saved in hypernode settings
+- enabled theme presets are saved in hypernode settings
 - UI radius preset is saved in hypernode settings
 - older documents without these values should fall back to `blueprint` and `rounded`
 

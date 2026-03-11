@@ -102,4 +102,6 @@ Use this checklist before shipping interaction changes.
 - [ ] Trigger file/theme/image toasts and verify they appear in the bottom-right with accent-highlighted borders and disappear quickly.
 - [ ] Open/close About dialog.
 - [ ] Change the UI theme preset and reload page to verify theme persistence.
+- [ ] Toggle the enabled state of several themes, press `T`, and verify disabled themes are skipped in the correct order.
+- [ ] Disable the active theme and verify the app immediately switches to the first remaining enabled theme.
 - [ ] Zoom until a single-node toolbar would collide with toolbar/meta/toast chrome and verify top/bottom auto-placement still avoids obstructions.

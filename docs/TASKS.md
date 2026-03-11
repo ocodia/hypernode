@@ -32,9 +32,10 @@ Last updated: 2026-03-10
   - extracted renderer theme metadata
   - extracted interaction shortcut/theme config
 - [x] Documentation alignment:
-  - current theme list is `blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`
+  - current theme list is `blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`, `citrine`, `canopy`, `tidepool`, `dusk`
   - current radius presets are `sharp`, `soft`, `rounded`
   - removed legacy alias language from the active contract
+  - documented unified theme settings list and enabled theme toggle behavior
 
 ## Remaining Work
 
