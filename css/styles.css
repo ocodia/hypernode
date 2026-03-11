@@ -1621,7 +1621,7 @@ select:focus-visible {
 
 .frame__title {
   margin: 0;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 600;
   line-height: 1.3;
 }
@@ -1720,8 +1720,9 @@ select:focus-visible {
 }
 
 .frame__editor-input {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   line-height: 1.3;
+  font-weight: 600;
 }
 
 .frame__editor-textarea {

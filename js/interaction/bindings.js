@@ -1750,19 +1750,95 @@ export function bindInteractions(elements, store) {
     event.preventDefault();
     const target = event.target;
 
-    // Future: node-specific context menu
-    if (target.closest("[data-node-id]")) {
-      // TODO: node context menu items
+    // Node context menu
+    const nodeEl = target.closest("[data-node-id]");
+    if (nodeEl) {
+      const nodeId = nodeEl.dataset.nodeId;
+      store.setSelection({ type: "node", id: nodeId });
+      contextMenu.show({
+        clientX: event.clientX,
+        clientY: event.clientY,
+        items: [
+          {
+            label: "Edit",
+            icon: "bi-pencil",
+            shortcut: "⌘↵",
+            action: () => openNodeEditor(nodeId),
+          },
+          {
+            label: "Focus",
+            icon: "bi-arrows-fullscreen",
+            shortcut: "⌘⌥↵",
+            action: () => openNodeFocus(nodeId),
+          },
+          { separator: true },
+          {
+            label: "Duplicate",
+            icon: "bi-copy",
+            action: () => store.duplicateNode(nodeId),
+          },
+          { separator: true },
+          {
+            label: "Delete",
+            icon: "bi-trash3",
+            shortcut: "⌫",
+            action: () => {
+              activeLiveEditNodeId = null;
+              store.deleteNode(nodeId);
+            },
+          },
+        ],
+      });
       return;
     }
-    // Future: edge-specific context menu
-    if (target.closest("[data-edge-id]")) {
-      // TODO: edge context menu items
+
+    // Edge context menu
+    const edgeEl = target.closest("[data-edge-id]");
+    if (edgeEl) {
+      const edgeId = edgeEl.dataset.edgeId;
+      store.setSelection({ type: "edge", id: edgeId });
+      contextMenu.show({
+        clientX: event.clientX,
+        clientY: event.clientY,
+        items: [
+          {
+            label: "Delete",
+            icon: "bi-trash3",
+            shortcut: "⌫",
+            action: () => store.deleteEdge(edgeId),
+          },
+        ],
+      });
       return;
     }
-    // Future: frame-specific context menu
-    if (target.closest("[data-frame-id]")) {
-      // TODO: frame context menu items
+
+    // Frame context menu
+    const frameEl = target.closest("[data-frame-id]");
+    if (frameEl) {
+      const frameId = frameEl.dataset.frameId;
+      store.setSelection({ type: "frame", id: frameId });
+      contextMenu.show({
+        clientX: event.clientX,
+        clientY: event.clientY,
+        items: [
+          {
+            label: "Edit",
+            icon: "bi-pencil",
+            shortcut: "⌘↵",
+            action: () => openFrameEditor(frameId),
+          },
+          { separator: true },
+          {
+            label: "Delete",
+            icon: "bi-trash3",
+            shortcut: "⌫",
+            action: () => {
+              activeLiveEditFrameId = null;
+              store.deleteFrame(frameId);
+            },
+          },
+        ],
+      });
       return;
     }
 

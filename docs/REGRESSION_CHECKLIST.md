@@ -128,3 +128,18 @@ Use this checklist before shipping interaction changes.
 - [ ] Right-click on a node, edge, or frame and verify the native browser context menu is suppressed.
 - [ ] Verify context menu respects the current theme preset appearance.
 - [ ] Verify context menu border radius adapts to the current radius preset.
+
+### Entity context menus
+
+- [ ] Right-click on a node and verify a context menu appears with Edit, Focus, Duplicate, and Delete items.
+- [ ] Click Edit in the node context menu and verify the node enters inline edit mode.
+- [ ] Click Focus in the node context menu and verify the node enters Zen (focus) mode.
+- [ ] Click Duplicate in the node context menu and verify a copy appears offset from the original and is selected.
+- [ ] Click Delete in the node context menu and verify the node and its connected edges are removed.
+- [ ] Right-click on a frame and verify a context menu appears with Edit and Delete items.
+- [ ] Click Edit in the frame context menu and verify the frame enters edit mode.
+- [ ] Click Delete in the frame context menu and verify the frame is removed while contained nodes remain.
+- [ ] Right-click on an edge and verify a context menu appears with a Delete item.
+- [ ] Click Delete in the edge context menu and verify the edge is removed.
+- [ ] Right-click on an entity and verify that entity becomes selected before the menu opens.
+- [ ] Verify entity context menus dismiss correctly via outside click, Escape, and scroll.

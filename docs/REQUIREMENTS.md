@@ -186,7 +186,10 @@ A multi-edge toolbar must appear at the average midpoint of the selected edges, 
 FR-42
 Right-clicking on the canvas must display a context menu at the cursor position.
 The blank-canvas context menu must offer Add Node, Add Frame, and Add Image options that create entities at the right-click graph point.
-The context menu must be extensible so that node, edge, and frame targets can provide target-specific menu items in future.
+Right-clicking a node must display a context menu with Edit, Focus, Duplicate, and Delete actions.
+Right-clicking a frame must display a context menu with Edit and Delete actions.
+Right-clicking an edge must display a context menu with a Delete action.
+Entity context menus must select the target entity before showing.
 The context menu must dismiss on outside click, Escape, scroll, or any menu-item action.
 The context menu must use the shared design system tokens and radius presets.
 

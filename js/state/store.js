@@ -856,6 +856,26 @@ export function createStore(initialGraph = null, initialSettings = null) {
     notify();
   }
 
+  function duplicateNode(id) {
+    const source = state.nodes.find((node) => node.id === id);
+    if (!source) return null;
+    const OFFSET = 30;
+    const clone = sanitizeNode(
+      {
+        ...structuredClone(source),
+        id: createId("node"),
+        x: source.x + OFFSET,
+        y: source.y + OFFSET,
+      },
+      new Set(state.frames.map((frame) => frame.id)),
+    );
+    applyStateChange("duplicate-node", () => {
+      state.nodes.push(clone);
+      state.selection = { type: "node", id: clone.id };
+    });
+    return clone;
+  }
+
   function setNodesColor(ids, colorKey) {
     const targets = dedupeNodeTargets(ids);
     if (!targets.length) return;
@@ -1513,6 +1533,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     setFramesBorderStyle,
     deleteNode,
     deleteFrame,
+    duplicateNode,
     deleteSelectedNodes,
     addEdge,
     connectNodes,
