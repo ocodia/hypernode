@@ -238,6 +238,9 @@ export function validateGraphPayload(payload) {
     settings.nodeColorDefault === undefined ||
     settings.nodeColorDefault === null ||
     isValidNodeColorKey(settings.nodeColorDefault);
+  const hasValidEdgeTypeDefault =
+    settings.edgeTypeDefault === undefined ||
+    isValidEdgeType(settings.edgeTypeDefault);
   if (
     !hasValidUiThemePreset ||
     !hasValidEnabledThemePresets ||
@@ -250,7 +253,8 @@ export function validateGraphPayload(payload) {
     !hasValidAnchorsMode ||
     !hasValidArrowheadsMode ||
     !hasValidArrowheadSizeStep ||
-    !hasValidNodeColorDefault
+    !hasValidNodeColorDefault ||
+    !hasValidEdgeTypeDefault
   ) {
     return false;
   }
@@ -340,6 +344,9 @@ export function sanitizeAppSettings(settings) {
       : APP_SETTINGS_DEFAULTS.arrowheads,
     arrowheadSizeStep: sanitizeArrowheadSizeStep(settings?.arrowheadSizeStep),
     nodeColorDefault: sanitizeNodeColorKey(settings?.nodeColorDefault),
+    edgeTypeDefault: isValidEdgeType(settings?.edgeTypeDefault)
+      ? settings.edgeTypeDefault
+      : APP_SETTINGS_DEFAULTS.edgeTypeDefault,
   };
   const resolvedPlacement = getAnchoredUiPlacement(sanitized);
   return {
@@ -357,6 +364,10 @@ export function isValidAnchor(anchor) {
 
 function sanitizeAnchor(anchor) {
   return isValidAnchor(anchor) ? anchor : null;
+}
+
+function isValidEdgeType(edgeType) {
+  return typeof edgeType === "string" && EDGE_TYPES.includes(edgeType);
 }
 
 function isValidBackgroundStyle(value) {

@@ -280,7 +280,47 @@ export function renderDraftEdge(edgeDraftGroup, state) {
 
   const start = getAnchorPoint(sourceEntity, sourceSize, fromAnchor);
   const resolvedToAnchor = toAnchor || inferIncomingAnchor(start, end);
-  const d = buildTautPath(start, end, fromAnchor, resolvedToAnchor);
+  const edgeType = state.settings.edgeTypeDefault || "curved";
+  let d;
+
+  if (edgeType === "straight") {
+    d = buildStraightPath(start, end);
+  } else if (edgeType === "orthogonal") {
+    const sourceRect = {
+      x: sourceEntity.x,
+      y: sourceEntity.y,
+      width: sourceSize.width,
+      height: sourceSize.height,
+    };
+    const targetEntity = targetNodeId ? findEntityById(state, targetNodeId) : null;
+    const targetSize =
+      targetEntity && bySize.get(targetEntity.id)
+        ? bySize.get(targetEntity.id)
+        : targetEntity
+          ? defaultEntitySize(targetEntity)
+          : null;
+    const targetRect = targetEntity && targetSize
+      ? {
+          x: targetEntity.x,
+          y: targetEntity.y,
+          width: targetSize.width,
+          height: targetSize.height,
+        }
+      : null;
+    d = targetRect
+      ? buildOrthogonalPath(
+          start,
+          end,
+          fromAnchor,
+          resolvedToAnchor,
+          sourceRect,
+          targetRect,
+        )
+      : buildTautPath(start, end, fromAnchor, resolvedToAnchor);
+  } else {
+    d = buildTautPath(start, end, fromAnchor, resolvedToAnchor);
+  }
+
   edgeDraftGroup.innerHTML = `
     <path class="is-draft" d="${d}"></path>
     <circle class="edge__draft-end" cx="${end.x}" cy="${end.y}" r="5.5"></circle>

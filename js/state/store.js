@@ -1039,6 +1039,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
       to,
       fromAnchor: resolveAutoAnchor(fromEntity, toEntity),
       toAnchor: resolveAutoAnchor(toEntity, fromEntity),
+      edgeType: state.settings.edgeTypeDefault,
     });
     state.edges.push(edge);
     syncAutoAnchorsForEdge(edge);
@@ -1069,6 +1070,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
       to: toNodeId,
       fromAnchor,
       toAnchor,
+      edgeType: state.settings.edgeTypeDefault,
     });
     state.edges.push(edge);
     syncAutoAnchorsForEdge(edge);
@@ -1216,6 +1218,14 @@ export function createStore(initialGraph = null, initialSettings = null) {
     updateAppSettings(
       { arrowheadSizeStep },
       { actionLabel: "set-arrowhead-size-step" },
+    );
+  }
+
+  function setEdgeTypeDefault(edgeType) {
+    if (typeof edgeType !== "string" || !EDGE_TYPES.includes(edgeType)) return;
+    updateAppSettings(
+      { edgeTypeDefault: edgeType },
+      { actionLabel: "set-edge-type-default", skipHistory: true },
     );
   }
 
@@ -1554,6 +1564,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     setAnchorsMode,
     setArrowheads,
     setArrowheadSizeStep,
+    setEdgeTypeDefault,
     setNodeColorDefault,
     replaceGraph,
     setViewport,

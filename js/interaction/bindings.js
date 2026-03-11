@@ -1617,6 +1617,7 @@ export function bindInteractions(elements, store) {
   function applyToolbarEdgeType(target, edgeType) {
     const context = getToolbarContext(target);
     if (!context) return;
+    store.setEdgeTypeDefault(edgeType);
     if (context.entity === "edge") {
       store.updateEdge(context.ids[0], { edgeType });
       return;

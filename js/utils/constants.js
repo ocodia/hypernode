@@ -71,6 +71,7 @@ export const APP_SETTINGS_DEFAULTS = {
   arrowheads: "shown",
   arrowheadSizeStep: 0,
   nodeColorDefault: null,
+  edgeTypeDefault: "curved",
 };
 
 export const EDGE_DEFAULTS = {
