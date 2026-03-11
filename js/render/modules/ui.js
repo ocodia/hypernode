@@ -484,7 +484,7 @@ export function renderHypernodeMetadata(
     );
     viewportCoordinates.textContent = `x: ${centerX}  y: ${centerY}`;
   }
-  document.title = `${state.name} - hypernode`;
+  document.title = `hypernode: ${state.name}`;
 }
 
 function escapeHtml(value) {

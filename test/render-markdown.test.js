@@ -367,5 +367,5 @@ test('renderHypernodeMetadata updates name, viewport center coordinates, and doc
 
   assert.equal(graphTitle.textContent, '2026-03-09');
   assert.equal(viewportCoordinates.textContent, 'x: 250  y: 125');
-  assert.equal(mockDocument.title, '2026-03-09 - hypernode');
+  assert.equal(mockDocument.title, 'hypernode: 2026-03-09');
 });
