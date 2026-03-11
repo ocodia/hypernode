@@ -3,6 +3,7 @@ import { renderFrames } from './modules/frames.js';
 import { renderNodes } from './modules/nodes.js';
 import { renderFocusOverlay, renderHypernodeMetadata, renderImportStatus, renderSelectionControls } from './modules/ui.js';
 import { THEME_META } from './theme-meta.js';
+import { getThemePresetById } from '../shared/themes.js';
 import { applyViewport } from './modules/viewport.js';
 
 export function createRenderer(elements, _store) {
@@ -38,10 +39,21 @@ export function createRenderer(elements, _store) {
     edgeOverlayGroup,
     edgesGroup,
   };
+  let activeThemePreset = null;
+
+  function applyThemePreset(themeId) {
+    if (activeThemePreset === themeId) return;
+    activeThemePreset = themeId;
+    const theme = getThemePresetById(themeId);
+    Object.entries(theme.tokens).forEach(([token, value]) => {
+      document.documentElement.style.setProperty(`--${token}`, value);
+    });
+  }
 
   function render(state) {
     applyViewport(viewportElements, state.viewport);
     canvas.dataset.backgroundStyle = state.settings.backgroundStyle;
+    applyThemePreset(state.settings.uiThemePreset);
     document.documentElement.dataset.uiTheme = state.settings.uiThemePreset;
     document.documentElement.dataset.uiRadius = state.settings.uiRadiusPreset;
     workspace.dataset.toolbarPosition = state.settings.toolbarPosition;

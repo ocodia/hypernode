@@ -1,38 +1,27 @@
-const THEME_PRESET_SEQUENCE = ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard', 'citrine', 'canopy', 'tidepool', 'dusk'];
+import {
+  getThemePresetById,
+  getThemePresetSequence as getSharedThemePresetSequence,
+  THEME_PRESETS,
+} from '../shared/themes.js';
 
-const THEME_PRESET_LABELS = {
-  blueprint: 'Blueprint',
-  fjord: 'Fjord',
-  slate: 'Slate',
-  paper: 'Paper',
-  ember: 'Ember',
-  chalkboard: 'Chalkboard',
-  citrine: 'Citrine',
-  canopy: 'Canopy',
-  tidepool: 'Tidepool',
-  dusk: 'Dusk',
-};
+export function getThemePresetSequence(enabledThemeIds = null) {
+  return getSharedThemePresetSequence(enabledThemeIds);
+}
 
-const THEME_PRESET_ICONS = {
-  blueprint: 'bi-moon-stars',
-  fjord: 'bi-water',
-  slate: 'bi-cloud-fog2',
-  paper: 'bi-sun',
-  ember: 'bi-brightness-alt-high',
-  chalkboard: 'bi-circle-half',
-  citrine: 'bi-sunrise',
-  canopy: 'bi-tree',
-  tidepool: 'bi-water',
-  dusk: 'bi-moon-stars',
-};
-
-export function getThemePresetSequence() {
-  return THEME_PRESET_SEQUENCE;
+export function getThemePresetDefinitions() {
+  return THEME_PRESETS.map(({ id, label, icon, mode, color }) => ({
+    id,
+    label,
+    icon,
+    mode,
+    color,
+  }));
 }
 
 export function getThemePresetPresentation(uiThemePreset) {
+  const theme = getThemePresetById(uiThemePreset);
   return {
-    icon: THEME_PRESET_ICONS[uiThemePreset] || THEME_PRESET_ICONS.blueprint,
-    title: THEME_PRESET_LABELS[uiThemePreset] || THEME_PRESET_LABELS.blueprint,
+    icon: theme.icon,
+    title: theme.label,
   };
 }

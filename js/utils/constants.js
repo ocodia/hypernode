@@ -1,3 +1,5 @@
+import { THEME_PRESET_IDS } from '../shared/themes.js';
+
 export const STORAGE_KEY = "hypernode.graph.v2";
 export const SETTINGS_STORAGE_KEY = "hypernode.settings.v1";
 export const VIEWPORT_LIMITS = {
@@ -58,6 +60,7 @@ export const GRAPH_DEFAULTS = {
 
 export const APP_SETTINGS_DEFAULTS = {
   uiThemePreset: "blueprint",
+  enabledThemePresets: [...THEME_PRESET_IDS],
   uiRadiusPreset: "rounded",
   toolbarPosition: "top-left",
   toolbarOrientation: "horizontal",

@@ -53,6 +53,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Theme-aware custom scrollbars across dialogs, focus views, and editor panes that inherit the active preset and radius scale.
 - Settings menu for document-level defaults:
   - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`, `citrine`, `canopy`, `tidepool`, or `dusk`)
+  - enabled theme presets for the `T` keyboard cycle
   - UI radius preset (`sharp`, `soft`, or `rounded`)
   - hypernode background style (`blank`, `dots`, or `graph-paper`)
   - anchors mode (`auto` or `exact`) where `auto` keeps each edge's stored anchor points synced to the currently resolved connection sides as nodes and frames move

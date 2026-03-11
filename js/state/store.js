@@ -962,6 +962,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
     updateAppSettings({ uiThemePreset }, { actionLabel: 'set-ui-theme-preset' });
   }
 
+  function setEnabledThemePresets(enabledThemePresets) {
+    updateAppSettings({ enabledThemePresets }, { actionLabel: 'set-enabled-theme-presets' });
+  }
+
   function setUiRadiusPreset(uiRadiusPreset) {
     updateAppSettings({ uiRadiusPreset }, { actionLabel: 'set-ui-radius-preset' });
   }
@@ -1218,6 +1222,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     deleteEdge,
     setGraphName,
     setUiThemePreset,
+    setEnabledThemePresets,
     setUiRadiusPreset,
     setToolbarPosition,
     setToolbarOrientation,

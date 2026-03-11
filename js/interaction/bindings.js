@@ -20,7 +20,7 @@ import { bindKeyboardInteractions } from './binders/keyboard.js';
 import { bindNodeInteractions } from './binders/nodes.js';
 import { bindToolbarInteractions } from './binders/toolbar.js';
 import { SHORTCUT_CATALOG, TOOLBAR_SHORTCUTS } from './config.js';
-import { getThemePresetPresentation, getThemePresetSequence } from './theme-presets.js';
+import { getThemePresetDefinitions, getThemePresetPresentation, getThemePresetSequence } from './theme-presets.js';
 
 export function bindInteractions(elements, store, options = {}) {
   const {
@@ -2521,6 +2521,7 @@ export function bindInteractions(elements, store, options = {}) {
   const settingsBtn = document.getElementById('settings-btn');
   const settingsCloseBtn = document.getElementById('settings-close-btn');
   const settingsTabSelect = document.getElementById('settings-tab-select');
+  const settingsThemeOptions = document.getElementById('settings-theme-options');
   const renameGraphTrigger = document.getElementById('graph-rename-trigger');
   const renameGraphDialog = document.getElementById('rename-graph-dialog');
   const renameGraphInput = document.getElementById('rename-graph-input');
@@ -2541,6 +2542,8 @@ export function bindInteractions(elements, store, options = {}) {
     hint: document.getElementById(id)?.querySelector('.toolbar__shortcut-hint'),
     config,
   }));
+
+  renderThemeSettingsOptions(settingsThemeOptions);
 
   function hasGraphData() {
     const state = store.getState();
@@ -2586,6 +2589,7 @@ export function bindInteractions(elements, store, options = {}) {
       const state = store.getState();
       currentFileHandle = await saveGraphFile({
         name: state.name,
+        settings: state.settings,
         nodes: state.nodes,
         frames: state.frames,
         edges: state.edges,
@@ -2699,10 +2703,10 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function toggleThemePreference() {
-    const currentThemePreset = getThemePresetSequence().includes(store.getState().settings?.uiThemePreset)
+    const currentThemePreset = getThemePresetSequence(store.getState().settings?.enabledThemePresets).includes(store.getState().settings?.uiThemePreset)
       ? store.getState().settings.uiThemePreset
       : 'blueprint';
-    const presetSequence = getThemePresetSequence();
+    const presetSequence = getThemePresetSequence(store.getState().settings?.enabledThemePresets);
     const currentIndex = presetSequence.indexOf(currentThemePreset);
     const nextThemePreset = presetSequence[(currentIndex + 1) % presetSequence.length];
     store.setUiThemePreset(nextThemePreset);
@@ -3018,6 +3022,23 @@ export function bindInteractions(elements, store, options = {}) {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || !target.checked) return;
       store.setUiThemePreset(target.value);
+    });
+  });
+
+  settingsDialog?.querySelectorAll('input[name="enabled-theme-preset"]').forEach((input) => {
+    input.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const enabledThemePresets = Array.from(
+        settingsDialog.querySelectorAll('input[name="enabled-theme-preset"]'),
+      )
+        .filter((option) => option instanceof HTMLInputElement && option.checked)
+        .map((option) => option.value);
+      if (!enabledThemePresets.length) {
+        target.checked = true;
+        return;
+      }
+      store.setEnabledThemePresets(enabledThemePresets);
     });
   });
 
@@ -3984,6 +4005,18 @@ function syncSettingsDialogFromState(
   settingsDialog.querySelectorAll('input[name="ui-theme-preset"]').forEach((input) => {
     if (input instanceof HTMLInputElement) {
       input.checked = input.value === state.settings.uiThemePreset;
+      input.disabled = !state.settings.enabledThemePresets.includes(input.value);
+      input.closest('.settings-dialog__theme-option')?.classList.toggle('is-disabled', input.disabled);
+    }
+  });
+
+  const enabledThemeCount = state.settings.enabledThemePresets.length;
+  settingsDialog.querySelectorAll('input[name="enabled-theme-preset"]').forEach((input) => {
+    if (input instanceof HTMLInputElement) {
+      const enabled = state.settings.enabledThemePresets.includes(input.value);
+      input.checked = enabled;
+      input.disabled = enabled && enabledThemeCount <= 1;
+      input.closest('.settings-dialog__theme-option')?.classList.toggle('is-disabled', !enabled);
     }
   });
 
@@ -4058,6 +4091,37 @@ function syncPositionPickers(state, settingsDialog, positionButtons, toolbarOrie
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   });
+}
+
+function renderThemeSettingsOptions(themeOptionsContainer) {
+  if (!(themeOptionsContainer instanceof HTMLElement)) return;
+  const themeOptionsMarkup = getThemePresetDefinitions().map((theme) => {
+    const modeLabel = theme.mode === 'dark' ? 'Dark' : 'Light';
+    return `
+      <label class="settings-dialog__option settings-dialog__theme-option">
+        <span class="settings-dialog__theme-option-main">
+          <span class="settings-dialog__theme-option-copy">
+            <span class="settings-dialog__theme-option-title">${theme.label}</span>
+            <span class="settings-dialog__theme-option-meta">${modeLabel} preset</span>
+          </span>
+        </span>
+        <span class="settings-dialog__theme-option-control">
+          <input type="radio" name="ui-theme-preset" value="${theme.id}" aria-label="Set ${theme.label} as active theme" />
+        </span>
+        <span class="settings-dialog__theme-option-control">
+          <input type="checkbox" name="enabled-theme-preset" value="${theme.id}" aria-label="Enable ${theme.label} in theme toggle" />
+        </span>
+      </label>
+    `;
+  }).join('');
+  themeOptionsContainer.innerHTML = `
+    <div class="settings-dialog__theme-list-head" aria-hidden="true">
+      <span>Theme</span>
+      <span>Active</span>
+      <span>Enabled</span>
+    </div>
+    ${themeOptionsMarkup}
+  `;
 }
 
 function bindDialogBackdropClose(dialog) {

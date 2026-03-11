@@ -73,6 +73,31 @@ test('setToolbarOrientation updates state and undo/redo restores it', () => {
   assert.equal(store.getState().settings.toolbarOrientation, 'vertical');
 });
 
+test('setEnabledThemePresets rehomes the active theme and undo/redo restores the list', () => {
+  const store = createStore({
+    name: 'Graph',
+    settings: {
+      uiThemePreset: 'blueprint',
+      enabledThemePresets: ['blueprint', 'paper', 'dusk'],
+    },
+    nodes: [],
+    frames: [],
+    edges: [],
+  });
+
+  store.setEnabledThemePresets(['paper', 'dusk']);
+  assert.deepEqual(store.getState().settings.enabledThemePresets, ['paper', 'dusk']);
+  assert.equal(store.getState().settings.uiThemePreset, 'paper');
+
+  store.undo();
+  assert.deepEqual(store.getState().settings.enabledThemePresets, ['blueprint', 'paper', 'dusk']);
+  assert.equal(store.getState().settings.uiThemePreset, 'blueprint');
+
+  store.redo();
+  assert.deepEqual(store.getState().settings.enabledThemePresets, ['paper', 'dusk']);
+  assert.equal(store.getState().settings.uiThemePreset, 'paper');
+});
+
 test('replaceGraph restores persisted settings from imported graph', () => {
   const store = createStore({
     name: 'Graph',
@@ -94,6 +119,7 @@ test('replaceGraph restores persisted settings from imported graph', () => {
       toastPosition: 'top-right',
       metaPosition: 'bottom-left',
       uiThemePreset: 'chalkboard',
+      enabledThemePresets: ['chalkboard', 'dusk'],
       uiRadiusPreset: 'soft',
       nodeColorDefault: null,
     },
@@ -109,6 +135,7 @@ test('replaceGraph restores persisted settings from imported graph', () => {
   assert.equal(state.settings.toastPosition, 'top-right');
   assert.equal(state.settings.metaPosition, 'bottom-left');
   assert.equal(state.settings.uiThemePreset, 'chalkboard');
+  assert.deepEqual(state.settings.enabledThemePresets, ['chalkboard', 'dusk']);
   assert.equal(state.settings.uiRadiusPreset, 'soft');
 });
 
@@ -117,6 +144,7 @@ test('createStore uses graph settings when explicit app settings are not provide
     name: 'Graph',
     settings: {
       uiThemePreset: 'chalkboard',
+      enabledThemePresets: ['chalkboard', 'paper'],
       uiRadiusPreset: 'soft',
       toolbarPosition: 'bottom-right',
     },
@@ -127,6 +155,7 @@ test('createStore uses graph settings when explicit app settings are not provide
 
   const { settings } = store.getState();
   assert.equal(settings.uiThemePreset, 'chalkboard');
+  assert.deepEqual(settings.enabledThemePresets, ['chalkboard', 'paper']);
   assert.equal(settings.uiRadiusPreset, 'soft');
   assert.equal(settings.toolbarPosition, 'bottom-right');
 });

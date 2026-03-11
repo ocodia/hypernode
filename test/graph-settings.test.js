@@ -23,6 +23,16 @@ test('sanitizeAppSettings accepts all current curated ui theme presets', () => {
   }
 });
 
+test('sanitizeAppSettings keeps enabled theme presets canonical and resolves disabled active themes', () => {
+  const settings = sanitizeAppSettings({
+    uiThemePreset: 'blueprint',
+    enabledThemePresets: ['dusk', 'dusk', 'unknown', 'paper'],
+  });
+
+  assert.deepEqual(settings.enabledThemePresets, ['dusk', 'paper']);
+  assert.equal(settings.uiThemePreset, 'dusk');
+});
+
 test('sanitizeAppSettings accepts only current radius presets', () => {
   for (const preset of ['sharp', 'soft', 'rounded']) {
     assert.equal(sanitizeAppSettings({ uiRadiusPreset: preset }).uiRadiusPreset, preset);
@@ -35,6 +45,7 @@ test('validateGraphPayload accepts the current curated ui theme preset list', ()
     name: 'Graph',
     settings: {
       uiThemePreset,
+      enabledThemePresets: ['blueprint', 'paper', 'dusk'],
       backgroundStyle: 'dots',
       anchorsMode: 'auto',
       arrowheads: 'shown',
@@ -61,6 +72,7 @@ test('validateGraphPayload rejects invalid current ui settings', () => {
   assert.equal(validateGraphPayload({
     name: 'Graph',
     settings: {
+      enabledThemePresets: ['blueprint', 'soft-black'],
       uiRadiusPreset: 'square',
       toolbarPosition: 'center',
       toolbarOrientation: 'diagonal',

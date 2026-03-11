@@ -168,47 +168,8 @@
             <section class="settings-dialog__panel is-active" id="settings-panel-appearance" role="tabpanel" aria-labelledby="settings-tab-appearance" data-settings-panel="appearance">
               <fieldset class="settings-dialog__section settings-dialog__section--spacious">
                 <legend>Theme</legend>
-                <p class="settings-dialog__hint">System-wide UI presets apply immediately and become the default for the next hypernode.</p>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="blueprint" />
-                  Blueprint
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="fjord" />
-                  Fjord
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="slate" />
-                  Slate
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="paper" />
-                  Paper
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="ember" />
-                  Ember
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="chalkboard" />
-                  Chalkboard
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="citrine" />
-                  Citrine
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="canopy" />
-                  Canopy
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="tidepool" />
-                  Tidepool
-                </label>
-                <label class="settings-dialog__option">
-                  <input type="radio" name="ui-theme-preset" value="dusk" />
-                  Dusk
-                </label>
+                <p class="settings-dialog__hint">Choose the active theme and which themes stay available in the `T` keyboard cycle.</p>
+                <div id="settings-theme-options" class="settings-dialog__theme-list" role="group" aria-label="Theme settings"></div>
               </fieldset>
               <fieldset class="settings-dialog__section">
                 <legend>Surface</legend>
