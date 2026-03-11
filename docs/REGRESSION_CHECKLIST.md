@@ -79,6 +79,17 @@ Use this checklist before shipping interaction changes.
 - [ ] Set `Anchors` to `Exact anchor` and verify created/reconnected edge endpoints stay on committed anchors when nodes move.
 - [ ] Switch between `Auto-anchor` and `Exact anchor` and confirm edge paths update immediately with no stuck draft/selection state.
 
+### Edge multi-select
+
+- [ ] Click an edge to select it; verify single-edge toolbar appears at edge midpoint.
+- [ ] Ctrl-click (Cmd-click on macOS) a second edge; verify both edges highlight and a multi-edge toolbar appears at the average midpoint.
+- [ ] Verify multi-edge toolbar displays the selection count (e.g. "2 selected").
+- [ ] Use multi-edge toolbar to change colour, line thickness, line style, and edge type for all selected edges.
+- [ ] Click the Delete button on the multi-edge toolbar and verify all selected edges are removed.
+- [ ] Ctrl-click a selected edge to deselect it; verify selection updates correctly (reverts to single-edge toolbar when one remains).
+- [ ] Press Delete/Backspace with multi-edge selection active; verify all selected edges are deleted.
+- [ ] Click on empty canvas to clear multi-edge selection.
+
 ### Arrowheads settings
 
 - [ ] Set `Arrowheads` to `Show` and verify committed edges render destination arrowheads; set `Hide` and verify they disappear.

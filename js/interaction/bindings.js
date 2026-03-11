@@ -1584,6 +1584,10 @@ export function bindInteractions(elements, store, options = {}) {
       store.updateEdge(context.ids[0], { colorKey });
       return;
     }
+    if (context.entity === "edges") {
+      store.updateEdges(context.ids, { colorKey });
+      return;
+    }
     store.setNodesColor(context.ids, colorKey);
   }
 
@@ -1596,6 +1600,10 @@ export function bindInteractions(elements, store, options = {}) {
     }
     if (context.entity === "edge") {
       store.updateEdge(context.ids[0], { strokeWidth: borderWidth });
+      return;
+    }
+    if (context.entity === "edges") {
+      store.updateEdges(context.ids, { strokeWidth: borderWidth });
       return;
     }
     store.setNodesBorderWidth(context.ids, borderWidth);
@@ -1612,13 +1620,24 @@ export function bindInteractions(elements, store, options = {}) {
       store.updateEdge(context.ids[0], { strokeStyle: borderStyle });
       return;
     }
+    if (context.entity === "edges") {
+      store.updateEdges(context.ids, { strokeStyle: borderStyle });
+      return;
+    }
     store.setNodesBorderStyle(context.ids, borderStyle);
   }
 
   function applyToolbarEdgeType(target, edgeType) {
     const context = getToolbarContext(target);
-    if (!context || context.entity !== "edge") return;
-    store.updateEdge(context.ids[0], { edgeType });
+    if (!context) return;
+    if (context.entity === "edge") {
+      store.updateEdge(context.ids[0], { edgeType });
+      return;
+    }
+    if (context.entity === "edges") {
+      store.updateEdges(context.ids, { edgeType });
+      return;
+    }
   }
 
   function syncToolbarRangeValue(inputEl) {
@@ -1685,6 +1704,15 @@ export function bindInteractions(elements, store, options = {}) {
     if (multiDeleteEl instanceof HTMLButtonElement) {
       activeLiveEditNodeId = null;
       store.deleteSelectedNodes();
+      closeToolbarPopover();
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
+
+    const edgesDeleteEl = event.target.closest("[data-edges-delete]");
+    if (edgesDeleteEl instanceof HTMLButtonElement) {
+      store.deleteSelectedEdges();
       closeToolbarPopover();
       event.stopPropagation();
       event.preventDefault();
@@ -2397,7 +2425,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     if (
       event.target.closest(
-        "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete]",
+        "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete], [data-edges-delete]",
       )
     ) {
       event.stopPropagation();
@@ -2406,12 +2434,19 @@ export function bindInteractions(elements, store, options = {}) {
 
   function onSelectionControlsClick(event) {
     const edgeGroupEl = event.target.closest(
-      ".selection-controls__group--edge[data-edge-id]",
+      ".selection-controls__group--edge[data-edge-id], .selection-controls__group--edges",
     );
     if (edgeGroupEl) {
       const deleteEl = event.target.closest("[data-edge-delete]");
       if (deleteEl) {
         store.deleteEdge(deleteEl.dataset.edgeDelete);
+        closeToolbarPopover();
+        event.stopPropagation();
+        return;
+      }
+      const edgesDeleteEl = event.target.closest("[data-edges-delete]");
+      if (edgesDeleteEl) {
+        store.deleteSelectedEdges();
         closeToolbarPopover();
         event.stopPropagation();
         return;
@@ -2950,7 +2985,7 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function handleEdgeClick(event) {
-    const toolbarEl = event.target.closest('[data-toolbar-entity="edge"]');
+    const toolbarEl = event.target.closest('[data-toolbar-entity="edge"], [data-toolbar-entity="edges"]');
     if (toolbarEl) {
       handleToolbarClick(event);
       return;
@@ -2963,10 +2998,22 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
+    const edgesDeleteEl = event.target.closest("[data-edges-delete]");
+    if (edgesDeleteEl) {
+      store.deleteSelectedEdges();
+      closeToolbarPopover();
+      event.stopPropagation();
+      return;
+    }
+
     const edgeEl = event.target.closest("[data-edge-id]");
     if (!edgeEl) return;
     activeLiveEditNodeId = null;
-    store.setSelection({ type: "edge", id: edgeEl.dataset.edgeId });
+    if (isAdditiveModifier(event)) {
+      store.toggleEdgeInSelection(edgeEl.dataset.edgeId);
+    } else {
+      store.setSelection({ type: "edge", id: edgeEl.dataset.edgeId });
+    }
     event.stopPropagation();
   }
 
@@ -3979,6 +4026,7 @@ export function bindInteractions(elements, store, options = {}) {
           if (selection.type === "nodes") store.deleteSelectedNodes();
           if (selection.type === "frame") store.deleteFrame(selection.id);
           if (selection.type === "edge") store.deleteEdge(selection.id);
+          if (selection.type === "edges") store.deleteSelectedEdges();
           return;
         }
         event.preventDefault();
@@ -3986,6 +4034,7 @@ export function bindInteractions(elements, store, options = {}) {
         if (selection.type === "nodes") store.deleteSelectedNodes();
         if (selection.type === "frame") store.deleteFrame(selection.id);
         if (selection.type === "edge") store.deleteEdge(selection.id);
+        if (selection.type === "edges") store.deleteSelectedEdges();
         return;
       }
 

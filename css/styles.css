@@ -2891,7 +2891,8 @@ select:focus-visible {
 }
 
 /* Edge toolbar */
-.selection-controls__group--edge {
+.selection-controls__group--edge,
+.selection-controls__group--edges {
   width: 0;
   height: 0;
   overflow: visible;
@@ -2911,7 +2912,8 @@ select:focus-visible {
   z-index: 20;
 }
 
-.selection-controls__toolbar--edge {
+.selection-controls__toolbar--edge,
+.selection-controls__toolbar--edges {
   left: 0;
   top: 0;
   transform-origin: center bottom;
@@ -2922,7 +2924,8 @@ select:focus-visible {
     scale(var(--selection-toolbar-scale, 1));
 }
 
-.selection-controls__toolbar--edge[data-toolbar-placement="bottom"] {
+.selection-controls__toolbar--edge[data-toolbar-placement="bottom"],
+.selection-controls__toolbar--edges[data-toolbar-placement="bottom"] {
   top: 0;
   transform-origin: center top;
   transform: translate(

@@ -14,7 +14,7 @@ import {
 } from "../helpers.js";
 import { buildFrameToolbarMarkup } from "./frames.js";
 import { buildNodeContentMarkup, buildNodeToolbarMarkup } from "./nodes.js";
-import { buildEdgeToolbarMarkup } from "./edges.js";
+import { buildEdgeToolbarMarkup, buildMultiEdgeToolbarMarkup } from "./edges.js";
 
 export function renderSelectionControls(selectionControlsLayer, state) {
   if (!(selectionControlsLayer instanceof HTMLElement)) {
@@ -97,6 +97,90 @@ export function renderSelectionControls(selectionControlsLayer, state) {
             strokeWidth: selectedEdge.strokeWidth ?? 2,
             strokeStyle: selectedEdge.strokeStyle || "solid",
             edgeType: selectedEdge.edgeType || "curved",
+          })}
+        </div>
+      `;
+    }
+  }
+
+  const selectedEdgeIds =
+    state.selection?.type === "edges" ? state.selection.ids : [];
+  if (selectedEdgeIds.length > 1 && !focusedNodeId) {
+    const byId = new Map([
+      ...state.nodes.map((n) => [n.id, n]),
+      ...state.frames.map((f) => [f.id, f]),
+    ]);
+    const useExactAnchors = state.settings.anchorsMode === "exact";
+    let sumX = 0;
+    let sumY = 0;
+    let count = 0;
+    let uniformColorKey = null;
+    let uniformStrokeWidth = null;
+    let uniformStrokeStyle = null;
+    let uniformEdgeType = null;
+    const selectedEdges = state.edges.filter((e) =>
+      selectedEdgeIds.includes(e.id),
+    );
+    for (const edge of selectedEdges) {
+      const fromEntity = byId.get(edge.from);
+      const toEntity = byId.get(edge.to);
+      if (!fromEntity || !toEntity) continue;
+      const fromSize =
+        bySize.get(fromEntity.id) || defaultEntitySize(fromEntity);
+      const toSize = bySize.get(toEntity.id) || defaultEntitySize(toEntity);
+      const fromAnchor = resolveEdgeAnchor(
+        edge.fromAnchor,
+        fromEntity,
+        toEntity,
+        useExactAnchors,
+      );
+      const toAnchor = resolveEdgeAnchor(
+        edge.toAnchor,
+        toEntity,
+        fromEntity,
+        useExactAnchors,
+      );
+      const start = getAnchorPoint(fromEntity, fromSize, fromAnchor);
+      const end = getAnchorPoint(toEntity, toSize, toAnchor);
+      const edgeType = edge.edgeType || "curved";
+      let midpoint;
+      if (edgeType === "straight") {
+        midpoint = straightLineMidpoint(start, end);
+      } else if (edgeType === "orthogonal") {
+        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor);
+      } else {
+        const controls = getTautControls(start, end, fromAnchor, toAnchor);
+        midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
+      }
+      sumX += midpoint.x;
+      sumY += midpoint.y;
+      count += 1;
+      const ck = edge.colorKey || "";
+      const sw = edge.strokeWidth ?? 2;
+      const ss = edge.strokeStyle || "solid";
+      const et = edge.edgeType || "curved";
+      if (uniformColorKey === null) uniformColorKey = ck;
+      else if (uniformColorKey !== ck) uniformColorKey = "";
+      if (uniformStrokeWidth === null) uniformStrokeWidth = sw;
+      else if (uniformStrokeWidth !== sw) uniformStrokeWidth = 2;
+      if (uniformStrokeStyle === null) uniformStrokeStyle = ss;
+      else if (uniformStrokeStyle !== ss) uniformStrokeStyle = "solid";
+      if (uniformEdgeType === null) uniformEdgeType = et;
+      else if (uniformEdgeType !== et) uniformEdgeType = "curved";
+    }
+    if (count > 0) {
+      const avgX = sumX / count;
+      const avgY = sumY / count;
+      markup += `
+        <div
+          class="selection-controls__group selection-controls__group--edges"
+          style="transform: translate(${avgX}px, ${avgY}px); --selection-toolbar-scale: ${toolbarScale};"
+        >
+          ${buildMultiEdgeToolbarMarkup(selectedEdgeIds, {
+            colorKey: uniformColorKey || "",
+            strokeWidth: uniformStrokeWidth ?? 2,
+            strokeStyle: uniformStrokeStyle || "solid",
+            edgeType: uniformEdgeType || "curved",
           })}
         </div>
       `;

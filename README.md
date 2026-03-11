@@ -38,6 +38,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Render directed edge arrowheads at destination anchors with curved-approach rotation.
 - Reconnect existing edge endpoints by dragging selected edge endpoints.
 - Delete selected edges via inline edge overlay control or keyboard delete.
+- Multi-select edges with `Ctrl/Cmd + click` (additive); multi-edge toolbar shows selection count with batch colour, thickness, style, type, and delete controls.
 - Pan canvas with pointer drag on empty space.
 - Zoom with mouse wheel/trackpad (bounded: `0.35` to `2.5`).
 - Reset view to default pan/zoom.
@@ -93,7 +94,7 @@ Use the shortcuts dialog to search by key combo or action name.
 - `Ctrl/Cmd + 0`: reset view
 - `Ctrl/Cmd + Enter`: toggle selected node/frame editor
 - `Ctrl/Cmd + Alt + Enter`: toggle Focus mode for the selected node
-- `Ctrl/Cmd + Click`: add a node to current node selection
+- `Ctrl/Cmd + Click`: add a node or edge to current selection
 - `Ctrl/Cmd + ,`: open settings
 - `Ctrl/Cmd + /`: open keyboard shortcuts
 - `T`: toggle to the next enabled theme preset

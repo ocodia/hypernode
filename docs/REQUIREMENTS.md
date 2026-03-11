@@ -176,6 +176,10 @@ Node title and description editors must use placeholders as their visible afford
 FR-40
 Zen read mode must render node image content before title and description, and the focused node body must scroll internally for long descriptions.
 
+FR-41
+Users must be able to Ctrl-click (Cmd-click on macOS) edges to multi-select them. Multi-selected edges must visually highlight.
+A multi-edge toolbar must appear at the average midpoint of the selected edges, displaying the selection count and providing controls for colour, line thickness, line style, edge type, and bulk delete — mirroring the single-edge toolbar and the multi-node toolbar pattern.
+
 ## Non Functional Requirements
 
 ### Performance

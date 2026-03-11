@@ -1,4 +1,4 @@
-const CACHE_NAME = "hypernode-cache-v12";
+const CACHE_NAME = "hypernode-cache-v13";
 
 const APP_SHELL = [
   "./",

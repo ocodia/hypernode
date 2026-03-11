@@ -39,6 +39,8 @@ export function renderEdges(elements, state) {
   );
   const selectedEdgeId =
     state.selection?.type === "edge" ? state.selection.id : null;
+  const selectedEdgeIds =
+    state.selection?.type === "edges" ? new Set(state.selection.ids) : null;
   const twangEdgeId = state.ui.edgeTwangId;
   const edgeEndpointRadius = Math.max(
     5.5,
@@ -110,7 +112,8 @@ export function renderEdges(elements, state) {
         }
       }
 
-      const selected = selectedEdgeId === edge.id ? "is-selected" : "";
+      const isSelected = selectedEdgeId === edge.id || (selectedEdgeIds && selectedEdgeIds.has(edge.id));
+      const selected = isSelected ? "is-selected" : "";
       const twang = twangEdgeId === edge.id ? "is-twang" : "";
       const colorAttr = colorKey
         ? ` data-edge-color="${escapeAttr(colorKey)}"`
@@ -184,6 +187,54 @@ export function buildEdgeToolbarMarkup(edgeId, options = {}) {
         ${buildToolbarEdgeTypePopoverMarkup(edgeType)}
       </div>
       <button class="node__tool-btn entity-toolbar__btn node__tool-btn--danger" type="button" data-edge-delete="${escapeAttr(edgeId)}" aria-label="Delete edge" title="Delete Edge">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  `;
+}
+
+export function buildMultiEdgeToolbarMarkup(edgeIds, options = {}) {
+  const colorKey = typeof options.colorKey === "string" ? options.colorKey : "";
+  const strokeWidth = Number.isFinite(Number(options.strokeWidth))
+    ? Math.round(Number(options.strokeWidth))
+    : 2;
+  const strokeStyle =
+    typeof options.strokeStyle === "string" ? options.strokeStyle : "solid";
+  const edgeType =
+    typeof options.edgeType === "string" ? options.edgeType : "curved";
+  const toolbarPlacement =
+    options.toolbarPlacement === "bottom" ? "bottom" : "top";
+  const count = Array.isArray(edgeIds) ? edgeIds.length : 0;
+  const idsAttr = Array.isArray(edgeIds) ? edgeIds.join(",") : "";
+
+  return `
+    <div class="edge__toolbar selection-controls__toolbar selection-controls__toolbar--edges entity-toolbar" data-toolbar-entity="edges" data-toolbar-target-ids="${escapeAttr(idsAttr)}" data-toolbar-placement="${toolbarPlacement}">
+      <div class="entity-toolbar__selection-count" aria-label="${count} edges selected">${count} selected</div>
+      <div class="entity-toolbar__control">
+        <button class="node__tool-btn entity-toolbar__btn${colorKey ? " entity-toolbar__trigger--has-swatch" : ""}" type="button" data-toolbar-popover-toggle="color" aria-label="Edge colour" title="Edge colour" aria-expanded="false"${colorKey ? ` data-toolbar-color-current="${escapeAttr(colorKey)}"` : ""}>
+          <i class="bi bi-palette"></i>
+        </button>
+        ${buildToolbarColorPopoverMarkup("Colour")}
+      </div>
+      <div class="entity-toolbar__control">
+        <button class="node__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="border-width" aria-label="Line thickness" title="Line thickness" aria-expanded="false">
+          <i class="bi bi-distribute-vertical"></i>
+        </button>
+        ${buildToolbarBorderWidthPopoverMarkup(strokeWidth, "Line Thickness")}
+      </div>
+      <div class="entity-toolbar__control">
+        <button class="node__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="border-style" aria-label="Line style" title="Line style" aria-expanded="false">
+          <i class="bi bi-border-style"></i>
+        </button>
+        ${buildToolbarBorderStylePopoverMarkup(strokeStyle, "Line Style")}
+      </div>
+      <div class="entity-toolbar__control">
+        <button class="node__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="edge-type" aria-label="Edge type" title="Edge type" aria-expanded="false">
+          <i class="bi bi-bezier2"></i>
+        </button>
+        ${buildToolbarEdgeTypePopoverMarkup(edgeType)}
+      </div>
+      <button class="node__tool-btn entity-toolbar__btn node__tool-btn--danger" type="button" data-edges-delete="true" aria-label="Delete selected edges" title="Delete Selected Edges">
         <i class="bi bi-trash"></i>
       </button>
     </div>

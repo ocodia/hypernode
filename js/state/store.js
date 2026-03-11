@@ -25,9 +25,11 @@ import { resolveAutoAnchor } from "../shared/anchors.js";
 import {
   areSelectionsEqual,
   cloneSelection,
+  getSelectedEdgeIds,
   getSelectedNodeIds,
   isFrameSelected,
   isNodeSelected,
+  normalizeEdgeSelection,
   normalizeNodeSelection,
 } from "../shared/selection.js";
 import { createHistoryManager } from "./history.js";
@@ -405,6 +407,22 @@ export function createStore(initialGraph = null, initialSettings = null) {
       ? ids.filter((id) => id !== nodeId)
       : [...ids, nodeId];
     setNodeSelection(nextIds, { primaryId: nodeId });
+  }
+
+  function setEdgeSelection(ids) {
+    const normalized = normalizeEdgeSelection(ids, state.edges);
+    setSelection(normalized);
+  }
+
+  function toggleEdgeInSelection(edgeId) {
+    if (!edgeId) return;
+    const edgeExists = state.edges.some((edge) => edge.id === edgeId);
+    if (!edgeExists) return;
+    const ids = getSelectedEdgeIds(state.selection);
+    const nextIds = ids.includes(edgeId)
+      ? ids.filter((id) => id !== edgeId)
+      : [...ids, edgeId];
+    setEdgeSelection(nextIds);
   }
 
   function clearSelection() {
@@ -1226,6 +1244,56 @@ export function createStore(initialGraph = null, initialSettings = null) {
     }
     notify();
   }
+
+  function updateEdges(ids, patch) {
+    if (!Array.isArray(ids) || !ids.length) return;
+    const idSet = new Set(ids);
+    const targets = state.edges.filter((edge) => idSet.has(edge.id));
+    if (!targets.length) return;
+    pushHistory("update-edges");
+    for (const edge of targets) {
+      if (patch.strokeWidth !== undefined) {
+        const numeric = Math.round(Number(patch.strokeWidth));
+        if (Number.isFinite(numeric)) {
+          edge.strokeWidth = Math.min(
+            EDGE_DEFAULTS.strokeWidthMax,
+            Math.max(EDGE_DEFAULTS.strokeWidthMin, numeric),
+          );
+        }
+      }
+      if (
+        typeof patch.strokeStyle === "string" &&
+        EDGE_STROKE_STYLES.includes(patch.strokeStyle)
+      ) {
+        edge.strokeStyle = patch.strokeStyle;
+      }
+      if (
+        typeof patch.edgeType === "string" &&
+        EDGE_TYPES.includes(patch.edgeType)
+      ) {
+        edge.edgeType = patch.edgeType;
+      }
+      if (patch.colorKey !== undefined) {
+        if (NODE_COLOR_KEYS.includes(patch.colorKey)) {
+          edge.colorKey = patch.colorKey;
+        } else {
+          delete edge.colorKey;
+        }
+      }
+    }
+    notify();
+  }
+
+  function deleteSelectedEdges() {
+    const selectedEdgeIds = getSelectedEdgeIds(state.selection);
+    if (!selectedEdgeIds.length) return;
+    const selected = new Set(selectedEdgeIds);
+    pushHistory("delete-edges");
+    state.edges = state.edges.filter((edge) => !selected.has(edge.id));
+    state.selection = null;
+    notify();
+  }
+
   function replaceGraph(graph) {
     pushHistory("import-graph");
     state.name = sanitizeGraphName(graph.name);
@@ -1419,6 +1487,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     setNodeSelection,
     addNodeToSelection,
     toggleNodeInSelection,
+    toggleEdgeInSelection,
     clearSelection,
     addNode,
     addFrame,
@@ -1450,7 +1519,9 @@ export function createStore(initialGraph = null, initialSettings = null) {
     connectNodes,
     reconnectEdge,
     updateEdge,
+    updateEdges,
     deleteEdge,
+    deleteSelectedEdges,
     setGraphName,
     setUiThemePreset,
     setEnabledThemePresets,
