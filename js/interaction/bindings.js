@@ -38,7 +38,7 @@ import {
   getThemePresetSequence,
 } from "./theme-presets.js";
 
-export function bindInteractions(elements, store, options = {}) {
+export function bindInteractions(elements, store) {
   const {
     workspace,
     canvas,
@@ -411,22 +411,6 @@ export function bindInteractions(elements, store, options = {}) {
     titleInput.select();
   }
 
-  function getTodayLocalDateString() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  function getStarterNodePoint(viewport = store.getState().viewport) {
-    const center = getCanvasCenterGraphPoint(viewport);
-    return {
-      x: Math.round(center.x - NODE_DEFAULTS.width / 2),
-      y: Math.round(center.y - NODE_DEFAULTS.height / 2),
-    };
-  }
-
   function getCanvasCenterGraphPoint(viewport = store.getState().viewport) {
     const rect =
       typeof canvas?.getBoundingClientRect === "function"
@@ -438,6 +422,14 @@ export function bindInteractions(elements, store, options = {}) {
       canvas,
       viewport,
     );
+  }
+
+  function getCanvasCenterNodePoint(viewport = store.getState().viewport) {
+    const center = getCanvasCenterGraphPoint(viewport);
+    return {
+      x: Math.round(center.x - NODE_DEFAULTS.width / 2),
+      y: Math.round(center.y - NODE_DEFAULTS.height / 2),
+    };
   }
 
   function resetCanvasView() {
@@ -462,24 +454,6 @@ export function bindInteractions(elements, store, options = {}) {
       canvas,
       viewport,
     );
-  }
-
-  function createStarterHypernode() {
-    const state = store.getState();
-    if (state.nodes.length || state.frames.length || state.edges.length) {
-      return false;
-    }
-    const title = getTodayLocalDateString();
-    store.setGraphName(title);
-    const node = store.addNode({
-      ...getStarterNodePoint(state.viewport),
-      title,
-      description: "",
-    });
-    if (!node) return false;
-    store.setStarterNode(node.id);
-    openNodeFocus(node.id, { lockFocusMs: 7000, stabilizeFrames: 3 });
-    return true;
   }
 
   function endFrameResizeSession(pointerId = null) {
@@ -1800,11 +1774,6 @@ export function bindInteractions(elements, store, options = {}) {
       canvas,
       state.viewport,
     );
-
-    const isMac =
-      typeof navigator !== "undefined" &&
-      /Mac|iPhone|iPad/.test(navigator.platform || "");
-    const ctrlLabel = isMac ? "\u2318" : "Ctrl+";
 
     contextMenu.show({
       clientX: event.clientX,
@@ -3351,7 +3320,7 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function handleNewGraph() {
-    if (!confirmDiscardIfNeeded("create a new hypernode")) {
+    if (!confirmDiscardIfNeeded("create a new one")) {
       return;
     }
 
@@ -3364,7 +3333,6 @@ export function bindInteractions(elements, store, options = {}) {
       edges: [],
     });
     resetCanvasView();
-    createStarterHypernode();
     syncSettingsDialogFromState(
       store.getState(),
       settingsDialog,
@@ -3404,7 +3372,7 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function handleAddNode() {
-    handleAddNodeAtPointer();
+    createNodeInEditMode(getCanvasCenterNodePoint(store.getState().viewport));
   }
 
   function commitStarterHypernode(nodeId) {
@@ -4220,19 +4188,6 @@ export function bindInteractions(elements, store, options = {}) {
   scheduleSingleNodeToolbarPlacement();
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
-  if (options.shouldCreateStarter) {
-    createStarterHypernode();
-    syncSettingsDialogFromState(
-      store.getState(),
-      settingsDialog,
-      positionButtons,
-      toolbarOrientationButtons,
-      settingsTabSelect,
-      settingsTabButtons,
-      settingsPanels,
-    );
-    scheduleSingleNodeToolbarPlacement();
-  }
 
   window.addEventListener("resize", scheduleSingleNodeToolbarPlacement);
 }

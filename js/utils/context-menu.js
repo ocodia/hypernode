@@ -114,6 +114,11 @@ export function createContextMenu() {
         li.appendChild(shortcutEl);
       }
 
+      li.addEventListener("pointerenter", () => {
+        clearFocusedClass();
+        focusedIndex = index;
+      });
+
       li.addEventListener("click", (event) => {
         event.stopPropagation();
         if (item.disabled) return;
@@ -157,9 +162,13 @@ export function createContextMenu() {
       .filter((i) => i !== -1);
   }
 
-  function setFocused(index) {
+  function clearFocusedClass() {
     const items = listEl.querySelectorAll(".context-menu__item");
     items.forEach((el) => el.classList.remove("context-menu__item--focused"));
+  }
+
+  function setFocused(index) {
+    clearFocusedClass();
     focusedIndex = index;
     const target = listEl.querySelector(`[data-index="${index}"]`);
     if (target) {
@@ -224,10 +233,11 @@ export function createContextMenu() {
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("wheel", onScroll, { passive: true, capture: true });
 
-    // Focus first actionable item
+    // Pre-select first actionable index for keyboard, but don't
+    // apply the visible focus class until an arrow key is pressed.
     const actionable = getActionableIndices();
     if (actionable.length) {
-      window.requestAnimationFrame(() => setFocused(actionable[0]));
+      focusedIndex = actionable[0];
     }
   }
 

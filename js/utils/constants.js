@@ -55,13 +55,13 @@ export const NODE_COLOR_KEYS = [
 ];
 
 export const GRAPH_DEFAULTS = {
-  name: "Untitled hypernode",
+  name: "Untitled",
 };
 
 export const APP_SETTINGS_DEFAULTS = {
-  uiThemePreset: "blueprint",
+  uiThemePreset: "tidepool",
   enabledThemePresets: [...THEME_PRESET_IDS],
-  uiRadiusPreset: "rounded",
+  uiRadiusPreset: "soft",
   toolbarPosition: "top-left",
   toolbarOrientation: "horizontal",
   toastPosition: "bottom-right",

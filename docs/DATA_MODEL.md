@@ -12,9 +12,9 @@ The persisted graph shape is:
 
 ```json
 {
-  "name": "Untitled hypernode",
+  "name": "Untitled",
   "settings": {
-    "uiThemePreset": "blueprint",
+    "uiThemePreset": "tidepool",
     "enabledThemePresets": [
       "blueprint",
       "fjord",
@@ -27,7 +27,7 @@ The persisted graph shape is:
       "tidepool",
       "dusk"
     ],
-    "uiRadiusPreset": "rounded",
+    "uiRadiusPreset": "soft",
     "toolbarPosition": "top-left",
     "toolbarOrientation": "horizontal",
     "toastPosition": "bottom-right",
@@ -67,9 +67,9 @@ Current valid values:
 
 Defaults:
 
-- `uiThemePreset`: `blueprint`
+- `uiThemePreset`: `tidepool`
 - `enabledThemePresets`: all installed theme preset ids, in registry order
-- `uiRadiusPreset`: `rounded`
+- `uiRadiusPreset`: `soft`
 - `toolbarPosition`: `top-left`
 - `toolbarOrientation`: `horizontal`
 - `toastPosition`: `bottom-right`

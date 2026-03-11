@@ -3,6 +3,17 @@ import assert from 'node:assert/strict';
 
 import { createStore } from '../js/state/store.js';
 
+test('new stores start blank with Untitled name and no starter node', () => {
+  const store = createStore();
+  const state = store.getState();
+
+  assert.equal(state.name, 'Untitled');
+  assert.deepEqual(state.nodes, []);
+  assert.deepEqual(state.frames, []);
+  assert.deepEqual(state.edges, []);
+  assert.equal(state.ui.starterNodeId, null);
+});
+
 test('focused node clears when selection moves away', () => {
   const store = createStore({
     name: 'Graph',

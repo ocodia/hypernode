@@ -50,7 +50,7 @@ store.subscribe((state) => {
   }, 120);
 });
 
-bindInteractions(elements, store, { shouldCreateStarter: !initialGraph });
+bindInteractions(elements, store);
 renderer.render(store.getState());
 registerServiceWorker();
 

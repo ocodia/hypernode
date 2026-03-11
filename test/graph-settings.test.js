@@ -17,6 +17,13 @@ test('sanitizeAppSettings accepts current anchored ui positions', () => {
   assert.equal(settings.metaPosition, 'bottom-left');
 });
 
+test('sanitizeAppSettings defaults to Tidepool with soft radius', () => {
+  const settings = sanitizeAppSettings();
+
+  assert.equal(settings.uiThemePreset, 'tidepool');
+  assert.equal(settings.uiRadiusPreset, 'soft');
+});
+
 test('sanitizeAppSettings accepts all current curated ui theme presets', () => {
   for (const preset of ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard', 'citrine', 'canopy', 'tidepool', 'dusk']) {
     assert.equal(sanitizeAppSettings({ uiThemePreset: preset }).uiThemePreset, preset);
@@ -37,7 +44,7 @@ test('sanitizeAppSettings accepts only current radius presets', () => {
   for (const preset of ['sharp', 'soft', 'rounded']) {
     assert.equal(sanitizeAppSettings({ uiRadiusPreset: preset }).uiRadiusPreset, preset);
   }
-  assert.equal(sanitizeAppSettings({ uiRadiusPreset: 'square' }).uiRadiusPreset, 'rounded');
+  assert.equal(sanitizeAppSettings({ uiRadiusPreset: 'square' }).uiRadiusPreset, 'soft');
 });
 
 test('validateGraphPayload accepts the current curated ui theme preset list', () => {

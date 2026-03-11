@@ -44,9 +44,9 @@ As a user, I want to create nodes fast from canvas or toolbar.
 Acceptance criteria:
 
 - Double-click canvas creates a node at pointer hypernode position.
-- Toolbar action creates a node at the default hypernode position.
+- Toolbar action creates a node at the current pointer position when available.
 - New node is immediately visible and selected.
-- A fresh hypernode starts with one starter node already selected, in Zen edit mode, with the title focused.
+- A fresh hypernode opens as a blank canvas named `Untitled`.
 
 ### US-5: Drag nodes
 
