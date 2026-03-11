@@ -7,20 +7,35 @@ import {
   NODE_COLOR_KEYS,
   NODE_DEFAULTS,
   VIEWPORT_LIMITS,
-} from '../utils/constants.js';
-import { openGraphFile, saveGraphFile, supportsFileSystemAccess } from '../persistence/file.js';
-import { matchesShortcutSearch, normalizeShortcutSearchText } from '../utils/shortcut-search.js';
-import { isDialogBackdropTarget } from '../utils/dialog.js';
-import { formatShortcutLabel } from '../utils/shortcuts.js';
-import { getAnchoredUiPlacement, getUnavailableCornerPositions, resolvePlacementChange } from '../utils/ui-placement.js';
-import { bindCanvasInteractions } from './binders/canvas.js';
-import { bindEdgeInteractions } from './binders/edges.js';
-import { bindFrameInteractions } from './binders/frames.js';
-import { bindKeyboardInteractions } from './binders/keyboard.js';
-import { bindNodeInteractions } from './binders/nodes.js';
-import { bindToolbarInteractions } from './binders/toolbar.js';
-import { SHORTCUT_CATALOG, TOOLBAR_SHORTCUTS } from './config.js';
-import { getThemePresetDefinitions, getThemePresetPresentation, getThemePresetSequence } from './theme-presets.js';
+} from "../utils/constants.js";
+import {
+  openGraphFile,
+  saveGraphFile,
+  supportsFileSystemAccess,
+} from "../persistence/file.js";
+import {
+  matchesShortcutSearch,
+  normalizeShortcutSearchText,
+} from "../utils/shortcut-search.js";
+import { isDialogBackdropTarget } from "../utils/dialog.js";
+import { formatShortcutLabel } from "../utils/shortcuts.js";
+import {
+  getAnchoredUiPlacement,
+  getUnavailableCornerPositions,
+  resolvePlacementChange,
+} from "../utils/ui-placement.js";
+import { bindCanvasInteractions } from "./binders/canvas.js";
+import { bindEdgeInteractions } from "./binders/edges.js";
+import { bindFrameInteractions } from "./binders/frames.js";
+import { bindKeyboardInteractions } from "./binders/keyboard.js";
+import { bindNodeInteractions } from "./binders/nodes.js";
+import { bindToolbarInteractions } from "./binders/toolbar.js";
+import { SHORTCUT_CATALOG, TOOLBAR_SHORTCUTS } from "./config.js";
+import {
+  getThemePresetDefinitions,
+  getThemePresetPresentation,
+  getThemePresetSequence,
+} from "./theme-presets.js";
 
 export function bindInteractions(elements, store, options = {}) {
   const {
@@ -133,20 +148,29 @@ export function bindInteractions(elements, store, options = {}) {
   function updateEdgeDraft(event) {
     if (!edgeSession || edgeSession.pointerId !== event.pointerId) return;
     const state = store.getState();
-    const pointer = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
-    const hoverEntityId = getGraphEntityIdAtClientPoint(event.clientX, event.clientY);
+    const pointer = toGraphPoint(
+      event.clientX,
+      event.clientY,
+      canvas,
+      state.viewport,
+    );
+    const hoverEntityId = getGraphEntityIdAtClientPoint(
+      event.clientX,
+      event.clientY,
+    );
     const sourceNode = getEntity(edgeSession.fromNodeId, state);
     const targetNode = hoverEntityId ? getEntity(hoverEntityId, state) : null;
-    const isValidTarget = sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
+    const isValidTarget =
+      sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
     const hoverAnchor = isValidTarget
       ? resolveSessionTargetAnchor({
-        sourceNode,
-        targetNode,
-        pointer,
-        viewport: state.viewport,
-        canvasEl: canvas,
-        anchorsMode: state.settings.anchorsMode,
-      })
+          sourceNode,
+          targetNode,
+          pointer,
+          viewport: state.viewport,
+          canvasEl: canvas,
+          anchorsMode: state.settings.anchorsMode,
+        })
       : null;
 
     store.setEdgeDraft({
@@ -173,7 +197,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     edgeSession = {
       pointerId: event.pointerId,
-      mode: 'create',
+      mode: "create",
       fromNodeId: parsed.nodeId,
       fromAnchor: parsed.anchor,
       invalidNodeId: parsed.nodeId,
@@ -181,7 +205,11 @@ export function bindInteractions(elements, store, options = {}) {
 
     store.setConnecting(true);
     const sourceFrame = getFrame(parsed.nodeId, store.getState());
-    store.setSelection(sourceFrame ? { type: 'frame', id: parsed.nodeId } : { type: 'node', id: parsed.nodeId });
+    store.setSelection(
+      sourceFrame
+        ? { type: "frame", id: parsed.nodeId }
+        : { type: "node", id: parsed.nodeId },
+    );
     nodesLayer.setPointerCapture(event.pointerId);
     updateEdgeDraft(event);
   }
@@ -197,12 +225,17 @@ export function bindInteractions(elements, store, options = {}) {
     const toNode = getEntity(edge.to, state);
     if (!fromNode || !toNode) return;
 
-    const movingFrom = parsed.side === 'from';
+    const movingFrom = parsed.side === "from";
     const fixedNodeId = movingFrom ? edge.to : edge.from;
     const fixedNode = movingFrom ? toNode : fromNode;
     const movingNode = movingFrom ? fromNode : toNode;
     const fixedStoredAnchor = movingFrom ? edge.toAnchor : edge.fromAnchor;
-    const fixedAnchor = resolveEffectiveAnchorForSession(fixedStoredAnchor, fixedNode, movingNode, store.getState().settings.anchorsMode);
+    const fixedAnchor = resolveEffectiveAnchorForSession(
+      fixedStoredAnchor,
+      fixedNode,
+      movingNode,
+      store.getState().settings.anchorsMode,
+    );
 
     endPanSession();
     endDragSession();
@@ -214,7 +247,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     edgeSession = {
       pointerId: event.pointerId,
-      mode: 'reconnect',
+      mode: "reconnect",
       edgeId: edge.id,
       movingSide: parsed.side,
       fromNodeId: fixedNodeId,
@@ -225,7 +258,7 @@ export function bindInteractions(elements, store, options = {}) {
     };
 
     store.setConnecting(true);
-    store.setSelection({ type: 'edge', id: edge.id });
+    store.setSelection({ type: "edge", id: edge.id });
     nodesLayer.setPointerCapture(event.pointerId);
     updateEdgeDraft(event);
   }
@@ -238,18 +271,24 @@ export function bindInteractions(elements, store, options = {}) {
     const node = getNode(parsed.nodeId, state);
     if (!node) return;
 
-    const escapedNodeId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-      ? CSS.escape(parsed.nodeId)
-      : parsed.nodeId;
-    const nodeEl = document.querySelector(`#nodes-layer > [data-node-id="${escapedNodeId}"]`)
-      || event.target.closest('#nodes-layer > [data-node-id]')
-      || event.target.closest('.selection-controls__group--node[data-node-id]');
-    const initialWidth = Number(node.width) > 0
-      ? Number(node.width)
-      : (nodeEl?.offsetWidth || NODE_DEFAULTS.width);
-    const initialHeight = Number(node.height) > 0
-      ? Number(node.height)
-      : (nodeEl?.offsetHeight || NODE_DEFAULTS.height);
+    const escapedNodeId =
+      typeof CSS !== "undefined" && typeof CSS.escape === "function"
+        ? CSS.escape(parsed.nodeId)
+        : parsed.nodeId;
+    const nodeEl =
+      document.querySelector(
+        `#nodes-layer > [data-node-id="${escapedNodeId}"]`,
+      ) ||
+      event.target.closest("#nodes-layer > [data-node-id]") ||
+      event.target.closest(".selection-controls__group--node[data-node-id]");
+    const initialWidth =
+      Number(node.width) > 0
+        ? Number(node.width)
+        : nodeEl?.offsetWidth || NODE_DEFAULTS.width;
+    const initialHeight =
+      Number(node.height) > 0
+        ? Number(node.height)
+        : nodeEl?.offsetHeight || NODE_DEFAULTS.height;
 
     endPanSession();
     endDragSession();
@@ -260,12 +299,13 @@ export function bindInteractions(elements, store, options = {}) {
     endFrameResizeSession();
 
     const imageAspectRatio = Number(node.imageAspectRatio);
-    const imagePaneEl = nodeEl?.querySelector('.node__image-pane');
-    const isImageNode = node.kind === IMAGE_NODE_DEFAULTS.kind
-      && Number.isFinite(imageAspectRatio)
-      && imageAspectRatio > 0;
+    const imagePaneEl = nodeEl?.querySelector(".node__image-pane");
+    const isImageNode =
+      node.kind === IMAGE_NODE_DEFAULTS.kind &&
+      Number.isFinite(imageAspectRatio) &&
+      imageAspectRatio > 0;
     const imagePaneHeight = isImageNode
-      ? (imagePaneEl?.offsetHeight || (initialWidth / imageAspectRatio))
+      ? imagePaneEl?.offsetHeight || initialWidth / imageAspectRatio
       : null;
     const imageMetaHeight = isImageNode
       ? Math.max(0, initialHeight - imagePaneHeight)
@@ -287,7 +327,7 @@ export function bindInteractions(elements, store, options = {}) {
       imageMetaHeight,
     };
 
-    store.setSelection({ type: 'node', id: parsed.nodeId });
+    store.setSelection({ type: "node", id: parsed.nodeId });
     store.setResizing(true);
     nodesLayer.setPointerCapture(event.pointerId);
   }
@@ -295,11 +335,20 @@ export function bindInteractions(elements, store, options = {}) {
   function finishEdgeSession(event) {
     if (!edgeSession || edgeSession.pointerId !== event.pointerId) return;
     const state = store.getState();
-    const pointer = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
-    const hoverNodeId = getGraphEntityIdAtClientPoint(event.clientX, event.clientY);
+    const pointer = toGraphPoint(
+      event.clientX,
+      event.clientY,
+      canvas,
+      state.viewport,
+    );
+    const hoverNodeId = getGraphEntityIdAtClientPoint(
+      event.clientX,
+      event.clientY,
+    );
     const sourceNode = getEntity(edgeSession.fromNodeId, state);
     const targetNode = hoverNodeId ? getEntity(hoverNodeId, state) : null;
-    const isValidTarget = sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
+    const isValidTarget =
+      sourceNode && targetNode && targetNode.id !== edgeSession.invalidNodeId;
     let anchoredEdgeId = null;
     if (isValidTarget) {
       const targetAnchor = resolveSessionTargetAnchor({
@@ -310,7 +359,7 @@ export function bindInteractions(elements, store, options = {}) {
         canvasEl: canvas,
         anchorsMode: state.settings.anchorsMode,
       });
-      if (edgeSession.mode === 'reconnect') {
+      if (edgeSession.mode === "reconnect") {
         anchoredEdgeId = store.reconnectEdge(
           edgeSession.edgeId,
           edgeSession.movingSide,
@@ -348,7 +397,9 @@ export function bindInteractions(elements, store, options = {}) {
     const titleInput = getNodeTitleInput(nodeId);
     if (!titleInput) {
       if (retries > 0) {
-        window.requestAnimationFrame(() => focusNodeTitleInput(nodeId, retries - 1));
+        window.requestAnimationFrame(() =>
+          focusNodeTitleInput(nodeId, retries - 1),
+        );
       }
       return;
     }
@@ -360,30 +411,37 @@ export function bindInteractions(elements, store, options = {}) {
   function getTodayLocalDateString() {
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
 
   function getStarterNodePoint(viewport = store.getState().viewport) {
     const center = getCanvasCenterGraphPoint(viewport);
     return {
-      x: Math.round(center.x - (NODE_DEFAULTS.width / 2)),
-      y: Math.round(center.y - (NODE_DEFAULTS.height / 2)),
+      x: Math.round(center.x - NODE_DEFAULTS.width / 2),
+      y: Math.round(center.y - NODE_DEFAULTS.height / 2),
     };
   }
 
   function getCanvasCenterGraphPoint(viewport = store.getState().viewport) {
-    const rect = typeof canvas?.getBoundingClientRect === 'function'
-      ? canvas.getBoundingClientRect()
-      : { left: 0, top: 0, width: 0, height: 0 };
-    return toGraphPoint(rect.left + (rect.width / 2), rect.top + (rect.height / 2), canvas, viewport);
+    const rect =
+      typeof canvas?.getBoundingClientRect === "function"
+        ? canvas.getBoundingClientRect()
+        : { left: 0, top: 0, width: 0, height: 0 };
+    return toGraphPoint(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      canvas,
+      viewport,
+    );
   }
 
   function resetCanvasView() {
-    const rect = typeof canvas?.getBoundingClientRect === 'function'
-      ? canvas.getBoundingClientRect()
-      : { width: 0, height: 0 };
+    const rect =
+      typeof canvas?.getBoundingClientRect === "function"
+        ? canvas.getBoundingClientRect()
+        : { width: 0, height: 0 };
     store.setViewport({
       panX: Math.round(rect.width / 2),
       panY: Math.round(rect.height / 2),
@@ -395,7 +453,12 @@ export function bindInteractions(elements, store, options = {}) {
     if (!lastCanvasPointerClient) {
       return getCanvasCenterGraphPoint(viewport);
     }
-    return toGraphPoint(lastCanvasPointerClient.clientX, lastCanvasPointerClient.clientY, canvas, viewport);
+    return toGraphPoint(
+      lastCanvasPointerClient.clientX,
+      lastCanvasPointerClient.clientY,
+      canvas,
+      viewport,
+    );
   }
 
   function createStarterHypernode() {
@@ -408,7 +471,7 @@ export function bindInteractions(elements, store, options = {}) {
     const node = store.addNode({
       ...getStarterNodePoint(state.viewport),
       title,
-      description: '',
+      description: "",
     });
     if (!node) return false;
     store.setStarterNode(node.id);
@@ -491,7 +554,7 @@ export function bindInteractions(elements, store, options = {}) {
       moved: false,
     };
 
-    store.setSelection({ type: 'frame', id: parsed.frameId });
+    store.setSelection({ type: "frame", id: parsed.frameId });
     store.setResizing(true);
     framesLayer.setPointerCapture(event.pointerId);
   }
@@ -506,7 +569,12 @@ export function bindInteractions(elements, store, options = {}) {
     cancelEdgeSession();
 
     const state = store.getState();
-    const startGraph = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+    const startGraph = toGraphPoint(
+      event.clientX,
+      event.clientY,
+      canvas,
+      state.viewport,
+    );
     marqueeSession = {
       pointerId: event.pointerId,
       startClientX: event.clientX,
@@ -529,7 +597,12 @@ export function bindInteractions(elements, store, options = {}) {
   function updateMarqueeSession(event) {
     if (!marqueeSession || marqueeSession.pointerId !== event.pointerId) return;
     const state = store.getState();
-    const currentGraph = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+    const currentGraph = toGraphPoint(
+      event.clientX,
+      event.clientY,
+      canvas,
+      state.viewport,
+    );
     const graphRect = toRectFromPoints(
       marqueeSession.startGraphX,
       marqueeSession.startGraphY,
@@ -537,7 +610,10 @@ export function bindInteractions(elements, store, options = {}) {
       currentGraph.y,
     );
     const hitNodeIds = getIntersectingNodeIds(state.nodes, graphRect);
-    const mergedIds = uniqueIds([...marqueeSession.baseSelectionIds, ...hitNodeIds]);
+    const mergedIds = uniqueIds([
+      ...marqueeSession.baseSelectionIds,
+      ...hitNodeIds,
+    ]);
 
     const rect = canvas.getBoundingClientRect();
     const startX = marqueeSession.startClientX - rect.left;
@@ -546,7 +622,9 @@ export function bindInteractions(elements, store, options = {}) {
     const currentY = event.clientY - rect.top;
     const screenRect = toRectFromPoints(startX, startY, currentX, currentY);
     store.setSelectionMarquee(screenRect);
-    store.setNodeSelection(mergedIds, { primaryId: hitNodeIds[hitNodeIds.length - 1] || null });
+    store.setNodeSelection(mergedIds, {
+      primaryId: hitNodeIds[hitNodeIds.length - 1] || null,
+    });
   }
 
   function setEditorFocusLock(nodeId, durationMs = 900) {
@@ -593,7 +671,7 @@ export function bindInteractions(elements, store, options = {}) {
       x: point.x,
       y: point.y,
       title: imageFileInfo.title || NODE_DEFAULTS.title,
-      description: '',
+      description: "",
       kind: IMAGE_NODE_DEFAULTS.kind,
       imageData: imageFileInfo.dataUrl,
       imageAspectRatio: imageFileInfo.aspectRatio,
@@ -606,34 +684,44 @@ export function bindInteractions(elements, store, options = {}) {
 
   function setCanvasFileDropActive(active) {
     const enabled = Boolean(active);
-    canvas.classList.toggle('is-file-drop-active', enabled);
+    canvas.classList.toggle("is-file-drop-active", enabled);
     if (canvasDropZone instanceof HTMLElement) {
       canvasDropZone.hidden = !enabled;
     }
   }
 
   function setFocusImageDropActive(active) {
-    focusLayer?.classList.toggle('is-file-drop-active', Boolean(active));
+    focusLayer?.classList.toggle("is-file-drop-active", Boolean(active));
   }
 
   function confirmFocusedDelete(selection) {
     if (!selection) return false;
-    const label = selection.type === 'frame'
-      ? 'this frame'
-      : selection.type === 'edge'
-        ? 'this edge'
-        : selection.type === 'nodes'
-          ? 'these nodes'
-          : 'this node';
+    const label =
+      selection.type === "frame"
+        ? "this frame"
+        : selection.type === "edge"
+          ? "this edge"
+          : selection.type === "nodes"
+            ? "these nodes"
+            : "this node";
     return window.confirm(`Delete ${label}?`);
   }
 
   async function readImageFileInfo(file, options = {}) {
     const dataUrl = await readFileAsDataUrl(file);
     const imageMeta = await loadImageMeta(dataUrl);
-    const width = Math.max(IMAGE_NODE_DEFAULTS.minImageWidth, Math.round(Number(options.width) || NODE_DEFAULTS.width));
-    const metaHeight = Math.max(IMAGE_NODE_DEFAULTS.metaHeight, Math.round(Number(options.metaHeight) || IMAGE_NODE_DEFAULTS.metaHeight));
-    const imageHeight = Math.max(IMAGE_NODE_DEFAULTS.minImageHeight, Math.round(width / imageMeta.aspectRatio));
+    const width = Math.max(
+      IMAGE_NODE_DEFAULTS.minImageWidth,
+      Math.round(Number(options.width) || NODE_DEFAULTS.width),
+    );
+    const metaHeight = Math.max(
+      IMAGE_NODE_DEFAULTS.metaHeight,
+      Math.round(Number(options.metaHeight) || IMAGE_NODE_DEFAULTS.metaHeight),
+    );
+    const imageHeight = Math.max(
+      IMAGE_NODE_DEFAULTS.minImageHeight,
+      Math.round(width / imageMeta.aspectRatio),
+    );
     return {
       title: deriveNodeTitleFromFilename(file.name),
       dataUrl,
@@ -648,7 +736,7 @@ export function bindInteractions(elements, store, options = {}) {
       const imageFileInfo = await readImageFileInfo(file);
       createImageNodeInEditMode(point, imageFileInfo);
     } catch {
-      store.setImportStatus('Image add failed. Try another file.');
+      store.setImportStatus("Image add failed. Try another file.");
     }
   }
 
@@ -657,13 +745,29 @@ export function bindInteractions(elements, store, options = {}) {
     const node = state.nodes.find((entry) => entry.id === nodeId);
     if (!node) return;
 
-    const currentWidth = Math.max(IMAGE_NODE_DEFAULTS.minImageWidth, Math.round(Number(node.width) || NODE_DEFAULTS.width));
-    const currentHeight = Math.max(IMAGE_NODE_DEFAULTS.metaHeight, Math.round(Number(node.height) || (NODE_DEFAULTS.height + IMAGE_NODE_DEFAULTS.metaHeight)));
+    const currentWidth = Math.max(
+      IMAGE_NODE_DEFAULTS.minImageWidth,
+      Math.round(Number(node.width) || NODE_DEFAULTS.width),
+    );
+    const currentHeight = Math.max(
+      IMAGE_NODE_DEFAULTS.metaHeight,
+      Math.round(
+        Number(node.height) ||
+          NODE_DEFAULTS.height + IMAGE_NODE_DEFAULTS.metaHeight,
+      ),
+    );
     const currentAspectRatio = Number(node.imageAspectRatio);
-    const currentImageHeight = Number.isFinite(currentAspectRatio) && currentAspectRatio > 0
-      ? Math.round(currentWidth / currentAspectRatio)
-      : Math.max(IMAGE_NODE_DEFAULTS.minImageHeight, currentHeight - IMAGE_NODE_DEFAULTS.metaHeight);
-    const metaHeight = Math.max(IMAGE_NODE_DEFAULTS.metaHeight, currentHeight - currentImageHeight);
+    const currentImageHeight =
+      Number.isFinite(currentAspectRatio) && currentAspectRatio > 0
+        ? Math.round(currentWidth / currentAspectRatio)
+        : Math.max(
+            IMAGE_NODE_DEFAULTS.minImageHeight,
+            currentHeight - IMAGE_NODE_DEFAULTS.metaHeight,
+          );
+    const metaHeight = Math.max(
+      IMAGE_NODE_DEFAULTS.metaHeight,
+      currentHeight - currentImageHeight,
+    );
 
     try {
       const imageFileInfo = await readImageFileInfo(file, {
@@ -677,9 +781,17 @@ export function bindInteractions(elements, store, options = {}) {
         width: imageFileInfo.width,
         height: imageFileInfo.height,
       });
-      store.setImportStatus(node.kind === IMAGE_NODE_DEFAULTS.kind ? 'Image updated.' : 'Image added.');
+      store.setImportStatus(
+        node.kind === IMAGE_NODE_DEFAULTS.kind
+          ? "Image updated."
+          : "Image added.",
+      );
     } catch {
-      store.setImportStatus(node.kind === IMAGE_NODE_DEFAULTS.kind ? 'Image replace failed. Try another file.' : 'Image add failed. Try another file.');
+      store.setImportStatus(
+        node.kind === IMAGE_NODE_DEFAULTS.kind
+          ? "Image replace failed. Try another file."
+          : "Image add failed. Try another file.",
+      );
     }
   }
 
@@ -710,7 +822,7 @@ export function bindInteractions(elements, store, options = {}) {
   function createLinkedNodeFromSelection() {
     const state = store.getState();
     const selection = state.selection;
-    if (!selection || selection.type !== 'node') return false;
+    if (!selection || selection.type !== "node") return false;
     const sourceNode = getNode(selection.id, state);
     if (!sourceNode) return false;
 
@@ -727,12 +839,17 @@ export function bindInteractions(elements, store, options = {}) {
 
     const fromAnchor = resolveAnchorName(null, sourceNode, node);
     const toAnchor = resolveAnchorName(null, node, sourceNode);
-    const edgeId = store.connectNodes(sourceNode.id, fromAnchor, node.id, toAnchor);
+    const edgeId = store.connectNodes(
+      sourceNode.id,
+      fromAnchor,
+      node.id,
+      toAnchor,
+    );
     if (edgeId) {
       triggerEdgeTwang(edgeId);
     }
 
-    store.setSelection({ type: 'node', id: node.id });
+    store.setSelection({ type: "node", id: node.id });
     openNodeEditor(node.id, { stabilizeFrames: 3, lockFocusMs: 1200 });
     return true;
   }
@@ -742,7 +859,7 @@ export function bindInteractions(elements, store, options = {}) {
     const selection = state.selection;
     if (!isDirectionalArrowKey(key)) return false;
 
-    if (!selection || selection.type !== 'node') {
+    if (!selection || selection.type !== "node") {
       if (!state.nodes.length) return false;
       return selectNodeById(state.nodes[0].id);
     }
@@ -753,12 +870,20 @@ export function bindInteractions(elements, store, options = {}) {
       return selectNodeById(state.nodes[0].id);
     }
 
-    const edgeFollowNodeId = resolveDirectionalEdgeFollowCandidate(currentNode, key, state);
+    const edgeFollowNodeId = resolveDirectionalEdgeFollowCandidate(
+      currentNode,
+      key,
+      state,
+    );
     if (edgeFollowNodeId) {
       return selectNodeById(edgeFollowNodeId);
     }
 
-    const nearestNodeId = resolveNearestDirectionalNodeCandidate(currentNode, key, state.nodes);
+    const nearestNodeId = resolveNearestDirectionalNodeCandidate(
+      currentNode,
+      key,
+      state.nodes,
+    );
     if (!nearestNodeId) return false;
     return selectNodeById(nearestNodeId);
   }
@@ -776,7 +901,7 @@ export function bindInteractions(elements, store, options = {}) {
       cancelEdgeSession();
     }
 
-    store.setSelection({ type: 'node', id: nodeId });
+    store.setSelection({ type: "node", id: nodeId });
     return true;
   }
 
@@ -806,10 +931,10 @@ export function bindInteractions(elements, store, options = {}) {
       let side = null;
       let otherId = null;
       if (edge.from === currentNode.id) {
-        side = 'from';
+        side = "from";
         otherId = edge.to;
       } else if (edge.to === currentNode.id) {
-        side = 'to';
+        side = "to";
         otherId = edge.from;
       }
       if (!side || !otherId) continue;
@@ -826,7 +951,11 @@ export function bindInteractions(elements, store, options = {}) {
       });
       if (currentAnchor !== expectedAnchor) continue;
 
-      const score = buildDirectionalScore(getNodeCenter(currentNode), otherNode, key);
+      const score = buildDirectionalScore(
+        getNodeCenter(currentNode),
+        otherNode,
+        key,
+      );
       if (!score) continue;
 
       const existing = candidates.get(otherNode.id);
@@ -850,7 +979,7 @@ export function bindInteractions(elements, store, options = {}) {
     const selection = state.selection;
     if (!selection) return false;
 
-    if (selection.type === 'node') {
+    if (selection.type === "node") {
       if (state.ui.editingNodeId === selection.id) {
         closeNodeEditor(selection.id);
         return true;
@@ -859,7 +988,7 @@ export function bindInteractions(elements, store, options = {}) {
       return true;
     }
 
-    if (selection.type === 'frame') {
+    if (selection.type === "frame") {
       if (state.ui.editingFrameId === selection.id) {
         closeFrameEditor(selection.id);
         return true;
@@ -892,7 +1021,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   function openNodeFocus(nodeId, options = {}) {
     if (!nodeId) return false;
-    store.setSelection({ type: 'node', id: nodeId });
+    store.setSelection({ type: "node", id: nodeId });
     activeLiveEditFrameId = null;
     store.setFocusedNode(nodeId);
     openNodeEditor(nodeId, {
@@ -915,7 +1044,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   function toggleFocusedSelectionNode() {
     const state = store.getState();
-    if (state.selection?.type !== 'node') return false;
+    if (state.selection?.type !== "node") return false;
     if (state.ui.focusedNodeId === state.selection.id) {
       return closeNodeFocus();
     }
@@ -924,10 +1053,9 @@ export function bindInteractions(elements, store, options = {}) {
 
   function consumeNodeDoublePress(nodeId) {
     const now = performance.now();
-    const isRepeat = lastNodePress.id === nodeId && (now - lastNodePress.at) <= 420;
-    lastNodePress = isRepeat
-      ? { id: null, at: 0 }
-      : { id: nodeId, at: now };
+    const isRepeat =
+      lastNodePress.id === nodeId && now - lastNodePress.at <= 420;
+    lastNodePress = isRepeat ? { id: null, at: 0 } : { id: nodeId, at: now };
     return isRepeat;
   }
 
@@ -952,28 +1080,39 @@ export function bindInteractions(elements, store, options = {}) {
       store.beginFrameEdit();
       activeLiveEditFrameId = frameId;
     }
-    if (typeof patch.title === 'string') {
+    if (typeof patch.title === "string") {
       frame.title = patch.title;
     }
-    if (typeof patch.description === 'string') {
+    if (typeof patch.description === "string") {
       frame.description = patch.description;
     }
     if (patch.borderWidth !== undefined) {
       const numeric = Math.round(Number(patch.borderWidth));
       if (Number.isFinite(numeric)) {
-        frame.borderWidth = clamp(numeric, FRAME_DEFAULTS.borderWidthMin, FRAME_DEFAULTS.borderWidthMax);
+        frame.borderWidth = clamp(
+          numeric,
+          FRAME_DEFAULTS.borderWidthMin,
+          FRAME_DEFAULTS.borderWidthMax,
+        );
       }
     }
-    if (typeof patch.borderStyle === 'string' && ['solid', 'dashed', 'dotted'].includes(patch.borderStyle)) {
+    if (
+      typeof patch.borderStyle === "string" &&
+      ["solid", "dashed", "dotted"].includes(patch.borderStyle)
+    ) {
       frame.borderStyle = patch.borderStyle;
     }
   }
 
   function focusFrameTitleInput(frameId, retries = 2) {
-    const titleInput = framesLayer.querySelector(`[data-frame-edit-title="${frameId}"]`);
+    const titleInput = framesLayer.querySelector(
+      `[data-frame-edit-title="${frameId}"]`,
+    );
     if (!titleInput) {
       if (retries > 0) {
-        window.requestAnimationFrame(() => focusFrameTitleInput(frameId, retries - 1));
+        window.requestAnimationFrame(() =>
+          focusFrameTitleInput(frameId, retries - 1),
+        );
       }
       return;
     }
@@ -988,10 +1127,10 @@ export function bindInteractions(elements, store, options = {}) {
       store.beginNodeEdit();
       activeLiveEditNodeId = nodeId;
     }
-    if (typeof patch.title === 'string') {
+    if (typeof patch.title === "string") {
       node.title = patch.title;
     }
-    if (typeof patch.description === 'string') {
+    if (typeof patch.description === "string") {
       node.description = patch.description;
     }
   }
@@ -1012,14 +1151,17 @@ export function bindInteractions(elements, store, options = {}) {
         x: nodeEntry.nodeStartX + dx,
         y: nodeEntry.nodeStartY + dy,
       };
-      const bestFrameId = findBestFrameIdForNodeFromRects(simulatedNode, state.frames);
+      const bestFrameId = findBestFrameIdForNodeFromRects(
+        simulatedNode,
+        state.frames,
+      );
       const currentFrameId = node.frameId || null;
 
       if (currentFrameId && currentFrameId !== bestFrameId) {
-        preview[currentFrameId] = 'remove';
+        preview[currentFrameId] = "remove";
       }
       if (bestFrameId && bestFrameId !== currentFrameId) {
-        preview[bestFrameId] = 'add';
+        preview[bestFrameId] = "add";
       }
     }
 
@@ -1027,20 +1169,26 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function updateFrameResizeMembershipPreview(frameId, nextRect, state) {
-    const { addNodeIds, removeNodeIds } = getFrameResizeMembershipDelta(frameId, nextRect, state);
+    const { addNodeIds, removeNodeIds } = getFrameResizeMembershipDelta(
+      frameId,
+      nextRect,
+      state,
+    );
     const nodePreview = {};
     for (const id of addNodeIds) {
-      nodePreview[id] = 'add';
+      nodePreview[id] = "add";
     }
     for (const id of removeNodeIds) {
       if (!(id in nodePreview)) {
-        nodePreview[id] = 'remove';
+        nodePreview[id] = "remove";
       }
     }
 
     if (Object.keys(nodePreview).length) {
       store.setNodeMembershipPreview(nodePreview);
-      store.setFrameMembershipPreview({ [frameId]: addNodeIds.length ? 'add' : 'remove' });
+      store.setFrameMembershipPreview({
+        [frameId]: addNodeIds.length ? "add" : "remove",
+      });
       return;
     }
 
@@ -1059,7 +1207,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     for (const node of state.nodes) {
       if (getNodeFrameOverlapArea(node, draftFrame) > 0) {
-        nodePreview[node.id] = 'add';
+        nodePreview[node.id] = "add";
       }
     }
 
@@ -1075,16 +1223,20 @@ export function bindInteractions(elements, store, options = {}) {
     const frame = getFrame(frameId, state);
     if (!frame) return;
     const frameRect = getFrameRect(frame);
-    const candidates = findFrameResizeCandidateNodeIds(frameId, frameRect, state);
+    const candidates = findFrameResizeCandidateNodeIds(
+      frameId,
+      frameRect,
+      state,
+    );
     if (!candidates.length) return;
     store.recomputeNodeFrameMembership(candidates, { skipHistory: true });
   }
 
   function getNormalizedNodeColorValue(value) {
-    if (value === 'default') {
+    if (value === "default") {
       return null;
     }
-    if (typeof value !== 'string') {
+    if (typeof value !== "string") {
       return null;
     }
     return NODE_COLOR_KEYS.includes(value) ? value : null;
@@ -1092,49 +1244,72 @@ export function bindInteractions(elements, store, options = {}) {
 
   function closeToolbarPopover() {
     if (!(openToolbarPopoverEl instanceof HTMLElement)) return;
-    const controlEl = openToolbarPopoverEl.closest('.entity-toolbar__control');
-    const triggerEl = controlEl?.querySelector('[data-toolbar-popover-toggle]');
+    const controlEl = openToolbarPopoverEl.closest(".entity-toolbar__control");
+    const triggerEl = controlEl?.querySelector("[data-toolbar-popover-toggle]");
     openToolbarPopoverEl.hidden = true;
-    openToolbarPopoverEl.style.left = '';
-    openToolbarPopoverEl.style.top = '';
-    openToolbarPopoverEl.style.bottom = '';
+    openToolbarPopoverEl.style.left = "";
+    openToolbarPopoverEl.style.top = "";
+    openToolbarPopoverEl.style.bottom = "";
     delete openToolbarPopoverEl.dataset.toolbarPopoverSide;
     if (triggerEl instanceof HTMLElement) {
-      triggerEl.setAttribute('aria-expanded', 'false');
+      triggerEl.setAttribute("aria-expanded", "false");
     }
     openToolbarPopoverEl = null;
   }
 
   function openToolbarPopover(triggerEl, popoverEl) {
-    if (!(triggerEl instanceof HTMLElement) || !(popoverEl instanceof HTMLElement)) return;
+    if (
+      !(triggerEl instanceof HTMLElement) ||
+      !(popoverEl instanceof HTMLElement)
+    )
+      return;
     if (openToolbarPopoverEl === popoverEl) {
       closeToolbarPopover();
       return;
     }
     closeToolbarPopover();
     popoverEl.hidden = false;
-    triggerEl.setAttribute('aria-expanded', 'true');
+    triggerEl.setAttribute("aria-expanded", "true");
     const viewportGutter = 12;
     const controlRect = triggerEl.parentElement?.getBoundingClientRect?.();
     const triggerRect = triggerEl.getBoundingClientRect();
-    const preferredSide = triggerEl.closest('[data-toolbar-placement]')?.dataset?.toolbarPlacement === 'bottom'
-      ? 'top'
-      : 'bottom';
+    const preferredSide =
+      triggerEl.closest("[data-toolbar-placement]")?.dataset
+        ?.toolbarPlacement === "bottom"
+        ? "top"
+        : "bottom";
     const popoverHeight = popoverEl.offsetHeight;
-    const fitsBottom = controlRect ? ((window.innerHeight - viewportGutter - controlRect.bottom) >= popoverHeight) : true;
-    const fitsTop = controlRect ? ((controlRect.top - viewportGutter) >= popoverHeight) : true;
-    const verticalSide = preferredSide === 'top'
-      ? (fitsTop || !fitsBottom ? 'top' : 'bottom')
-      : (fitsBottom || !fitsTop ? 'bottom' : 'top');
+    const fitsBottom = controlRect
+      ? window.innerHeight - viewportGutter - controlRect.bottom >=
+        popoverHeight
+      : true;
+    const fitsTop = controlRect
+      ? controlRect.top - viewportGutter >= popoverHeight
+      : true;
+    const verticalSide =
+      preferredSide === "top"
+        ? fitsTop || !fitsBottom
+          ? "top"
+          : "bottom"
+        : fitsBottom || !fitsTop
+          ? "bottom"
+          : "top";
     popoverEl.dataset.toolbarPopoverSide = verticalSide;
-    popoverEl.style.top = verticalSide === 'top' ? 'auto' : '';
-    popoverEl.style.bottom = verticalSide === 'top' ? 'calc(100% + 10px)' : '';
+    popoverEl.style.top = verticalSide === "top" ? "auto" : "";
+    popoverEl.style.bottom = verticalSide === "top" ? "calc(100% + 10px)" : "";
     if (controlRect) {
       const popoverWidth = popoverEl.offsetWidth;
-      const preferredLeft = (triggerRect.left - controlRect.left) - ((popoverWidth - triggerRect.width) / 2);
+      const preferredLeft =
+        triggerRect.left -
+        controlRect.left -
+        (popoverWidth - triggerRect.width) / 2;
       const absoluteMinLeft = viewportGutter - controlRect.left;
-      const absoluteMaxLeft = (window.innerWidth - viewportGutter - popoverWidth) - controlRect.left;
-      const left = Math.max(absoluteMinLeft, Math.min(preferredLeft, absoluteMaxLeft));
+      const absoluteMaxLeft =
+        window.innerWidth - viewportGutter - popoverWidth - controlRect.left;
+      const left = Math.max(
+        absoluteMinLeft,
+        Math.min(preferredLeft, absoluteMaxLeft),
+      );
       popoverEl.style.left = `${left}px`;
     }
     openToolbarPopoverEl = popoverEl;
@@ -1152,31 +1327,54 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function applySingleNodeToolbarPlacement() {
-    const toolbarEl = selectionControlsLayer?.querySelector('.selection-controls__toolbar--node[data-toolbar-entity="node"]');
-    const groupEl = toolbarEl?.closest('.selection-controls__group--node[data-node-id]');
-    if (!(toolbarEl instanceof HTMLElement) || !(groupEl instanceof HTMLElement) || !(workspace instanceof HTMLElement)) {
+    const toolbarEl = selectionControlsLayer?.querySelector(
+      '.selection-controls__toolbar--node[data-toolbar-entity="node"]',
+    );
+    const groupEl = toolbarEl?.closest(
+      ".selection-controls__group--node[data-node-id]",
+    );
+    if (
+      !(toolbarEl instanceof HTMLElement) ||
+      !(groupEl instanceof HTMLElement) ||
+      !(workspace instanceof HTMLElement)
+    ) {
       return;
     }
 
-    toolbarEl.dataset.toolbarPlacement = 'top';
-    toolbarEl.style.setProperty('--toolbar-shift-x', '0px');
+    toolbarEl.dataset.toolbarPlacement = "top";
+    toolbarEl.style.setProperty("--toolbar-shift-x", "0px");
 
     const workspaceRect = workspace.getBoundingClientRect();
     const groupRect = groupEl.getBoundingClientRect();
     const toolbarRect = toolbarEl.getBoundingClientRect();
-    if (!workspaceRect.width || !workspaceRect.height || !toolbarRect.width || !toolbarRect.height) {
+    if (
+      !workspaceRect.width ||
+      !workspaceRect.height ||
+      !toolbarRect.width ||
+      !toolbarRect.height
+    ) {
       return;
     }
 
     const horizontalGutter = 12;
     const verticalGutter = 12;
     const gap = 10;
-    const centerX = groupRect.left + (groupRect.width / 2);
-    const viewportZoom = Math.max(0.01, Number.parseFloat(getComputedStyle(selectionControlsLayer).getPropertyValue('--viewport-zoom')) || 1);
-    const rawLeft = centerX - (toolbarRect.width / 2);
+    const centerX = groupRect.left + groupRect.width / 2;
+    const viewportZoom = Math.max(
+      0.01,
+      Number.parseFloat(
+        getComputedStyle(selectionControlsLayer).getPropertyValue(
+          "--viewport-zoom",
+        ),
+      ) || 1,
+    );
+    const rawLeft = centerX - toolbarRect.width / 2;
     const clampedLeft = Math.max(
       workspaceRect.left + horizontalGutter,
-      Math.min(rawLeft, workspaceRect.right - horizontalGutter - toolbarRect.width),
+      Math.min(
+        rawLeft,
+        workspaceRect.right - horizontalGutter - toolbarRect.width,
+      ),
     );
     const shiftX = (clampedLeft - rawLeft) / viewportZoom;
 
@@ -1193,62 +1391,106 @@ export function bindInteractions(elements, store, options = {}) {
       bottom: groupRect.bottom + gap + toolbarRect.height,
     };
 
-    const obstructionRects = Array.from(document.querySelectorAll('.toolbar, .workspace-meta, .toast.is-visible, .selection-controls__toolbar, .entity-toolbar__popover:not([hidden])'))
-      .filter((element) => element instanceof HTMLElement && element !== toolbarEl && !toolbarEl.contains(element) && !element.contains(toolbarEl))
+    const obstructionRects = Array.from(
+      document.querySelectorAll(
+        ".toolbar, .workspace-meta, .toast.is-visible, .selection-controls__toolbar, .entity-toolbar__popover:not([hidden])",
+      ),
+    )
+      .filter(
+        (element) =>
+          element instanceof HTMLElement &&
+          element !== toolbarEl &&
+          !toolbarEl.contains(element) &&
+          !element.contains(toolbarEl),
+      )
       .map((element) => element.getBoundingClientRect())
       .filter((rect) => rect.width > 0 && rect.height > 0);
 
-    const intersectsObstruction = (candidateRect) => obstructionRects.some((rect) => {
-      return candidateRect.left < rect.right
-        && candidateRect.right > rect.left
-        && candidateRect.top < rect.bottom
-        && candidateRect.bottom > rect.top;
-    });
+    const intersectsObstruction = (candidateRect) =>
+      obstructionRects.some((rect) => {
+        return (
+          candidateRect.left < rect.right &&
+          candidateRect.right > rect.left &&
+          candidateRect.top < rect.bottom &&
+          candidateRect.bottom > rect.top
+        );
+      });
 
     const topFitsViewport = topRect.top >= workspaceRect.top + verticalGutter;
-    const bottomFitsViewport = bottomRect.bottom <= workspaceRect.bottom - verticalGutter;
+    const bottomFitsViewport =
+      bottomRect.bottom <= workspaceRect.bottom - verticalGutter;
     const topBlocked = intersectsObstruction(topRect);
     const bottomBlocked = intersectsObstruction(bottomRect);
 
-    let placement = 'top';
-    if (!(topFitsViewport && !topBlocked) && (bottomFitsViewport && !bottomBlocked)) {
-      placement = 'bottom';
-    } else if (!(topFitsViewport && !topBlocked) && !(bottomFitsViewport && !bottomBlocked)) {
+    let placement = "top";
+    if (
+      !(topFitsViewport && !topBlocked) &&
+      bottomFitsViewport &&
+      !bottomBlocked
+    ) {
+      placement = "bottom";
+    } else if (
+      !(topFitsViewport && !topBlocked) &&
+      !(bottomFitsViewport && !bottomBlocked)
+    ) {
       const topSpace = groupRect.top - workspaceRect.top;
       const bottomSpace = workspaceRect.bottom - groupRect.bottom;
-      placement = bottomSpace > topSpace ? 'bottom' : 'top';
+      placement = bottomSpace > topSpace ? "bottom" : "top";
     }
 
     toolbarEl.dataset.toolbarPlacement = placement;
-    toolbarEl.style.setProperty('--toolbar-shift-x', `${Math.round(shiftX)}px`);
+    toolbarEl.style.setProperty("--toolbar-shift-x", `${Math.round(shiftX)}px`);
   }
 
   function applyEdgeToolbarPlacement() {
-    const toolbarEl = selectionControlsLayer?.querySelector('.selection-controls__toolbar--edge[data-toolbar-entity="edge"]');
-    const groupEl = toolbarEl?.closest('.selection-controls__group--edge[data-edge-id]');
-    if (!(toolbarEl instanceof HTMLElement) || !(groupEl instanceof HTMLElement) || !(workspace instanceof HTMLElement)) {
+    const toolbarEl = selectionControlsLayer?.querySelector(
+      '.selection-controls__toolbar--edge[data-toolbar-entity="edge"]',
+    );
+    const groupEl = toolbarEl?.closest(
+      ".selection-controls__group--edge[data-edge-id]",
+    );
+    if (
+      !(toolbarEl instanceof HTMLElement) ||
+      !(groupEl instanceof HTMLElement) ||
+      !(workspace instanceof HTMLElement)
+    ) {
       return;
     }
 
-    toolbarEl.dataset.toolbarPlacement = 'top';
-    toolbarEl.style.setProperty('--toolbar-shift-x', '0px');
+    toolbarEl.dataset.toolbarPlacement = "top";
+    toolbarEl.style.setProperty("--toolbar-shift-x", "0px");
 
     const workspaceRect = workspace.getBoundingClientRect();
     const groupRect = groupEl.getBoundingClientRect();
     const toolbarRect = toolbarEl.getBoundingClientRect();
-    if (!workspaceRect.width || !workspaceRect.height || !toolbarRect.width || !toolbarRect.height) {
+    if (
+      !workspaceRect.width ||
+      !workspaceRect.height ||
+      !toolbarRect.width ||
+      !toolbarRect.height
+    ) {
       return;
     }
 
     const horizontalGutter = 12;
     const verticalGutter = 12;
     const gap = 10;
-    const centerX = groupRect.left + (groupRect.width / 2);
-    const viewportZoom = Math.max(0.01, Number.parseFloat(getComputedStyle(selectionControlsLayer).getPropertyValue('--viewport-zoom')) || 1);
-    const rawLeft = centerX - (toolbarRect.width / 2);
+    const centerX = groupRect.left + groupRect.width / 2;
+    const viewportZoom = Math.max(
+      0.01,
+      Number.parseFloat(
+        getComputedStyle(selectionControlsLayer).getPropertyValue(
+          "--viewport-zoom",
+        ),
+      ) || 1,
+    );
+    const rawLeft = centerX - toolbarRect.width / 2;
     const clampedLeft = Math.max(
       workspaceRect.left + horizontalGutter,
-      Math.min(rawLeft, workspaceRect.right - horizontalGutter - toolbarRect.width),
+      Math.min(
+        rawLeft,
+        workspaceRect.right - horizontalGutter - toolbarRect.width,
+      ),
     );
     const shiftX = (clampedLeft - rawLeft) / viewportZoom;
 
@@ -1265,44 +1507,66 @@ export function bindInteractions(elements, store, options = {}) {
       bottom: groupRect.bottom + gap + toolbarRect.height,
     };
 
-    const obstructionRects = Array.from(document.querySelectorAll('.toolbar, .workspace-meta, .toast.is-visible, .selection-controls__toolbar, .entity-toolbar__popover:not([hidden])'))
-      .filter((element) => element instanceof HTMLElement && element !== toolbarEl && !toolbarEl.contains(element) && !element.contains(toolbarEl))
+    const obstructionRects = Array.from(
+      document.querySelectorAll(
+        ".toolbar, .workspace-meta, .toast.is-visible, .selection-controls__toolbar, .entity-toolbar__popover:not([hidden])",
+      ),
+    )
+      .filter(
+        (element) =>
+          element instanceof HTMLElement &&
+          element !== toolbarEl &&
+          !toolbarEl.contains(element) &&
+          !element.contains(toolbarEl),
+      )
       .map((element) => element.getBoundingClientRect())
       .filter((rect) => rect.width > 0 && rect.height > 0);
 
-    const intersectsObstruction = (candidateRect) => obstructionRects.some((rect) => {
-      return candidateRect.left < rect.right
-        && candidateRect.right > rect.left
-        && candidateRect.top < rect.bottom
-        && candidateRect.bottom > rect.top;
-    });
+    const intersectsObstruction = (candidateRect) =>
+      obstructionRects.some((rect) => {
+        return (
+          candidateRect.left < rect.right &&
+          candidateRect.right > rect.left &&
+          candidateRect.top < rect.bottom &&
+          candidateRect.bottom > rect.top
+        );
+      });
 
     const topFitsViewport = topRect.top >= workspaceRect.top + verticalGutter;
-    const bottomFitsViewport = bottomRect.bottom <= workspaceRect.bottom - verticalGutter;
+    const bottomFitsViewport =
+      bottomRect.bottom <= workspaceRect.bottom - verticalGutter;
     const topBlocked = intersectsObstruction(topRect);
     const bottomBlocked = intersectsObstruction(bottomRect);
 
-    let placement = 'top';
-    if (!(topFitsViewport && !topBlocked) && (bottomFitsViewport && !bottomBlocked)) {
-      placement = 'bottom';
-    } else if (!(topFitsViewport && !topBlocked) && !(bottomFitsViewport && !bottomBlocked)) {
+    let placement = "top";
+    if (
+      !(topFitsViewport && !topBlocked) &&
+      bottomFitsViewport &&
+      !bottomBlocked
+    ) {
+      placement = "bottom";
+    } else if (
+      !(topFitsViewport && !topBlocked) &&
+      !(bottomFitsViewport && !bottomBlocked)
+    ) {
       const topSpace = groupRect.top - workspaceRect.top;
       const bottomSpace = workspaceRect.bottom - groupRect.bottom;
-      placement = bottomSpace > topSpace ? 'bottom' : 'top';
+      placement = bottomSpace > topSpace ? "bottom" : "top";
     }
 
     toolbarEl.dataset.toolbarPlacement = placement;
-    toolbarEl.style.setProperty('--toolbar-shift-x', `${Math.round(shiftX)}px`);
+    toolbarEl.style.setProperty("--toolbar-shift-x", `${Math.round(shiftX)}px`);
   }
 
   function getToolbarContext(target) {
-    const toolbarEl = target instanceof HTMLElement
-      ? target.closest('[data-toolbar-entity][data-toolbar-target-ids]')
-      : null;
+    const toolbarEl =
+      target instanceof HTMLElement
+        ? target.closest("[data-toolbar-entity][data-toolbar-target-ids]")
+        : null;
     if (!(toolbarEl instanceof HTMLElement)) return null;
     const entity = toolbarEl.dataset.toolbarEntity;
-    const ids = String(toolbarEl.dataset.toolbarTargetIds || '')
-      .split(',')
+    const ids = String(toolbarEl.dataset.toolbarTargetIds || "")
+      .split(",")
       .map((value) => value.trim())
       .filter(Boolean);
     if (!entity || !ids.length) return null;
@@ -1312,11 +1576,11 @@ export function bindInteractions(elements, store, options = {}) {
   function applyToolbarColor(target, colorKey) {
     const context = getToolbarContext(target);
     if (!context) return;
-    if (context.entity === 'frame') {
+    if (context.entity === "frame") {
       store.setFramesColor(context.ids, colorKey);
       return;
     }
-    if (context.entity === 'edge') {
+    if (context.entity === "edge") {
       store.updateEdge(context.ids[0], { colorKey });
       return;
     }
@@ -1326,11 +1590,11 @@ export function bindInteractions(elements, store, options = {}) {
   function applyToolbarBorderWidth(target, borderWidth) {
     const context = getToolbarContext(target);
     if (!context) return;
-    if (context.entity === 'frame') {
+    if (context.entity === "frame") {
       store.setFramesBorderWidth(context.ids, borderWidth);
       return;
     }
-    if (context.entity === 'edge') {
+    if (context.entity === "edge") {
       store.updateEdge(context.ids[0], { strokeWidth: borderWidth });
       return;
     }
@@ -1340,11 +1604,11 @@ export function bindInteractions(elements, store, options = {}) {
   function applyToolbarBorderStyle(target, borderStyle) {
     const context = getToolbarContext(target);
     if (!context) return;
-    if (context.entity === 'frame') {
+    if (context.entity === "frame") {
       store.setFramesBorderStyle(context.ids, borderStyle);
       return;
     }
-    if (context.entity === 'edge') {
+    if (context.entity === "edge") {
       store.updateEdge(context.ids[0], { strokeStyle: borderStyle });
       return;
     }
@@ -1353,23 +1617,27 @@ export function bindInteractions(elements, store, options = {}) {
 
   function applyToolbarEdgeType(target, edgeType) {
     const context = getToolbarContext(target);
-    if (!context || context.entity !== 'edge') return;
+    if (!context || context.entity !== "edge") return;
     store.updateEdge(context.ids[0], { edgeType });
   }
 
   function syncToolbarRangeValue(inputEl) {
     if (!(inputEl instanceof HTMLInputElement)) return;
-    const valueEl = inputEl.closest('[data-toolbar-range]')?.querySelector('[data-toolbar-border-width-value]');
+    const valueEl = inputEl
+      .closest("[data-toolbar-range]")
+      ?.querySelector("[data-toolbar-border-width-value]");
     if (valueEl instanceof HTMLElement) {
       valueEl.textContent = String(Math.round(Number(inputEl.value) || 1));
     }
   }
 
   function handleToolbarClick(event) {
-    const toggleEl = event.target.closest('[data-toolbar-popover-toggle]');
+    const toggleEl = event.target.closest("[data-toolbar-popover-toggle]");
     if (toggleEl instanceof HTMLElement) {
       const popoverName = toggleEl.dataset.toolbarPopoverToggle;
-      const popoverEl = toggleEl.parentElement?.querySelector(`[data-toolbar-popover="${popoverName}"]`);
+      const popoverEl = toggleEl.parentElement?.querySelector(
+        `[data-toolbar-popover="${popoverName}"]`,
+      );
       if (popoverEl instanceof HTMLElement) {
         openToolbarPopover(toggleEl, popoverEl);
       }
@@ -1378,25 +1646,33 @@ export function bindInteractions(elements, store, options = {}) {
       return true;
     }
 
-    const colorEl = event.target.closest('[data-toolbar-color-value]');
+    const colorEl = event.target.closest("[data-toolbar-color-value]");
     if (colorEl instanceof HTMLButtonElement) {
-      applyToolbarColor(colorEl, getNormalizedNodeColorValue(colorEl.dataset.toolbarColorValue));
+      applyToolbarColor(
+        colorEl,
+        getNormalizedNodeColorValue(colorEl.dataset.toolbarColorValue),
+      );
       closeToolbarPopover();
       event.stopPropagation();
       event.preventDefault();
       return true;
     }
 
-    const borderStyleEl = event.target.closest('[data-toolbar-border-style-value]');
+    const borderStyleEl = event.target.closest(
+      "[data-toolbar-border-style-value]",
+    );
     if (borderStyleEl instanceof HTMLButtonElement) {
-      applyToolbarBorderStyle(borderStyleEl, borderStyleEl.dataset.toolbarBorderStyleValue);
+      applyToolbarBorderStyle(
+        borderStyleEl,
+        borderStyleEl.dataset.toolbarBorderStyleValue,
+      );
       closeToolbarPopover();
       event.stopPropagation();
       event.preventDefault();
       return true;
     }
 
-    const edgeTypeEl = event.target.closest('[data-toolbar-edge-type-value]');
+    const edgeTypeEl = event.target.closest("[data-toolbar-edge-type-value]");
     if (edgeTypeEl instanceof HTMLButtonElement) {
       applyToolbarEdgeType(edgeTypeEl, edgeTypeEl.dataset.toolbarEdgeTypeValue);
       closeToolbarPopover();
@@ -1405,7 +1681,7 @@ export function bindInteractions(elements, store, options = {}) {
       return true;
     }
 
-    const multiDeleteEl = event.target.closest('[data-nodes-delete]');
+    const multiDeleteEl = event.target.closest("[data-nodes-delete]");
     if (multiDeleteEl instanceof HTMLButtonElement) {
       activeLiveEditNodeId = null;
       store.deleteSelectedNodes();
@@ -1415,7 +1691,7 @@ export function bindInteractions(elements, store, options = {}) {
       return true;
     }
 
-    const frameConfirmEl = event.target.closest('[data-frame-edit-confirm]');
+    const frameConfirmEl = event.target.closest("[data-frame-edit-confirm]");
     if (frameConfirmEl instanceof HTMLButtonElement) {
       closeFrameEditor(frameConfirmEl.dataset.frameEditConfirm);
       closeToolbarPopover();
@@ -1428,7 +1704,7 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function handleToolbarInput(event) {
-    const rangeEl = event.target.closest('[data-toolbar-border-width-input]');
+    const rangeEl = event.target.closest("[data-toolbar-border-width-input]");
     if (!(rangeEl instanceof HTMLInputElement)) return false;
     syncToolbarRangeValue(rangeEl);
     event.stopPropagation();
@@ -1436,7 +1712,7 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function handleToolbarChange(event) {
-    const rangeEl = event.target.closest('[data-toolbar-border-width-input]');
+    const rangeEl = event.target.closest("[data-toolbar-border-width-input]");
     if (!(rangeEl instanceof HTMLInputElement)) return false;
     applyToolbarBorderWidth(rangeEl, rangeEl.value);
     event.stopPropagation();
@@ -1445,18 +1721,33 @@ export function bindInteractions(elements, store, options = {}) {
 
   function onCanvasDoubleClick(event) {
     if (isFrameDrawMode) return;
-    if (event.target.closest('[data-node-id], [data-frame-id]')) return;
-    const point = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
+    if (event.target.closest("[data-node-id], [data-frame-id]")) return;
+    const point = toGraphPoint(
+      event.clientX,
+      event.clientY,
+      canvas,
+      store.getState().viewport,
+    );
     createNodeInEditMode(point);
   }
 
   function onCanvasPointerDown(event) {
     if (event.button !== 0) return;
-    if (event.target.closest('[data-node-id], [data-frame-id], [data-edge-id], .panel, button, input, textarea, label')) return;
+    if (
+      event.target.closest(
+        "[data-node-id], [data-frame-id], [data-edge-id], .panel, button, input, textarea, label",
+      )
+    )
+      return;
 
     if (isFrameDrawMode) {
       const state = store.getState();
-      const start = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
+      const start = toGraphPoint(
+        event.clientX,
+        event.clientY,
+        canvas,
+        state.viewport,
+      );
       frameDrawSession = {
         pointerId: event.pointerId,
         startX: start.x,
@@ -1510,8 +1801,18 @@ export function bindInteractions(elements, store, options = {}) {
   function onCanvasPointerMove(event) {
     if (frameDrawSession && event.pointerId === frameDrawSession.pointerId) {
       const state = store.getState();
-      const current = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
-      const rect = toRectFromPoints(frameDrawSession.startX, frameDrawSession.startY, current.x, current.y);
+      const current = toGraphPoint(
+        event.clientX,
+        event.clientY,
+        canvas,
+        state.viewport,
+      );
+      const rect = toRectFromPoints(
+        frameDrawSession.startX,
+        frameDrawSession.startY,
+        current.x,
+        current.y,
+      );
       store.setFrameDraft({
         x: rect.left,
         y: rect.top,
@@ -1537,8 +1838,18 @@ export function bindInteractions(elements, store, options = {}) {
   function onCanvasPointerUp(event) {
     if (frameDrawSession && event.pointerId === frameDrawSession.pointerId) {
       const state = store.getState();
-      const current = toGraphPoint(event.clientX, event.clientY, canvas, state.viewport);
-      const rect = toRectFromPoints(frameDrawSession.startX, frameDrawSession.startY, current.x, current.y);
+      const current = toGraphPoint(
+        event.clientX,
+        event.clientY,
+        canvas,
+        state.viewport,
+      );
+      const rect = toRectFromPoints(
+        frameDrawSession.startX,
+        frameDrawSession.startY,
+        current.x,
+        current.y,
+      );
       if (rect.width >= 24 && rect.height >= 24) {
         createFrameFromDraft(rect);
       }
@@ -1584,13 +1895,18 @@ export function bindInteractions(elements, store, options = {}) {
     if (isTypingTarget(event.target)) return;
     if (store.getState().ui.focusedNodeId) return;
     if (!event.ctrlKey && shouldAllowNativeWheelScroll(event)) return;
-    if (!event.ctrlKey && Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+    if (!event.ctrlKey && Math.abs(event.deltaY) < Math.abs(event.deltaX))
+      return;
     event.preventDefault();
 
     const state = store.getState();
     const oldZoom = state.viewport.zoom;
     const zoomStep = Math.exp(-event.deltaY * 0.0015);
-    const nextZoom = clamp(oldZoom * zoomStep, VIEWPORT_LIMITS.minZoom, VIEWPORT_LIMITS.maxZoom);
+    const nextZoom = clamp(
+      oldZoom * zoomStep,
+      VIEWPORT_LIMITS.minZoom,
+      VIEWPORT_LIMITS.maxZoom,
+    );
 
     const rect = canvas.getBoundingClientRect();
     const cursorX = event.clientX - rect.left;
@@ -1606,25 +1922,31 @@ export function bindInteractions(elements, store, options = {}) {
     });
   }
 
-  bindCanvasInteractions({ canvas, workspace }, {
-    onCanvasDoubleClick,
-    onCanvasPointerDown,
-    onCanvasPointerMove,
-    onCanvasPointerUp,
-    onCanvasPointerCancel,
-    onCanvasLostPointerCapture,
-    onWorkspaceWheel,
-  });
+  bindCanvasInteractions(
+    { canvas, workspace },
+    {
+      onCanvasDoubleClick,
+      onCanvasPointerDown,
+      onCanvasPointerMove,
+      onCanvasPointerUp,
+      onCanvasPointerCancel,
+      onCanvasLostPointerCapture,
+      onWorkspaceWheel,
+    },
+  );
 
   function isDescriptionLinkTarget(target) {
-    return target instanceof Element && Boolean(target.closest('.node__description a, .frame__description a'));
+    return (
+      target instanceof Element &&
+      Boolean(target.closest(".node__description a, .frame__description a"))
+    );
   }
 
   function shouldAllowNativeWheelScroll(event) {
     const target = event.target;
     if (!(target instanceof Element)) return false;
     const scrollable = target.closest(
-      '.node__focus-value--description, .node__focus-body, .node__editor-textarea, .app-dialog__panel, .shortcuts-dialog__list',
+      ".node__focus-value--description, .node__focus-body, .node__editor-textarea, .app-dialog__panel, .shortcuts-dialog__list",
     );
     if (!(scrollable instanceof HTMLElement)) return false;
     return scrollable.scrollHeight > scrollable.clientHeight + 1;
@@ -1632,7 +1954,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   function onNodePointerDown(event) {
     if (isFrameDrawMode) return;
-    const resizeEl = event.target.closest('[data-node-resize]');
+    const resizeEl = event.target.closest("[data-node-resize]");
     if (resizeEl && event.button === 0) {
       beginResizeSession(event, resizeEl.dataset.nodeResize);
       event.stopPropagation();
@@ -1640,7 +1962,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const anchorEl = event.target.closest('[data-node-anchor]');
+    const anchorEl = event.target.closest("[data-node-anchor]");
     if (anchorEl && event.button === 0) {
       beginEdgeSession(event, anchorEl.dataset.nodeAnchor);
       event.stopPropagation();
@@ -1653,12 +1975,16 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-node-editor], [data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-toolbar-popover-toggle], [data-toolbar-popover]')) {
+    if (
+      event.target.closest(
+        "[data-node-editor], [data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-toolbar-popover-toggle], [data-toolbar-popover]",
+      )
+    ) {
       event.stopPropagation();
       return;
     }
 
-    const nodeEl = event.target.closest('[data-node-id]');
+    const nodeEl = event.target.closest("[data-node-id]");
     if (!nodeEl || event.button !== 0) return;
     endDragSession();
     endFrameDragSession();
@@ -1682,11 +2008,12 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const dragNodeIds = (selectedNodeIds.length > 1 && isNodeAlreadySelected)
-      ? selectedNodeIds
-      : [nodeId];
+    const dragNodeIds =
+      selectedNodeIds.length > 1 && isNodeAlreadySelected
+        ? selectedNodeIds
+        : [nodeId];
     if (!(selectedNodeIds.length > 1 && isNodeAlreadySelected)) {
-      store.setSelection({ type: 'node', id: nodeId });
+      store.setSelection({ type: "node", id: nodeId });
     }
     store.setPanning(false);
     endPanSession();
@@ -1716,10 +2043,10 @@ export function bindInteractions(elements, store, options = {}) {
 
   function onNodeDoubleClick(event) {
     if (isTypingTarget(event.target)) return;
-    const nodeEl = event.target.closest('[data-node-id]');
+    const nodeEl = event.target.closest("[data-node-id]");
     if (!nodeEl) return;
     const nodeId = nodeEl.dataset.nodeId;
-    store.setSelection({ type: 'node', id: nodeId });
+    store.setSelection({ type: "node", id: nodeId });
     openNodeEditor(nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
     event.stopPropagation();
     event.preventDefault();
@@ -1761,7 +2088,12 @@ export function bindInteractions(elements, store, options = {}) {
 
     if (dragSession.nodes.length === 1) {
       const single = dragSession.nodes[0];
-      store.moveNode(single.id, single.nodeStartX + dx, single.nodeStartY + dy, { skipHistory: true });
+      store.moveNode(
+        single.id,
+        single.nodeStartX + dx,
+        single.nodeStartY + dy,
+        { skipHistory: true },
+      );
       if (dragSession.moved) {
         updateFrameMembershipPreview(dragSession.nodes, dx, dy);
       }
@@ -1791,12 +2123,14 @@ export function bindInteractions(elements, store, options = {}) {
     const sessionNodeId = dragSession.nodeId;
     const wasMoved = dragSession.moved;
     if (dragSession.moved) {
-      store.recomputeNodeFrameMembership(dragSession.nodes.map((entry) => entry.id));
+      store.recomputeNodeFrameMembership(
+        dragSession.nodes.map((entry) => entry.id),
+      );
     }
     store.clearFrameMembershipPreview();
     endDragSession(event.pointerId);
     if (!wasMoved && sessionNodeId && consumeNodeDoublePress(sessionNodeId)) {
-      store.setSelection({ type: 'node', id: sessionNodeId });
+      store.setSelection({ type: "node", id: sessionNodeId });
       openNodeEditor(sessionNodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
     }
   }
@@ -1839,10 +2173,10 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const openEl = event.target.closest('[data-node-edit-open]');
+    const openEl = event.target.closest("[data-node-edit-open]");
     if (openEl) {
       const nodeId = openEl.dataset.nodeEditOpen;
-      store.setSelection({ type: 'node', id: nodeId });
+      store.setSelection({ type: "node", id: nodeId });
       if (store.getState().ui.editingNodeId === nodeId) {
         closeNodeEditor(nodeId);
       } else {
@@ -1852,7 +2186,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const deleteEl = event.target.closest('[data-node-delete]');
+    const deleteEl = event.target.closest("[data-node-delete]");
     if (deleteEl) {
       const nodeId = deleteEl.dataset.nodeDelete;
       activeLiveEditNodeId = null;
@@ -1861,7 +2195,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const focusEl = event.target.closest('[data-node-focus-toggle]');
+    const focusEl = event.target.closest("[data-node-focus-toggle]");
     if (focusEl) {
       const nodeId = focusEl.dataset.nodeFocusToggle;
       const starterActive = store.getState().ui.starterNodeId === nodeId;
@@ -1876,7 +2210,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const startEl = event.target.closest('[data-node-start]');
+    const startEl = event.target.closest("[data-node-start]");
     if (startEl) {
       const nodeId = startEl.dataset.nodeStart;
       if (nodeId) {
@@ -1886,7 +2220,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const imagePickEl = event.target.closest('[data-node-image-pick]');
+    const imagePickEl = event.target.closest("[data-node-image-pick]");
     const clickedFocusLayer = event.currentTarget === focusLayer;
     if (imagePickEl && clickedFocusLayer) {
       const nodeId = imagePickEl.dataset.nodeImagePick;
@@ -1898,26 +2232,29 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const imageRemoveEl = event.target.closest('[data-node-image-remove]');
+    const imageRemoveEl = event.target.closest("[data-node-image-remove]");
     if (imageRemoveEl && clickedFocusLayer) {
       const nodeId = imageRemoveEl.dataset.nodeImageRemove;
       if (nodeId) {
-        store.updateNode(nodeId, { kind: 'text' });
+        store.updateNode(nodeId, { kind: "text" });
       }
       event.stopPropagation();
       return;
     }
 
-    const nodeEl = event.target.closest('[data-node-id]');
+    const nodeEl = event.target.closest("[data-node-id]");
     if (nodeEl && event.detail >= 2 && !isTypingTarget(event.target)) {
-      store.setSelection({ type: 'node', id: nodeEl.dataset.nodeId });
-      openNodeEditor(nodeEl.dataset.nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
+      store.setSelection({ type: "node", id: nodeEl.dataset.nodeId });
+      openNodeEditor(nodeEl.dataset.nodeId, {
+        stabilizeFrames: 2,
+        lockFocusMs: 1200,
+      });
       event.stopPropagation();
       event.preventDefault();
       return;
     }
 
-    if (event.target.closest('[data-node-editor]')) {
+    if (event.target.closest("[data-node-editor]")) {
       event.stopPropagation();
       return;
     }
@@ -1929,36 +2266,46 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
     const state = store.getState();
-    if (state.selection?.type === 'nodes' && state.selection.ids.includes(nodeEl.dataset.nodeId)) {
+    if (
+      state.selection?.type === "nodes" &&
+      state.selection.ids.includes(nodeEl.dataset.nodeId)
+    ) {
       event.stopPropagation();
       return;
     }
-    if (store.getState().ui.editingNodeId && store.getState().ui.editingNodeId !== nodeEl.dataset.nodeId) {
+    if (
+      store.getState().ui.editingNodeId &&
+      store.getState().ui.editingNodeId !== nodeEl.dataset.nodeId
+    ) {
       activeLiveEditNodeId = null;
     }
-    store.setSelection({ type: 'node', id: nodeEl.dataset.nodeId });
+    store.setSelection({ type: "node", id: nodeEl.dataset.nodeId });
     event.stopPropagation();
   }
 
   function onNodeKeyDown(event) {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
-    const nodeEl = target.closest('[data-node-id]');
-    const editorEl = target.closest('[data-node-editor]');
+    const nodeEl = target.closest("[data-node-id]");
+    const editorEl = target.closest("[data-node-editor]");
     if (!nodeEl || !editorEl) return;
 
     const nodeId = nodeEl.dataset.nodeId;
     if (!nodeId) return;
     const starterActive = store.getState().ui.starterNodeId === nodeId;
     const focusedNodeId = store.getState().ui.focusedNodeId;
-    const focusShortcut = (event.ctrlKey || event.metaKey) && event.altKey && event.key === 'Enter';
+    const focusShortcut =
+      (event.ctrlKey || event.metaKey) && event.altKey && event.key === "Enter";
 
-    if (starterActive && (event.key === 'Escape' || event.key === 'Enter' || focusShortcut)) {
+    if (
+      starterActive &&
+      (event.key === "Escape" || event.key === "Enter" || focusShortcut)
+    ) {
       event.stopPropagation();
       return;
     }
 
-    if (event.key === 'Escape' && focusedNodeId === nodeId) {
+    if (event.key === "Escape" && focusedNodeId === nodeId) {
       event.preventDefault();
       event.stopPropagation();
       closeNodeFocus();
@@ -1972,7 +2319,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.key === 'Escape') {
+    if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
       closeNodeEditor(nodeId);
@@ -1980,7 +2327,7 @@ export function bindInteractions(elements, store, options = {}) {
     }
 
     const ctrlOrCmd = event.ctrlKey || event.metaKey;
-    if (ctrlOrCmd && event.key === 'Enter' && !event.altKey) {
+    if (ctrlOrCmd && event.key === "Enter" && !event.altKey) {
       event.preventDefault();
       event.stopPropagation();
       closeNodeEditor(nodeId);
@@ -1989,19 +2336,25 @@ export function bindInteractions(elements, store, options = {}) {
 
   function onNodeInput(event) {
     const target = event.target;
-    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
-    const nodeEl = target.closest('[data-node-id]');
+    if (
+      !(
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement
+      )
+    )
+      return;
+    const nodeEl = target.closest("[data-node-id]");
     if (!nodeEl) return;
     const nodeId = nodeEl.dataset.nodeId;
     if (!nodeId) return;
 
-    if (target.matches('[data-node-edit-title]')) {
+    if (target.matches("[data-node-edit-title]")) {
       applyLiveNodeEditorInput(nodeId, { title: target.value });
       event.stopPropagation();
       return;
     }
 
-    if (target.matches('[data-node-edit-description]')) {
+    if (target.matches("[data-node-edit-description]")) {
       applyLiveNodeEditorInput(nodeId, { description: target.value });
       event.stopPropagation();
     }
@@ -2010,7 +2363,7 @@ export function bindInteractions(elements, store, options = {}) {
   function onSelectionControlsPointerDown(event) {
     if (isFrameDrawMode || event.button !== 0) return;
 
-    const nodeResizeEl = event.target.closest('[data-node-resize]');
+    const nodeResizeEl = event.target.closest("[data-node-resize]");
     if (nodeResizeEl) {
       beginResizeSession(event, nodeResizeEl.dataset.nodeResize);
       event.stopPropagation();
@@ -2018,7 +2371,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const frameResizeEl = event.target.closest('[data-frame-resize]');
+    const frameResizeEl = event.target.closest("[data-frame-resize]");
     if (frameResizeEl) {
       beginFrameResizeSession(event, frameResizeEl.dataset.frameResize);
       event.stopPropagation();
@@ -2026,7 +2379,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const nodeAnchorEl = event.target.closest('[data-node-anchor]');
+    const nodeAnchorEl = event.target.closest("[data-node-anchor]");
     if (nodeAnchorEl) {
       beginEdgeSession(event, nodeAnchorEl.dataset.nodeAnchor);
       event.stopPropagation();
@@ -2034,7 +2387,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const frameAnchorEl = event.target.closest('[data-frame-anchor]');
+    const frameAnchorEl = event.target.closest("[data-frame-anchor]");
     if (frameAnchorEl) {
       beginEdgeSession(event, frameAnchorEl.dataset.frameAnchor);
       event.stopPropagation();
@@ -2042,15 +2395,21 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete]')) {
+    if (
+      event.target.closest(
+        "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete]",
+      )
+    ) {
       event.stopPropagation();
     }
   }
 
   function onSelectionControlsClick(event) {
-    const edgeGroupEl = event.target.closest('.selection-controls__group--edge[data-edge-id]');
+    const edgeGroupEl = event.target.closest(
+      ".selection-controls__group--edge[data-edge-id]",
+    );
     if (edgeGroupEl) {
-      const deleteEl = event.target.closest('[data-edge-delete]');
+      const deleteEl = event.target.closest("[data-edge-delete]");
       if (deleteEl) {
         store.deleteEdge(deleteEl.dataset.edgeDelete);
         closeToolbarPopover();
@@ -2063,11 +2422,18 @@ export function bindInteractions(elements, store, options = {}) {
       event.stopPropagation();
       return;
     }
-    const nodeGroupEl = event.target.closest('.selection-controls__group--node[data-node-id]');
-    const clickedToolbarControl = event.target.closest('[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-resize], [data-node-anchor], [data-toolbar-popover-toggle], [data-toolbar-popover]');
+    const nodeGroupEl = event.target.closest(
+      ".selection-controls__group--node[data-node-id]",
+    );
+    const clickedToolbarControl = event.target.closest(
+      "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-resize], [data-node-anchor], [data-toolbar-popover-toggle], [data-toolbar-popover]",
+    );
     if (nodeGroupEl && !clickedToolbarControl && event.detail >= 2) {
-      store.setSelection({ type: 'node', id: nodeGroupEl.dataset.nodeId });
-      openNodeEditor(nodeGroupEl.dataset.nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
+      store.setSelection({ type: "node", id: nodeGroupEl.dataset.nodeId });
+      openNodeEditor(nodeGroupEl.dataset.nodeId, {
+        stabilizeFrames: 2,
+        lockFocusMs: 1200,
+      });
       event.stopPropagation();
       event.preventDefault();
       return;
@@ -2077,10 +2443,10 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const nodeOpenEl = event.target.closest('[data-node-edit-open]');
+    const nodeOpenEl = event.target.closest("[data-node-edit-open]");
     if (nodeOpenEl) {
       const nodeId = nodeOpenEl.dataset.nodeEditOpen;
-      store.setSelection({ type: 'node', id: nodeId });
+      store.setSelection({ type: "node", id: nodeId });
       if (store.getState().ui.editingNodeId === nodeId) {
         closeNodeEditor(nodeId);
       } else {
@@ -2090,7 +2456,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const nodeDeleteEl = event.target.closest('[data-node-delete]');
+    const nodeDeleteEl = event.target.closest("[data-node-delete]");
     if (nodeDeleteEl) {
       const nodeId = nodeDeleteEl.dataset.nodeDelete;
       activeLiveEditNodeId = null;
@@ -2099,10 +2465,10 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const nodeFocusEl = event.target.closest('[data-node-focus-toggle]');
+    const nodeFocusEl = event.target.closest("[data-node-focus-toggle]");
     if (nodeFocusEl) {
       const nodeId = nodeFocusEl.dataset.nodeFocusToggle;
-      store.setSelection({ type: 'node', id: nodeId });
+      store.setSelection({ type: "node", id: nodeId });
       const starterActive = store.getState().ui.starterNodeId === nodeId;
       if (starterActive && store.getState().ui.focusedNodeId === nodeId) {
         commitStarterHypernode(nodeId);
@@ -2115,7 +2481,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const nodeStartEl = event.target.closest('[data-node-start]');
+    const nodeStartEl = event.target.closest("[data-node-start]");
     if (nodeStartEl) {
       const nodeId = nodeStartEl.dataset.nodeStart;
       if (nodeId) {
@@ -2125,16 +2491,16 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const frameOpenEl = event.target.closest('[data-frame-edit-open]');
+    const frameOpenEl = event.target.closest("[data-frame-edit-open]");
     if (frameOpenEl) {
       const frameId = frameOpenEl.dataset.frameEditOpen;
-      store.setSelection({ type: 'frame', id: frameId });
+      store.setSelection({ type: "frame", id: frameId });
       openFrameEditor(frameId);
       event.stopPropagation();
       return;
     }
 
-    const frameDeleteEl = event.target.closest('[data-frame-delete]');
+    const frameDeleteEl = event.target.closest("[data-frame-delete]");
     if (frameDeleteEl) {
       const frameId = frameDeleteEl.dataset.frameDelete;
       activeLiveEditFrameId = null;
@@ -2144,11 +2510,13 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function onSelectionControlsDoubleClick(event) {
-    const nodeGroupEl = event.target.closest('.selection-controls__group--node[data-node-id]');
+    const nodeGroupEl = event.target.closest(
+      ".selection-controls__group--node[data-node-id]",
+    );
     if (!nodeGroupEl) return;
     const nodeId = nodeGroupEl.dataset.nodeId;
     if (!nodeId) return;
-    store.setSelection({ type: 'node', id: nodeId });
+    store.setSelection({ type: "node", id: nodeId });
     openNodeEditor(nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
     event.stopPropagation();
     event.preventDefault();
@@ -2162,25 +2530,32 @@ export function bindInteractions(elements, store, options = {}) {
     handleToolbarChange(event);
   }
 
-  bindNodeInteractions({ nodesLayer, selectionControlsLayer, focusLayer }, {
-    onNodePointerDown,
-    onNodeDoubleClick,
-    onNodePointerMove,
-    onNodePointerUp,
-    onNodePointerCancel,
-    onNodeLostPointerCapture,
-    onNodeClick,
-    onNodeKeyDown,
-    onNodeInput,
-    onSelectionControlsPointerDown,
-    onSelectionControlsClick,
-    onSelectionControlsDoubleClick,
-    onSelectionControlsInput,
-    onSelectionControlsChange,
-  });
+  bindNodeInteractions(
+    { nodesLayer, selectionControlsLayer, focusLayer },
+    {
+      onNodePointerDown,
+      onNodeDoubleClick,
+      onNodePointerMove,
+      onNodePointerUp,
+      onNodePointerCancel,
+      onNodeLostPointerCapture,
+      onNodeClick,
+      onNodeKeyDown,
+      onNodeInput,
+      onSelectionControlsPointerDown,
+      onSelectionControlsClick,
+      onSelectionControlsDoubleClick,
+      onSelectionControlsInput,
+      onSelectionControlsChange,
+    },
+  );
 
-  canvas.addEventListener('dragenter', (event) => {
-    if (!containsImageFile(event.dataTransfer) || store.getState().ui.focusedNodeId) return;
+  canvas.addEventListener("dragenter", (event) => {
+    if (
+      !containsImageFile(event.dataTransfer) ||
+      store.getState().ui.focusedNodeId
+    )
+      return;
     const imageTarget = getFocusImageTarget(event.target);
     if (imageTarget) {
       event.preventDefault();
@@ -2191,12 +2566,16 @@ export function bindInteractions(elements, store, options = {}) {
     event.preventDefault();
   });
 
-  canvas.addEventListener('dragover', (event) => {
-    if (!containsImageFile(event.dataTransfer) || store.getState().ui.focusedNodeId) return;
+  canvas.addEventListener("dragover", (event) => {
+    if (
+      !containsImageFile(event.dataTransfer) ||
+      store.getState().ui.focusedNodeId
+    )
+      return;
     const imageTarget = getFocusImageTarget(event.target);
     event.preventDefault();
     if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'copy';
+      event.dataTransfer.dropEffect = "copy";
     }
     if (imageTarget) {
       setCanvasFileDropActive(false);
@@ -2205,7 +2584,7 @@ export function bindInteractions(elements, store, options = {}) {
     setCanvasFileDropActive(true);
   });
 
-  canvas.addEventListener('dragleave', (event) => {
+  canvas.addEventListener("dragleave", (event) => {
     if (!containsImageFile(event.dataTransfer)) return;
     canvasFileDragDepth = Math.max(0, canvasFileDragDepth - 1);
     if (canvasFileDragDepth === 0) {
@@ -2214,8 +2593,12 @@ export function bindInteractions(elements, store, options = {}) {
     event.preventDefault();
   });
 
-  canvas.addEventListener('drop', (event) => {
-    if (!containsImageFile(event.dataTransfer) || store.getState().ui.focusedNodeId) return;
+  canvas.addEventListener("drop", (event) => {
+    if (
+      !containsImageFile(event.dataTransfer) ||
+      store.getState().ui.focusedNodeId
+    )
+      return;
     const file = getFirstImageFile(event.dataTransfer);
     const imageTarget = getFocusImageTarget(event.target);
     canvasFileDragDepth = 0;
@@ -2226,11 +2609,16 @@ export function bindInteractions(elements, store, options = {}) {
       void handleFocusedImageReplace(imageTarget.dataset.nodeImagePick, file);
       return;
     }
-    const point = toGraphPoint(event.clientX, event.clientY, canvas, store.getState().viewport);
+    const point = toGraphPoint(
+      event.clientX,
+      event.clientY,
+      canvas,
+      store.getState().viewport,
+    );
     void handleDroppedCanvasImage(file, point);
   });
 
-  focusLayer?.addEventListener('dragenter', (event) => {
+  focusLayer?.addEventListener("dragenter", (event) => {
     const imageTarget = getFocusImageTarget(event.target);
     if (!imageTarget || !containsImageFile(event.dataTransfer)) return;
     focusImageDragDepth += 1;
@@ -2238,17 +2626,17 @@ export function bindInteractions(elements, store, options = {}) {
     event.preventDefault();
   });
 
-  focusLayer?.addEventListener('dragover', (event) => {
+  focusLayer?.addEventListener("dragover", (event) => {
     const imageTarget = getFocusImageTarget(event.target);
     if (!imageTarget || !containsImageFile(event.dataTransfer)) return;
     event.preventDefault();
     if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'copy';
+      event.dataTransfer.dropEffect = "copy";
     }
     setFocusImageDropActive(true);
   });
 
-  focusLayer?.addEventListener('dragleave', (event) => {
+  focusLayer?.addEventListener("dragleave", (event) => {
     const imageTarget = getFocusImageTarget(event.target);
     if (!imageTarget || !containsImageFile(event.dataTransfer)) return;
     focusImageDragDepth = Math.max(0, focusImageDragDepth - 1);
@@ -2258,11 +2646,14 @@ export function bindInteractions(elements, store, options = {}) {
     event.preventDefault();
   });
 
-  focusLayer?.addEventListener('drop', (event) => {
+  focusLayer?.addEventListener("drop", (event) => {
     const imageTarget = getFocusImageTarget(event.target);
     if (!imageTarget || !containsImageFile(event.dataTransfer)) return;
     const file = getFirstImageFile(event.dataTransfer);
-    const nodeId = imageTarget.dataset.focusImageDropzone || imageTarget.dataset.nodeImagePick || null;
+    const nodeId =
+      imageTarget.dataset.focusImageDropzone ||
+      imageTarget.dataset.nodeImagePick ||
+      null;
     focusImageDragDepth = 0;
     setFocusImageDropActive(false);
     if (!file || !nodeId) return;
@@ -2272,7 +2663,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   function onFramePointerDown(event) {
     if (isFrameDrawMode) return;
-    const resizeEl = event.target.closest('[data-frame-resize]');
+    const resizeEl = event.target.closest("[data-frame-resize]");
     if (resizeEl && event.button === 0) {
       beginFrameResizeSession(event, resizeEl.dataset.frameResize);
       event.stopPropagation();
@@ -2280,7 +2671,7 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const anchorEl = event.target.closest('[data-frame-anchor]');
+    const anchorEl = event.target.closest("[data-frame-anchor]");
     if (anchorEl && event.button === 0) {
       beginEdgeSession(event, anchorEl.dataset.frameAnchor);
       event.stopPropagation();
@@ -2293,12 +2684,16 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-frame-editor], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover]')) {
+    if (
+      event.target.closest(
+        "[data-frame-editor], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover]",
+      )
+    ) {
       event.stopPropagation();
       return;
     }
 
-    const frameEl = event.target.closest('[data-frame-id]');
+    const frameEl = event.target.closest("[data-frame-id]");
     if (!frameEl || event.button !== 0) return;
 
     endPanSession();
@@ -2318,7 +2713,7 @@ export function bindInteractions(elements, store, options = {}) {
     if (state.ui.editingNodeId) {
       closeNodeEditor();
     }
-    store.setSelection({ type: 'frame', id: frameId });
+    store.setSelection({ type: "frame", id: frameId });
 
     frameDragSession = {
       pointerId: event.pointerId,
@@ -2342,7 +2737,10 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (frameResizeSession && frameResizeSession.pointerId === event.pointerId) {
+    if (
+      frameResizeSession &&
+      frameResizeSession.pointerId === event.pointerId
+    ) {
       const state = store.getState();
       const viewport = state.viewport;
       const dx = (event.clientX - frameResizeSession.startX) / viewport.zoom;
@@ -2357,17 +2755,24 @@ export function bindInteractions(elements, store, options = {}) {
       }
 
       const next = computeFrameResizedRect(frameResizeSession, dx, dy);
-      store.resizeFrame(frameResizeSession.frameId, next, { skipHistory: true });
-      updateFrameResizeMembershipPreview(frameResizeSession.frameId, {
-        left: next.x,
-        top: next.y,
-        right: next.x + next.width,
-        bottom: next.y + next.height,
-      }, state);
+      store.resizeFrame(frameResizeSession.frameId, next, {
+        skipHistory: true,
+      });
+      updateFrameResizeMembershipPreview(
+        frameResizeSession.frameId,
+        {
+          left: next.x,
+          top: next.y,
+          right: next.x + next.width,
+          bottom: next.y + next.height,
+        },
+        state,
+      );
       return;
     }
 
-    if (!frameDragSession || frameDragSession.pointerId !== event.pointerId) return;
+    if (!frameDragSession || frameDragSession.pointerId !== event.pointerId)
+      return;
     const viewport = store.getState().viewport;
     const dx = (event.clientX - frameDragSession.startX) / viewport.zoom;
     const dy = (event.clientY - frameDragSession.startY) / viewport.zoom;
@@ -2386,9 +2791,15 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function onFramePointerUp(event) {
-    if (frameResizeSession && event.pointerId === frameResizeSession.pointerId) {
+    if (
+      frameResizeSession &&
+      event.pointerId === frameResizeSession.pointerId
+    ) {
       if (frameResizeSession.moved) {
-        applyFrameResizeMembership(frameResizeSession.frameId, store.getState());
+        applyFrameResizeMembership(
+          frameResizeSession.frameId,
+          store.getState(),
+        );
       }
       endFrameResizeSession(event.pointerId);
       return;
@@ -2397,12 +2808,16 @@ export function bindInteractions(elements, store, options = {}) {
       finishEdgeSession(event);
       return;
     }
-    if (!frameDragSession || event.pointerId !== frameDragSession.pointerId) return;
+    if (!frameDragSession || event.pointerId !== frameDragSession.pointerId)
+      return;
     endFrameDragSession(event.pointerId);
   }
 
   function onFramePointerCancel(event) {
-    if (frameResizeSession && event.pointerId === frameResizeSession.pointerId) {
+    if (
+      frameResizeSession &&
+      event.pointerId === frameResizeSession.pointerId
+    ) {
       endFrameResizeSession(event.pointerId);
       return;
     }
@@ -2410,12 +2825,16 @@ export function bindInteractions(elements, store, options = {}) {
       cancelEdgeSession(event.pointerId);
       return;
     }
-    if (!frameDragSession || event.pointerId !== frameDragSession.pointerId) return;
+    if (!frameDragSession || event.pointerId !== frameDragSession.pointerId)
+      return;
     endFrameDragSession(event.pointerId);
   }
 
   function onFrameLostPointerCapture(event) {
-    if (frameResizeSession && event.pointerId === frameResizeSession.pointerId) {
+    if (
+      frameResizeSession &&
+      event.pointerId === frameResizeSession.pointerId
+    ) {
       endFrameResizeSession();
       return;
     }
@@ -2423,7 +2842,8 @@ export function bindInteractions(elements, store, options = {}) {
       cancelEdgeSession();
       return;
     }
-    if (!frameDragSession || event.pointerId !== frameDragSession.pointerId) return;
+    if (!frameDragSession || event.pointerId !== frameDragSession.pointerId)
+      return;
     endFrameDragSession();
   }
 
@@ -2437,16 +2857,16 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const openEl = event.target.closest('[data-frame-edit-open]');
+    const openEl = event.target.closest("[data-frame-edit-open]");
     if (openEl) {
       const frameId = openEl.dataset.frameEditOpen;
-      store.setSelection({ type: 'frame', id: frameId });
+      store.setSelection({ type: "frame", id: frameId });
       openFrameEditor(frameId);
       event.stopPropagation();
       return;
     }
 
-    const deleteEl = event.target.closest('[data-frame-delete]');
+    const deleteEl = event.target.closest("[data-frame-delete]");
     if (deleteEl) {
       const frameId = deleteEl.dataset.frameDelete;
       activeLiveEditFrameId = null;
@@ -2455,27 +2875,27 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-frame-editor]')) {
+    if (event.target.closest("[data-frame-editor]")) {
       event.stopPropagation();
       return;
     }
 
-    const frameEl = event.target.closest('[data-frame-id]');
+    const frameEl = event.target.closest("[data-frame-id]");
     if (!frameEl) return;
-    store.setSelection({ type: 'frame', id: frameEl.dataset.frameId });
+    store.setSelection({ type: "frame", id: frameEl.dataset.frameId });
     event.stopPropagation();
   }
 
   function onFrameKeyDown(event) {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
-    const frameEl = target.closest('[data-frame-id]');
-    const editorEl = target.closest('[data-frame-editor]');
+    const frameEl = target.closest("[data-frame-id]");
+    const editorEl = target.closest("[data-frame-editor]");
     if (!frameEl || !editorEl) return;
     const frameId = frameEl.dataset.frameId;
     if (!frameId) return;
 
-    if (event.key === 'Escape') {
+    if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
       closeFrameEditor(frameId);
@@ -2483,7 +2903,7 @@ export function bindInteractions(elements, store, options = {}) {
     }
 
     const ctrlOrCmd = event.ctrlKey || event.metaKey;
-    if (ctrlOrCmd && event.key === 'Enter') {
+    if (ctrlOrCmd && event.key === "Enter") {
       event.preventDefault();
       event.stopPropagation();
       closeFrameEditor(frameId);
@@ -2492,31 +2912,38 @@ export function bindInteractions(elements, store, options = {}) {
 
   function onFrameInput(event) {
     const target = event.target;
-    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
-    const frameEl = target.closest('[data-frame-id]');
+    if (
+      !(
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      )
+    )
+      return;
+    const frameEl = target.closest("[data-frame-id]");
     if (!frameEl) return;
     const frameId = frameEl.dataset.frameId;
     if (!frameId) return;
 
-    if (target.matches('[data-frame-edit-title]')) {
+    if (target.matches("[data-frame-edit-title]")) {
       applyLiveFrameEditorInput(frameId, { title: target.value });
       event.stopPropagation();
       return;
     }
 
-    if (target.matches('[data-frame-edit-description]')) {
+    if (target.matches("[data-frame-edit-description]")) {
       applyLiveFrameEditorInput(frameId, { description: target.value });
       event.stopPropagation();
       return;
     }
 
-    if (target.matches('[data-frame-edit-border-width]')) {
+    if (target.matches("[data-frame-edit-border-width]")) {
       applyLiveFrameEditorInput(frameId, { borderWidth: target.value });
       event.stopPropagation();
       return;
     }
 
-    if (target.matches('[data-frame-edit-border-style]')) {
+    if (target.matches("[data-frame-edit-border-style]")) {
       applyLiveFrameEditorInput(frameId, { borderStyle: target.value });
       event.stopPropagation();
     }
@@ -2529,44 +2956,50 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const deleteEl = event.target.closest('[data-edge-delete]');
+    const deleteEl = event.target.closest("[data-edge-delete]");
     if (deleteEl) {
       store.deleteEdge(deleteEl.dataset.edgeDelete);
       event.stopPropagation();
       return;
     }
 
-    const edgeEl = event.target.closest('[data-edge-id]');
+    const edgeEl = event.target.closest("[data-edge-id]");
     if (!edgeEl) return;
     activeLiveEditNodeId = null;
-    store.setSelection({ type: 'edge', id: edgeEl.dataset.edgeId });
+    store.setSelection({ type: "edge", id: edgeEl.dataset.edgeId });
     event.stopPropagation();
   }
 
   function onEdgePointerDown(event) {
     if (event.button !== 0) return;
-    const endpointEl = event.target.closest('[data-edge-endpoint]');
+    const endpointEl = event.target.closest("[data-edge-endpoint]");
     if (!endpointEl) return;
     beginReconnectSession(event, endpointEl.dataset.edgeEndpoint);
     event.stopPropagation();
     event.preventDefault();
   }
 
-  bindFrameInteractions({ framesLayer }, {
-    onFramePointerDown,
-    onFramePointerMove,
-    onFramePointerUp,
-    onFramePointerCancel,
-    onFrameLostPointerCapture,
-    onFrameClick,
-    onFrameKeyDown,
-    onFrameInput,
-  });
+  bindFrameInteractions(
+    { framesLayer },
+    {
+      onFramePointerDown,
+      onFramePointerMove,
+      onFramePointerUp,
+      onFramePointerCancel,
+      onFrameLostPointerCapture,
+      onFrameClick,
+      onFrameKeyDown,
+      onFrameInput,
+    },
+  );
 
-  bindEdgeInteractions({ edgeOverlayGroup, edgesGroup }, {
-    onEdgeClick: handleEdgeClick,
-    onEdgePointerDown,
-  });
+  bindEdgeInteractions(
+    { edgeOverlayGroup, edgesGroup },
+    {
+      onEdgeClick: handleEdgeClick,
+      onEdgePointerDown,
+    },
+  );
 
   store.subscribe((state) => {
     if (!editorFocusLock) return;
@@ -2579,7 +3012,10 @@ export function bindInteractions(elements, store, options = {}) {
       clearEditorFocusLock();
       return;
     }
-    if (state.selection?.type !== 'node' || state.selection.id !== lock.nodeId) {
+    if (
+      state.selection?.type !== "node" ||
+      state.selection.id !== lock.nodeId
+    ) {
       clearEditorFocusLock();
       return;
     }
@@ -2588,7 +3024,11 @@ export function bindInteractions(elements, store, options = {}) {
     if (!(titleInput instanceof HTMLInputElement)) return;
 
     const active = document.activeElement;
-    if (active instanceof HTMLElement && isTypingTarget(active) && active !== titleInput) {
+    if (
+      active instanceof HTMLElement &&
+      isTypingTarget(active) &&
+      active !== titleInput
+    ) {
       clearEditorFocusLock();
       return;
     }
@@ -2598,7 +3038,7 @@ export function bindInteractions(elements, store, options = {}) {
     }
   });
 
-  document.addEventListener('focusin', (event) => {
+  document.addEventListener("focusin", (event) => {
     if (!editorFocusLock) return;
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
@@ -2609,15 +3049,17 @@ export function bindInteractions(elements, store, options = {}) {
     }
   });
 
-  canvas?.addEventListener('pointermove', (event) => {
-    const rect = typeof canvas.getBoundingClientRect === 'function'
-      ? canvas.getBoundingClientRect()
-      : null;
+  canvas?.addEventListener("pointermove", (event) => {
+    const rect =
+      typeof canvas.getBoundingClientRect === "function"
+        ? canvas.getBoundingClientRect()
+        : null;
     if (!rect) return;
-    const withinCanvas = event.clientX >= rect.left
-      && event.clientX <= rect.right
-      && event.clientY >= rect.top
-      && event.clientY <= rect.bottom;
+    const withinCanvas =
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom;
     if (!withinCanvas) return;
     lastCanvasPointerClient = {
       clientX: event.clientX,
@@ -2625,50 +3067,72 @@ export function bindInteractions(elements, store, options = {}) {
     };
   });
 
-  const aboutDialog = document.getElementById('about-dialog');
-  const aboutBtn = document.getElementById('about-btn');
-  const aboutCloseBtn = document.getElementById('about-close-btn');
-  const aboutGuideSlides = document.getElementById('about-guide-slides');
-  const aboutGuideDots = document.getElementById('about-guide-dots');
-  const aboutPrevBtn = document.getElementById('about-prev-btn');
-  const aboutNextBtn = document.getElementById('about-next-btn');
-  const shortcutsDialog = document.getElementById('shortcuts-dialog');
-  const shortcutsBtn = document.getElementById('shortcuts-btn');
-  const shortcutsCloseBtn = document.getElementById('shortcuts-close-btn');
-  const shortcutsSearchInput = document.getElementById('shortcuts-search-input');
-  const shortcutsList = document.getElementById('shortcuts-list');
-  const shortcutsEmptyState = document.getElementById('shortcuts-empty-state');
-  const settingsDialog = document.getElementById('settings-dialog');
-  const settingsBtn = document.getElementById('settings-btn');
-  const settingsCloseBtn = document.getElementById('settings-close-btn');
-  const settingsTabSelect = document.getElementById('settings-tab-select');
-  const settingsThemeOptions = document.getElementById('settings-theme-options');
-  const renameGraphTrigger = document.getElementById('graph-rename-trigger');
-  const renameGraphDialog = document.getElementById('rename-graph-dialog');
-  const renameGraphInput = document.getElementById('rename-graph-input');
-  const renameGraphCloseBtn = document.getElementById('rename-graph-close-btn');
-  const renameGraphCancelBtn = document.getElementById('rename-graph-cancel-btn');
-  const renameGraphSubmitBtn = document.getElementById('rename-graph-submit-btn');
-  const settingsTabButtons = settingsDialog?.querySelectorAll('[data-settings-tab]') ?? [];
-  const settingsPanels = settingsDialog?.querySelectorAll('[data-settings-panel]') ?? [];
-  const positionButtons = settingsDialog?.querySelectorAll('[data-position-target][data-position-value]') ?? [];
-  const toolbarOrientationButtons = settingsDialog?.querySelectorAll('[data-toolbar-orientation]') ?? [];
-  const arrowheadSizeRange = document.getElementById('arrowhead-size-range');
-  const arrowheadSizeValue = document.getElementById('arrowhead-size-value');
-  const newGraphBtn = document.getElementById('new-graph-btn');
-  const openGraphBtn = document.getElementById('open-graph-btn');
-  const saveGraphBtn = document.getElementById('save-graph-btn');
-  const toolbarShortcutButtons = Object.entries(TOOLBAR_SHORTCUTS).map(([id, config]) => ({
-    button: document.getElementById(id),
-    hint: document.getElementById(id)?.querySelector('.toolbar__shortcut-hint'),
-    config,
-  }));
+  const aboutDialog = document.getElementById("about-dialog");
+  const aboutBtn = document.getElementById("about-btn");
+  const aboutCloseBtn = document.getElementById("about-close-btn");
+  const aboutGuideSlides = document.getElementById("about-guide-slides");
+  const aboutGuideDots = document.getElementById("about-guide-dots");
+  const aboutPrevBtn = document.getElementById("about-prev-btn");
+  const aboutNextBtn = document.getElementById("about-next-btn");
+  const shortcutsDialog = document.getElementById("shortcuts-dialog");
+  const shortcutsBtn = document.getElementById("shortcuts-btn");
+  const shortcutsCloseBtn = document.getElementById("shortcuts-close-btn");
+  const shortcutsSearchInput = document.getElementById(
+    "shortcuts-search-input",
+  );
+  const shortcutsList = document.getElementById("shortcuts-list");
+  const shortcutsEmptyState = document.getElementById("shortcuts-empty-state");
+  const settingsDialog = document.getElementById("settings-dialog");
+  const settingsBtn = document.getElementById("settings-btn");
+  const settingsCloseBtn = document.getElementById("settings-close-btn");
+  const settingsTabSelect = document.getElementById("settings-tab-select");
+  const settingsThemeOptions = document.getElementById(
+    "settings-theme-options",
+  );
+  const renameGraphTrigger = document.getElementById("graph-rename-trigger");
+  const renameGraphDialog = document.getElementById("rename-graph-dialog");
+  const renameGraphInput = document.getElementById("rename-graph-input");
+  const renameGraphCloseBtn = document.getElementById("rename-graph-close-btn");
+  const renameGraphCancelBtn = document.getElementById(
+    "rename-graph-cancel-btn",
+  );
+  const renameGraphSubmitBtn = document.getElementById(
+    "rename-graph-submit-btn",
+  );
+  const settingsTabButtons =
+    settingsDialog?.querySelectorAll("[data-settings-tab]") ?? [];
+  const settingsPanels =
+    settingsDialog?.querySelectorAll("[data-settings-panel]") ?? [];
+  const positionButtons =
+    settingsDialog?.querySelectorAll(
+      "[data-position-target][data-position-value]",
+    ) ?? [];
+  const toolbarOrientationButtons =
+    settingsDialog?.querySelectorAll("[data-toolbar-orientation]") ?? [];
+  const arrowheadSizeRange = document.getElementById("arrowhead-size-range");
+  const arrowheadSizeValue = document.getElementById("arrowhead-size-value");
+  const newGraphBtn = document.getElementById("new-graph-btn");
+  const openGraphBtn = document.getElementById("open-graph-btn");
+  const saveGraphBtn = document.getElementById("save-graph-btn");
+  const toolbarShortcutButtons = Object.entries(TOOLBAR_SHORTCUTS).map(
+    ([id, config]) => ({
+      button: document.getElementById(id),
+      hint: document
+        .getElementById(id)
+        ?.querySelector(".toolbar__shortcut-hint"),
+      config,
+    }),
+  );
 
   renderThemeSettingsOptions(settingsThemeOptions);
 
   function hasGraphData() {
     const state = store.getState();
-    return state.nodes.length > 0 || state.frames.length > 0 || state.edges.length > 0;
+    return (
+      state.nodes.length > 0 ||
+      state.frames.length > 0 ||
+      state.edges.length > 0
+    );
   }
 
   function confirmDiscardIfNeeded(action) {
@@ -2678,11 +3142,11 @@ export function bindInteractions(elements, store, options = {}) {
 
   async function handleOpenGraph() {
     if (!canUseFileSystemAccess) {
-      store.setImportStatus('Open hypernode is unavailable in this browser.');
+      store.setImportStatus("Open hypernode is unavailable in this browser.");
       return;
     }
 
-    if (!confirmDiscardIfNeeded('open another hypernode')) {
+    if (!confirmDiscardIfNeeded("open another hypernode")) {
       return;
     }
 
@@ -2692,38 +3156,51 @@ export function bindInteractions(elements, store, options = {}) {
       store.clearStarterNode();
       store.replaceGraph(graph);
       resetCanvasView();
-      syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
-      store.setImportStatus('Hypernode opened.');
+      syncSettingsDialogFromState(
+        store.getState(),
+        settingsDialog,
+        positionButtons,
+        toolbarOrientationButtons,
+        settingsTabSelect,
+        settingsTabButtons,
+        settingsPanels,
+      );
+      store.setImportStatus("Hypernode opened.");
     } catch (error) {
       if (isAbortError(error)) return;
-      store.setImportStatus('Open failed: invalid hypernode JSON file.');
+      store.setImportStatus("Open failed: invalid hypernode JSON file.");
     }
   }
 
   async function handleSaveGraph() {
     if (!canUseFileSystemAccess) {
-      store.setImportStatus('Save hypernode is unavailable in this browser.');
+      store.setImportStatus("Save hypernode is unavailable in this browser.");
       return;
     }
 
     try {
       const state = store.getState();
-      currentFileHandle = await saveGraphFile({
-        name: state.name,
-        settings: state.settings,
-        nodes: state.nodes,
-        frames: state.frames,
-        edges: state.edges,
-      }, currentFileHandle);
-      store.setImportStatus('Saved');
+      currentFileHandle = await saveGraphFile(
+        {
+          name: state.name,
+          settings: state.settings,
+          nodes: state.nodes,
+          frames: state.frames,
+          edges: state.edges,
+        },
+        currentFileHandle,
+      );
+      store.setImportStatus("Saved");
     } catch (error) {
       if (isAbortError(error)) return;
-      store.setImportStatus('Save failed. Check file permissions and try again.');
+      store.setImportStatus(
+        "Save failed. Check file permissions and try again.",
+      );
     }
   }
 
   function handleNewGraph() {
-    if (!confirmDiscardIfNeeded('create a new hypernode')) {
+    if (!confirmDiscardIfNeeded("create a new hypernode")) {
       return;
     }
 
@@ -2737,7 +3214,15 @@ export function bindInteractions(elements, store, options = {}) {
     });
     resetCanvasView();
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    syncSettingsDialogFromState(
+      store.getState(),
+      settingsDialog,
+      positionButtons,
+      toolbarOrientationButtons,
+      settingsTabSelect,
+      settingsTabButtons,
+      settingsPanels,
+    );
   }
 
   async function handleAddImageNode() {
@@ -2752,13 +3237,16 @@ export function bindInteractions(elements, store, options = {}) {
       const imageFileInfo = await readImageFileInfo(file);
       createImageNodeInEditMode(point, imageFileInfo);
     } catch {
-      store.setImportStatus('Image add failed. Try another file.');
+      store.setImportStatus("Image add failed. Try another file.");
     }
   }
 
   function handleAddNode() {
     const { viewport } = store.getState();
-    createNodeInEditMode({ x: (120 - viewport.panX) / viewport.zoom, y: (120 - viewport.panY) / viewport.zoom });
+    createNodeInEditMode({
+      x: (120 - viewport.panX) / viewport.zoom,
+      y: (120 - viewport.panY) / viewport.zoom,
+    });
   }
 
   function commitStarterHypernode(nodeId) {
@@ -2766,12 +3254,12 @@ export function bindInteractions(elements, store, options = {}) {
     if (state.ui.starterNodeId !== nodeId) return false;
     const node = getNode(nodeId, state);
     if (!node) return false;
-    const title = String(node.title ?? '').trim() || NODE_DEFAULTS.title;
+    const title = String(node.title ?? "").trim() || NODE_DEFAULTS.title;
     node.title = title;
     store.setGraphName(title);
     store.clearStarterNode();
     closeNodeFocus();
-    store.setImportStatus('New hypernode started.');
+    store.setImportStatus("New hypernode started.");
     return true;
   }
 
@@ -2783,9 +3271,9 @@ export function bindInteractions(elements, store, options = {}) {
     if (!shortcutsDialog) return;
     renderShortcutCatalog();
     if (shortcutsSearchInput instanceof HTMLInputElement) {
-      shortcutsSearchInput.value = '';
+      shortcutsSearchInput.value = "";
     }
-    filterShortcuts('');
+    filterShortcuts("");
     shortcutsDialog.showModal();
     window.requestAnimationFrame(() => {
       shortcutsSearchInput?.focus({ preventScroll: true });
@@ -2794,7 +3282,15 @@ export function bindInteractions(elements, store, options = {}) {
 
   function openSettingsDialog() {
     if (!settingsDialog) return;
-    syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    syncSettingsDialogFromState(
+      store.getState(),
+      settingsDialog,
+      positionButtons,
+      toolbarOrientationButtons,
+      settingsTabSelect,
+      settingsTabButtons,
+      settingsPanels,
+    );
     settingsDialog.showModal();
   }
 
@@ -2824,18 +3320,23 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function toggleThemePreference() {
-    const currentThemePreset = getThemePresetSequence(store.getState().settings?.enabledThemePresets).includes(store.getState().settings?.uiThemePreset)
+    const currentThemePreset = getThemePresetSequence(
+      store.getState().settings?.enabledThemePresets,
+    ).includes(store.getState().settings?.uiThemePreset)
       ? store.getState().settings.uiThemePreset
-      : 'blueprint';
-    const presetSequence = getThemePresetSequence(store.getState().settings?.enabledThemePresets);
+      : "blueprint";
+    const presetSequence = getThemePresetSequence(
+      store.getState().settings?.enabledThemePresets,
+    );
     const currentIndex = presetSequence.indexOf(currentThemePreset);
-    const nextThemePreset = presetSequence[(currentIndex + 1) % presetSequence.length];
+    const nextThemePreset =
+      presetSequence[(currentIndex + 1) % presetSequence.length];
     store.setUiThemePreset(nextThemePreset);
     showThemeToast(store, nextThemePreset);
   }
 
   function setAboutSlide(nextIndex) {
-    const slideEls = aboutGuideSlides?.querySelectorAll('[data-about-slide]');
+    const slideEls = aboutGuideSlides?.querySelectorAll("[data-about-slide]");
     if (!slideEls?.length) return;
     const maxIndex = slideEls.length - 1;
     aboutSlideIndex = Math.max(0, Math.min(maxIndex, Number(nextIndex) || 0));
@@ -2844,14 +3345,16 @@ export function bindInteractions(elements, store, options = {}) {
     }
     slideEls.forEach((slideEl, index) => {
       const active = index === aboutSlideIndex;
-      slideEl.classList.toggle('is-active', active);
-      slideEl.setAttribute('aria-hidden', active ? 'false' : 'true');
+      slideEl.classList.toggle("is-active", active);
+      slideEl.setAttribute("aria-hidden", active ? "false" : "true");
     });
-    aboutGuideDots?.querySelectorAll('[data-about-slide-target]').forEach((dotEl, index) => {
-      const active = index === aboutSlideIndex;
-      dotEl.classList.toggle('is-active', active);
-      dotEl.setAttribute('aria-current', active ? 'true' : 'false');
-    });
+    aboutGuideDots
+      ?.querySelectorAll("[data-about-slide-target]")
+      .forEach((dotEl, index) => {
+        const active = index === aboutSlideIndex;
+        dotEl.classList.toggle("is-active", active);
+        dotEl.setAttribute("aria-current", active ? "true" : "false");
+      });
     if (aboutPrevBtn instanceof HTMLButtonElement) {
       aboutPrevBtn.disabled = aboutSlideIndex === 0;
     }
@@ -2861,14 +3364,15 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function filterShortcuts(query) {
-    const items = shortcutsList?.querySelectorAll('[data-shortcut-id]');
+    const items = shortcutsList?.querySelectorAll("[data-shortcut-id]");
     if (!items?.length) return;
-    const searchIndex = shortcutsList?._shortcutSearchIndex instanceof Map
-      ? shortcutsList._shortcutSearchIndex
-      : new Map();
+    const searchIndex =
+      shortcutsList?._shortcutSearchIndex instanceof Map
+        ? shortcutsList._shortcutSearchIndex
+        : new Map();
     let visibleCount = 0;
     items.forEach((item) => {
-      const haystack = searchIndex.get(item.dataset.shortcutId || '') || '';
+      const haystack = searchIndex.get(item.dataset.shortcutId || "") || "";
       const visible = matchesShortcutSearch(query, haystack);
       item.hidden = !visible;
       if (visible) {
@@ -2882,15 +3386,20 @@ export function bindInteractions(elements, store, options = {}) {
 
   function setActiveSettingsTab(nextTabId, options = {}) {
     const availableTabIds = Array.from(settingsTabButtons)
-      .map((button) => button instanceof HTMLElement ? button.dataset.settingsTab : null)
+      .map((button) =>
+        button instanceof HTMLElement ? button.dataset.settingsTab : null,
+      )
       .filter(Boolean);
-    const requestedTabId = typeof nextTabId === 'string' && nextTabId ? nextTabId : 'appearance';
-    const tabId = availableTabIds.includes(requestedTabId) ? requestedTabId : (availableTabIds[0] || 'appearance');
+    const requestedTabId =
+      typeof nextTabId === "string" && nextTabId ? nextTabId : "appearance";
+    const tabId = availableTabIds.includes(requestedTabId)
+      ? requestedTabId
+      : availableTabIds[0] || "appearance";
     settingsTabButtons.forEach((button) => {
       if (!(button instanceof HTMLButtonElement)) return;
       const active = button.dataset.settingsTab === tabId;
-      button.classList.toggle('is-active', active);
-      button.setAttribute('aria-selected', active ? 'true' : 'false');
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
       button.tabIndex = active ? 0 : -1;
       if (active && options.focusButton) {
         button.focus({ preventScroll: true });
@@ -2899,11 +3408,14 @@ export function bindInteractions(elements, store, options = {}) {
     settingsPanels.forEach((panel) => {
       if (!(panel instanceof HTMLElement)) return;
       const active = panel.dataset.settingsPanel === tabId;
-      panel.classList.toggle('is-active', active);
+      panel.classList.toggle("is-active", active);
       panel.hidden = !active;
-      panel.setAttribute('aria-hidden', active ? 'false' : 'true');
+      panel.setAttribute("aria-hidden", active ? "false" : "true");
     });
-    if (settingsTabSelect instanceof HTMLSelectElement && settingsTabSelect.value !== tabId) {
+    if (
+      settingsTabSelect instanceof HTMLSelectElement &&
+      settingsTabSelect.value !== tabId
+    ) {
       settingsTabSelect.value = tabId;
     }
   }
@@ -2912,41 +3424,54 @@ export function bindInteractions(elements, store, options = {}) {
     if (!(shortcutsList instanceof HTMLElement)) return;
     const searchIndex = new Map();
     shortcutsList.innerHTML = SHORTCUT_CATALOG.map((shortcut) => {
-      const searchText = normalizeShortcutSearchText([
-        shortcut.title,
-        shortcut.description,
-        ...shortcut.keys,
-        ...shortcut.keys.map((key) => formatShortcutLabel(key)),
-        ...shortcut.keys.map((key) => formatShortcutLabel(key, { compact: true })),
-        ...(Array.isArray(shortcut.searchTokens) ? shortcut.searchTokens : []),
-      ].join(' '));
+      const searchText = normalizeShortcutSearchText(
+        [
+          shortcut.title,
+          shortcut.description,
+          ...shortcut.keys,
+          ...shortcut.keys.map((key) => formatShortcutLabel(key)),
+          ...shortcut.keys.map((key) =>
+            formatShortcutLabel(key, { compact: true }),
+          ),
+          ...(Array.isArray(shortcut.searchTokens)
+            ? shortcut.searchTokens
+            : []),
+        ].join(" "),
+      );
       searchIndex.set(shortcut.id, searchText);
       return `
         <article class="shortcuts-dialog__item" role="listitem" data-shortcut-id="${shortcut.id}">
-          <div class="shortcuts-dialog__keys">${shortcut.keys.map((key) => `<kbd>${formatShortcutLabel(key)}</kbd>`).join('')}</div>
+          <div class="shortcuts-dialog__keys">${shortcut.keys.map((key) => `<kbd>${formatShortcutLabel(key)}</kbd>`).join("")}</div>
           <div class="shortcuts-dialog__meta"><h3>${shortcut.title}</h3><p>${shortcut.description}</p></div>
         </article>
       `;
-    }).join('');
+    }).join("");
     shortcutsList._shortcutSearchIndex = searchIndex;
   }
 
   function syncShortcutUiFromState() {
     toolbarShortcutButtons.forEach(({ button, hint, config }) => {
-      if (!(button instanceof HTMLButtonElement) || !(hint instanceof HTMLElement)) return;
-      if (!canUseFileSystemAccess && (button.id === 'open-graph-btn' || button.id === 'save-graph-btn')) {
+      if (
+        !(button instanceof HTMLButtonElement) ||
+        !(hint instanceof HTMLElement)
+      )
+        return;
+      if (
+        !canUseFileSystemAccess &&
+        (button.id === "open-graph-btn" || button.id === "save-graph-btn")
+      ) {
         hint.hidden = true;
-        hint.textContent = '';
-        button.classList.remove('toolbar__icon-btn--hinted');
+        hint.textContent = "";
+        button.classList.remove("toolbar__icon-btn--hinted");
         return;
       }
       const baseLabel = config.label;
       const hintVisible = false;
       hint.hidden = !hintVisible;
-      hint.textContent = '';
-      button.classList.toggle('toolbar__icon-btn--hinted', hintVisible);
+      hint.textContent = "";
+      button.classList.toggle("toolbar__icon-btn--hinted", hintVisible);
       button.title = baseLabel;
-      button.setAttribute('aria-label', baseLabel);
+      button.setAttribute("aria-label", baseLabel);
     });
   }
 
@@ -2955,460 +3480,556 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function bindToolbar() {
-  bindDialogBackdropClose(aboutDialog);
-  bindDialogBackdropClose(shortcutsDialog);
-  bindDialogBackdropClose(settingsDialog);
-  bindDialogBackdropClose(renameGraphDialog);
+    bindDialogBackdropClose(aboutDialog);
+    bindDialogBackdropClose(shortcutsDialog);
+    bindDialogBackdropClose(settingsDialog);
+    bindDialogBackdropClose(renameGraphDialog);
 
-  if (aboutBtn && aboutDialog) {
-    aboutBtn.addEventListener('click', () => {
-      if (aboutDialog.open) {
-        aboutDialog.close();
-      } else {
-        openAboutDialog();
-      }
-    });
-  }
-
-  if (aboutCloseBtn && aboutDialog) {
-    aboutCloseBtn.addEventListener('click', () => {
-      if (aboutDialog.open) {
-        aboutDialog.close();
-      }
-    });
-  }
-
-  shortcutsBtn?.addEventListener('click', () => {
-    if (!shortcutsDialog) return;
-    if (shortcutsDialog.open) {
-      shortcutsDialog.close();
-      return;
+    if (aboutBtn && aboutDialog) {
+      aboutBtn.addEventListener("click", () => {
+        if (aboutDialog.open) {
+          aboutDialog.close();
+        } else {
+          openAboutDialog();
+        }
+      });
     }
-    openShortcutsDialog();
-  });
 
-  shortcutsCloseBtn?.addEventListener('click', () => {
-    if (shortcutsDialog?.open) {
-      shortcutsDialog.close();
+    if (aboutCloseBtn && aboutDialog) {
+      aboutCloseBtn.addEventListener("click", () => {
+        if (aboutDialog.open) {
+          aboutDialog.close();
+        }
+      });
     }
-  });
 
-  shortcutsSearchInput?.addEventListener('input', () => {
-    filterShortcuts(shortcutsSearchInput.value);
-  });
+    shortcutsBtn?.addEventListener("click", () => {
+      if (!shortcutsDialog) return;
+      if (shortcutsDialog.open) {
+        shortcutsDialog.close();
+        return;
+      }
+      openShortcutsDialog();
+    });
 
-  aboutPrevBtn?.addEventListener('click', () => {
-    setAboutSlide(aboutSlideIndex - 1);
-  });
-
-  aboutNextBtn?.addEventListener('click', () => {
-    setAboutSlide(aboutSlideIndex + 1);
-  });
-
-  aboutGuideDots?.addEventListener('click', (event) => {
-    const target = event.target.closest('[data-about-slide-target]');
-    if (!(target instanceof HTMLButtonElement)) return;
-    setAboutSlide(Number(target.dataset.aboutSlideTarget));
-  });
-
-  if (settingsBtn && settingsDialog) {
-    settingsBtn.addEventListener('click', () => {
-      if (settingsDialog.open) {
-        settingsDialog.close();
-      } else {
-        openSettingsDialog();
+    shortcutsCloseBtn?.addEventListener("click", () => {
+      if (shortcutsDialog?.open) {
+        shortcutsDialog.close();
       }
     });
-  }
 
-  if (settingsCloseBtn && settingsDialog) {
-    settingsCloseBtn.addEventListener('click', () => {
-      if (settingsDialog.open) {
-        settingsDialog.close();
-      }
+    shortcutsSearchInput?.addEventListener("input", () => {
+      filterShortcuts(shortcutsSearchInput.value);
     });
-  }
 
-  settingsTabButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      if (!(button instanceof HTMLButtonElement)) return;
-      setActiveSettingsTab(button.dataset.settingsTab, { focusButton: false });
+    aboutPrevBtn?.addEventListener("click", () => {
+      setAboutSlide(aboutSlideIndex - 1);
     });
-    button.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+
+    aboutNextBtn?.addEventListener("click", () => {
+      setAboutSlide(aboutSlideIndex + 1);
+    });
+
+    aboutGuideDots?.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-about-slide-target]");
+      if (!(target instanceof HTMLButtonElement)) return;
+      setAboutSlide(Number(target.dataset.aboutSlideTarget));
+    });
+
+    if (settingsBtn && settingsDialog) {
+      settingsBtn.addEventListener("click", () => {
+        if (settingsDialog.open) {
+          settingsDialog.close();
+        } else {
+          openSettingsDialog();
+        }
+      });
+    }
+
+    if (settingsCloseBtn && settingsDialog) {
+      settingsCloseBtn.addEventListener("click", () => {
+        if (settingsDialog.open) {
+          settingsDialog.close();
+        }
+      });
+    }
+
+    settingsTabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        setActiveSettingsTab(button.dataset.settingsTab, {
+          focusButton: false,
+        });
+      });
+      button.addEventListener("keydown", (event) => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        const tabs = Array.from(settingsTabButtons).filter(
+          (item) => item instanceof HTMLButtonElement,
+        );
+        const currentIndex = tabs.indexOf(button);
+        if (currentIndex === -1 || tabs.length === 0) return;
+        const offset = event.key === "ArrowRight" ? 1 : -1;
+        const nextIndex = (currentIndex + offset + tabs.length) % tabs.length;
+        const nextTab = tabs[nextIndex];
+        setActiveSettingsTab(nextTab.dataset.settingsTab, {
+          focusButton: true,
+        });
+      });
+    });
+
+    settingsTabSelect?.addEventListener("change", () => {
+      setActiveSettingsTab(settingsTabSelect.value, { focusButton: false });
+    });
+
+    renameGraphTrigger?.addEventListener("click", (event) => {
       event.preventDefault();
-      const tabs = Array.from(settingsTabButtons).filter((item) => item instanceof HTMLButtonElement);
-      const currentIndex = tabs.indexOf(button);
-      if (currentIndex === -1 || tabs.length === 0) return;
-      const offset = event.key === 'ArrowRight' ? 1 : -1;
-      const nextIndex = (currentIndex + offset + tabs.length) % tabs.length;
-      const nextTab = tabs[nextIndex];
-      setActiveSettingsTab(nextTab.dataset.settingsTab, { focusButton: true });
+      openRenameGraphDialog();
     });
-  });
 
-  settingsTabSelect?.addEventListener('change', () => {
-    setActiveSettingsTab(settingsTabSelect.value, { focusButton: false });
-  });
-
-  renameGraphTrigger?.addEventListener('click', (event) => {
-    event.preventDefault();
-    openRenameGraphDialog();
-  });
-
-  renameGraphCloseBtn?.addEventListener('click', () => {
-    if (renameGraphDialog?.open) {
-      renameGraphDialog.close();
-    }
-  });
-
-  renameGraphCancelBtn?.addEventListener('click', () => {
-    if (renameGraphDialog?.open) {
-      renameGraphDialog.close();
-    }
-  });
-
-  renameGraphSubmitBtn?.addEventListener('click', submitRenameGraph);
-
-  renameGraphInput?.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      submitRenameGraph();
-    }
-  });
-
-  positionButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      if (!(button instanceof HTMLButtonElement)) return;
-      const target = button.dataset.positionTarget;
-      const value = button.dataset.positionValue;
-      if (!target || !value || button.disabled) return;
-      const nextPlacement = resolvePlacementChange(store.getState().settings, target, value);
-      if (target === 'toolbar') {
-        store.setToolbarPosition(nextPlacement.toolbarPosition);
-        return;
-      }
-      if (target === 'toast') {
-        store.setToastPosition(nextPlacement.toastPosition);
-        store.setMetaPosition(nextPlacement.metaPosition);
-        return;
-      }
-      if (target === 'meta') {
-        store.setMetaPosition(nextPlacement.metaPosition);
+    renameGraphCloseBtn?.addEventListener("click", () => {
+      if (renameGraphDialog?.open) {
+        renameGraphDialog.close();
       }
     });
-  });
 
-  toolbarOrientationButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      if (!(button instanceof HTMLButtonElement)) return;
-      const value = button.dataset.toolbarOrientation;
-      if (!value) return;
-      store.setToolbarOrientation(value);
-    });
-  });
-
-  settingsDialog?.querySelectorAll('input[name="background-style"]').forEach((input) => {
-    input.addEventListener('change', (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement) || !target.checked) return;
-      store.setBackgroundStyle(target.value);
-    });
-  });
-
-  settingsDialog?.querySelectorAll('input[name="anchors-mode"]').forEach((input) => {
-    input.addEventListener('change', (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement) || !target.checked) return;
-      store.setAnchorsMode(target.value);
-    });
-  });
-
-  settingsDialog?.querySelectorAll('input[name="arrowheads"]').forEach((input) => {
-    input.addEventListener('change', (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement) || !target.checked) return;
-      store.setArrowheads(target.value);
-    });
-  });
-
-  arrowheadSizeRange?.addEventListener('input', () => {
-    const nextStep = Number(arrowheadSizeRange.value);
-    updateArrowheadSizeLabel(arrowheadSizeValue, nextStep);
-    store.setArrowheadSizeStep(nextStep);
-  });
-
-  settingsDialog?.querySelectorAll('input[name="ui-theme-preset"]').forEach((input) => {
-    input.addEventListener('change', (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement) || !target.checked) return;
-      store.setUiThemePreset(target.value);
-    });
-  });
-
-  settingsDialog?.querySelectorAll('input[name="enabled-theme-preset"]').forEach((input) => {
-    input.addEventListener('change', (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement)) return;
-      const enabledThemePresets = Array.from(
-        settingsDialog.querySelectorAll('input[name="enabled-theme-preset"]'),
-      )
-        .filter((option) => option instanceof HTMLInputElement && option.checked)
-        .map((option) => option.value);
-      if (!enabledThemePresets.length) {
-        target.checked = true;
-        return;
+    renameGraphCancelBtn?.addEventListener("click", () => {
+      if (renameGraphDialog?.open) {
+        renameGraphDialog.close();
       }
-      store.setEnabledThemePresets(enabledThemePresets);
     });
-  });
 
-  settingsDialog?.querySelectorAll('input[name="ui-radius-preset"]').forEach((input) => {
-    input.addEventListener('change', (event) => {
+    renameGraphSubmitBtn?.addEventListener("click", submitRenameGraph);
+
+    renameGraphInput?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitRenameGraph();
+      }
+    });
+
+    positionButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        const target = button.dataset.positionTarget;
+        const value = button.dataset.positionValue;
+        if (!target || !value || button.disabled) return;
+        const nextPlacement = resolvePlacementChange(
+          store.getState().settings,
+          target,
+          value,
+        );
+        if (target === "toolbar") {
+          store.setToolbarPosition(nextPlacement.toolbarPosition);
+          return;
+        }
+        if (target === "toast") {
+          store.setToastPosition(nextPlacement.toastPosition);
+          store.setMetaPosition(nextPlacement.metaPosition);
+          return;
+        }
+        if (target === "meta") {
+          store.setMetaPosition(nextPlacement.metaPosition);
+        }
+      });
+    });
+
+    toolbarOrientationButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        const value = button.dataset.toolbarOrientation;
+        if (!value) return;
+        store.setToolbarOrientation(value);
+      });
+    });
+
+    settingsDialog
+      ?.querySelectorAll('input[name="background-style"]')
+      .forEach((input) => {
+        input.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || !target.checked) return;
+          store.setBackgroundStyle(target.value);
+        });
+      });
+
+    settingsDialog
+      ?.querySelectorAll('input[name="anchors-mode"]')
+      .forEach((input) => {
+        input.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || !target.checked) return;
+          store.setAnchorsMode(target.value);
+        });
+      });
+
+    settingsDialog
+      ?.querySelectorAll('input[name="arrowheads"]')
+      .forEach((input) => {
+        input.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || !target.checked) return;
+          store.setArrowheads(target.value);
+        });
+      });
+
+    arrowheadSizeRange?.addEventListener("input", () => {
+      const nextStep = Number(arrowheadSizeRange.value);
+      updateArrowheadSizeLabel(arrowheadSizeValue, nextStep);
+      store.setArrowheadSizeStep(nextStep);
+    });
+
+    settingsDialog
+      ?.querySelectorAll('input[name="ui-theme-preset"]')
+      .forEach((input) => {
+        input.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || !target.checked) return;
+          store.setUiThemePreset(target.value);
+        });
+      });
+
+    settingsDialog
+      ?.querySelectorAll('input[name="enabled-theme-preset"]')
+      .forEach((input) => {
+        input.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement)) return;
+          const enabledThemePresets = Array.from(
+            settingsDialog.querySelectorAll(
+              'input[name="enabled-theme-preset"]',
+            ),
+          )
+            .filter(
+              (option) => option instanceof HTMLInputElement && option.checked,
+            )
+            .map((option) => option.value);
+          if (!enabledThemePresets.length) {
+            target.checked = true;
+            return;
+          }
+          store.setEnabledThemePresets(enabledThemePresets);
+        });
+      });
+
+    settingsDialog
+      ?.querySelectorAll('input[name="ui-radius-preset"]')
+      .forEach((input) => {
+        input.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || !target.checked) return;
+          store.setUiRadiusPreset(target.value);
+        });
+      });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (!(openToolbarPopoverEl instanceof HTMLElement)) return;
       const target = event.target;
-      if (!(target instanceof HTMLInputElement) || !target.checked) return;
-      store.setUiRadiusPreset(target.value);
+      if (!(target instanceof HTMLElement)) return;
+      if (target.closest(".entity-toolbar__control")) return;
+      closeToolbarPopover();
     });
-  });
 
-  document.addEventListener('pointerdown', (event) => {
-    if (!(openToolbarPopoverEl instanceof HTMLElement)) return;
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) return;
-    if (target.closest('.entity-toolbar__control')) return;
-    closeToolbarPopover();
-  });
+    document
+      .getElementById("add-node-btn")
+      ?.addEventListener("click", handleAddNode);
 
-  document.getElementById('add-node-btn')?.addEventListener('click', handleAddNode);
+    document.getElementById("add-image-btn")?.addEventListener("click", () => {
+      void handleAddImageNode();
+    });
 
-  document.getElementById('add-image-btn')?.addEventListener('click', () => {
-    void handleAddImageNode();
-  });
+    document.getElementById("add-frame-btn")?.addEventListener("click", () => {
+      setFrameDrawMode(!isFrameDrawMode);
+    });
 
-  document.getElementById('add-frame-btn')?.addEventListener('click', () => {
-    setFrameDrawMode(!isFrameDrawMode);
-  });
+    document
+      .getElementById("reset-view-btn")
+      ?.addEventListener("click", resetCanvasView);
+    document
+      .getElementById("undo-btn")
+      ?.addEventListener("click", () => store.undo());
+    document
+      .getElementById("redo-btn")
+      ?.addEventListener("click", () => store.redo());
 
-  document.getElementById('reset-view-btn')?.addEventListener('click', resetCanvasView);
-  document.getElementById('undo-btn')?.addEventListener('click', () => store.undo());
-  document.getElementById('redo-btn')?.addEventListener('click', () => store.redo());
+    newGraphBtn?.addEventListener("click", handleNewGraph);
+    openGraphBtn?.addEventListener("click", () => {
+      void handleOpenGraph();
+    });
+    saveGraphBtn?.addEventListener("click", () => {
+      void handleSaveGraph();
+    });
 
-  newGraphBtn?.addEventListener('click', handleNewGraph);
-  openGraphBtn?.addEventListener('click', () => {
-    void handleOpenGraph();
-  });
-  saveGraphBtn?.addEventListener('click', () => {
-    void handleSaveGraph();
-  });
-
-  if (!canUseFileSystemAccess) {
-    if (openGraphBtn) {
-      openGraphBtn.disabled = true;
-      openGraphBtn.title = 'Open hypernode is unavailable in this browser';
-      openGraphBtn.setAttribute('aria-label', 'Open hypernode unavailable in this browser');
+    if (!canUseFileSystemAccess) {
+      if (openGraphBtn) {
+        openGraphBtn.disabled = true;
+        openGraphBtn.title = "Open hypernode is unavailable in this browser";
+        openGraphBtn.setAttribute(
+          "aria-label",
+          "Open hypernode unavailable in this browser",
+        );
+      }
+      if (saveGraphBtn) {
+        saveGraphBtn.disabled = true;
+        saveGraphBtn.title = "Save hypernode is unavailable in this browser";
+        saveGraphBtn.setAttribute(
+          "aria-label",
+          "Save hypernode unavailable in this browser",
+        );
+      }
     }
-    if (saveGraphBtn) {
-      saveGraphBtn.disabled = true;
-      saveGraphBtn.title = 'Save hypernode is unavailable in this browser';
-      saveGraphBtn.setAttribute('aria-label', 'Save hypernode unavailable in this browser');
-    }
-  }
-
   }
 
   function bindKeyboard() {
-  document.addEventListener('keydown', (event) => {
-    if (aboutDialog?.open || shortcutsDialog?.open || settingsDialog?.open || renameGraphDialog?.open) return;
-    if (event.key === 'Escape' && openToolbarPopoverEl) {
-      event.preventDefault();
-      closeToolbarPopover();
-      return;
-    }
-    const ctrlOrCmd = event.ctrlKey || event.metaKey;
-    const starterNodeId = store.getState().ui.starterNodeId;
-    const starterFocused = Boolean(starterNodeId && store.getState().ui.focusedNodeId === starterNodeId);
-    const focusShortcut = ctrlOrCmd && event.altKey && event.key === 'Enter';
-    if (starterFocused && (event.key === 'Escape' || event.key === 'Delete' || event.key === 'Backspace' || focusShortcut)) {
-      event.preventDefault();
-      return;
-    }
-    if (focusShortcut) {
-      if (toggleFocusedSelectionNode()) {
+    document.addEventListener("keydown", (event) => {
+      if (
+        aboutDialog?.open ||
+        shortcutsDialog?.open ||
+        settingsDialog?.open ||
+        renameGraphDialog?.open
+      )
+        return;
+      if (event.key === "Escape" && openToolbarPopoverEl) {
         event.preventDefault();
+        closeToolbarPopover();
+        return;
       }
-      return;
-    }
-    if (isTypingTarget(event.target)) return;
+      const ctrlOrCmd = event.ctrlKey || event.metaKey;
+      const starterNodeId = store.getState().ui.starterNodeId;
+      const starterFocused = Boolean(
+        starterNodeId && store.getState().ui.focusedNodeId === starterNodeId,
+      );
+      const focusShortcut = ctrlOrCmd && event.altKey && event.key === "Enter";
+      if (
+        starterFocused &&
+        (event.key === "Escape" ||
+          event.key === "Delete" ||
+          event.key === "Backspace" ||
+          focusShortcut)
+      ) {
+        event.preventDefault();
+        return;
+      }
+      if (focusShortcut) {
+        if (toggleFocusedSelectionNode()) {
+          event.preventDefault();
+        }
+        return;
+      }
+      if (isTypingTarget(event.target)) return;
 
-    if (ctrlOrCmd && event.shiftKey && !event.altKey && event.key.toLowerCase() === 'h') {
-      event.preventDefault();
-      handleNewGraph();
-      return;
-    }
+      if (
+        ctrlOrCmd &&
+        event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === "h"
+      ) {
+        event.preventDefault();
+        handleNewGraph();
+        return;
+      }
 
-    if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'n') {
-      event.preventDefault();
-      handleAddNodeAtPointer();
-      return;
-    }
+      if (
+        ctrlOrCmd &&
+        !event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === "n"
+      ) {
+        event.preventDefault();
+        handleAddNodeAtPointer();
+        return;
+      }
 
-    if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'o') {
-      event.preventDefault();
-      void handleOpenGraph();
-      return;
-    }
+      if (
+        ctrlOrCmd &&
+        !event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === "o"
+      ) {
+        event.preventDefault();
+        void handleOpenGraph();
+        return;
+      }
 
-    if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key === ',') {
-      event.preventDefault();
-      openSettingsDialog();
-      return;
-    }
+      if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key === ",") {
+        event.preventDefault();
+        openSettingsDialog();
+        return;
+      }
 
-    if (ctrlOrCmd && !event.altKey && (event.key === '/' || event.key === '?')) {
-      event.preventDefault();
-      openShortcutsDialog();
-      return;
-    }
+      if (
+        ctrlOrCmd &&
+        !event.altKey &&
+        (event.key === "/" || event.key === "?")
+      ) {
+        event.preventDefault();
+        openShortcutsDialog();
+        return;
+      }
 
-    if (ctrlOrCmd && event.key.toLowerCase() === 'z' && !event.shiftKey) {
-      event.preventDefault();
-      store.undo();
-      return;
-    }
+      if (ctrlOrCmd && event.key.toLowerCase() === "z" && !event.shiftKey) {
+        event.preventDefault();
+        store.undo();
+        return;
+      }
 
-    if (ctrlOrCmd && (event.key.toLowerCase() === 'y' || (event.shiftKey && event.key.toLowerCase() === 'z'))) {
-      event.preventDefault();
-      store.redo();
-      return;
-    }
+      if (
+        ctrlOrCmd &&
+        (event.key.toLowerCase() === "y" ||
+          (event.shiftKey && event.key.toLowerCase() === "z"))
+      ) {
+        event.preventDefault();
+        store.redo();
+        return;
+      }
 
-    if (ctrlOrCmd && event.key.toLowerCase() === 's') {
-      event.preventDefault();
-      void handleSaveGraph();
-      return;
-    }
+      if (ctrlOrCmd && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        void handleSaveGraph();
+        return;
+      }
 
-    if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key === '0') {
-      event.preventDefault();
-      resetCanvasView();
-      return;
-    }
+      if (ctrlOrCmd && !event.shiftKey && !event.altKey && event.key === "0") {
+        event.preventDefault();
+        resetCanvasView();
+        return;
+      }
 
-    if (ctrlOrCmd && !event.shiftKey && event.key === 'Enter') {
-      event.preventDefault();
-      toggleSelectedEditor();
-      return;
-    }
+      if (ctrlOrCmd && !event.shiftKey && event.key === "Enter") {
+        event.preventDefault();
+        toggleSelectedEditor();
+        return;
+      }
 
-    if (ctrlOrCmd && event.shiftKey && event.key === 'Enter') {
-      event.preventDefault();
-      createLinkedNodeFromSelection();
-      return;
-    }
+      if (ctrlOrCmd && event.shiftKey && event.key === "Enter") {
+        event.preventDefault();
+        createLinkedNodeFromSelection();
+        return;
+      }
 
-    if (ctrlOrCmd && isDirectionalArrowKey(event.key)) {
-      event.preventDefault();
-      selectDirectionalNode(event.key);
-      return;
-    }
+      if (ctrlOrCmd && isDirectionalArrowKey(event.key)) {
+        event.preventDefault();
+        selectDirectionalNode(event.key);
+        return;
+      }
 
-    if (!ctrlOrCmd && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'n') {
-      event.preventDefault();
-      handleAddNode();
-      return;
-    }
+      if (
+        !ctrlOrCmd &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === "n"
+      ) {
+        event.preventDefault();
+        handleAddNode();
+        return;
+      }
 
-    if (!ctrlOrCmd && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'i') {
-      event.preventDefault();
-      void handleAddImageNode();
-      return;
-    }
+      if (
+        !ctrlOrCmd &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === "i"
+      ) {
+        event.preventDefault();
+        void handleAddImageNode();
+        return;
+      }
 
-    if (!ctrlOrCmd && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'f') {
-      event.preventDefault();
-      setFrameDrawMode(!isFrameDrawMode);
-      return;
-    }
+      if (
+        !ctrlOrCmd &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === "f"
+      ) {
+        event.preventDefault();
+        setFrameDrawMode(!isFrameDrawMode);
+        return;
+      }
 
-    if (!ctrlOrCmd && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 't') {
-      event.preventDefault();
-      toggleThemePreference();
-      return;
-    }
+      if (
+        !ctrlOrCmd &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === "t"
+      ) {
+        event.preventDefault();
+        toggleThemePreference();
+        return;
+      }
 
-    if (!ctrlOrCmd && !event.altKey && event.shiftKey && event.key === '?') {
-      event.preventDefault();
-      openAboutDialog();
-      return;
-    }
+      if (!ctrlOrCmd && !event.altKey && event.shiftKey && event.key === "?") {
+        event.preventDefault();
+        openAboutDialog();
+        return;
+      }
 
-    if (event.key === 'Delete' || event.key === 'Backspace') {
-      const selection = store.getState().selection;
-      if (!selection) return;
-      const focusedNodeId = store.getState().ui.focusedNodeId;
-      if (focusedNodeId) {
-        if (!ctrlOrCmd) {
+      if (event.key === "Delete" || event.key === "Backspace") {
+        const selection = store.getState().selection;
+        if (!selection) return;
+        const focusedNodeId = store.getState().ui.focusedNodeId;
+        if (focusedNodeId) {
+          if (!ctrlOrCmd) {
+            return;
+          }
+          event.preventDefault();
+          if (!confirmFocusedDelete(selection)) {
+            return;
+          }
+          if (selection.type === "node") store.deleteNode(selection.id);
+          if (selection.type === "nodes") store.deleteSelectedNodes();
+          if (selection.type === "frame") store.deleteFrame(selection.id);
+          if (selection.type === "edge") store.deleteEdge(selection.id);
           return;
         }
         event.preventDefault();
-        if (!confirmFocusedDelete(selection)) {
+        if (selection.type === "node") store.deleteNode(selection.id);
+        if (selection.type === "nodes") store.deleteSelectedNodes();
+        if (selection.type === "frame") store.deleteFrame(selection.id);
+        if (selection.type === "edge") store.deleteEdge(selection.id);
+        return;
+      }
+
+      if (event.key === "Escape") {
+        if (store.getState().ui.focusedNodeId) {
+          closeNodeFocus();
           return;
         }
-        if (selection.type === 'node') store.deleteNode(selection.id);
-        if (selection.type === 'nodes') store.deleteSelectedNodes();
-        if (selection.type === 'frame') store.deleteFrame(selection.id);
-        if (selection.type === 'edge') store.deleteEdge(selection.id);
-        return;
+        if (frameDrawSession || isFrameDrawMode) {
+          endFrameDrawSession();
+          setFrameDrawMode(false);
+          return;
+        }
+        if (marqueeSession) {
+          endMarqueeSession();
+          return;
+        }
+        if (frameResizeSession) {
+          endFrameResizeSession();
+          return;
+        }
+        if (resizeSession) {
+          endResizeSession();
+          return;
+        }
+        if (store.getState().ui.editingFrameId) {
+          closeFrameEditor();
+          return;
+        }
+        if (store.getState().ui.editingNodeId) {
+          closeNodeEditor();
+          return;
+        }
+        if (edgeSession) {
+          cancelEdgeSession();
+          return;
+        }
+        if (frameDragSession) {
+          endFrameDragSession();
+          return;
+        }
+        store.clearSelection();
       }
-      event.preventDefault();
-      if (selection.type === 'node') store.deleteNode(selection.id);
-      if (selection.type === 'nodes') store.deleteSelectedNodes();
-      if (selection.type === 'frame') store.deleteFrame(selection.id);
-      if (selection.type === 'edge') store.deleteEdge(selection.id);
-      return;
-    }
-
-    if (event.key === 'Escape') {
-      if (store.getState().ui.focusedNodeId) {
-        closeNodeFocus();
-        return;
-      }
-      if (frameDrawSession || isFrameDrawMode) {
-        endFrameDrawSession();
-        setFrameDrawMode(false);
-        return;
-      }
-      if (marqueeSession) {
-        endMarqueeSession();
-        return;
-      }
-      if (frameResizeSession) {
-        endFrameResizeSession();
-        return;
-      }
-      if (resizeSession) {
-        endResizeSession();
-        return;
-      }
-      if (store.getState().ui.editingFrameId) {
-        closeFrameEditor();
-        return;
-      }
-      if (store.getState().ui.editingNodeId) {
-        closeNodeEditor();
-        return;
-      }
-      if (edgeSession) {
-        cancelEdgeSession();
-        return;
-      }
-      if (frameDragSession) {
-        endFrameDragSession();
-        return;
-      }
-      store.clearSelection();
-    }
-  });
+    });
   }
 
   store.subscribe((state) => {
@@ -3417,26 +4038,50 @@ export function bindInteractions(elements, store, options = {}) {
       openToolbarPopoverEl = null;
     }
     syncShortcutUiFromState();
-    syncSettingsDialogFromState(state, settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    syncSettingsDialogFromState(
+      state,
+      settingsDialog,
+      positionButtons,
+      toolbarOrientationButtons,
+      settingsTabSelect,
+      settingsTabButtons,
+      settingsPanels,
+    );
     scheduleSingleNodeToolbarPlacement();
   });
 
   resetAboutDialog();
   renderShortcutCatalog();
-  filterShortcuts('');
+  filterShortcuts("");
   resetCanvasView();
-  syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+  syncSettingsDialogFromState(
+    store.getState(),
+    settingsDialog,
+    positionButtons,
+    toolbarOrientationButtons,
+    settingsTabSelect,
+    settingsTabButtons,
+    settingsPanels,
+  );
   syncShortcutUiFromState();
   scheduleSingleNodeToolbarPlacement();
   bindToolbarInteractions({ bindToolbar });
   bindKeyboardInteractions({ bindKeyboard });
   if (options.shouldCreateStarter) {
     createStarterHypernode();
-    syncSettingsDialogFromState(store.getState(), settingsDialog, positionButtons, toolbarOrientationButtons, settingsTabSelect, settingsTabButtons, settingsPanels);
+    syncSettingsDialogFromState(
+      store.getState(),
+      settingsDialog,
+      positionButtons,
+      toolbarOrientationButtons,
+      settingsTabSelect,
+      settingsTabButtons,
+      settingsPanels,
+    );
     scheduleSingleNodeToolbarPlacement();
   }
 
-  window.addEventListener('resize', scheduleSingleNodeToolbarPlacement);
+  window.addEventListener("resize", scheduleSingleNodeToolbarPlacement);
 }
 
 function isAdditiveModifier(event) {
@@ -3445,8 +4090,8 @@ function isAdditiveModifier(event) {
 
 function getSelectedNodeIds(selection) {
   if (!selection) return [];
-  if (selection.type === 'node') return [selection.id];
-  if (selection.type === 'nodes') {
+  if (selection.type === "node") return [selection.id];
+  if (selection.type === "nodes") {
     return Array.isArray(selection.ids) ? selection.ids : [];
   }
   return [];
@@ -3472,10 +4117,11 @@ function getIntersectingNodeIds(nodes, rect) {
   const hitIds = [];
   for (const node of nodes) {
     const nodeRect = getNodeInteractionRect(node);
-    const intersects = rect.left < nodeRect.right
-      && rect.right > nodeRect.left
-      && rect.top < nodeRect.bottom
-      && rect.bottom > nodeRect.top;
+    const intersects =
+      rect.left < nodeRect.right &&
+      rect.right > nodeRect.left &&
+      rect.top < nodeRect.bottom &&
+      rect.bottom > nodeRect.top;
     if (intersects) {
       hitIds.push(node.id);
     }
@@ -3487,7 +4133,7 @@ function uniqueIds(ids) {
   const seen = new Set();
   const output = [];
   for (const id of ids) {
-    if (typeof id !== 'string' || seen.has(id)) continue;
+    if (typeof id !== "string" || seen.has(id)) continue;
     seen.add(id);
     output.push(id);
   }
@@ -3495,7 +4141,9 @@ function uniqueIds(ids) {
 }
 
 function getNodeInteractionRect(node) {
-  const nodeEl = document.querySelector(`[data-node-id="${typeof CSS !== 'undefined' && typeof CSS.escape === 'function' ? CSS.escape(node.id) : node.id}"]`);
+  const nodeEl = document.querySelector(
+    `[data-node-id="${typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(node.id) : node.id}"]`,
+  );
   if (nodeEl) {
     const width = nodeEl.offsetWidth || getNodeWidth(node);
     const height = nodeEl.offsetHeight || getNodeHeight(node);
@@ -3535,8 +4183,8 @@ function getEntity(id, state) {
 }
 
 function parseAnchorToken(value) {
-  if (!value || typeof value !== 'string') return null;
-  const [nodeId, anchor] = value.split(':');
+  if (!value || typeof value !== "string") return null;
+  const [nodeId, anchor] = value.split(":");
   if (!nodeId || !isAnchorName(anchor)) return null;
   return { nodeId, anchor };
 }
@@ -3544,11 +4192,11 @@ function parseAnchorToken(value) {
 function getGraphEntityIdAtClientPoint(clientX, clientY) {
   const hits = document.elementsFromPoint(clientX, clientY);
   for (const hit of hits) {
-    const frameEl = hit.closest('[data-frame-id]');
+    const frameEl = hit.closest("[data-frame-id]");
     if (frameEl?.dataset?.frameId) {
       return frameEl.dataset.frameId;
     }
-    const nodeEl = hit.closest('[data-node-id]');
+    const nodeEl = hit.closest("[data-node-id]");
     if (nodeEl?.dataset?.nodeId) {
       return nodeEl.dataset.nodeId;
     }
@@ -3557,19 +4205,24 @@ function getGraphEntityIdAtClientPoint(clientX, clientY) {
 }
 
 function isAnchorName(anchor) {
-  return anchor === 'top' || anchor === 'right' || anchor === 'bottom' || anchor === 'left';
+  return (
+    anchor === "top" ||
+    anchor === "right" ||
+    anchor === "bottom" ||
+    anchor === "left"
+  );
 }
 
 function parseEdgeEndpointToken(value) {
-  if (!value || typeof value !== 'string') return null;
-  const [edgeId, side] = value.split(':');
-  if (!edgeId || (side !== 'from' && side !== 'to')) return null;
+  if (!value || typeof value !== "string") return null;
+  const [edgeId, side] = value.split(":");
+  if (!edgeId || (side !== "from" && side !== "to")) return null;
   return { edgeId, side };
 }
 
 function parseNodeResizeToken(value) {
-  if (!value || typeof value !== 'string') return null;
-  const [nodeId, corner] = value.split(':');
+  if (!value || typeof value !== "string") return null;
+  const [nodeId, corner] = value.split(":");
   if (!nodeId || !isResizeCorner(corner)) return null;
   return { nodeId, corner };
 }
@@ -3579,9 +4232,9 @@ function resolveAnchorName(anchor, fromNode, toNode) {
   const dx = toNode.x - fromNode.x;
   const dy = toNode.y - fromNode.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
-    return dx >= 0 ? 'right' : 'left';
+    return dx >= 0 ? "right" : "left";
   }
-  return dy >= 0 ? 'bottom' : 'top';
+  return dy >= 0 ? "bottom" : "top";
 }
 
 function resolveSessionTargetAnchor({
@@ -3592,8 +4245,13 @@ function resolveSessionTargetAnchor({
   canvasEl,
   anchorsMode,
 }) {
-  if (anchorsMode === 'exact') {
-    const nearestAnchor = resolveNearestEntityAnchorToPointer(targetNode.id, pointer, canvasEl, viewport);
+  if (anchorsMode === "exact") {
+    const nearestAnchor = resolveNearestEntityAnchorToPointer(
+      targetNode.id,
+      pointer,
+      canvasEl,
+      viewport,
+    );
     if (nearestAnchor) {
       return nearestAnchor;
     }
@@ -3606,29 +4264,33 @@ function clamp(value, min, max) {
 }
 
 function parseFrameResizeToken(value) {
-  if (!value || typeof value !== 'string') return null;
-  const [frameId, corner] = value.split(':');
+  if (!value || typeof value !== "string") return null;
+  const [frameId, corner] = value.split(":");
   if (!frameId || !isResizeCorner(corner)) return null;
   return { frameId, corner };
 }
 
 function isDirectionalArrowKey(key) {
-  return key === 'ArrowUp'
-    || key === 'ArrowDown'
-    || key === 'ArrowLeft'
-    || key === 'ArrowRight';
+  return (
+    key === "ArrowUp" ||
+    key === "ArrowDown" ||
+    key === "ArrowLeft" ||
+    key === "ArrowRight"
+  );
 }
 
 function getNodeCenter(node) {
   return {
-    x: node.x + (getNodeWidth(node) / 2),
-    y: node.y + (getNodeHeight(node) / 2),
+    x: node.x + getNodeWidth(node) / 2,
+    y: node.y + getNodeHeight(node) / 2,
   };
 }
 
 function getFocusImageTarget(target) {
   if (!(target instanceof HTMLElement)) return null;
-  return target.closest('[data-focus-image-dropzone], .node__image-pane[data-node-image-pick], .node__image-dropzone[data-node-image-pick]');
+  return target.closest(
+    "[data-focus-image-dropzone], .node__image-pane[data-node-image-pick], .node__image-dropzone[data-node-image-pick]",
+  );
 }
 
 function getNodeWidth(node) {
@@ -3677,8 +4339,16 @@ function getFrameRect(frame) {
 function getNodeFrameOverlapArea(node, frame) {
   const nodeRect = getNodeRect(node);
   const frameRect = getFrameRect(frame);
-  const overlapWidth = Math.max(0, Math.min(nodeRect.right, frameRect.right) - Math.max(nodeRect.left, frameRect.left));
-  const overlapHeight = Math.max(0, Math.min(nodeRect.bottom, frameRect.bottom) - Math.max(nodeRect.top, frameRect.top));
+  const overlapWidth = Math.max(
+    0,
+    Math.min(nodeRect.right, frameRect.right) -
+      Math.max(nodeRect.left, frameRect.left),
+  );
+  const overlapHeight = Math.max(
+    0,
+    Math.min(nodeRect.bottom, frameRect.bottom) -
+      Math.max(nodeRect.top, frameRect.top),
+  );
   return overlapWidth * overlapHeight;
 }
 
@@ -3688,7 +4358,11 @@ function findBestFrameIdForNodeFromRects(node, frames) {
     const frame = frames[index];
     const overlap = getNodeFrameOverlapArea(node, frame);
     if (overlap <= 0) continue;
-    if (!best || overlap > best.overlap || (overlap === best.overlap && index > best.index)) {
+    if (
+      !best ||
+      overlap > best.overlap ||
+      (overlap === best.overlap && index > best.index)
+    ) {
       best = { frameId: frame.id, overlap, index };
     }
   }
@@ -3698,7 +4372,11 @@ function findBestFrameIdForNodeFromRects(node, frames) {
 function getFrameResizeMembershipDelta(frameId, frameRect, state) {
   const addNodeIds = [];
   const removeNodeIds = [];
-  const candidateIds = findFrameResizeCandidateNodeIds(frameId, frameRect, state);
+  const candidateIds = findFrameResizeCandidateNodeIds(
+    frameId,
+    frameRect,
+    state,
+  );
   if (!candidateIds.length) {
     return { addNodeIds, removeNodeIds };
   }
@@ -3735,12 +4413,13 @@ function findFrameResizeCandidateNodeIds(frameId, frameRect, state) {
   const ids = [];
   for (const node of state.nodes) {
     const currentlyInFrame = node.frameId === frameId;
-    const overlapsResizedFrame = getNodeFrameOverlapArea(node, {
-      x: frameRect.left,
-      y: frameRect.top,
-      width: frameRect.right - frameRect.left,
-      height: frameRect.bottom - frameRect.top,
-    }) > 0;
+    const overlapsResizedFrame =
+      getNodeFrameOverlapArea(node, {
+        x: frameRect.left,
+        y: frameRect.top,
+        width: frameRect.right - frameRect.left,
+        height: frameRect.bottom - frameRect.top,
+      }) > 0;
     if (currentlyInFrame || overlapsResizedFrame) {
       ids.push(node.id);
     }
@@ -3762,10 +4441,10 @@ function buildDirectionalScore(originCenter, candidateNode, key) {
 }
 
 function getExpectedDirectionalAnchor(key) {
-  if (key === 'ArrowUp') return 'top';
-  if (key === 'ArrowDown') return 'bottom';
-  if (key === 'ArrowLeft') return 'left';
-  if (key === 'ArrowRight') return 'right';
+  if (key === "ArrowUp") return "top";
+  if (key === "ArrowDown") return "bottom";
+  if (key === "ArrowLeft") return "left";
+  if (key === "ArrowRight") return "right";
   return null;
 }
 
@@ -3777,8 +4456,8 @@ function resolveDirectionalAnchorForEdgeSide({
   anchorsMode,
 }) {
   if (!edge || !side || !currentNode || !otherNode) return null;
-  if (anchorsMode === 'exact') {
-    const storedAnchor = side === 'from' ? edge.fromAnchor : edge.toAnchor;
+  if (anchorsMode === "exact") {
+    const storedAnchor = side === "from" ? edge.fromAnchor : edge.toAnchor;
     return isAnchorName(storedAnchor) ? storedAnchor : null;
   }
   return resolveAnchorName(null, currentNode, otherNode);
@@ -3788,23 +4467,33 @@ function computeLinkedNodePosition(sourceNode, nodes) {
   const sourceWidth = getNodeWidth(sourceNode);
   const sourceHeight = getNodeHeight(sourceNode);
   const baseX = sourceNode.x + sourceWidth + KEYBOARD_LINKED_NODE.horizontalGap;
-  const centeredBaseY = sourceNode.y
-    + KEYBOARD_LINKED_NODE.verticalOffset
-    + ((sourceHeight - NODE_DEFAULTS.height) / 2);
+  const centeredBaseY =
+    sourceNode.y +
+    KEYBOARD_LINKED_NODE.verticalOffset +
+    (sourceHeight - NODE_DEFAULTS.height) / 2;
 
-  for (let attempt = 0; attempt <= KEYBOARD_LINKED_NODE.maxCollisionChecks; attempt += 1) {
+  for (
+    let attempt = 0;
+    attempt <= KEYBOARD_LINKED_NODE.maxCollisionChecks;
+    attempt += 1
+  ) {
     const candidate = {
       x: baseX,
-      y: centeredBaseY + (attempt * KEYBOARD_LINKED_NODE.collisionStepY),
+      y: centeredBaseY + attempt * KEYBOARD_LINKED_NODE.collisionStepY,
     };
-    if (!doesNodeOverlap(candidate, nodes, KEYBOARD_LINKED_NODE.overlapPadding)) {
+    if (
+      !doesNodeOverlap(candidate, nodes, KEYBOARD_LINKED_NODE.overlapPadding)
+    ) {
       return candidate;
     }
   }
 
   return {
     x: baseX,
-    y: centeredBaseY + ((KEYBOARD_LINKED_NODE.maxCollisionChecks + 1) * KEYBOARD_LINKED_NODE.collisionStepY),
+    y:
+      centeredBaseY +
+      (KEYBOARD_LINKED_NODE.maxCollisionChecks + 1) *
+        KEYBOARD_LINKED_NODE.collisionStepY,
   };
 }
 
@@ -3819,10 +4508,11 @@ function doesNodeOverlap(candidate, nodes, padding = 0) {
     const nodeRight = node.x + getNodeWidth(node);
     const nodeTop = node.y;
     const nodeBottom = node.y + getNodeHeight(node);
-    const intersects = left < nodeRight
-      && right > nodeLeft
-      && top < nodeBottom
-      && bottom > nodeTop;
+    const intersects =
+      left < nodeRight &&
+      right > nodeLeft &&
+      top < nodeBottom &&
+      bottom > nodeTop;
     if (intersects) {
       return true;
     }
@@ -3833,22 +4523,22 @@ function doesNodeOverlap(candidate, nodes, padding = 0) {
 
 function isDirectionalCandidate(dx, dy, key) {
   const epsilon = KEYBOARD_DIRECTIONAL_SELECTION.axisEpsilon;
-  if (key === 'ArrowUp') return dy < -epsilon;
-  if (key === 'ArrowDown') return dy > epsilon;
-  if (key === 'ArrowLeft') return dx < -epsilon;
-  if (key === 'ArrowRight') return dx > epsilon;
+  if (key === "ArrowUp") return dy < -epsilon;
+  if (key === "ArrowDown") return dy > epsilon;
+  if (key === "ArrowLeft") return dx < -epsilon;
+  if (key === "ArrowRight") return dx > epsilon;
   return false;
 }
 
 function getDirectionalPrimaryDistance(dx, dy, key) {
-  if (key === 'ArrowUp' || key === 'ArrowDown') {
+  if (key === "ArrowUp" || key === "ArrowDown") {
     return Math.abs(dx);
   }
   return Math.abs(dy);
 }
 
 function getDirectionalSecondaryOffset(dx, dy, key) {
-  if (key === 'ArrowUp' || key === 'ArrowDown') {
+  if (key === "ArrowUp" || key === "ArrowDown") {
     return Math.abs(dy);
   }
   return Math.abs(dx);
@@ -3869,10 +4559,12 @@ function compareDirectionalScores(left, right) {
 }
 
 function isResizeCorner(corner) {
-  return corner === 'top-left'
-    || corner === 'top-right'
-    || corner === 'bottom-right'
-    || corner === 'bottom-left';
+  return (
+    corner === "top-left" ||
+    corner === "top-right" ||
+    corner === "bottom-right" ||
+    corner === "bottom-left"
+  );
 }
 
 function computeResizedRect(session, deltaX, deltaY) {
@@ -3881,29 +4573,29 @@ function computeResizedRect(session, deltaX, deltaY) {
   let top = session.startTop;
   let bottom = session.startBottom;
 
-  if (session.corner.includes('left')) {
+  if (session.corner.includes("left")) {
     left = session.startLeft + deltaX;
   }
-  if (session.corner.includes('right')) {
+  if (session.corner.includes("right")) {
     right = session.startRight + deltaX;
   }
-  if (session.corner.includes('top')) {
+  if (session.corner.includes("top")) {
     top = session.startTop + deltaY;
   }
-  if (session.corner.includes('bottom')) {
+  if (session.corner.includes("bottom")) {
     bottom = session.startBottom + deltaY;
   }
 
-  if (session.corner.includes('left')) {
+  if (session.corner.includes("left")) {
     left = Math.min(left, right - NODE_DEFAULTS.minWidth);
   }
-  if (session.corner.includes('right')) {
+  if (session.corner.includes("right")) {
     right = Math.max(right, left + NODE_DEFAULTS.minWidth);
   }
-  if (session.corner.includes('top')) {
+  if (session.corner.includes("top")) {
     top = Math.min(top, bottom - NODE_DEFAULTS.minHeight);
   }
-  if (session.corner.includes('bottom')) {
+  if (session.corner.includes("bottom")) {
     bottom = Math.max(bottom, top + NODE_DEFAULTS.minHeight);
   }
 
@@ -3921,29 +4613,29 @@ function computeFrameResizedRect(session, deltaX, deltaY) {
   let top = session.startTop;
   let bottom = session.startBottom;
 
-  if (session.corner.includes('left')) {
+  if (session.corner.includes("left")) {
     left = session.startLeft + deltaX;
   }
-  if (session.corner.includes('right')) {
+  if (session.corner.includes("right")) {
     right = session.startRight + deltaX;
   }
-  if (session.corner.includes('top')) {
+  if (session.corner.includes("top")) {
     top = session.startTop + deltaY;
   }
-  if (session.corner.includes('bottom')) {
+  if (session.corner.includes("bottom")) {
     bottom = session.startBottom + deltaY;
   }
 
-  if (session.corner.includes('left')) {
+  if (session.corner.includes("left")) {
     left = Math.min(left, right - FRAME_DEFAULTS.minWidth);
   }
-  if (session.corner.includes('right')) {
+  if (session.corner.includes("right")) {
     right = Math.max(right, left + FRAME_DEFAULTS.minWidth);
   }
-  if (session.corner.includes('top')) {
+  if (session.corner.includes("top")) {
     top = Math.min(top, bottom - FRAME_DEFAULTS.minHeight);
   }
-  if (session.corner.includes('bottom')) {
+  if (session.corner.includes("bottom")) {
     bottom = Math.max(bottom, top + FRAME_DEFAULTS.minHeight);
   }
 
@@ -3962,17 +4654,30 @@ function isTypingTarget(target) {
 
 function getNodeTitleInput(nodeId) {
   const selector = `[data-node-edit-title="${nodeId}"]`;
-  return document.querySelector(`#focus-layer ${selector}`) || document.querySelector(`#nodes-layer ${selector}`);
+  return (
+    document.querySelector(`#focus-layer ${selector}`) ||
+    document.querySelector(`#nodes-layer ${selector}`)
+  );
 }
 
-function resolveEffectiveAnchorForSession(storedAnchor, fromNode, toNode, anchorsMode) {
-  if (anchorsMode === 'exact' && isAnchorName(storedAnchor)) {
+function resolveEffectiveAnchorForSession(
+  storedAnchor,
+  fromNode,
+  toNode,
+  anchorsMode,
+) {
+  if (anchorsMode === "exact" && isAnchorName(storedAnchor)) {
     return storedAnchor;
   }
   return resolveAnchorName(null, fromNode, toNode);
 }
 
-function resolveNearestEntityAnchorToPointer(nodeId, pointer, canvasEl, viewport) {
+function resolveNearestEntityAnchorToPointer(
+  nodeId,
+  pointer,
+  canvasEl,
+  viewport,
+) {
   if (!nodeId || !pointer || !canvasEl || !viewport) return null;
   const nodeEl = getGraphElementById(nodeId);
   if (!nodeEl) return null;
@@ -3980,9 +4685,24 @@ function resolveNearestEntityAnchorToPointer(nodeId, pointer, canvasEl, viewport
   const rect = nodeEl.getBoundingClientRect();
   const anchors = {
     top: toGraphPoint(rect.left + rect.width / 2, rect.top, canvasEl, viewport),
-    right: toGraphPoint(rect.right, rect.top + rect.height / 2, canvasEl, viewport),
-    bottom: toGraphPoint(rect.left + rect.width / 2, rect.bottom, canvasEl, viewport),
-    left: toGraphPoint(rect.left, rect.top + rect.height / 2, canvasEl, viewport),
+    right: toGraphPoint(
+      rect.right,
+      rect.top + rect.height / 2,
+      canvasEl,
+      viewport,
+    ),
+    bottom: toGraphPoint(
+      rect.left + rect.width / 2,
+      rect.bottom,
+      canvasEl,
+      viewport,
+    ),
+    left: toGraphPoint(
+      rect.left,
+      rect.top + rect.height / 2,
+      canvasEl,
+      viewport,
+    ),
   };
 
   let nearest = null;
@@ -3990,7 +4710,7 @@ function resolveNearestEntityAnchorToPointer(nodeId, pointer, canvasEl, viewport
   for (const [anchor, point] of Object.entries(anchors)) {
     const dx = pointer.x - point.x;
     const dy = pointer.y - point.y;
-    const distanceSq = (dx * dx) + (dy * dy);
+    const distanceSq = dx * dx + dy * dy;
     if (distanceSq < nearestDistanceSq) {
       nearestDistanceSq = distanceSq;
       nearest = anchor;
@@ -4001,21 +4721,24 @@ function resolveNearestEntityAnchorToPointer(nodeId, pointer, canvasEl, viewport
 }
 
 function getGraphElementById(nodeId) {
-  const escapedId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-    ? CSS.escape(nodeId)
-    : nodeId;
-  const nodeEl = document.querySelector(`[data-node-id="${escapedId}"], [data-frame-id="${escapedId}"]`);
+  const escapedId =
+    typeof CSS !== "undefined" && typeof CSS.escape === "function"
+      ? CSS.escape(nodeId)
+      : nodeId;
+  const nodeEl = document.querySelector(
+    `[data-node-id="${escapedId}"], [data-frame-id="${escapedId}"]`,
+  );
   return nodeEl instanceof HTMLElement ? nodeEl : null;
 }
 
 function pickImageFile() {
   return new Promise((resolve) => {
-    const picker = document.createElement('input');
-    picker.type = 'file';
-    picker.accept = 'image/*';
+    const picker = document.createElement("input");
+    picker.type = "file";
+    picker.accept = "image/*";
     picker.multiple = false;
-    picker.style.position = 'fixed';
-    picker.style.left = '-9999px';
+    picker.style.position = "fixed";
+    picker.style.left = "-9999px";
     document.body.appendChild(picker);
 
     const finalize = (file = null) => {
@@ -4023,10 +4746,14 @@ function pickImageFile() {
       resolve(file);
     };
 
-    picker.addEventListener('change', () => {
-      finalize(picker.files?.[0] || null);
-    }, { once: true });
-    picker.addEventListener('cancel', () => finalize(null), { once: true });
+    picker.addEventListener(
+      "change",
+      () => {
+        finalize(picker.files?.[0] || null);
+      },
+      { once: true },
+    );
+    picker.addEventListener("cancel", () => finalize(null), { once: true });
     picker.click();
   });
 }
@@ -4034,28 +4761,46 @@ function pickImageFile() {
 function containsImageFile(dataTransfer) {
   if (!dataTransfer) return false;
   const items = Array.from(dataTransfer.items || []);
-  if (items.some((item) => item.kind === 'file' && typeof item.type === 'string' && item.type.startsWith('image/'))) {
+  if (
+    items.some(
+      (item) =>
+        item.kind === "file" &&
+        typeof item.type === "string" &&
+        item.type.startsWith("image/"),
+    )
+  ) {
     return true;
   }
-  return Array.from(dataTransfer.files || []).some((file) => typeof file.type === 'string' && file.type.startsWith('image/'));
+  return Array.from(dataTransfer.files || []).some(
+    (file) => typeof file.type === "string" && file.type.startsWith("image/"),
+  );
 }
 
 function getFirstImageFile(dataTransfer) {
   if (!dataTransfer) return null;
-  return Array.from(dataTransfer.files || []).find((file) => typeof file.type === 'string' && file.type.startsWith('image/')) || null;
+  return (
+    Array.from(dataTransfer.files || []).find(
+      (file) => typeof file.type === "string" && file.type.startsWith("image/"),
+    ) || null
+  );
 }
 
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.addEventListener('load', () => {
-      if (typeof reader.result !== 'string' || !reader.result.startsWith('data:image/')) {
-        reject(new Error('Invalid image data'));
+    reader.addEventListener("load", () => {
+      if (
+        typeof reader.result !== "string" ||
+        !reader.result.startsWith("data:image/")
+      ) {
+        reject(new Error("Invalid image data"));
         return;
       }
       resolve(reader.result);
     });
-    reader.addEventListener('error', () => reject(reader.error || new Error('Failed to read image')));
+    reader.addEventListener("error", () =>
+      reject(reader.error || new Error("Failed to read image")),
+    );
     reader.readAsDataURL(file);
   });
 }
@@ -4063,11 +4808,11 @@ function readFileAsDataUrl(file) {
 function loadImageMeta(dataUrl) {
   return new Promise((resolve, reject) => {
     const image = new Image();
-    image.addEventListener('load', () => {
+    image.addEventListener("load", () => {
       const width = image.naturalWidth;
       const height = image.naturalHeight;
       if (!width || !height) {
-        reject(new Error('Unsupported image dimensions'));
+        reject(new Error("Unsupported image dimensions"));
         return;
       }
       resolve({
@@ -4076,20 +4821,22 @@ function loadImageMeta(dataUrl) {
         aspectRatio: width / height,
       });
     });
-    image.addEventListener('error', () => reject(new Error('Failed to decode image')));
+    image.addEventListener("error", () =>
+      reject(new Error("Failed to decode image")),
+    );
     image.src = dataUrl;
   });
 }
 
 function deriveNodeTitleFromFilename(fileName) {
-  const raw = String(fileName || '').trim();
+  const raw = String(fileName || "").trim();
   if (!raw) return NODE_DEFAULTS.title;
-  const trimmedExtension = raw.replace(/\.[^/.]+$/, '').trim();
+  const trimmedExtension = raw.replace(/\.[^/.]+$/, "").trim();
   return trimmedExtension || NODE_DEFAULTS.title;
 }
 
 function isAbortError(error) {
-  return error instanceof DOMException && error.name === 'AbortError';
+  return error instanceof DOMException && error.name === "AbortError";
 }
 
 function syncSettingsDialogFromState(
@@ -4102,83 +4849,125 @@ function syncSettingsDialogFromState(
   settingsPanels = [],
 ) {
   if (!settingsDialog) return;
-  const activeTab = Array.from(settingsTabButtons)
-    .find((button) => button instanceof HTMLElement && button.classList.contains('is-active'))
-    ?.dataset?.settingsTab || settingsTabSelect?.value || 'appearance';
+  const activeTab =
+    Array.from(settingsTabButtons).find(
+      (button) =>
+        button instanceof HTMLElement && button.classList.contains("is-active"),
+    )?.dataset?.settingsTab ||
+    settingsTabSelect?.value ||
+    "appearance";
   settingsTabButtons.forEach((button) => {
     if (!(button instanceof HTMLButtonElement)) return;
     const active = button.dataset.settingsTab === activeTab;
-    button.classList.toggle('is-active', active);
-    button.setAttribute('aria-selected', active ? 'true' : 'false');
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
     button.tabIndex = active ? 0 : -1;
   });
   settingsPanels.forEach((panel) => {
     if (!(panel instanceof HTMLElement)) return;
     const active = panel.dataset.settingsPanel === activeTab;
-    panel.classList.toggle('is-active', active);
+    panel.classList.toggle("is-active", active);
     panel.hidden = !active;
   });
   if (settingsTabSelect instanceof HTMLSelectElement) {
     settingsTabSelect.value = activeTab;
   }
-  syncPositionPickers(state, settingsDialog, positionButtons, toolbarOrientationButtons);
+  syncPositionPickers(
+    state,
+    settingsDialog,
+    positionButtons,
+    toolbarOrientationButtons,
+  );
 
-  settingsDialog.querySelectorAll('input[name="ui-theme-preset"]').forEach((input) => {
-    if (input instanceof HTMLInputElement) {
-      input.checked = input.value === state.settings.uiThemePreset;
-      input.disabled = !state.settings.enabledThemePresets.includes(input.value);
-      input.closest('.settings-dialog__theme-option')?.classList.toggle('is-disabled', input.disabled);
-    }
-  });
+  settingsDialog
+    .querySelectorAll('input[name="ui-theme-preset"]')
+    .forEach((input) => {
+      if (input instanceof HTMLInputElement) {
+        input.checked = input.value === state.settings.uiThemePreset;
+        input.disabled = !state.settings.enabledThemePresets.includes(
+          input.value,
+        );
+        input
+          .closest(".settings-dialog__theme-option")
+          ?.classList.toggle("is-disabled", input.disabled);
+      }
+    });
 
   const enabledThemeCount = state.settings.enabledThemePresets.length;
-  settingsDialog.querySelectorAll('input[name="enabled-theme-preset"]').forEach((input) => {
-    if (input instanceof HTMLInputElement) {
-      const enabled = state.settings.enabledThemePresets.includes(input.value);
-      input.checked = enabled;
-      input.disabled = enabled && enabledThemeCount <= 1;
-      input.closest('.settings-dialog__theme-option')?.classList.toggle('is-disabled', !enabled);
-    }
-  });
+  settingsDialog
+    .querySelectorAll('input[name="enabled-theme-preset"]')
+    .forEach((input) => {
+      if (input instanceof HTMLInputElement) {
+        const enabled = state.settings.enabledThemePresets.includes(
+          input.value,
+        );
+        input.checked = enabled;
+        input.disabled = enabled && enabledThemeCount <= 1;
+        input
+          .closest(".settings-dialog__theme-option")
+          ?.classList.toggle("is-disabled", !enabled);
+      }
+    });
 
-  settingsDialog.querySelectorAll('input[name="ui-radius-preset"]').forEach((input) => {
-    if (input instanceof HTMLInputElement) {
-      input.checked = input.value === state.settings.uiRadiusPreset;
-    }
-  });
+  settingsDialog
+    .querySelectorAll('input[name="ui-radius-preset"]')
+    .forEach((input) => {
+      if (input instanceof HTMLInputElement) {
+        input.checked = input.value === state.settings.uiRadiusPreset;
+      }
+    });
 
-  settingsDialog.querySelectorAll('input[name="background-style"]').forEach((input) => {
-    if (input instanceof HTMLInputElement) {
-      input.checked = input.value === state.settings.backgroundStyle;
-    }
-  });
+  settingsDialog
+    .querySelectorAll('input[name="background-style"]')
+    .forEach((input) => {
+      if (input instanceof HTMLInputElement) {
+        input.checked = input.value === state.settings.backgroundStyle;
+      }
+    });
 
-  settingsDialog.querySelectorAll('input[name="anchors-mode"]').forEach((input) => {
-    if (input instanceof HTMLInputElement) {
-      input.checked = input.value === state.settings.anchorsMode;
-    }
-  });
+  settingsDialog
+    .querySelectorAll('input[name="anchors-mode"]')
+    .forEach((input) => {
+      if (input instanceof HTMLInputElement) {
+        input.checked = input.value === state.settings.anchorsMode;
+      }
+    });
 
-  settingsDialog.querySelectorAll('input[name="arrowheads"]').forEach((input) => {
-    if (input instanceof HTMLInputElement) {
-      input.checked = input.value === state.settings.arrowheads;
-    }
-  });
+  settingsDialog
+    .querySelectorAll('input[name="arrowheads"]')
+    .forEach((input) => {
+      if (input instanceof HTMLInputElement) {
+        input.checked = input.value === state.settings.arrowheads;
+      }
+    });
 
-  const arrowheadSizeRange = document.getElementById('arrowhead-size-range');
-  const arrowheadSizeValue = document.getElementById('arrowhead-size-value');
+  const arrowheadSizeRange = document.getElementById("arrowhead-size-range");
+  const arrowheadSizeValue = document.getElementById("arrowhead-size-value");
   if (arrowheadSizeRange instanceof HTMLInputElement) {
-    const step = Number.isFinite(state.settings.arrowheadSizeStep) ? state.settings.arrowheadSizeStep : 0;
+    const step = Number.isFinite(state.settings.arrowheadSizeStep)
+      ? state.settings.arrowheadSizeStep
+      : 0;
     arrowheadSizeRange.value = String(step);
     updateArrowheadSizeLabel(arrowheadSizeValue, step);
   }
 }
 
-function syncPositionPickers(state, settingsDialog, positionButtons, toolbarOrientationButtons = []) {
+function syncPositionPickers(
+  state,
+  settingsDialog,
+  positionButtons,
+  toolbarOrientationButtons = [],
+) {
   const placement = getAnchoredUiPlacement(state.settings);
-  const toolbarPicker = settingsDialog?.querySelector('[data-position-picker="toolbar"]');
-  const toastPicker = settingsDialog?.querySelector('[data-position-picker="toast"]');
-  const metaPicker = settingsDialog?.querySelector('[data-position-picker="meta"]');
+  const toolbarPicker = settingsDialog?.querySelector(
+    '[data-position-picker="toolbar"]',
+  );
+  const toastPicker = settingsDialog?.querySelector(
+    '[data-position-picker="toast"]',
+  );
+  const metaPicker = settingsDialog?.querySelector(
+    '[data-position-picker="meta"]',
+  );
   if (toolbarPicker instanceof HTMLElement) {
     toolbarPicker.dataset.activeValue = placement.toolbarPosition;
   }
@@ -4189,36 +4978,43 @@ function syncPositionPickers(state, settingsDialog, positionButtons, toolbarOrie
     metaPicker.dataset.activeValue = placement.metaPosition;
   }
 
-  const unavailableToast = getUnavailableCornerPositions(state.settings, 'toast');
-  const unavailableMeta = getUnavailableCornerPositions(state.settings, 'meta');
+  const unavailableToast = getUnavailableCornerPositions(
+    state.settings,
+    "toast",
+  );
+  const unavailableMeta = getUnavailableCornerPositions(state.settings, "meta");
   positionButtons.forEach((button) => {
     if (!(button instanceof HTMLButtonElement)) return;
     const target = button.dataset.positionTarget;
     const value = button.dataset.positionValue;
-    const isActive = (target === 'toolbar' && value === placement.toolbarPosition)
-      || (target === 'toast' && value === placement.toastPosition)
-      || (target === 'meta' && value === placement.metaPosition);
-    const unavailable = (target === 'toast' && unavailableToast.has(value))
-      || (target === 'meta' && unavailableMeta.has(value));
-    button.classList.toggle('is-active', isActive);
-    button.classList.toggle('is-unavailable', unavailable && !isActive);
-    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    const isActive =
+      (target === "toolbar" && value === placement.toolbarPosition) ||
+      (target === "toast" && value === placement.toastPosition) ||
+      (target === "meta" && value === placement.metaPosition);
+    const unavailable =
+      (target === "toast" && unavailableToast.has(value)) ||
+      (target === "meta" && unavailableMeta.has(value));
+    button.classList.toggle("is-active", isActive);
+    button.classList.toggle("is-unavailable", unavailable && !isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
     button.disabled = unavailable && !isActive;
   });
 
   toolbarOrientationButtons.forEach((button) => {
     if (!(button instanceof HTMLButtonElement)) return;
-    const isActive = button.dataset.toolbarOrientation === placement.toolbarOrientation;
-    button.classList.toggle('is-active', isActive);
-    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    const isActive =
+      button.dataset.toolbarOrientation === placement.toolbarOrientation;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
 }
 
 function renderThemeSettingsOptions(themeOptionsContainer) {
   if (!(themeOptionsContainer instanceof HTMLElement)) return;
-  const themeOptionsMarkup = getThemePresetDefinitions().map((theme) => {
-    const modeLabel = theme.mode === 'dark' ? 'Dark' : 'Light';
-    return `
+  const themeOptionsMarkup = getThemePresetDefinitions()
+    .map((theme) => {
+      const modeLabel = theme.mode === "dark" ? "Dark" : "Light";
+      return `
       <label class="settings-dialog__option settings-dialog__theme-option">
         <span class="settings-dialog__theme-option-main">
           <span class="settings-dialog__theme-option-copy">
@@ -4234,7 +5030,8 @@ function renderThemeSettingsOptions(themeOptionsContainer) {
         </span>
       </label>
     `;
-  }).join('');
+    })
+    .join("");
   themeOptionsContainer.innerHTML = `
     <div class="settings-dialog__theme-list-head" aria-hidden="true">
       <span>Theme</span>
@@ -4247,7 +5044,7 @@ function renderThemeSettingsOptions(themeOptionsContainer) {
 
 function bindDialogBackdropClose(dialog) {
   if (!(dialog instanceof HTMLDialogElement)) return;
-  dialog.addEventListener('click', (event) => {
+  dialog.addEventListener("click", (event) => {
     if (isDialogBackdropTarget(dialog, event.target)) {
       dialog.close();
     }
@@ -4262,6 +5059,6 @@ function showThemeToast(store, uiThemePreset) {
 function updateArrowheadSizeLabel(labelEl, step) {
   if (!(labelEl instanceof HTMLElement)) return;
   const level = Math.max(1, Math.min(10, Math.round(Number(step)) + 1));
-  const percent = level === 1 ? 100 : (100 + ((level - 1) * 20));
+  const percent = level === 1 ? 100 : 100 + (level - 1) * 20;
   labelEl.textContent = `Level ${level} (${percent}%)`;
 }
