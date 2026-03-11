@@ -3348,11 +3348,7 @@ export function bindInteractions(elements, store) {
     try {
       const file = await pickImageFile();
       if (!file) return;
-      const { viewport } = store.getState();
-      const point = {
-        x: (120 - viewport.panX) / viewport.zoom,
-        y: (120 - viewport.panY) / viewport.zoom,
-      };
+      const point = getCanvasCenterNodePoint(store.getState().viewport);
       const imageFileInfo = await readImageFileInfo(file);
       createImageNodeInEditMode(point, imageFileInfo);
     } catch {
