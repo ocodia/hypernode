@@ -24,6 +24,7 @@ import {
   getUnavailableCornerPositions,
   resolvePlacementChange,
 } from "../utils/ui-placement.js";
+import { createContextMenu } from "../utils/context-menu.js";
 import { bindCanvasInteractions } from "./binders/canvas.js";
 import { bindEdgeInteractions } from "./binders/edges.js";
 import { bindFrameInteractions } from "./binders/frames.js";
@@ -73,6 +74,7 @@ export function bindInteractions(elements, store, options = {}) {
   let focusImageDragDepth = 0;
   let aboutSlideIndex = 0;
   let lastCanvasPointerClient = null;
+  const contextMenu = createContextMenu();
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -1770,6 +1772,66 @@ export function bindInteractions(elements, store, options = {}) {
     createNodeInEditMode(point);
   }
 
+  function onCanvasContextMenu(event) {
+    event.preventDefault();
+    const target = event.target;
+
+    // Future: node-specific context menu
+    if (target.closest("[data-node-id]")) {
+      // TODO: node context menu items
+      return;
+    }
+    // Future: edge-specific context menu
+    if (target.closest("[data-edge-id]")) {
+      // TODO: edge context menu items
+      return;
+    }
+    // Future: frame-specific context menu
+    if (target.closest("[data-frame-id]")) {
+      // TODO: frame context menu items
+      return;
+    }
+
+    // Blank canvas context menu
+    const state = store.getState();
+    const point = toGraphPoint(
+      event.clientX,
+      event.clientY,
+      canvas,
+      state.viewport,
+    );
+
+    const isMac =
+      typeof navigator !== "undefined" &&
+      /Mac|iPhone|iPad/.test(navigator.platform || "");
+    const ctrlLabel = isMac ? "\u2318" : "Ctrl+";
+
+    contextMenu.show({
+      clientX: event.clientX,
+      clientY: event.clientY,
+      items: [
+        {
+          label: "Add Node",
+          icon: "bi-plus-square",
+          shortcut: `${ctrlLabel}N`,
+          action: () => createNodeInEditMode(point),
+        },
+        {
+          label: "Add Image",
+          icon: "bi-image",
+          shortcut: "I",
+          action: () => void handleAddImageNodeAtPoint(point),
+        },
+        {
+          label: "Add Frame",
+          icon: "bi-bounding-box-circles",
+          shortcut: "F",
+          action: () => setFrameDrawMode(true),
+        },
+      ],
+    });
+  }
+
   function onCanvasPointerDown(event) {
     if (event.button !== 0) return;
     if (
@@ -1965,6 +2027,7 @@ export function bindInteractions(elements, store, options = {}) {
     { canvas, workspace },
     {
       onCanvasDoubleClick,
+      onCanvasContextMenu,
       onCanvasPointerDown,
       onCanvasPointerMove,
       onCanvasPointerUp,
@@ -3329,6 +3392,17 @@ export function bindInteractions(elements, store, options = {}) {
     }
   }
 
+  async function handleAddImageNodeAtPoint(point) {
+    try {
+      const file = await pickImageFile();
+      if (!file) return;
+      const imageFileInfo = await readImageFileInfo(file);
+      createImageNodeInEditMode(point, imageFileInfo);
+    } catch {
+      store.setImportStatus("Image add failed. Try another file.");
+    }
+  }
+
   function handleAddNode() {
     const { viewport } = store.getState();
     createNodeInEditMode({
@@ -4080,6 +4154,10 @@ export function bindInteractions(elements, store, options = {}) {
       }
 
       if (event.key === "Escape") {
+        if (contextMenu.visible()) {
+          contextMenu.hide();
+          return;
+        }
         if (store.getState().ui.focusedNodeId) {
           closeNodeFocus();
           return;

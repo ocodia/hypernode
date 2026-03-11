@@ -1,5 +1,6 @@
 export function bindCanvasInteractions({ canvas, workspace }, handlers) {
   canvas.addEventListener('dblclick', handlers.onCanvasDoubleClick);
+  canvas.addEventListener('contextmenu', handlers.onCanvasContextMenu);
   canvas.addEventListener('pointerdown', handlers.onCanvasPointerDown);
   canvas.addEventListener('pointermove', handlers.onCanvasPointerMove);
   canvas.addEventListener('pointerup', handlers.onCanvasPointerUp);

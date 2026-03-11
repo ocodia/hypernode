@@ -1,4 +1,4 @@
-const CACHE_NAME = "hypernode-cache-v13";
+const CACHE_NAME = "hypernode-cache-v14";
 
 const APP_SHELL = [
   "./",
@@ -11,6 +11,7 @@ const APP_SHELL = [
   "./icons/app-icon.svg",
   "./js/main.js",
   "./js/interaction/bindings.js",
+  "./js/utils/context-menu.js",
   "./js/persistence/file.js",
   "./js/persistence/storage.js",
   "./js/render/renderer.js",

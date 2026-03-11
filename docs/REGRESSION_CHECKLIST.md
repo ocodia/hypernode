@@ -116,3 +116,15 @@ Use this checklist before shipping interaction changes.
 - [ ] Toggle the enabled state of several themes, press `T`, and verify disabled themes are skipped in the correct order.
 - [ ] Disable the active theme and verify the app immediately switches to the first remaining enabled theme.
 - [ ] Zoom until a single-node toolbar would collide with toolbar/meta/toast chrome and verify top/bottom auto-placement still avoids obstructions.
+
+### Context menu
+
+- [ ] Right-click on blank canvas and verify a context menu appears at the cursor with Add Node, Add Image, and Add Frame items.
+- [ ] Click Add Node in the context menu and verify a node is created at the right-click location.
+- [ ] Click Add Image in the context menu, pick an image, and verify an image node is created at the right-click location.
+- [ ] Click Add Frame in the context menu and verify frame draw mode is activated.
+- [ ] Press Escape while the context menu is open and verify it dismisses without triggering other Escape actions.
+- [ ] Click outside the context menu and verify it dismisses.
+- [ ] Right-click on a node, edge, or frame and verify the native browser context menu is suppressed.
+- [ ] Verify context menu respects the current theme preset appearance.
+- [ ] Verify context menu border radius adapts to the current radius preset.
