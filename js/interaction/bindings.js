@@ -72,7 +72,6 @@ export function bindInteractions(elements, store) {
   let lastFramePress = { id: null, at: 0 };
   let canvasFileDragDepth = 0;
   let focusImageDragDepth = 0;
-  let aboutSlideIndex = 0;
   let lastCanvasPointerClient = null;
   const contextMenu = createContextMenu();
 
@@ -3267,10 +3266,6 @@ export function bindInteractions(elements, store) {
   const aboutDialog = document.getElementById("about-dialog");
   const aboutBtn = document.getElementById("about-btn");
   const aboutCloseBtn = document.getElementById("about-close-btn");
-  const aboutGuideSlides = document.getElementById("about-guide-slides");
-  const aboutGuideDots = document.getElementById("about-guide-dots");
-  const aboutPrevBtn = document.getElementById("about-prev-btn");
-  const aboutNextBtn = document.getElementById("about-next-btn");
   const shortcutsDialog = document.getElementById("shortcuts-dialog");
   const shortcutsBtn = document.getElementById("shortcuts-btn");
   const shortcutsCloseBtn = document.getElementById("shortcuts-close-btn");
@@ -3310,6 +3305,8 @@ export function bindInteractions(elements, store) {
   const newGraphBtn = document.getElementById("new-graph-btn");
   const openGraphBtn = document.getElementById("open-graph-btn");
   const saveGraphBtn = document.getElementById("save-graph-btn");
+  const undoBtn = document.getElementById("undo-btn");
+  const redoBtn = document.getElementById("redo-btn");
   const toolbarShortcutButtons = Object.entries(TOOLBAR_SHORTCUTS).map(
     ([id, config]) => ({
       button: document.getElementById(id),
@@ -3512,7 +3509,6 @@ export function bindInteractions(elements, store) {
 
   function openAboutDialog() {
     if (!aboutDialog) return;
-    resetAboutDialog();
     aboutDialog.showModal();
   }
 
@@ -3530,34 +3526,6 @@ export function bindInteractions(elements, store) {
       presetSequence[(currentIndex + 1) % presetSequence.length];
     store.setUiThemePreset(nextThemePreset);
     showThemeToast(store, nextThemePreset);
-  }
-
-  function setAboutSlide(nextIndex) {
-    const slideEls = aboutGuideSlides?.querySelectorAll("[data-about-slide]");
-    if (!slideEls?.length) return;
-    const maxIndex = slideEls.length - 1;
-    aboutSlideIndex = Math.max(0, Math.min(maxIndex, Number(nextIndex) || 0));
-    if (aboutGuideSlides instanceof HTMLElement) {
-      aboutGuideSlides.dataset.activeSlide = String(aboutSlideIndex);
-    }
-    slideEls.forEach((slideEl, index) => {
-      const active = index === aboutSlideIndex;
-      slideEl.classList.toggle("is-active", active);
-      slideEl.setAttribute("aria-hidden", active ? "false" : "true");
-    });
-    aboutGuideDots
-      ?.querySelectorAll("[data-about-slide-target]")
-      .forEach((dotEl, index) => {
-        const active = index === aboutSlideIndex;
-        dotEl.classList.toggle("is-active", active);
-        dotEl.setAttribute("aria-current", active ? "true" : "false");
-      });
-    if (aboutPrevBtn instanceof HTMLButtonElement) {
-      aboutPrevBtn.disabled = aboutSlideIndex === 0;
-    }
-    if (aboutNextBtn instanceof HTMLButtonElement) {
-      aboutNextBtn.disabled = aboutSlideIndex === maxIndex;
-    }
   }
 
   function filterShortcuts(query) {
@@ -3672,8 +3640,13 @@ export function bindInteractions(elements, store) {
     });
   }
 
-  function resetAboutDialog() {
-    setAboutSlide(0);
+  function syncHistoryButtons(state = store.getState()) {
+    if (undoBtn instanceof HTMLButtonElement) {
+      undoBtn.disabled = state.history.past.length === 0;
+    }
+    if (redoBtn instanceof HTMLButtonElement) {
+      redoBtn.disabled = state.history.future.length === 0;
+    }
   }
 
   function bindToolbar() {
@@ -3717,20 +3690,6 @@ export function bindInteractions(elements, store) {
 
     shortcutsSearchInput?.addEventListener("input", () => {
       filterShortcuts(shortcutsSearchInput.value);
-    });
-
-    aboutPrevBtn?.addEventListener("click", () => {
-      setAboutSlide(aboutSlideIndex - 1);
-    });
-
-    aboutNextBtn?.addEventListener("click", () => {
-      setAboutSlide(aboutSlideIndex + 1);
-    });
-
-    aboutGuideDots?.addEventListener("click", (event) => {
-      const target = event.target.closest("[data-about-slide-target]");
-      if (!(target instanceof HTMLButtonElement)) return;
-      setAboutSlide(Number(target.dataset.aboutSlideTarget));
     });
 
     if (settingsBtn && settingsDialog) {
@@ -3938,10 +3897,16 @@ export function bindInteractions(elements, store) {
       ?.addEventListener("click", resetCanvasView);
     document
       .getElementById("undo-btn")
-      ?.addEventListener("click", () => store.undo());
+      ?.addEventListener("click", () => {
+        if (undoBtn instanceof HTMLButtonElement && undoBtn.disabled) return;
+        store.undo();
+      });
     document
       .getElementById("redo-btn")
-      ?.addEventListener("click", () => store.redo());
+      ?.addEventListener("click", () => {
+        if (redoBtn instanceof HTMLButtonElement && redoBtn.disabled) return;
+        store.redo();
+      });
 
     newGraphBtn?.addEventListener("click", handleNewGraph);
     openGraphBtn?.addEventListener("click", () => {
@@ -4223,6 +4188,7 @@ export function bindInteractions(elements, store) {
     if (openToolbarPopoverEl && !document.body.contains(openToolbarPopoverEl)) {
       openToolbarPopoverEl = null;
     }
+    syncHistoryButtons(state);
     syncShortcutUiFromState();
     syncSettingsDialogFromState(
       state,
@@ -4236,7 +4202,6 @@ export function bindInteractions(elements, store) {
     scheduleSingleNodeToolbarPlacement();
   });
 
-  resetAboutDialog();
   renderShortcutCatalog();
   filterShortcuts("");
   resetCanvasView();
@@ -4249,6 +4214,7 @@ export function bindInteractions(elements, store) {
     settingsTabButtons,
     settingsPanels,
   );
+  syncHistoryButtons();
   syncShortcutUiFromState();
   scheduleSingleNodeToolbarPlacement();
   bindToolbarInteractions({ bindToolbar });
