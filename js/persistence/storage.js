@@ -16,7 +16,6 @@ export function loadGraphFromStorage() {
 export function saveGraphToStorage(graph) {
   const payload = JSON.stringify({
     name: graph.name,
-    settings: graph.settings,
     nodes: graph.nodes,
     frames: graph.frames,
     edges: graph.edges,

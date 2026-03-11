@@ -3303,7 +3303,6 @@ export function bindInteractions(elements, store) {
       currentFileHandle = await saveGraphFile(
         {
           name: state.name,
-          settings: state.settings,
           nodes: state.nodes,
           frames: state.frames,
           edges: state.edges,

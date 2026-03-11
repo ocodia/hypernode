@@ -92,10 +92,10 @@ test('switching from auto to exact freezes the last synchronized anchors', () =>
   assert.equal(store.getState().edges[0].toAnchor, 'top');
 });
 
-test('replaceGraph normalizes stale and null anchors immediately when imported graph uses auto anchors', () => {
+test('replaceGraph normalizes stale and null anchors immediately when current app settings use auto anchors', () => {
   const store = createStore(createGraph({
-    settings: { anchorsMode: 'exact' },
-  }), { anchorsMode: 'exact' });
+    settings: { anchorsMode: 'auto' },
+  }), { anchorsMode: 'auto' });
 
   store.replaceGraph(createGraph({
     nodes: [

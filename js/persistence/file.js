@@ -35,7 +35,6 @@ export async function saveGraphFile(graph, handle = null) {
 
   const payload = JSON.stringify({
     name: graph.name,
-    settings: graph.settings,
     nodes: graph.nodes,
     frames: graph.frames,
     edges: graph.edges,

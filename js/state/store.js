@@ -1297,7 +1297,6 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function replaceGraph(graph) {
     pushHistory("import-graph");
     state.name = sanitizeGraphName(graph.name);
-    state.settings = getInitialSettings(graph, null);
     state.frames = (Array.isArray(graph.frames) ? graph.frames : []).map(
       sanitizeFrame,
     );

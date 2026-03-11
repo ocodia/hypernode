@@ -70,6 +70,9 @@ When anchors mode is `auto`, stored edge anchors must stay synchronized with the
 FR-16  
 Graphs must autosave to browser storage.
 
+FR-16a
+App settings must persist across sessions in browser storage and must be honoured when creating a new graph or opening an existing one. Settings must never be reset by document-level operations.
+
 FR-17  
 Saved graphs must load on app startup when valid.
 
@@ -112,7 +115,7 @@ FR-28a
 Canvas selection toolbars must remain usable across the supported zoom range by keeping their click targets effectively screen-space sized while staying attached to the selected node/frame bounds.
 
 FR-29
-Graph settings must include graph name, UI theme preset, enabled theme presets, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, and arrowhead size.
+App settings must include UI theme preset, enabled theme presets, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, arrowhead size, and default node colour. App settings must persist in browser storage independently of graph documents and must not be serialized into graph JSON files.
 
 FR-29a
 The shortcuts dialog must support search by shortcut keys and action text.
@@ -127,7 +130,7 @@ FR-29d
 Dialog overflow must scroll within the dialog content regions rather than scrolling the entire dialog shell.
 
 FR-30
-The app must provide hypernode-level appearance presets and persist the selected UI theme preset and UI radius preset with the graph document.
+The app must provide hypernode-level appearance presets and persist the selected UI theme preset and UI radius preset as app-level preferences in browser storage, independent of any graph document.
 
 FR-30a
 The UI theme preset must apply semantic design tokens across shared UI primitives and canvas objects, including dialogs, toolbar controls, nodes, frames, and image wells.
@@ -216,7 +219,7 @@ When file system APIs are unavailable, unsupported actions should degrade gracef
 ### Data Format and Safety
 
 NFR-7
-Graph persistence and import/export formats must use JSON with `{ name, settings, nodes, frames, edges }`.
+Graph persistence and import/export formats must use JSON with `{ name, nodes, frames, edges }`. App settings are persisted separately in browser storage and are not included in the document schema.
 
 NFR-8
 All graph data processing must occur client-side.
