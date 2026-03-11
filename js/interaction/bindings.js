@@ -3212,7 +3212,6 @@ export function bindInteractions(elements, store) {
   const renameGraphTrigger = document.getElementById("graph-rename-trigger");
   const renameGraphDialog = document.getElementById("rename-graph-dialog");
   const renameGraphInput = document.getElementById("rename-graph-input");
-  const renameGraphCloseBtn = document.getElementById("rename-graph-close-btn");
   const renameGraphCancelBtn = document.getElementById(
     "rename-graph-cancel-btn",
   );
@@ -3706,12 +3705,6 @@ export function bindInteractions(elements, store) {
     renameGraphTrigger?.addEventListener("click", (event) => {
       event.preventDefault();
       openRenameGraphDialog();
-    });
-
-    renameGraphCloseBtn?.addEventListener("click", () => {
-      if (renameGraphDialog?.open) {
-        renameGraphDialog.close();
-      }
     });
 
     renameGraphCancelBtn?.addEventListener("click", () => {
