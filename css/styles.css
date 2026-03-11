@@ -883,7 +883,6 @@ select:focus-visible {
     var(--node-border);
   background: var(--node-bg);
   color: var(--node-text);
-  box-shadow: var(--node-shadow);
   padding: 12px;
   pointer-events: auto;
   user-select: none;
@@ -1752,7 +1751,6 @@ select:focus-visible {
   background: var(--toolbar-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  box-shadow: var(--overlay-shadow);
   transition:
     opacity 120ms ease,
     transform 120ms ease;
@@ -2027,9 +2025,7 @@ select:focus-visible {
 
 .node.is-connect-target {
   border-color: var(--accent);
-  box-shadow:
-    0 0 0 3px rgba(37, 99, 235, 0.16),
-    var(--node-shadow);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
 }
 
 .node.is-connect-candidate {
@@ -2042,16 +2038,12 @@ select:focus-visible {
 
 .node.is-frame-membership-remove-preview {
   border-color: #ef4444;
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, #ef4444 24%, transparent),
-    var(--node-shadow);
+  box-shadow: 0 0 0 2px color-mix(in srgb, #ef4444 24%, transparent);
 }
 
 .node.is-frame-membership-add-preview {
   border-color: #2f855a;
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, #2f855a 24%, transparent),
-    var(--node-shadow);
+  box-shadow: 0 0 0 2px color-mix(in srgb, #2f855a 24%, transparent);
 }
 
 .node__title {
@@ -2918,6 +2910,7 @@ select:focus-visible {
   background: var(--toolbar-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  box-shadow: none;
   white-space: nowrap;
   z-index: 20;
 }
