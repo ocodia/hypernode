@@ -1,4 +1,4 @@
-const THEME_PRESET_SEQUENCE = ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard'];
+const THEME_PRESET_SEQUENCE = ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard', 'citrine', 'canopy', 'tidepool', 'dusk'];
 
 const THEME_PRESET_LABELS = {
   blueprint: 'Blueprint',
@@ -7,6 +7,10 @@ const THEME_PRESET_LABELS = {
   paper: 'Paper',
   ember: 'Ember',
   chalkboard: 'Chalkboard',
+  citrine: 'Citrine',
+  canopy: 'Canopy',
+  tidepool: 'Tidepool',
+  dusk: 'Dusk',
 };
 
 const THEME_PRESET_ICONS = {
@@ -16,6 +20,10 @@ const THEME_PRESET_ICONS = {
   paper: 'bi-sun',
   ember: 'bi-brightness-alt-high',
   chalkboard: 'bi-circle-half',
+  citrine: 'bi-sunrise',
+  canopy: 'bi-tree',
+  tidepool: 'bi-water',
+  dusk: 'bi-moon-stars',
 };
 
 export function getThemePresetSequence() {

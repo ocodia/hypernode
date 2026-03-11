@@ -18,7 +18,7 @@ test('sanitizeAppSettings accepts current anchored ui positions', () => {
 });
 
 test('sanitizeAppSettings accepts all current curated ui theme presets', () => {
-  for (const preset of ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard']) {
+  for (const preset of ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard', 'citrine', 'canopy', 'tidepool', 'dusk']) {
     assert.equal(sanitizeAppSettings({ uiThemePreset: preset }).uiThemePreset, preset);
   }
 });
@@ -50,7 +50,7 @@ test('validateGraphPayload accepts the current curated ui theme preset list', ()
     edges: [],
   });
 
-  for (const preset of ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard']) {
+  for (const preset of ['blueprint', 'fjord', 'slate', 'paper', 'ember', 'chalkboard', 'citrine', 'canopy', 'tidepool', 'dusk']) {
     assert.equal(validateGraphPayload(makePayload(preset)), true);
   }
   assert.equal(validateGraphPayload(makePayload('soft-black')), false);

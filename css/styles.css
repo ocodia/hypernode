@@ -233,6 +233,130 @@
   --node-shadow: 0 10px 26px rgba(0, 0, 0, 0.44);
 }
 
+[data-ui-theme="citrine"] {
+  --surface: #fffdfa;
+  --surface-muted: #f5efe1;
+  --surface-raised: #fffefb;
+  --border: #decdaa;
+  --text: #382918;
+  --text-muted: #7d6a4a;
+  --accent: #b8891f;
+  --accent-contrast: #fff5d8;
+  --focus-ring: #9f7315;
+  --danger: #b63a24;
+  --danger-soft: #fff0eb;
+  --danger-border: #f0c1b1;
+  --success: #3d7b4f;
+  --bg: #fbf6e8;
+  --grid-dot: #e2d4b8;
+  --panel: color-mix(in srgb, var(--surface-raised) 98%, transparent);
+  --toolbar-bg: rgba(255, 253, 250, 0.84);
+  --panel-border: var(--border);
+  --muted: var(--text-muted);
+  --edge: #b79f70;
+  --edge-selected: var(--focus-ring);
+  --surface-soft: var(--surface-muted);
+  --danger-text: var(--danger);
+  --draft-stroke: #8d7a57;
+  --endpoint-stroke: #bda77a;
+  --endpoint-fill: #fffdf8;
+  --overlay-shadow: 0 10px 28px rgba(56, 41, 24, 0.1);
+  --node-shadow: 0 8px 22px rgba(56, 41, 24, 0.08);
+}
+
+[data-ui-theme="canopy"] {
+  --surface: #f9fcf8;
+  --surface-muted: #edf3ec;
+  --surface-raised: #fcfefb;
+  --border: #c8d8ca;
+  --text: #203128;
+  --text-muted: #5e7666;
+  --accent: #4f7d5f;
+  --accent-contrast: #ecf6ef;
+  --focus-ring: #3e694e;
+  --danger: #b64134;
+  --danger-soft: #fcede9;
+  --danger-border: #eabbb3;
+  --success: #34744d;
+  --bg: #eef4ec;
+  --grid-dot: #cfdbcf;
+  --panel: color-mix(in srgb, var(--surface-raised) 98%, transparent);
+  --toolbar-bg: rgba(249, 252, 248, 0.84);
+  --panel-border: var(--border);
+  --muted: var(--text-muted);
+  --edge: #88a18e;
+  --edge-selected: var(--focus-ring);
+  --surface-soft: var(--surface-muted);
+  --danger-text: var(--danger);
+  --draft-stroke: #748b79;
+  --endpoint-stroke: #93aa98;
+  --endpoint-fill: #fbfefb;
+  --overlay-shadow: 0 10px 28px rgba(32, 49, 40, 0.1);
+  --node-shadow: 0 8px 22px rgba(32, 49, 40, 0.08);
+}
+
+[data-ui-theme="tidepool"] {
+  --bg: #0f2329;
+  --surface: #123039;
+  --surface-muted: #183d47;
+  --surface-raised: #102a32;
+  --border: #2b5661;
+  --text: #ddf0f1;
+  --text-muted: #91adb2;
+  --accent: #59b7bf;
+  --accent-contrast: #10292f;
+  --focus-ring: #82d6dc;
+  --danger: #ffd1c4;
+  --danger-soft: #472722;
+  --danger-border: #91544a;
+  --success: #90e0be;
+  --grid-dot: #244750;
+  --panel: color-mix(in srgb, var(--surface-raised) 98%, transparent);
+  --toolbar-bg: rgba(16, 42, 50, 0.84);
+  --panel-border: var(--border);
+  --muted: var(--text-muted);
+  --edge: #5f949b;
+  --edge-selected: var(--focus-ring);
+  --surface-soft: var(--surface-muted);
+  --danger-text: var(--danger);
+  --draft-stroke: #8bb8bd;
+  --endpoint-stroke: #8bb8bd;
+  --endpoint-fill: #112d35;
+  --overlay-shadow: 0 12px 30px rgba(0, 0, 0, 0.42);
+  --node-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+}
+
+[data-ui-theme="dusk"] {
+  --bg: #16182b;
+  --surface: #1a1d33;
+  --surface-muted: #22263f;
+  --surface-raised: #171a2f;
+  --border: #3a4164;
+  --text: #e8eaf7;
+  --text-muted: #a1a7c8;
+  --accent: #7f8ff3;
+  --accent-contrast: #171d37;
+  --focus-ring: #aab4ff;
+  --danger: #ffd1d1;
+  --danger-soft: #43232e;
+  --danger-border: #8d4d60;
+  --success: #93dfbf;
+  --grid-dot: #2e3454;
+  --panel: color-mix(in srgb, var(--surface-raised) 98%, transparent);
+  --toolbar-bg: rgba(23, 26, 47, 0.84);
+  --panel-border: var(--border);
+  --muted: var(--text-muted);
+  --edge: #6c76ad;
+  --edge-selected: var(--focus-ring);
+  --surface-soft: var(--surface-muted);
+  --danger-text: var(--danger);
+  --draft-stroke: #a1a9d8;
+  --endpoint-stroke: #a1a9d8;
+  --endpoint-fill: #191c31;
+  --overlay-shadow: 0 12px 30px rgba(0, 0, 0, 0.46);
+  --node-shadow: 0 10px 26px rgba(0, 0, 0, 0.42);
+}
+
 [data-ui-radius="sharp"] {
   --radius-xs: 0px;
   --radius-sm: 0px;
@@ -321,6 +445,10 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+input:is([type="radio"], [type="checkbox"], [type="range"]) {
+  accent-color: var(--accent);
 }
 
 .panel {
@@ -3556,7 +3684,7 @@ kbd {
   border-radius: 0;
   padding: 0;
   background: transparent;
-  accent-color: var(--edge-selected);
+  accent-color: var(--accent);
 }
 
 .settings-dialog__option {
@@ -3644,15 +3772,29 @@ kbd {
     background-color 180ms ease;
 }
 
+.settings-dialog__switch-input:hover + .settings-dialog__switch-ui {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, var(--panel-border)),
+    inset 0 10px 18px rgba(255, 255, 255, 0.05);
+}
+
 .settings-dialog__switch-input:checked + .settings-dialog__switch-ui {
-  background: color-mix(in srgb, var(--accent) 82%, white 18%);
+  background: color-mix(in srgb, var(--accent) 82%, var(--surface) 18%);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--accent) 58%, transparent),
     0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
+.settings-dialog__switch-input:checked:hover + .settings-dialog__switch-ui {
+  background: color-mix(in srgb, var(--accent) 88%, var(--surface) 12%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 72%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
 .settings-dialog__switch-input:checked + .settings-dialog__switch-ui::after {
   transform: translateX(18px);
+  background: color-mix(in srgb, var(--surface) 82%, white 18%);
 }
 
 .settings-dialog__switch-input:focus-visible + .settings-dialog__switch-ui {

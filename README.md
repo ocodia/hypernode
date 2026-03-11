@@ -47,12 +47,12 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Toasts render in any screen corner, use accent-highlighted glass surfaces, and auto-resolve away from occupied toolbar/meta placements.
 - Start a new hypernode from the toolbar (with discard confirmation when existing hypernode data is present).
 - Built-in semantic design system for surfaces, buttons, inputs, dialogs, toolbar controls, nodes, and frames.
-- Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, and `chalkboard`) saved with the document.
+- Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`, `citrine`, `canopy`, `tidepool`, and `dusk`) saved with the document.
 - Shared UI radius presets (`sharp`, `soft`, `rounded`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
 - Full-screen settings, about, and keyboard shortcuts dialogs with responsive layouts.
 - Theme-aware custom scrollbars across dialogs, focus views, and editor panes that inherit the active preset and radius scale.
 - Settings menu for document-level defaults:
-  - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, or `chalkboard`)
+  - UI theme preset (`blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`, `citrine`, `canopy`, `tidepool`, or `dusk`)
   - UI radius preset (`sharp`, `soft`, or `rounded`)
   - hypernode background style (`blank`, `dots`, or `graph-paper`)
   - anchors mode (`auto` or `exact`) where `auto` keeps each edge's stored anchor points synced to the currently resolved connection sides as nodes and frames move
@@ -71,6 +71,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Searchable keyboard shortcuts dialog with key/action matching, including punctuation-light searches such as `comma`, `slash`, `?`, and `delete`.
 - About dialog with a toggleable guide wizard, keyboard shortcuts, and a GitHub link.
 - Visible focus states, keyboard-usable controls, and contrast-conscious presets across the themed UI.
+- Native radios, checkboxes, ranges, and custom switches inherit their accent treatment from the active theme preset.
 
 ## Keyboard Shortcuts
 
@@ -132,13 +133,13 @@ These tokens are applied across:
 
 - toolbar controls
 - dialogs and popovers
-- buttons, inputs, and toggles
+- buttons, inputs, toggles, and native form controls
 - metadata chips and pills
 - nodes, frames, and image wells
 
 Appearance stays preset-driven:
 
-- UI theme presets: `blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`
+- UI theme presets: `blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`, `citrine`, `canopy`, `tidepool`, `dusk`
 - UI radius presets: `sharp`, `soft`, `rounded`
 
 The selected radius preset applies to standard UI controls and canvas objects alike, including nodes and frames.
