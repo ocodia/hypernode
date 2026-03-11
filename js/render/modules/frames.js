@@ -12,14 +12,8 @@ export function buildFrameMetaMarkup(frame, options = {}) {
   if (editingActive) {
     return `
       <div class="frame__editor" data-frame-editor="${frame.id}">
-        <label class="frame__editor-label">
-          Name
-          <input class="frame__editor-input" data-frame-edit-title="${frame.id}" value="${escapeAttr(frame.title)}" maxlength="80" />
-        </label>
-        <label class="frame__editor-label">
-          Description
-          <textarea class="frame__editor-textarea" data-frame-edit-description="${frame.id}">${escapeHTML(frame.description)}</textarea>
-        </label>
+        <input class="frame__editor-input" data-frame-edit-title="${frame.id}" value="${escapeAttr(frame.title)}" maxlength="80" placeholder="Name" aria-label="Name" />
+        <textarea class="frame__editor-textarea" data-frame-edit-description="${frame.id}" placeholder="Description" aria-label="Description">${escapeHTML(frame.description)}</textarea>
       </div>
     `;
   }

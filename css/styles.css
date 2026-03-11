@@ -1700,14 +1700,6 @@ select:focus-visible {
   z-index: 2;
 }
 
-.frame__editor-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.72rem;
-  color: var(--frame-muted);
-}
-
 .frame__editor-input,
 .frame__editor-textarea {
   position: relative;
