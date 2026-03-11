@@ -1,34 +1,37 @@
 import {
   APP_SETTINGS_DEFAULTS,
+  EDGE_DEFAULTS,
+  EDGE_STROKE_STYLES,
+  EDGE_TYPES,
   FRAME_DEFAULTS,
   GRAPH_DEFAULTS,
   IMAGE_NODE_DEFAULTS,
   NODE_COLOR_KEYS,
   NODE_DEFAULTS,
   VIEWPORT_LIMITS,
-} from './constants.js';
+} from "./constants.js";
 import {
   getAnchoredUiPlacement,
   isValidCornerPosition,
   isValidToolbarOrientation,
   isValidToolbarPosition,
   normalizeToolbarPosition,
-} from './ui-placement.js';
+} from "./ui-placement.js";
 import {
   isValidThemePresetId,
   sanitizeEnabledThemePresetIds,
   THEME_PRESET_IDS,
-} from '../shared/themes.js';
+} from "../shared/themes.js";
 
-const ANCHORS = new Set(['top', 'right', 'bottom', 'left']);
-const BACKGROUND_STYLES = new Set(['blank', 'dots', 'graph-paper']);
-const ANCHORS_MODES = new Set(['auto', 'exact']);
-const ARROWHEADS_MODES = new Set(['shown', 'hidden']);
-const UI_RADIUS_PRESETS = new Set(['sharp', 'soft', 'rounded']);
+const ANCHORS = new Set(["top", "right", "bottom", "left"]);
+const BACKGROUND_STYLES = new Set(["blank", "dots", "graph-paper"]);
+const ANCHORS_MODES = new Set(["auto", "exact"]);
+const ARROWHEADS_MODES = new Set(["shown", "hidden"]);
+const UI_RADIUS_PRESETS = new Set(["sharp", "soft", "rounded"]);
 const ARROWHEAD_SIZE_STEP_MIN = 0;
 const ARROWHEAD_SIZE_STEP_MAX = 9;
-const NODE_KINDS = new Set(['text', 'image']);
-const FRAME_BORDER_STYLES = new Set(['solid', 'dashed', 'dotted']);
+const NODE_KINDS = new Set(["text", "image"]);
+const FRAME_BORDER_STYLES = new Set(["solid", "dashed", "dotted"]);
 
 export function emptyGraphState() {
   return {
@@ -44,7 +47,7 @@ export function emptyGraphState() {
       zoom: VIEWPORT_LIMITS.defaultZoom,
     },
     ui: {
-      importStatus: '',
+      importStatus: "",
       edgeDraft: null,
       edgeTwangId: null,
       editingNodeId: null,
@@ -79,8 +82,9 @@ export function sanitizeNode(node, frameIds = null) {
   const frameId = sanitizeFrameRef(node.frameId, frameIds);
   const baseNode = {
     id: String(node.id),
-    title: String(node.title || NODE_DEFAULTS.title).trim() || NODE_DEFAULTS.title,
-    description: String(node.description || ''),
+    title:
+      String(node.title || NODE_DEFAULTS.title).trim() || NODE_DEFAULTS.title,
+    description: String(node.description || ""),
     kind,
     x: Number(node.x) || 0,
     y: Number(node.y) || 0,
@@ -96,17 +100,21 @@ export function sanitizeNode(node, frameIds = null) {
     if (!imageData || imageAspectRatio === null) {
       return {
         ...baseNode,
-        kind: 'text',
+        kind: "text",
         ...(width === null ? {} : { width }),
         ...(height === null ? {} : { height }),
       };
     }
 
     const resolvedWidth = width ?? NODE_DEFAULTS.width;
-    const resolvedHeight = height ?? Math.max(
-      NODE_DEFAULTS.minHeight,
-      Math.round((resolvedWidth / imageAspectRatio) + IMAGE_NODE_DEFAULTS.metaHeight),
-    );
+    const resolvedHeight =
+      height ??
+      Math.max(
+        NODE_DEFAULTS.minHeight,
+        Math.round(
+          resolvedWidth / imageAspectRatio + IMAGE_NODE_DEFAULTS.metaHeight,
+        ),
+      );
 
     return {
       ...baseNode,
@@ -134,8 +142,10 @@ export function sanitizeFrame(frame) {
 
   return {
     id: String(frame.id),
-    title: String(frame.title || FRAME_DEFAULTS.title).trim() || FRAME_DEFAULTS.title,
-    description: String(frame.description || ''),
+    title:
+      String(frame.title || FRAME_DEFAULTS.title).trim() ||
+      FRAME_DEFAULTS.title,
+    description: String(frame.description || ""),
     x: Number(frame.x) || 0,
     y: Number(frame.y) || 0,
     width: Math.max(FRAME_DEFAULTS.minWidth, width),
@@ -147,17 +157,42 @@ export function sanitizeFrame(frame) {
 }
 
 export function sanitizeEdge(edge) {
+  const strokeWidth = Math.round(Number(edge.strokeWidth));
+  const resolvedStrokeWidth = Number.isFinite(strokeWidth)
+    ? Math.min(
+        EDGE_DEFAULTS.strokeWidthMax,
+        Math.max(EDGE_DEFAULTS.strokeWidthMin, strokeWidth),
+      )
+    : EDGE_DEFAULTS.strokeWidth;
+  const resolvedStrokeStyle = EDGE_STROKE_STYLES.includes(edge.strokeStyle)
+    ? edge.strokeStyle
+    : EDGE_DEFAULTS.strokeStyle;
+  const resolvedEdgeType = EDGE_TYPES.includes(edge.edgeType)
+    ? edge.edgeType
+    : EDGE_DEFAULTS.edgeType;
+  const resolvedColorKey = NODE_COLOR_KEYS.includes(edge.colorKey)
+    ? edge.colorKey
+    : null;
   return {
     id: String(edge.id),
     from: String(edge.from),
     to: String(edge.to),
     fromAnchor: sanitizeAnchor(edge.fromAnchor),
     toAnchor: sanitizeAnchor(edge.toAnchor),
+    strokeWidth: resolvedStrokeWidth,
+    strokeStyle: resolvedStrokeStyle,
+    edgeType: resolvedEdgeType,
+    ...(resolvedColorKey !== null ? { colorKey: resolvedColorKey } : {}),
   };
 }
 
 export function validateGraphPayload(payload) {
-  if (!payload || typeof payload.name !== 'string' || !Array.isArray(payload.nodes) || !Array.isArray(payload.edges)) {
+  if (
+    !payload ||
+    typeof payload.name !== "string" ||
+    !Array.isArray(payload.nodes) ||
+    !Array.isArray(payload.edges)
+  ) {
     return false;
   }
 
@@ -166,37 +201,64 @@ export function validateGraphPayload(payload) {
   }
 
   const settings = payload.settings ?? {};
-  const hasValidUiThemePreset = settings.uiThemePreset === undefined
-    || isValidUiThemePreset(settings.uiThemePreset);
-  const hasValidEnabledThemePresets = settings.enabledThemePresets === undefined
-    || isValidEnabledThemePresets(settings.enabledThemePresets);
-  const hasValidUiRadiusPreset = settings.uiRadiusPreset === undefined
-    || isValidUiRadiusPreset(settings.uiRadiusPreset);
-  const hasValidToolbarPosition = settings.toolbarPosition === undefined
-    || isValidToolbarPosition(settings.toolbarPosition);
-  const hasValidToolbarOrientation = settings.toolbarOrientation === undefined
-    || isValidToolbarOrientation(settings.toolbarOrientation);
-  const hasValidToastPosition = settings.toastPosition === undefined
-    || isValidCornerPosition(settings.toastPosition);
-  const hasValidMetaPosition = settings.metaPosition === undefined
-    || isValidCornerPosition(settings.metaPosition);
-  const hasValidCoreSettings = settings.backgroundStyle === undefined
-    || isValidBackgroundStyle(settings.backgroundStyle);
-  const hasValidAnchorsMode = settings.anchorsMode === undefined
-    || isValidAnchorsMode(settings.anchorsMode);
-  const hasValidArrowheadsMode = settings.arrowheads === undefined
-    || isValidArrowheadsMode(settings.arrowheads);
-  const hasValidArrowheadSizeStep = settings.arrowheadSizeStep === undefined
-    || isValidArrowheadSizeStep(settings.arrowheadSizeStep);
-  const hasValidNodeColorDefault = settings.nodeColorDefault === undefined
-    || settings.nodeColorDefault === null
-    || isValidNodeColorKey(settings.nodeColorDefault);
-  if (!hasValidUiThemePreset || !hasValidEnabledThemePresets || !hasValidUiRadiusPreset || !hasValidToolbarPosition || !hasValidToolbarOrientation || !hasValidToastPosition || !hasValidMetaPosition || !hasValidCoreSettings || !hasValidAnchorsMode || !hasValidArrowheadsMode || !hasValidArrowheadSizeStep || !hasValidNodeColorDefault) {
+  const hasValidUiThemePreset =
+    settings.uiThemePreset === undefined ||
+    isValidUiThemePreset(settings.uiThemePreset);
+  const hasValidEnabledThemePresets =
+    settings.enabledThemePresets === undefined ||
+    isValidEnabledThemePresets(settings.enabledThemePresets);
+  const hasValidUiRadiusPreset =
+    settings.uiRadiusPreset === undefined ||
+    isValidUiRadiusPreset(settings.uiRadiusPreset);
+  const hasValidToolbarPosition =
+    settings.toolbarPosition === undefined ||
+    isValidToolbarPosition(settings.toolbarPosition);
+  const hasValidToolbarOrientation =
+    settings.toolbarOrientation === undefined ||
+    isValidToolbarOrientation(settings.toolbarOrientation);
+  const hasValidToastPosition =
+    settings.toastPosition === undefined ||
+    isValidCornerPosition(settings.toastPosition);
+  const hasValidMetaPosition =
+    settings.metaPosition === undefined ||
+    isValidCornerPosition(settings.metaPosition);
+  const hasValidCoreSettings =
+    settings.backgroundStyle === undefined ||
+    isValidBackgroundStyle(settings.backgroundStyle);
+  const hasValidAnchorsMode =
+    settings.anchorsMode === undefined ||
+    isValidAnchorsMode(settings.anchorsMode);
+  const hasValidArrowheadsMode =
+    settings.arrowheads === undefined ||
+    isValidArrowheadsMode(settings.arrowheads);
+  const hasValidArrowheadSizeStep =
+    settings.arrowheadSizeStep === undefined ||
+    isValidArrowheadSizeStep(settings.arrowheadSizeStep);
+  const hasValidNodeColorDefault =
+    settings.nodeColorDefault === undefined ||
+    settings.nodeColorDefault === null ||
+    isValidNodeColorKey(settings.nodeColorDefault);
+  if (
+    !hasValidUiThemePreset ||
+    !hasValidEnabledThemePresets ||
+    !hasValidUiRadiusPreset ||
+    !hasValidToolbarPosition ||
+    !hasValidToolbarOrientation ||
+    !hasValidToastPosition ||
+    !hasValidMetaPosition ||
+    !hasValidCoreSettings ||
+    !hasValidAnchorsMode ||
+    !hasValidArrowheadsMode ||
+    !hasValidArrowheadSizeStep ||
+    !hasValidNodeColorDefault
+  ) {
     return false;
   }
 
   const frames = Array.isArray(payload.frames) ? payload.frames : [];
-  const hasValidFrames = frames.every((frame) => validateGraphFramePayload(frame));
+  const hasValidFrames = frames.every((frame) =>
+    validateGraphFramePayload(frame),
+  );
   if (!hasValidFrames) {
     return false;
   }
@@ -206,7 +268,9 @@ export function validateGraphPayload(payload) {
     return false;
   }
 
-  const hasValidNodes = payload.nodes.every((node) => validateGraphNodePayload(node, frameIds));
+  const hasValidNodes = payload.nodes.every((node) =>
+    validateGraphNodePayload(node, frameIds),
+  );
   if (!hasValidNodes) {
     return false;
   }
@@ -218,33 +282,44 @@ export function validateGraphPayload(payload) {
 
   const endpointIds = new Set([...nodeIds, ...frameIds]);
   return payload.edges.every((edge) => {
-    return edge
-      && typeof edge.id === 'string'
-      && endpointIds.has(edge.from)
-      && endpointIds.has(edge.to)
-      && edge.from !== edge.to
-      && (edge.fromAnchor === null || isValidAnchor(edge.fromAnchor))
-      && (edge.toAnchor === null || isValidAnchor(edge.toAnchor));
+    return (
+      edge &&
+      typeof edge.id === "string" &&
+      endpointIds.has(edge.from) &&
+      endpointIds.has(edge.to) &&
+      edge.from !== edge.to &&
+      (edge.fromAnchor === null || isValidAnchor(edge.fromAnchor)) &&
+      (edge.toAnchor === null || isValidAnchor(edge.toAnchor))
+    );
   });
 }
 
 export function sanitizeGraphName(name) {
-  const text = String(name ?? '').trim();
+  const text = String(name ?? "").trim();
   return text || GRAPH_DEFAULTS.name;
 }
 
 export function sanitizeAppSettings(settings) {
-  const enabledThemePresets = sanitizeEnabledThemePresetIds(settings?.enabledThemePresets ?? APP_SETTINGS_DEFAULTS.enabledThemePresets);
+  const enabledThemePresets = sanitizeEnabledThemePresetIds(
+    settings?.enabledThemePresets ?? APP_SETTINGS_DEFAULTS.enabledThemePresets,
+  );
   const preferredThemePreset = isValidUiThemePreset(settings?.uiThemePreset)
     ? settings.uiThemePreset
     : APP_SETTINGS_DEFAULTS.uiThemePreset;
   const sanitized = {
     uiThemePreset: enabledThemePresets.includes(preferredThemePreset)
       ? preferredThemePreset
-      : enabledThemePresets[0] ?? THEME_PRESET_IDS[0] ?? APP_SETTINGS_DEFAULTS.uiThemePreset,
+      : (enabledThemePresets[0] ??
+        THEME_PRESET_IDS[0] ??
+        APP_SETTINGS_DEFAULTS.uiThemePreset),
     enabledThemePresets,
-    uiRadiusPreset: isValidUiRadiusPreset(settings?.uiRadiusPreset) ? settings.uiRadiusPreset : APP_SETTINGS_DEFAULTS.uiRadiusPreset,
-    toolbarPosition: normalizeToolbarPosition(settings?.toolbarPosition, APP_SETTINGS_DEFAULTS.toolbarPosition),
+    uiRadiusPreset: isValidUiRadiusPreset(settings?.uiRadiusPreset)
+      ? settings.uiRadiusPreset
+      : APP_SETTINGS_DEFAULTS.uiRadiusPreset,
+    toolbarPosition: normalizeToolbarPosition(
+      settings?.toolbarPosition,
+      APP_SETTINGS_DEFAULTS.toolbarPosition,
+    ),
     toolbarOrientation: isValidToolbarOrientation(settings?.toolbarOrientation)
       ? settings.toolbarOrientation
       : APP_SETTINGS_DEFAULTS.toolbarOrientation,
@@ -277,7 +352,7 @@ export function sanitizeAppSettings(settings) {
 }
 
 export function isValidAnchor(anchor) {
-  return typeof anchor === 'string' && ANCHORS.has(anchor);
+  return typeof anchor === "string" && ANCHORS.has(anchor);
 }
 
 function sanitizeAnchor(anchor) {
@@ -285,7 +360,7 @@ function sanitizeAnchor(anchor) {
 }
 
 function isValidBackgroundStyle(value) {
-  return typeof value === 'string' && BACKGROUND_STYLES.has(value);
+  return typeof value === "string" && BACKGROUND_STYLES.has(value);
 }
 
 function isValidUiThemePreset(value) {
@@ -293,25 +368,30 @@ function isValidUiThemePreset(value) {
 }
 
 function isValidEnabledThemePresets(value) {
-  return Array.isArray(value) && value.every((themeId) => isValidUiThemePreset(themeId));
+  return (
+    Array.isArray(value) &&
+    value.every((themeId) => isValidUiThemePreset(themeId))
+  );
 }
 
 function isValidUiRadiusPreset(value) {
-  return typeof value === 'string' && UI_RADIUS_PRESETS.has(value);
+  return typeof value === "string" && UI_RADIUS_PRESETS.has(value);
 }
 
 function isValidAnchorsMode(value) {
-  return typeof value === 'string' && ANCHORS_MODES.has(value);
+  return typeof value === "string" && ANCHORS_MODES.has(value);
 }
 
 function isValidArrowheadsMode(value) {
-  return typeof value === 'string' && ARROWHEADS_MODES.has(value);
+  return typeof value === "string" && ARROWHEADS_MODES.has(value);
 }
 
 function isValidArrowheadSizeStep(value) {
-  return Number.isInteger(value)
-    && value >= ARROWHEAD_SIZE_STEP_MIN
-    && value <= ARROWHEAD_SIZE_STEP_MAX;
+  return (
+    Number.isInteger(value) &&
+    value >= ARROWHEAD_SIZE_STEP_MIN &&
+    value <= ARROWHEAD_SIZE_STEP_MAX
+  );
 }
 
 function sanitizeArrowheadSizeStep(value) {
@@ -334,11 +414,11 @@ function sanitizeOptionalSize(value) {
 }
 
 function sanitizeNodeKind(value) {
-  return isValidNodeKind(value) ? value : 'text';
+  return isValidNodeKind(value) ? value : "text";
 }
 
 function isValidNodeKind(value) {
-  return typeof value === 'string' && NODE_KINDS.has(value);
+  return typeof value === "string" && NODE_KINDS.has(value);
 }
 
 function sanitizeImageData(value) {
@@ -357,65 +437,93 @@ function sanitizeImageAspectRatio(value) {
 }
 
 function isValidImageDataUrl(value) {
-  if (typeof value !== 'string') return false;
-  if (!value.startsWith('data:image/')) return false;
-  const markerIndex = value.indexOf(';base64,');
-  if (markerIndex <= 'data:image/'.length) return false;
-  return markerIndex < (value.length - ';base64,'.length);
+  if (typeof value !== "string") return false;
+  if (!value.startsWith("data:image/")) return false;
+  const markerIndex = value.indexOf(";base64,");
+  if (markerIndex <= "data:image/".length) return false;
+  return markerIndex < value.length - ";base64,".length;
 }
 
 function validateGraphNodePayload(node, frameIds) {
-  if (!node || typeof node !== 'object') return false;
-  if (typeof node.id !== 'string' || !node.id) return false;
+  if (!node || typeof node !== "object") return false;
+  if (typeof node.id !== "string" || !node.id) return false;
   if (node.kind !== undefined && !isValidNodeKind(node.kind)) return false;
-  if (node.width !== undefined && sanitizeOptionalSize(node.width) === null) return false;
-  if (node.height !== undefined && sanitizeOptionalSize(node.height) === null) return false;
-  if (node.borderWidth !== undefined && !isValidNodeBorderWidth(node.borderWidth)) return false;
-  if (node.borderStyle !== undefined && !isValidNodeBorderStyle(node.borderStyle)) return false;
+  if (node.width !== undefined && sanitizeOptionalSize(node.width) === null)
+    return false;
+  if (node.height !== undefined && sanitizeOptionalSize(node.height) === null)
+    return false;
+  if (
+    node.borderWidth !== undefined &&
+    !isValidNodeBorderWidth(node.borderWidth)
+  )
+    return false;
+  if (
+    node.borderStyle !== undefined &&
+    !isValidNodeBorderStyle(node.borderStyle)
+  )
+    return false;
   if (node.frameId !== undefined && node.frameId !== null) {
-    if (typeof node.frameId !== 'string' || !frameIds.has(node.frameId)) return false;
+    if (typeof node.frameId !== "string" || !frameIds.has(node.frameId))
+      return false;
   }
 
-  const resolvedKind = node.kind === 'image' ? 'image' : 'text';
-  if (resolvedKind === 'image') {
-    return isValidImageDataUrl(node.imageData) && sanitizeImageAspectRatio(node.imageAspectRatio) !== null;
+  const resolvedKind = node.kind === "image" ? "image" : "text";
+  if (resolvedKind === "image") {
+    return (
+      isValidImageDataUrl(node.imageData) &&
+      sanitizeImageAspectRatio(node.imageAspectRatio) !== null
+    );
   }
 
   return true;
 }
 
 function validateGraphFramePayload(frame) {
-  if (!frame || typeof frame !== 'object') return false;
-  if (typeof frame.id !== 'string' || !frame.id) return false;
-  if (frame.width !== undefined && sanitizeOptionalSize(frame.width) === null) return false;
-  if (frame.height !== undefined && sanitizeOptionalSize(frame.height) === null) return false;
-  if (frame.borderWidth !== undefined && !isValidFrameBorderWidth(frame.borderWidth)) return false;
-  if (frame.borderStyle !== undefined && !isValidFrameBorderStyle(frame.borderStyle)) return false;
-  if (frame.colorKey !== undefined && frame.colorKey !== null && !isValidNodeColorKey(frame.colorKey)) {
+  if (!frame || typeof frame !== "object") return false;
+  if (typeof frame.id !== "string" || !frame.id) return false;
+  if (frame.width !== undefined && sanitizeOptionalSize(frame.width) === null)
+    return false;
+  if (frame.height !== undefined && sanitizeOptionalSize(frame.height) === null)
+    return false;
+  if (
+    frame.borderWidth !== undefined &&
+    !isValidFrameBorderWidth(frame.borderWidth)
+  )
+    return false;
+  if (
+    frame.borderStyle !== undefined &&
+    !isValidFrameBorderStyle(frame.borderStyle)
+  )
+    return false;
+  if (
+    frame.colorKey !== undefined &&
+    frame.colorKey !== null &&
+    !isValidNodeColorKey(frame.colorKey)
+  ) {
     return false;
   }
   return true;
 }
 
 function sanitizeNodeColorKey(value) {
-  if (value === null || value === undefined || value === '') {
+  if (value === null || value === undefined || value === "") {
     return null;
   }
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return null;
   }
   return isValidNodeColorKey(value) ? value : null;
 }
 
 function isValidNodeColorKey(value) {
-  return typeof value === 'string' && NODE_COLOR_KEYS.includes(value);
+  return typeof value === "string" && NODE_COLOR_KEYS.includes(value);
 }
 
 function sanitizeFrameRef(value, frameIds = null) {
-  if (value === null || value === undefined || value === '') {
+  if (value === null || value === undefined || value === "") {
     return null;
   }
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return null;
   }
   if (frameIds instanceof Set && !frameIds.has(value)) {
@@ -430,26 +538,30 @@ function sanitizeFrameBorderWidth(value) {
     return FRAME_DEFAULTS.borderWidth;
   }
   const rounded = Math.round(numeric);
-  if (rounded < FRAME_DEFAULTS.borderWidthMin) return FRAME_DEFAULTS.borderWidthMin;
-  if (rounded > FRAME_DEFAULTS.borderWidthMax) return FRAME_DEFAULTS.borderWidthMax;
+  if (rounded < FRAME_DEFAULTS.borderWidthMin)
+    return FRAME_DEFAULTS.borderWidthMin;
+  if (rounded > FRAME_DEFAULTS.borderWidthMax)
+    return FRAME_DEFAULTS.borderWidthMax;
   return rounded;
 }
 
 function sanitizeFrameBorderStyle(value) {
-  if (typeof value !== 'string' || !FRAME_BORDER_STYLES.has(value)) {
+  if (typeof value !== "string" || !FRAME_BORDER_STYLES.has(value)) {
     return FRAME_DEFAULTS.borderStyle;
   }
   return value;
 }
 
 function isValidFrameBorderWidth(value) {
-  return Number.isInteger(Number(value))
-    && Number(value) >= FRAME_DEFAULTS.borderWidthMin
-    && Number(value) <= FRAME_DEFAULTS.borderWidthMax;
+  return (
+    Number.isInteger(Number(value)) &&
+    Number(value) >= FRAME_DEFAULTS.borderWidthMin &&
+    Number(value) <= FRAME_DEFAULTS.borderWidthMax
+  );
 }
 
 function isValidFrameBorderStyle(value) {
-  return typeof value === 'string' && FRAME_BORDER_STYLES.has(value);
+  return typeof value === "string" && FRAME_BORDER_STYLES.has(value);
 }
 
 function sanitizeNodeBorderWidth(value) {
@@ -458,24 +570,28 @@ function sanitizeNodeBorderWidth(value) {
     return NODE_DEFAULTS.borderWidth;
   }
   const rounded = Math.round(numeric);
-  if (rounded < NODE_DEFAULTS.borderWidthMin) return NODE_DEFAULTS.borderWidthMin;
-  if (rounded > NODE_DEFAULTS.borderWidthMax) return NODE_DEFAULTS.borderWidthMax;
+  if (rounded < NODE_DEFAULTS.borderWidthMin)
+    return NODE_DEFAULTS.borderWidthMin;
+  if (rounded > NODE_DEFAULTS.borderWidthMax)
+    return NODE_DEFAULTS.borderWidthMax;
   return rounded;
 }
 
 function sanitizeNodeBorderStyle(value) {
-  if (typeof value !== 'string' || !FRAME_BORDER_STYLES.has(value)) {
+  if (typeof value !== "string" || !FRAME_BORDER_STYLES.has(value)) {
     return NODE_DEFAULTS.borderStyle;
   }
   return value;
 }
 
 function isValidNodeBorderWidth(value) {
-  return Number.isInteger(Number(value))
-    && Number(value) >= NODE_DEFAULTS.borderWidthMin
-    && Number(value) <= NODE_DEFAULTS.borderWidthMax;
+  return (
+    Number.isInteger(Number(value)) &&
+    Number(value) >= NODE_DEFAULTS.borderWidthMin &&
+    Number(value) <= NODE_DEFAULTS.borderWidthMax
+  );
 }
 
 function isValidNodeBorderStyle(value) {
-  return typeof value === 'string' && FRAME_BORDER_STYLES.has(value);
+  return typeof value === "string" && FRAME_BORDER_STYLES.has(value);
 }

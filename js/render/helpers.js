@@ -1,8 +1,23 @@
-import { FRAME_DEFAULTS, NODE_DEFAULTS } from '../utils/constants.js';
-import { isAnchorName, resolveAutoAnchor, unitVectorByAnchor } from '../shared/anchors.js';
-import { findEntityById, isFrameEntity, isImageNode } from '../shared/entities.js';
-import { getSelectedNodeIds, getSingleSelectedNodeId } from '../shared/selection.js';
-import { clamp, positiveModulo } from '../shared/math.js';
+import {
+  EDGE_TYPES,
+  FRAME_DEFAULTS,
+  NODE_DEFAULTS,
+} from "../utils/constants.js";
+import {
+  isAnchorName,
+  resolveAutoAnchor,
+  unitVectorByAnchor,
+} from "../shared/anchors.js";
+import {
+  findEntityById,
+  isFrameEntity,
+  isImageNode,
+} from "../shared/entities.js";
+import {
+  getSelectedNodeIds,
+  getSingleSelectedNodeId,
+} from "../shared/selection.js";
+import { clamp, positiveModulo } from "../shared/math.js";
 
 export {
   findEntityById,
@@ -14,9 +29,141 @@ export {
   clamp,
 };
 
-const BORDER_STYLE_OPTIONS = ['solid', 'dashed', 'dotted'];
+const BORDER_STYLE_OPTIONS = ["solid", "dashed", "dotted"];
+const EDGE_TYPE_OPTIONS = EDGE_TYPES;
 
-export function buildToolbarColorPopoverMarkup(label = 'Colors') {
+export function buildStraightPath(start, end) {
+  return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+}
+
+export function straightLineMidpoint(start, end) {
+  return { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+}
+
+export function buildOrthogonalPath(start, end, fromAnchor, toAnchor) {
+  const isFromHoriz = fromAnchor === "left" || fromAnchor === "right";
+  const isToHoriz = toAnchor === "left" || toAnchor === "right";
+  const r = 6;
+
+  // Helper: sign of actual travel between two coordinates (never 0)
+  function dir(a, b) {
+    return b >= a ? 1 : -1;
+  }
+
+  if (isFromHoriz && isToHoriz) {
+    // H → V → H  (3 segments, 2 bends at midX pivot)
+    const midX = (start.x + end.x) / 2;
+    if (Math.abs(end.y - start.y) < r * 2) {
+      return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    }
+    const hd1 = dir(start.x, midX);
+    const vd = dir(start.y, end.y);
+    const hd2 = dir(midX, end.x);
+    return `M ${start.x} ${start.y} L ${midX - r * hd1} ${start.y} Q ${midX} ${start.y} ${midX} ${start.y + r * vd} L ${midX} ${end.y - r * vd} Q ${midX} ${end.y} ${midX + r * hd2} ${end.y} L ${end.x} ${end.y}`;
+  }
+
+  if (!isFromHoriz && !isToHoriz) {
+    // V → H → V  (3 segments, 2 bends at midY pivot)
+    const midY = (start.y + end.y) / 2;
+    if (Math.abs(end.x - start.x) < r * 2) {
+      return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    }
+    const vd1 = dir(start.y, midY);
+    const hd = dir(start.x, end.x);
+    const vd2 = dir(midY, end.y);
+    return `M ${start.x} ${start.y} L ${start.x} ${midY - r * vd1} Q ${start.x} ${midY} ${start.x + r * hd} ${midY} L ${end.x - r * hd} ${midY} Q ${end.x} ${midY} ${end.x} ${midY + r * vd2} L ${end.x} ${end.y}`;
+  }
+
+  if (isFromHoriz && !isToHoriz) {
+    // H → V  (2 segments, 1 bend at (end.x, start.y))
+    if (Math.abs(end.x - start.x) < r || Math.abs(end.y - start.y) < r) {
+      return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    }
+    const hd = dir(start.x, end.x);
+    const vd = dir(start.y, end.y);
+    return `M ${start.x} ${start.y} L ${end.x - r * hd} ${start.y} Q ${end.x} ${start.y} ${end.x} ${start.y + r * vd} L ${end.x} ${end.y}`;
+  }
+
+  // V → H  (2 segments, 1 bend at (start.x, end.y))
+  if (Math.abs(end.x - start.x) < r || Math.abs(end.y - start.y) < r) {
+    return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+  }
+  const vd = dir(start.y, end.y);
+  const hd = dir(start.x, end.x);
+  return `M ${start.x} ${start.y} L ${start.x} ${end.y - r * vd} Q ${start.x} ${end.y} ${start.x + r * hd} ${end.y} L ${end.x} ${end.y}`;
+}
+
+export function orthogonalMidpoint(start, end, fromAnchor, toAnchor) {
+  const isFromHoriz = fromAnchor === "left" || fromAnchor === "right";
+  const isToHoriz = toAnchor === "left" || toAnchor === "right";
+  if (isFromHoriz && isToHoriz) {
+    return { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+  }
+  if (!isFromHoriz && !isToHoriz) {
+    return { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+  }
+  if (isFromHoriz) {
+    return { x: end.x, y: start.y };
+  }
+  return { x: start.x, y: end.y };
+}
+
+export function buildArrowheadFromDirection(end, ux, uy, sizeScale = 1) {
+  const length = 12.5 * sizeScale;
+  const halfWidth = 5 * sizeScale;
+  const inset = 2 + sizeScale * 0.8;
+  const px = -uy;
+  const py = ux;
+  const tipX = end.x + ux * inset;
+  const tipY = end.y + uy * inset;
+  const baseX = tipX - ux * length;
+  const baseY = tipY - uy * length;
+  const leftX = baseX + px * halfWidth;
+  const leftY = baseY + py * halfWidth;
+  const rightX = baseX - px * halfWidth;
+  const rightY = baseY - py * halfWidth;
+  return `M ${tipX} ${tipY} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`;
+}
+
+export function buildToolbarEdgeTypePopoverMarkup(
+  currentType,
+  label = "Edge Type",
+) {
+  const resolvedType = EDGE_TYPE_OPTIONS.includes(currentType)
+    ? currentType
+    : "curved";
+  const options = [
+    { value: "curved", icon: "bi-bezier2", title: "Curved" },
+    { value: "straight", icon: "bi-slash-lg", title: "Straight" },
+    {
+      value: "orthogonal",
+      icon: "bi-layout-three-columns",
+      title: "Orthogonal",
+    },
+  ];
+  return `
+    <div class="entity-toolbar__popover" data-toolbar-popover="edge-type" role="dialog" aria-label="${escapeAttr(label)}" hidden>
+      <p class="entity-toolbar__popover-title">${escapeHTML(label)}</p>
+      <div class="entity-toolbar__style-options entity-toolbar__edge-type-options" role="group" aria-label="${escapeAttr(label)}">
+        ${options
+          .map(
+            ({ value, icon, title }) => `
+          <button
+            class="entity-toolbar__style-btn entity-toolbar__edge-type-btn"
+            type="button"
+            data-toolbar-edge-type-value="${value}"
+            aria-pressed="${resolvedType === value ? "true" : "false"}"
+            title="${escapeAttr(title)}"
+          ><i class="bi ${icon}"></i> ${escapeHTML(title)}</button>
+        `,
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
+export function buildToolbarColorPopoverMarkup(label = "Colors") {
   return `
     <div class="entity-toolbar__popover" data-toolbar-popover="color" role="dialog" aria-label="${escapeAttr(label)}" hidden>
       <p class="entity-toolbar__popover-title">${escapeHTML(label)}</p>
@@ -37,8 +184,13 @@ export function buildToolbarColorPopoverMarkup(label = 'Colors') {
   `;
 }
 
-export function buildToolbarBorderWidthPopoverMarkup(value, label = 'Border Width') {
-  const resolvedValue = Number.isFinite(Number(value)) ? Math.round(Number(value)) : NODE_DEFAULTS.borderWidth;
+export function buildToolbarBorderWidthPopoverMarkup(
+  value,
+  label = "Border Width",
+) {
+  const resolvedValue = Number.isFinite(Number(value))
+    ? Math.round(Number(value))
+    : NODE_DEFAULTS.borderWidth;
   return `
     <div class="entity-toolbar__popover entity-toolbar__popover--range" data-toolbar-popover="border-width" role="dialog" aria-label="${escapeAttr(label)}" hidden>
       <label class="entity-toolbar__range" data-toolbar-range>
@@ -52,20 +204,27 @@ export function buildToolbarBorderWidthPopoverMarkup(value, label = 'Border Widt
   `;
 }
 
-export function buildToolbarBorderStylePopoverMarkup(currentStyle, label = 'Border Style') {
-  const resolvedStyle = BORDER_STYLE_OPTIONS.includes(currentStyle) ? currentStyle : NODE_DEFAULTS.borderStyle;
+export function buildToolbarBorderStylePopoverMarkup(
+  currentStyle,
+  label = "Border Style",
+) {
+  const resolvedStyle = BORDER_STYLE_OPTIONS.includes(currentStyle)
+    ? currentStyle
+    : NODE_DEFAULTS.borderStyle;
   return `
     <div class="entity-toolbar__popover" data-toolbar-popover="border-style" role="dialog" aria-label="${escapeAttr(label)}" hidden>
       <p class="entity-toolbar__popover-title">${escapeHTML(label)}</p>
       <div class="entity-toolbar__style-options" role="group" aria-label="${escapeAttr(label)}">
-        ${BORDER_STYLE_OPTIONS.map((style) => `
+        ${BORDER_STYLE_OPTIONS.map(
+          (style) => `
           <button
             class="entity-toolbar__style-btn"
             type="button"
             data-toolbar-border-style-value="${style}"
-            aria-pressed="${resolvedStyle === style ? 'true' : 'false'}"
+            aria-pressed="${resolvedStyle === style ? "true" : "false"}"
           >${escapeHTML(style)}</button>
-        `).join('')}
+        `,
+        ).join("")}
       </div>
     </div>
   `;
@@ -89,18 +248,24 @@ export function lerp(from, to, t) {
 
 export function measureEntitySizes(state) {
   const sizes = new Map();
-  document.querySelectorAll('#nodes-layer > [data-node-id]').forEach((nodeEl) => {
-    const nodeId = nodeEl.dataset.nodeId;
-    sizes.set(nodeId, {
-      width: nodeEl.offsetWidth || NODE_DEFAULTS.width,
-      height: nodeEl.offsetHeight || NODE_DEFAULTS.height,
+  document
+    .querySelectorAll("#nodes-layer > [data-node-id]")
+    .forEach((nodeEl) => {
+      const nodeId = nodeEl.dataset.nodeId;
+      sizes.set(nodeId, {
+        width: nodeEl.offsetWidth || NODE_DEFAULTS.width,
+        height: nodeEl.offsetHeight || NODE_DEFAULTS.height,
+      });
     });
-  });
   for (const frame of state.frames || []) {
-    const frameEl = document.querySelector(`#frames-layer > [data-frame-id="${escapeSelector(frame.id)}"]`);
+    const frameEl = document.querySelector(
+      `#frames-layer > [data-frame-id="${escapeSelector(frame.id)}"]`,
+    );
     sizes.set(frame.id, {
-      width: frameEl?.offsetWidth || Number(frame.width) || FRAME_DEFAULTS.width,
-      height: frameEl?.offsetHeight || Number(frame.height) || FRAME_DEFAULTS.height,
+      width:
+        frameEl?.offsetWidth || Number(frame.width) || FRAME_DEFAULTS.width,
+      height:
+        frameEl?.offsetHeight || Number(frame.height) || FRAME_DEFAULTS.height,
     });
   }
   return sizes;
@@ -122,9 +287,9 @@ export function buildNodeInlineSizeStyle(node) {
   const hasWidth = Number.isFinite(width) && width > 0;
   const hasHeight = Number.isFinite(height) && height > 0;
   if (!hasWidth && !hasHeight) {
-    return '';
+    return "";
   }
-  let style = '';
+  let style = "";
   if (hasWidth) {
     style += `width: ${width}px;`;
   }
@@ -137,7 +302,10 @@ export function buildNodeInlineSizeStyle(node) {
 export function hasExplicitNodeSize(node) {
   const width = Number(node.width);
   const height = Number(node.height);
-  return (Number.isFinite(width) && width > 0) || (Number.isFinite(height) && height > 0);
+  return (
+    (Number.isFinite(width) && width > 0) ||
+    (Number.isFinite(height) && height > 0)
+  );
 }
 
 export function getNodeCenter(node, size) {
@@ -151,19 +319,24 @@ export function getAnchorPoint(node, size, anchor) {
   const halfWidth = size.width / 2;
   const halfHeight = size.height / 2;
   switch (anchor) {
-    case 'top':
+    case "top":
       return { x: node.x + halfWidth, y: node.y };
-    case 'right':
+    case "right":
       return { x: node.x + size.width, y: node.y + halfHeight };
-    case 'bottom':
+    case "bottom":
       return { x: node.x + halfWidth, y: node.y + size.height };
-    case 'left':
+    case "left":
     default:
       return { x: node.x, y: node.y + halfHeight };
   }
 }
 
-export function resolveEdgeAnchor(preferredAnchor, fromNode, toNode, useExactAnchors) {
+export function resolveEdgeAnchor(
+  preferredAnchor,
+  fromNode,
+  toNode,
+  useExactAnchors,
+) {
   if (isAnchorName(preferredAnchor)) {
     return preferredAnchor;
   }
@@ -178,9 +351,9 @@ export function resolveAnchorToPoint(node, size, targetPoint) {
   const dx = targetPoint.x - center.x;
   const dy = targetPoint.y - center.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
-    return dx >= 0 ? 'right' : 'left';
+    return dx >= 0 ? "right" : "left";
   }
-  return dy >= 0 ? 'bottom' : 'top';
+  return dy >= 0 ? "bottom" : "top";
 }
 
 export function buildTautPath(start, end, fromAnchor, toAnchor) {
@@ -200,20 +373,20 @@ export function inferIncomingAnchor(start, end) {
   const dx = start.x - end.x;
   const dy = start.y - end.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
-    return dx >= 0 ? 'right' : 'left';
+    return dx >= 0 ? "right" : "left";
   }
-  return dy >= 0 ? 'bottom' : 'top';
+  return dy >= 0 ? "bottom" : "top";
 }
 
 export function moveByAnchor(point, anchor, distance) {
   switch (anchor) {
-    case 'top':
+    case "top":
       return { x: point.x, y: point.y - distance };
-    case 'right':
+    case "right":
       return { x: point.x + distance, y: point.y };
-    case 'bottom':
+    case "bottom":
       return { x: point.x, y: point.y + distance };
-    case 'left':
+    case "left":
       return { x: point.x - distance, y: point.y };
     default:
       return { x: point.x, y: point.y };
@@ -234,15 +407,28 @@ export function cubicPointAt(p0, p1, p2, p3, t) {
   };
 }
 
-export function buildArrowheadPath(start, controlStart, controlEnd, end, toAnchor, sizeScale = 1) {
+export function buildArrowheadPath(
+  start,
+  controlStart,
+  controlEnd,
+  end,
+  toAnchor,
+  sizeScale = 1,
+) {
   const tangentT = 0.96;
   const approach = cubicPointAt(start, controlStart, controlEnd, end, tangentT);
-  const tangent = cubicDerivativeAt(start, controlStart, controlEnd, end, tangentT);
+  const tangent = cubicDerivativeAt(
+    start,
+    controlStart,
+    controlEnd,
+    end,
+    tangentT,
+  );
   const vx = tangent.x;
   const vy = tangent.y;
   const length = 12.5 * sizeScale;
   const halfWidth = 5 * sizeScale;
-  const inset = 2 + (sizeScale * 0.8);
+  const inset = 2 + sizeScale * 0.8;
   const magnitude = Math.hypot(vx, vy);
   let ux = 0;
   let uy = 0;
@@ -252,7 +438,7 @@ export function buildArrowheadPath(start, controlStart, controlEnd, end, toAncho
     uy = vy / magnitude;
     const toEndX = end.x - approach.x;
     const toEndY = end.y - approach.y;
-    const dot = (ux * toEndX) + (uy * toEndY);
+    const dot = ux * toEndX + uy * toEndY;
     if (dot < 0) {
       ux = -ux;
       uy = -uy;
@@ -265,14 +451,14 @@ export function buildArrowheadPath(start, controlStart, controlEnd, end, toAncho
 
   const px = -uy;
   const py = ux;
-  const tipX = end.x + (ux * inset);
-  const tipY = end.y + (uy * inset);
-  const baseX = tipX - (ux * length);
-  const baseY = tipY - (uy * length);
-  const leftX = baseX + (px * halfWidth);
-  const leftY = baseY + (py * halfWidth);
-  const rightX = baseX - (px * halfWidth);
-  const rightY = baseY - (py * halfWidth);
+  const tipX = end.x + ux * inset;
+  const tipY = end.y + uy * inset;
+  const baseX = tipX - ux * length;
+  const baseY = tipY - uy * length;
+  const leftX = baseX + px * halfWidth;
+  const leftY = baseY + py * halfWidth;
+  const rightX = baseX - px * halfWidth;
+  const rightY = baseY - py * halfWidth;
   return `M ${tipX} ${tipY} L ${leftX} ${leftY} L ${rightX} ${rightY} Z`;
 }
 
@@ -282,22 +468,27 @@ export function cubicDerivativeAt(p0, p1, p2, p3, t) {
   const b = 6 * mt * t;
   const c = 3 * t * t;
   return {
-    x: (a * (p1.x - p0.x)) + (b * (p2.x - p1.x)) + (c * (p3.x - p2.x)),
-    y: (a * (p1.y - p0.y)) + (b * (p2.y - p1.y)) + (c * (p3.y - p2.y)),
+    x: a * (p1.x - p0.x) + b * (p2.x - p1.x) + c * (p3.x - p2.x),
+    y: a * (p1.y - p0.y) + b * (p2.y - p1.y) + c * (p3.y - p2.y),
   };
 }
 
 export function getArrowheadSizeScale(step) {
   const safeStep = clamp(Math.round(Number(step) || 0), 0, 9);
-  return 1 + (safeStep * 0.2);
+  return 1 + safeStep * 0.2;
 }
 
 export function escapeHTML(value) {
-  return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 export function escapeAttr(value) {
-  return escapeHTML(value).replaceAll('`', '&#096;');
+  return escapeHTML(value).replaceAll("`", "&#096;");
 }
 
 export function buildNodeOverlayControls(nodeId) {
@@ -316,10 +507,14 @@ export function buildNodeOverlayControls(nodeId) {
 export function buildFrameOverlayControls(frameId, options = {}) {
   const includeResize = options.includeResize !== false;
   return `
-    ${includeResize ? `<button class="frame__resize frame__resize--top-left selection-controls__resize" type="button" data-frame-resize="${frameId}:top-left" data-frame-id="${frameId}" aria-label="Resize frame from top left corner"></button>
+    ${
+      includeResize
+        ? `<button class="frame__resize frame__resize--top-left selection-controls__resize" type="button" data-frame-resize="${frameId}:top-left" data-frame-id="${frameId}" aria-label="Resize frame from top left corner"></button>
     <button class="frame__resize frame__resize--top-right selection-controls__resize" type="button" data-frame-resize="${frameId}:top-right" data-frame-id="${frameId}" aria-label="Resize frame from top right corner"></button>
     <button class="frame__resize frame__resize--bottom-right selection-controls__resize" type="button" data-frame-resize="${frameId}:bottom-right" data-frame-id="${frameId}" aria-label="Resize frame from bottom right corner"></button>
-    <button class="frame__resize frame__resize--bottom-left selection-controls__resize" type="button" data-frame-resize="${frameId}:bottom-left" data-frame-id="${frameId}" aria-label="Resize frame from bottom left corner"></button>` : ''}
+    <button class="frame__resize frame__resize--bottom-left selection-controls__resize" type="button" data-frame-resize="${frameId}:bottom-left" data-frame-id="${frameId}" aria-label="Resize frame from bottom left corner"></button>`
+        : ""
+    }
     <button class="frame__anchor frame__anchor--top selection-controls__anchor" type="button" data-frame-anchor="${frameId}:top" data-frame-id="${frameId}" aria-label="Connect from top anchor"></button>
     <button class="frame__anchor frame__anchor--right selection-controls__anchor" type="button" data-frame-anchor="${frameId}:right" data-frame-id="${frameId}" aria-label="Connect from right anchor"></button>
     <button class="frame__anchor frame__anchor--bottom selection-controls__anchor" type="button" data-frame-anchor="${frameId}:bottom" data-frame-id="${frameId}" aria-label="Connect from bottom anchor"></button>
@@ -328,13 +523,11 @@ export function buildFrameOverlayControls(frameId, options = {}) {
 }
 
 export function escapeCssUrl(value) {
-  return String(value)
-    .replaceAll('\\', '\\\\')
-    .replaceAll("'", "\\'");
+  return String(value).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
 }
 
 export function escapeSelector(value) {
-  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
     return CSS.escape(String(value));
   }
   return String(value);

@@ -15,7 +15,18 @@ The persisted graph shape is:
   "name": "Untitled hypernode",
   "settings": {
     "uiThemePreset": "blueprint",
-    "enabledThemePresets": ["blueprint", "fjord", "slate", "paper", "ember", "chalkboard", "citrine", "canopy", "tidepool", "dusk"],
+    "enabledThemePresets": [
+      "blueprint",
+      "fjord",
+      "slate",
+      "paper",
+      "ember",
+      "chalkboard",
+      "citrine",
+      "canopy",
+      "tidepool",
+      "dusk"
+    ],
     "uiRadiusPreset": "rounded",
     "toolbarPosition": "top-left",
     "toolbarOrientation": "horizontal",
@@ -166,7 +177,11 @@ Rules:
   "from": "node_123",
   "to": "frame_123",
   "fromAnchor": "right",
-  "toAnchor": "left"
+  "toAnchor": "left",
+  "strokeWidth": 2,
+  "strokeStyle": "solid",
+  "edgeType": "curved",
+  "colorKey": null
 }
 ```
 
@@ -176,6 +191,10 @@ Rules:
 - self-loops are invalid at payload level
 - anchors may be `top`, `right`, `bottom`, `left`, or `null`
 - when `anchorsMode` is `auto`, the store rewrites stale anchors to the currently resolved sides
+- `strokeWidth`: integer 1–8, defaults to `2`
+- `strokeStyle`: `"solid" | "dashed" | "dotted"`, defaults to `"solid"`
+- `edgeType`: `"curved" | "straight" | "orthogonal"`, defaults to `"curved"`
+- `colorKey`: one of the named palette keys or `null` (inherits theme default), omitted from serialised payload when `null`
 
 ## Persistence Boundaries
 

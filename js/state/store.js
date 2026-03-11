@@ -1,25 +1,27 @@
-
-import { createId } from '../utils/id.js';
+import { createId } from "../utils/id.js";
 import {
   emptyGraphState,
   sanitizeEdge,
   sanitizeFrame,
   sanitizeGraphName,
   sanitizeNode,
-} from '../utils/graph.js';
+} from "../utils/graph.js";
 import {
+  EDGE_DEFAULTS,
+  EDGE_STROKE_STYLES,
+  EDGE_TYPES,
   FRAME_DEFAULTS,
   IMAGE_NODE_DEFAULTS,
   NODE_COLOR_KEYS,
   NODE_DEFAULTS,
   VIEWPORT_LIMITS,
-} from '../utils/constants.js';
+} from "../utils/constants.js";
 import {
   findBestFrameIdForNode as findBestFrameIdForNodeInFrames,
   findEntityById,
   getNodeFrameOverlapArea,
-} from '../shared/entities.js';
-import { resolveAutoAnchor } from '../shared/anchors.js';
+} from "../shared/entities.js";
+import { resolveAutoAnchor } from "../shared/anchors.js";
 import {
   areSelectionsEqual,
   cloneSelection,
@@ -27,20 +29,28 @@ import {
   isFrameSelected,
   isNodeSelected,
   normalizeNodeSelection,
-} from '../shared/selection.js';
-import { createHistoryManager } from './history.js';
-import { createMutationTools } from './store-mutations.js';
-import { getInitialSettings, getResolvedSettings, settingsChanged } from './store-settings.js';
-import { clearTransientUiState } from './ui.js';
+} from "../shared/selection.js";
+import { createHistoryManager } from "./history.js";
+import { createMutationTools } from "./store-mutations.js";
+import {
+  getInitialSettings,
+  getResolvedSettings,
+  settingsChanged,
+} from "./store-settings.js";
+import { clearTransientUiState } from "./ui.js";
 
 export function createStore(initialGraph = null, initialSettings = null) {
   const state = emptyGraphState();
   state.settings = getInitialSettings(initialGraph, initialSettings);
   if (initialGraph) {
     state.name = sanitizeGraphName(initialGraph.name);
-    state.frames = (Array.isArray(initialGraph.frames) ? initialGraph.frames : []).map(sanitizeFrame);
+    state.frames = (
+      Array.isArray(initialGraph.frames) ? initialGraph.frames : []
+    ).map(sanitizeFrame);
     const frameIds = new Set(state.frames.map((frame) => frame.id));
-    state.nodes = initialGraph.nodes.map((node) => sanitizeNode(node, frameIds));
+    state.nodes = initialGraph.nodes.map((node) =>
+      sanitizeNode(node, frameIds),
+    );
     state.edges = initialGraph.edges.map(sanitizeEdge);
     syncAutoAnchorsForAllEdges();
   }
@@ -48,7 +58,11 @@ export function createStore(initialGraph = null, initialSettings = null) {
   const listeners = new Set();
   let importStatusTimeoutHandle = null;
   const { snapshot, pushHistory } = createHistoryManager(state);
-  const { applyStateChange } = createMutationTools({ notify, pushHistory, syncAutoAnchorsForAllEdges });
+  const { applyStateChange } = createMutationTools({
+    notify,
+    pushHistory,
+    syncAutoAnchorsForAllEdges,
+  });
 
   function notify() {
     for (const listener of listeners) {
@@ -57,14 +71,15 @@ export function createStore(initialGraph = null, initialSettings = null) {
   }
 
   function syncAutoAnchorsForEdge(edge) {
-    if (!edge || state.settings.anchorsMode !== 'auto') return false;
+    if (!edge || state.settings.anchorsMode !== "auto") return false;
     const fromEntity = getGraphEntity(edge.from);
     const toEntity = getGraphEntity(edge.to);
     if (!fromEntity || !toEntity) return false;
 
     const fromAnchor = resolveAutoAnchor(fromEntity, toEntity);
     const toAnchor = resolveAutoAnchor(toEntity, fromEntity);
-    const changed = edge.fromAnchor !== fromAnchor || edge.toAnchor !== toAnchor;
+    const changed =
+      edge.fromAnchor !== fromAnchor || edge.toAnchor !== toAnchor;
     if (!changed) return false;
 
     edge.fromAnchor = fromAnchor;
@@ -73,7 +88,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   }
 
   function syncAutoAnchorsForAllEdges() {
-    if (state.settings.anchorsMode !== 'auto') return false;
+    if (state.settings.anchorsMode !== "auto") return false;
     let changed = false;
     for (const edge of state.edges) {
       changed = syncAutoAnchorsForEdge(edge) || changed;
@@ -105,7 +120,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     importStatusTimeoutHandle = setTimeout(() => {
       importStatusTimeoutHandle = null;
       if (!getImportStatusText(state.ui.importStatus)) return;
-      state.ui.importStatus = '';
+      state.ui.importStatus = "";
       notify();
     }, 2200);
   }
@@ -247,12 +262,18 @@ export function createStore(initialGraph = null, initialSettings = null) {
   }
 
   function setFrameMembershipPreview(previewByFrameId) {
-    const nextPreview = (previewByFrameId && typeof previewByFrameId === 'object')
-      ? { ...previewByFrameId }
-      : {};
+    const nextPreview =
+      previewByFrameId && typeof previewByFrameId === "object"
+        ? { ...previewByFrameId }
+        : {};
     const prevKeys = Object.keys(state.ui.frameMembershipPreview || {});
     const nextKeys = Object.keys(nextPreview);
-    if (prevKeys.length === nextKeys.length && prevKeys.every((key) => state.ui.frameMembershipPreview[key] === nextPreview[key])) {
+    if (
+      prevKeys.length === nextKeys.length &&
+      prevKeys.every(
+        (key) => state.ui.frameMembershipPreview[key] === nextPreview[key],
+      )
+    ) {
       return;
     }
     state.ui.frameMembershipPreview = nextPreview;
@@ -260,17 +281,21 @@ export function createStore(initialGraph = null, initialSettings = null) {
   }
 
   function clearFrameMembershipPreview() {
-    if (!state.ui.frameMembershipPreview || Object.keys(state.ui.frameMembershipPreview).length === 0) return;
+    if (
+      !state.ui.frameMembershipPreview ||
+      Object.keys(state.ui.frameMembershipPreview).length === 0
+    )
+      return;
     state.ui.frameMembershipPreview = {};
     notify();
   }
 
   function setNodeMembershipPreview(previewByNodeId) {
     const nextPreview = {};
-    if (previewByNodeId && typeof previewByNodeId === 'object') {
+    if (previewByNodeId && typeof previewByNodeId === "object") {
       for (const [nodeId, mode] of Object.entries(previewByNodeId)) {
-        if (typeof nodeId !== 'string') continue;
-        if (mode !== 'add' && mode !== 'remove') continue;
+        if (typeof nodeId !== "string") continue;
+        if (mode !== "add" && mode !== "remove") continue;
         nextPreview[nodeId] = mode;
       }
     }
@@ -278,7 +303,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const previous = state.ui.nodeMembershipPreview || {};
     const prevKeys = Object.keys(previous);
     const nextKeys = Object.keys(nextPreview);
-    if (prevKeys.length === nextKeys.length && prevKeys.every((key) => previous[key] === nextPreview[key])) {
+    if (
+      prevKeys.length === nextKeys.length &&
+      prevKeys.every((key) => previous[key] === nextPreview[key])
+    ) {
       return;
     }
     state.ui.nodeMembershipPreview = nextPreview;
@@ -318,20 +346,28 @@ export function createStore(initialGraph = null, initialSettings = null) {
 
     state.selection = cloneSelection(selection);
     if (state.ui.editingNodeId) {
-      const keepEditing = isNodeSelected(state.selection, state.ui.editingNodeId);
+      const keepEditing = isNodeSelected(
+        state.selection,
+        state.ui.editingNodeId,
+      );
       if (!keepEditing) {
         finalizeEditingNodeText(state.ui.editingNodeId);
         state.ui.editingNodeId = null;
       }
     }
     if (state.ui.focusedNodeId) {
-      const keepFocused = state.selection?.type === 'node' && state.selection.id === state.ui.focusedNodeId;
+      const keepFocused =
+        state.selection?.type === "node" &&
+        state.selection.id === state.ui.focusedNodeId;
       if (!keepFocused) {
         state.ui.focusedNodeId = null;
       }
     }
     if (state.ui.editingFrameId) {
-      const keepEditing = isFrameSelected(state.selection, state.ui.editingFrameId);
+      const keepEditing = isFrameSelected(
+        state.selection,
+        state.ui.editingFrameId,
+      );
       if (!keepEditing) {
         finalizeEditingFrameText(state.ui.editingFrameId);
         state.ui.editingFrameId = null;
@@ -341,7 +377,11 @@ export function createStore(initialGraph = null, initialSettings = null) {
   }
 
   function setNodeSelection(ids, options = {}) {
-    const normalized = normalizeNodeSelection(ids, state.nodes, options.primaryId);
+    const normalized = normalizeNodeSelection(
+      ids,
+      state.nodes,
+      options.primaryId,
+    );
     setSelection(normalized);
   }
 
@@ -381,34 +421,43 @@ export function createStore(initialGraph = null, initialSettings = null) {
     notify();
   }
 
-  function addNode({
-    x,
-    y,
-    title = NODE_DEFAULTS.title,
-    description = '',
-    kind = 'text',
-    imageData = null,
-    imageAspectRatio = null,
-    width = null,
-    height = null,
-    frameId = null,
-  }, options = {}) {
-    const resolvedColorKey = options.colorKey !== undefined
-      ? sanitizeColorKey(options.colorKey)
-      : sanitizeColorKey(state.settings.nodeColorDefault);
-    const node = sanitizeNode({
-      id: createId('node'),
-      title,
-      description,
-      kind,
-      ...(kind === IMAGE_NODE_DEFAULTS.kind ? { imageData, imageAspectRatio } : {}),
+  function addNode(
+    {
       x,
       y,
-      ...(width === null ? {} : { width }),
-      ...(height === null ? {} : { height }),
-      ...(frameId ? { frameId } : {}),
-      colorKey: resolvedColorKey,
-    }, new Set(state.frames.map((frame) => frame.id)));
+      title = NODE_DEFAULTS.title,
+      description = "",
+      kind = "text",
+      imageData = null,
+      imageAspectRatio = null,
+      width = null,
+      height = null,
+      frameId = null,
+    },
+    options = {},
+  ) {
+    const resolvedColorKey =
+      options.colorKey !== undefined
+        ? sanitizeColorKey(options.colorKey)
+        : sanitizeColorKey(state.settings.nodeColorDefault);
+    const node = sanitizeNode(
+      {
+        id: createId("node"),
+        title,
+        description,
+        kind,
+        ...(kind === IMAGE_NODE_DEFAULTS.kind
+          ? { imageData, imageAspectRatio }
+          : {}),
+        x,
+        y,
+        ...(width === null ? {} : { width }),
+        ...(height === null ? {} : { height }),
+        ...(frameId ? { frameId } : {}),
+        colorKey: resolvedColorKey,
+      },
+      new Set(state.frames.map((frame) => frame.id)),
+    );
 
     if (!node.frameId && options.resolveFrameMembership !== false) {
       const bestFrameId = findBestFrameIdForNode(node);
@@ -417,24 +466,31 @@ export function createStore(initialGraph = null, initialSettings = null) {
       }
     }
 
-    applyStateChange('add-node', () => {
-      state.nodes.push(node);
-      state.selection = { type: 'node', id: node.id };
-    }, { skipHistory: options.skipHistory });
+    applyStateChange(
+      "add-node",
+      () => {
+        state.nodes.push(node);
+        state.selection = { type: "node", id: node.id };
+      },
+      { skipHistory: options.skipHistory },
+    );
     return node;
   }
 
-  function addFrame({
-    x,
-    y,
-    width = FRAME_DEFAULTS.width,
-    height = FRAME_DEFAULTS.height,
-    title = FRAME_DEFAULTS.title,
-    description = '',
-    colorKey = null,
-  }, options = {}) {
+  function addFrame(
+    {
+      x,
+      y,
+      width = FRAME_DEFAULTS.width,
+      height = FRAME_DEFAULTS.height,
+      title = FRAME_DEFAULTS.title,
+      description = "",
+      colorKey = null,
+    },
+    options = {},
+  ) {
     const frame = sanitizeFrame({
-      id: createId('frame'),
+      id: createId("frame"),
       title,
       description,
       x,
@@ -444,71 +500,106 @@ export function createStore(initialGraph = null, initialSettings = null) {
       colorKey,
     });
 
-    applyStateChange('add-frame', () => {
-      state.frames.push(frame);
+    applyStateChange(
+      "add-frame",
+      () => {
+        state.frames.push(frame);
 
-      if (options.assignOverlaps !== false) {
-        for (const node of state.nodes) {
-          if (node.frameId) continue;
-          const area = getNodeFrameOverlapArea(node, frame);
-          if (area > 0) {
-            node.frameId = frame.id;
+        if (options.assignOverlaps !== false) {
+          for (const node of state.nodes) {
+            if (node.frameId) continue;
+            const area = getNodeFrameOverlapArea(node, frame);
+            if (area > 0) {
+              node.frameId = frame.id;
+            }
           }
         }
-      }
 
-      state.selection = { type: 'frame', id: frame.id };
-    }, { skipHistory: options.skipHistory });
+        state.selection = { type: "frame", id: frame.id };
+      },
+      { skipHistory: options.skipHistory },
+    );
     return frame;
   }
   function updateNode(id, patch, options = {}) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
-    if (!options.skipHistory) pushHistory('update-node');
-    if (typeof patch.kind === 'string' && (patch.kind === 'text' || patch.kind === IMAGE_NODE_DEFAULTS.kind)) {
+    if (!options.skipHistory) pushHistory("update-node");
+    if (
+      typeof patch.kind === "string" &&
+      (patch.kind === "text" || patch.kind === IMAGE_NODE_DEFAULTS.kind)
+    ) {
       node.kind = patch.kind;
       if (patch.kind !== IMAGE_NODE_DEFAULTS.kind) {
         delete node.imageData;
         delete node.imageAspectRatio;
       }
     }
-    if (typeof patch.title === 'string') {
+    if (typeof patch.title === "string") {
       const title = patch.title.trim();
       node.title = title || NODE_DEFAULTS.title;
     }
-    if (typeof patch.description === 'string') {
+    if (typeof patch.description === "string") {
       node.description = patch.description;
     }
-    if (typeof patch.x === 'number') {
+    if (typeof patch.x === "number") {
       node.x = patch.x;
     }
-    if (typeof patch.y === 'number') {
+    if (typeof patch.y === "number") {
       node.y = patch.y;
     }
-    if (typeof patch.imageData === 'string' && patch.imageData.startsWith('data:image/')) {
+    if (
+      typeof patch.imageData === "string" &&
+      patch.imageData.startsWith("data:image/")
+    ) {
       node.imageData = patch.imageData;
     }
-    if (typeof patch.imageAspectRatio === 'number' && Number.isFinite(patch.imageAspectRatio) && patch.imageAspectRatio > 0) {
+    if (
+      typeof patch.imageAspectRatio === "number" &&
+      Number.isFinite(patch.imageAspectRatio) &&
+      patch.imageAspectRatio > 0
+    ) {
       node.imageAspectRatio = patch.imageAspectRatio;
     }
-    if (typeof patch.width === 'number' && Number.isFinite(patch.width) && patch.width > 0) {
+    if (
+      typeof patch.width === "number" &&
+      Number.isFinite(patch.width) &&
+      patch.width > 0
+    ) {
       node.width = patch.width;
     }
-    if (typeof patch.height === 'number' && Number.isFinite(patch.height) && patch.height > 0) {
+    if (
+      typeof patch.height === "number" &&
+      Number.isFinite(patch.height) &&
+      patch.height > 0
+    ) {
       node.height = patch.height;
     }
     if (patch.borderWidth !== undefined) {
       const numeric = Math.round(Number(patch.borderWidth));
       if (Number.isFinite(numeric)) {
-        node.borderWidth = Math.min(NODE_DEFAULTS.borderWidthMax, Math.max(NODE_DEFAULTS.borderWidthMin, numeric));
+        node.borderWidth = Math.min(
+          NODE_DEFAULTS.borderWidthMax,
+          Math.max(NODE_DEFAULTS.borderWidthMin, numeric),
+        );
       }
     }
-    if (typeof patch.borderStyle === 'string' && ['solid', 'dashed', 'dotted'].includes(patch.borderStyle)) {
+    if (
+      typeof patch.borderStyle === "string" &&
+      ["solid", "dashed", "dotted"].includes(patch.borderStyle)
+    ) {
       node.borderStyle = patch.borderStyle;
     }
-    if (patch.frameId === null || patch.frameId === undefined || patch.frameId === '') {
+    if (
+      patch.frameId === null ||
+      patch.frameId === undefined ||
+      patch.frameId === ""
+    ) {
       delete node.frameId;
-    } else if (typeof patch.frameId === 'string' && state.frames.some((frame) => frame.id === patch.frameId)) {
+    } else if (
+      typeof patch.frameId === "string" &&
+      state.frames.some((frame) => frame.id === patch.frameId)
+    ) {
       node.frameId = patch.frameId;
     }
     syncAutoAnchorsForAllEdges();
@@ -518,11 +609,17 @@ export function createStore(initialGraph = null, initialSettings = null) {
   }
 
   function clearNodesFrameMembership(nodeIds, options = {}) {
-    const ids = new Set((Array.isArray(nodeIds) ? nodeIds : []).filter((id) => typeof id === 'string'));
+    const ids = new Set(
+      (Array.isArray(nodeIds) ? nodeIds : []).filter(
+        (id) => typeof id === "string",
+      ),
+    );
     if (!ids.size) return false;
-    const targets = state.nodes.filter((node) => ids.has(node.id) && typeof node.frameId === 'string');
+    const targets = state.nodes.filter(
+      (node) => ids.has(node.id) && typeof node.frameId === "string",
+    );
     if (!targets.length) return false;
-    if (!options.skipHistory) pushHistory('set-node-frame');
+    if (!options.skipHistory) pushHistory("set-node-frame");
     for (const node of targets) {
       delete node.frameId;
     }
@@ -533,33 +630,39 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function updateFrame(id, patch, options = {}) {
     const frame = state.frames.find((item) => item.id === id);
     if (!frame) return;
-    if (!options.skipHistory) pushHistory('update-frame');
-    if (typeof patch.title === 'string') {
+    if (!options.skipHistory) pushHistory("update-frame");
+    if (typeof patch.title === "string") {
       const title = patch.title.trim();
       frame.title = title || FRAME_DEFAULTS.title;
     }
-    if (typeof patch.description === 'string') {
+    if (typeof patch.description === "string") {
       frame.description = patch.description;
     }
-    if (typeof patch.x === 'number') {
+    if (typeof patch.x === "number") {
       frame.x = patch.x;
     }
-    if (typeof patch.y === 'number') {
+    if (typeof patch.y === "number") {
       frame.y = patch.y;
     }
-    if (typeof patch.width === 'number') {
+    if (typeof patch.width === "number") {
       frame.width = Math.max(FRAME_DEFAULTS.minWidth, patch.width);
     }
-    if (typeof patch.height === 'number') {
+    if (typeof patch.height === "number") {
       frame.height = Math.max(FRAME_DEFAULTS.minHeight, patch.height);
     }
     if (patch.borderWidth !== undefined) {
       const numeric = Math.round(Number(patch.borderWidth));
       if (Number.isFinite(numeric)) {
-        frame.borderWidth = Math.min(FRAME_DEFAULTS.borderWidthMax, Math.max(FRAME_DEFAULTS.borderWidthMin, numeric));
+        frame.borderWidth = Math.min(
+          FRAME_DEFAULTS.borderWidthMax,
+          Math.max(FRAME_DEFAULTS.borderWidthMin, numeric),
+        );
       }
     }
-    if (typeof patch.borderStyle === 'string' && ['solid', 'dashed', 'dotted'].includes(patch.borderStyle)) {
+    if (
+      typeof patch.borderStyle === "string" &&
+      ["solid", "dashed", "dotted"].includes(patch.borderStyle)
+    ) {
       frame.borderStyle = patch.borderStyle;
     }
     syncAutoAnchorsForAllEdges();
@@ -571,7 +674,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function moveNode(id, x, y, options = {}) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
-    if (!options.skipHistory) pushHistory('move-node');
+    if (!options.skipHistory) pushHistory("move-node");
     node.x = x;
     node.y = y;
     syncAutoAnchorsForAllEdges();
@@ -580,13 +683,13 @@ export function createStore(initialGraph = null, initialSettings = null) {
 
   function moveNodes(batch, options = {}) {
     if (!Array.isArray(batch) || batch.length === 0) return;
-    if (!options.skipHistory) pushHistory('move-node');
+    if (!options.skipHistory) pushHistory("move-node");
     for (const entry of batch) {
-      if (!entry || typeof entry.id !== 'string') continue;
+      if (!entry || typeof entry.id !== "string") continue;
       const node = state.nodes.find((item) => item.id === entry.id);
       if (!node) continue;
-      if (typeof entry.x === 'number') node.x = entry.x;
-      if (typeof entry.y === 'number') node.y = entry.y;
+      if (typeof entry.x === "number") node.x = entry.x;
+      if (typeof entry.y === "number") node.y = entry.y;
     }
     syncAutoAnchorsForAllEdges();
     notify();
@@ -595,7 +698,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function moveFrame(id, x, y, options = {}) {
     const frame = state.frames.find((item) => item.id === id);
     if (!frame) return;
-    if (!options.skipHistory) pushHistory('move-frame');
+    if (!options.skipHistory) pushHistory("move-frame");
     const dx = x - frame.x;
     const dy = y - frame.y;
     frame.x = x;
@@ -617,17 +720,17 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function resizeNode(id, patch, options = {}) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
-    if (!options.skipHistory) pushHistory('resize-node');
-    if (typeof patch.x === 'number') {
+    if (!options.skipHistory) pushHistory("resize-node");
+    if (typeof patch.x === "number") {
       node.x = patch.x;
     }
-    if (typeof patch.y === 'number') {
+    if (typeof patch.y === "number") {
       node.y = patch.y;
     }
-    if (typeof patch.width === 'number') {
+    if (typeof patch.width === "number") {
       node.width = patch.width;
     }
-    if (typeof patch.height === 'number') {
+    if (typeof patch.height === "number") {
       node.height = patch.height;
     }
     syncAutoAnchorsForAllEdges();
@@ -637,17 +740,17 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function resizeFrame(id, patch, options = {}) {
     const frame = state.frames.find((item) => item.id === id);
     if (!frame) return;
-    if (!options.skipHistory) pushHistory('resize-frame');
-    if (typeof patch.x === 'number') {
+    if (!options.skipHistory) pushHistory("resize-frame");
+    if (typeof patch.x === "number") {
       frame.x = patch.x;
     }
-    if (typeof patch.y === 'number') {
+    if (typeof patch.y === "number") {
       frame.y = patch.y;
     }
-    if (typeof patch.width === 'number') {
+    if (typeof patch.width === "number") {
       frame.width = Math.max(FRAME_DEFAULTS.minWidth, patch.width);
     }
-    if (typeof patch.height === 'number') {
+    if (typeof patch.height === "number") {
       frame.height = Math.max(FRAME_DEFAULTS.minHeight, patch.height);
     }
     syncAutoAnchorsForAllEdges();
@@ -655,38 +758,44 @@ export function createStore(initialGraph = null, initialSettings = null) {
   }
 
   function beginNodeMove() {
-    pushHistory('move-node');
+    pushHistory("move-node");
   }
 
   function beginNodeEdit() {
-    pushHistory('update-node');
+    pushHistory("update-node");
   }
 
   function beginNodeResize() {
-    pushHistory('resize-node');
+    pushHistory("resize-node");
   }
 
   function beginFrameMove() {
-    pushHistory('move-frame');
+    pushHistory("move-frame");
   }
 
   function beginFrameEdit() {
-    pushHistory('update-frame');
+    pushHistory("update-frame");
   }
 
   function beginFrameResize() {
-    pushHistory('resize-frame');
+    pushHistory("resize-frame");
   }
 
   function deleteNode(id) {
     const index = state.nodes.findIndex((node) => node.id === id);
     if (index === -1) return;
-    pushHistory('delete-node');
+    pushHistory("delete-node");
     state.nodes.splice(index, 1);
-    state.edges = state.edges.filter((edge) => edge.from !== id && edge.to !== id);
-    if (state.selection?.type === 'nodes') {
+    state.edges = state.edges.filter(
+      (edge) => edge.from !== id && edge.to !== id,
+    );
+    if (state.selection?.type === "nodes") {
       const ids = state.selection.ids.filter((selectedId) => selectedId !== id);
-      state.selection = normalizeNodeSelection(ids, state.nodes, state.selection.primaryId);
+      state.selection = normalizeNodeSelection(
+        ids,
+        state.nodes,
+        state.selection.primaryId,
+      );
     } else if (state.selection?.id === id) {
       state.selection = null;
     }
@@ -705,7 +814,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function deleteFrame(id) {
     const index = state.frames.findIndex((frame) => frame.id === id);
     if (index === -1) return;
-    pushHistory('delete-frame');
+    pushHistory("delete-frame");
 
     state.frames.splice(index, 1);
     for (const node of state.nodes) {
@@ -714,9 +823,11 @@ export function createStore(initialGraph = null, initialSettings = null) {
       }
     }
 
-    state.edges = state.edges.filter((edge) => edge.from !== id && edge.to !== id);
+    state.edges = state.edges.filter(
+      (edge) => edge.from !== id && edge.to !== id,
+    );
 
-    if (state.selection?.type === 'frame' && state.selection.id === id) {
+    if (state.selection?.type === "frame" && state.selection.id === id) {
       state.selection = null;
     }
 
@@ -732,10 +843,12 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (!targets.length) return;
 
     const normalizedColorKey = sanitizeColorKey(colorKey);
-    const changed = targets.some((node) => (node.colorKey || null) !== normalizedColorKey);
+    const changed = targets.some(
+      (node) => (node.colorKey || null) !== normalizedColorKey,
+    );
     if (!changed) return;
 
-    pushHistory('set-node-color');
+    pushHistory("set-node-color");
     for (const node of targets) {
       applyColor(node, normalizedColorKey);
     }
@@ -747,10 +860,12 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (!targets.length) return;
 
     const normalizedColorKey = sanitizeColorKey(colorKey);
-    const changed = targets.some((frame) => (frame.colorKey || null) !== normalizedColorKey);
+    const changed = targets.some(
+      (frame) => (frame.colorKey || null) !== normalizedColorKey,
+    );
     if (!changed) return;
 
-    pushHistory('set-frame-color');
+    pushHistory("set-frame-color");
     for (const frame of targets) {
       applyColor(frame, normalizedColorKey);
     }
@@ -762,11 +877,17 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (!targets.length) return;
     const numeric = Math.round(Number(borderWidth));
     if (!Number.isFinite(numeric)) return;
-    const normalized = Math.min(NODE_DEFAULTS.borderWidthMax, Math.max(NODE_DEFAULTS.borderWidthMin, numeric));
-    const changed = targets.some((node) => Number(node.borderWidth || NODE_DEFAULTS.borderWidth) !== normalized);
+    const normalized = Math.min(
+      NODE_DEFAULTS.borderWidthMax,
+      Math.max(NODE_DEFAULTS.borderWidthMin, numeric),
+    );
+    const changed = targets.some(
+      (node) =>
+        Number(node.borderWidth || NODE_DEFAULTS.borderWidth) !== normalized,
+    );
     if (!changed) return;
 
-    pushHistory('set-node-border-width');
+    pushHistory("set-node-border-width");
     for (const node of targets) {
       node.borderWidth = normalized;
     }
@@ -776,11 +897,18 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function setNodesBorderStyle(ids, borderStyle) {
     const targets = dedupeNodeTargets(ids);
     if (!targets.length) return;
-    if (typeof borderStyle !== 'string' || !['solid', 'dashed', 'dotted'].includes(borderStyle)) return;
-    const changed = targets.some((node) => String(node.borderStyle || NODE_DEFAULTS.borderStyle) !== borderStyle);
+    if (
+      typeof borderStyle !== "string" ||
+      !["solid", "dashed", "dotted"].includes(borderStyle)
+    )
+      return;
+    const changed = targets.some(
+      (node) =>
+        String(node.borderStyle || NODE_DEFAULTS.borderStyle) !== borderStyle,
+    );
     if (!changed) return;
 
-    pushHistory('set-node-border-style');
+    pushHistory("set-node-border-style");
     for (const node of targets) {
       node.borderStyle = borderStyle;
     }
@@ -792,11 +920,17 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (!targets.length) return;
     const numeric = Math.round(Number(borderWidth));
     if (!Number.isFinite(numeric)) return;
-    const normalized = Math.min(FRAME_DEFAULTS.borderWidthMax, Math.max(FRAME_DEFAULTS.borderWidthMin, numeric));
-    const changed = targets.some((frame) => Number(frame.borderWidth || FRAME_DEFAULTS.borderWidth) !== normalized);
+    const normalized = Math.min(
+      FRAME_DEFAULTS.borderWidthMax,
+      Math.max(FRAME_DEFAULTS.borderWidthMin, numeric),
+    );
+    const changed = targets.some(
+      (frame) =>
+        Number(frame.borderWidth || FRAME_DEFAULTS.borderWidth) !== normalized,
+    );
     if (!changed) return;
 
-    pushHistory('set-frame-border-width');
+    pushHistory("set-frame-border-width");
     for (const frame of targets) {
       frame.borderWidth = normalized;
     }
@@ -806,11 +940,18 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function setFramesBorderStyle(ids, borderStyle) {
     const targets = dedupeFrameTargets(ids);
     if (!targets.length) return;
-    if (typeof borderStyle !== 'string' || !['solid', 'dashed', 'dotted'].includes(borderStyle)) return;
-    const changed = targets.some((frame) => String(frame.borderStyle || FRAME_DEFAULTS.borderStyle) !== borderStyle);
+    if (
+      typeof borderStyle !== "string" ||
+      !["solid", "dashed", "dotted"].includes(borderStyle)
+    )
+      return;
+    const changed = targets.some(
+      (frame) =>
+        String(frame.borderStyle || FRAME_DEFAULTS.borderStyle) !== borderStyle,
+    );
     if (!changed) return;
 
-    pushHistory('set-frame-border-style');
+    pushHistory("set-frame-border-style");
     for (const frame of targets) {
       frame.borderStyle = borderStyle;
     }
@@ -821,9 +962,11 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const selectedNodeIds = getSelectedNodeIds(state.selection);
     if (!selectedNodeIds.length) return;
     const selected = new Set(selectedNodeIds);
-    pushHistory('delete-node');
+    pushHistory("delete-node");
     state.nodes = state.nodes.filter((node) => !selected.has(node.id));
-    state.edges = state.edges.filter((edge) => !selected.has(edge.from) && !selected.has(edge.to));
+    state.edges = state.edges.filter(
+      (edge) => !selected.has(edge.from) && !selected.has(edge.to),
+    );
     if (state.ui.editingNodeId && selected.has(state.ui.editingNodeId)) {
       state.ui.editingNodeId = null;
     }
@@ -839,9 +982,11 @@ export function createStore(initialGraph = null, initialSettings = null) {
 
   function addEdge(from, to) {
     if (!from || !to || from === to) return;
-    const existingEdge = state.edges.find((edge) => edge.from === from && edge.to === to);
+    const existingEdge = state.edges.find(
+      (edge) => edge.from === from && edge.to === to,
+    );
     if (existingEdge) {
-      state.selection = { type: 'edge', id: existingEdge.id };
+      state.selection = { type: "edge", id: existingEdge.id };
       notify();
       return existingEdge.id;
     }
@@ -849,9 +994,9 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const toEntity = getGraphEntity(to);
     if (!fromEntity || !toEntity) return null;
 
-    pushHistory('add-edge');
+    pushHistory("add-edge");
     const edge = sanitizeEdge({
-      id: createId('edge'),
+      id: createId("edge"),
       from,
       to,
       fromAnchor: resolveAutoAnchor(fromEntity, toEntity),
@@ -859,26 +1004,29 @@ export function createStore(initialGraph = null, initialSettings = null) {
     });
     state.edges.push(edge);
     syncAutoAnchorsForEdge(edge);
-    state.selection = { type: 'edge', id: edge.id };
+    state.selection = { type: "edge", id: edge.id };
     notify();
     return edge.id;
   }
 
   function connectNodes(fromNodeId, fromAnchor, toNodeId, toAnchor) {
     if (!fromNodeId || !toNodeId || fromNodeId === toNodeId) return null;
-    const existingEdge = state.edges.find((edge) => edge.from === fromNodeId && edge.to === toNodeId);
+    const existingEdge = state.edges.find(
+      (edge) => edge.from === fromNodeId && edge.to === toNodeId,
+    );
     if (existingEdge) {
-      state.selection = { type: 'edge', id: existingEdge.id };
+      state.selection = { type: "edge", id: existingEdge.id };
       notify();
       return existingEdge.id;
     }
 
-    const hasEndpoints = Boolean(getGraphEntity(fromNodeId)) && Boolean(getGraphEntity(toNodeId));
+    const hasEndpoints =
+      Boolean(getGraphEntity(fromNodeId)) && Boolean(getGraphEntity(toNodeId));
     if (!hasEndpoints) return null;
 
-    pushHistory('add-edge');
+    pushHistory("add-edge");
     const edge = sanitizeEdge({
-      id: createId('edge'),
+      id: createId("edge"),
       from: fromNodeId,
       to: toNodeId,
       fromAnchor,
@@ -886,7 +1034,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     });
     state.edges.push(edge);
     syncAutoAnchorsForEdge(edge);
-    state.selection = { type: 'edge', id: edge.id };
+    state.selection = { type: "edge", id: edge.id };
     notify();
     return edge.id;
   }
@@ -904,10 +1052,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
       toAnchor: edge.toAnchor,
     };
 
-    if (side === 'from') {
+    if (side === "from") {
       next.from = entityId;
       next.fromAnchor = anchor;
-    } else if (side === 'to') {
+    } else if (side === "to") {
       next.to = entityId;
       next.toAnchor = anchor;
     } else {
@@ -916,22 +1064,26 @@ export function createStore(initialGraph = null, initialSettings = null) {
 
     if (next.from === next.to) return null;
 
-    const duplicate = state.edges.find((item) => item.id !== id && item.from === next.from && item.to === next.to);
+    const duplicate = state.edges.find(
+      (item) =>
+        item.id !== id && item.from === next.from && item.to === next.to,
+    );
     if (duplicate) return null;
 
-    const changed = edge.from !== next.from
-      || edge.to !== next.to
-      || edge.fromAnchor !== next.fromAnchor
-      || edge.toAnchor !== next.toAnchor;
+    const changed =
+      edge.from !== next.from ||
+      edge.to !== next.to ||
+      edge.fromAnchor !== next.fromAnchor ||
+      edge.toAnchor !== next.toAnchor;
     if (!changed) return edge.id;
 
-    pushHistory('reconnect-edge');
+    pushHistory("reconnect-edge");
     edge.from = next.from;
     edge.to = next.to;
     edge.fromAnchor = next.fromAnchor;
     edge.toAnchor = next.toAnchor;
     syncAutoAnchorsForEdge(edge);
-    state.selection = { type: 'edge', id: edge.id };
+    state.selection = { type: "edge", id: edge.id };
     notify();
     return edge.id;
   }
@@ -939,7 +1091,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function setGraphName(name) {
     const nextName = sanitizeGraphName(name);
     if (state.name === nextName) return;
-    applyStateChange('set-graph-name', () => {
+    applyStateChange("set-graph-name", () => {
       state.name = nextName;
     });
   }
@@ -948,60 +1100,126 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const nextSettings = getResolvedSettings(state.settings, partialSettings);
     const changed = settingsChanged(state.settings, nextSettings);
     if (!changed) return false;
-    applyStateChange(options.actionLabel ?? 'update-settings', () => {
-      state.settings = nextSettings;
-    }, { skipAnchorSync: !options.syncAnchors, skipHistory: options.skipHistory });
+    applyStateChange(
+      options.actionLabel ?? "update-settings",
+      () => {
+        state.settings = nextSettings;
+      },
+      {
+        skipAnchorSync: !options.syncAnchors,
+        skipHistory: options.skipHistory,
+      },
+    );
     return true;
   }
 
   function setBackgroundStyle(backgroundStyle) {
-    updateAppSettings({ backgroundStyle }, { actionLabel: 'set-background-style' });
+    updateAppSettings(
+      { backgroundStyle },
+      { actionLabel: "set-background-style" },
+    );
   }
 
   function setUiThemePreset(uiThemePreset) {
-    updateAppSettings({ uiThemePreset }, { actionLabel: 'set-ui-theme-preset' });
+    updateAppSettings(
+      { uiThemePreset },
+      { actionLabel: "set-ui-theme-preset" },
+    );
   }
 
   function setEnabledThemePresets(enabledThemePresets) {
-    updateAppSettings({ enabledThemePresets }, { actionLabel: 'set-enabled-theme-presets' });
+    updateAppSettings(
+      { enabledThemePresets },
+      { actionLabel: "set-enabled-theme-presets" },
+    );
   }
 
   function setUiRadiusPreset(uiRadiusPreset) {
-    updateAppSettings({ uiRadiusPreset }, { actionLabel: 'set-ui-radius-preset' });
+    updateAppSettings(
+      { uiRadiusPreset },
+      { actionLabel: "set-ui-radius-preset" },
+    );
   }
 
   function setToolbarPosition(toolbarPosition) {
-    updateAppSettings({ toolbarPosition }, { actionLabel: 'set-toolbar-position' });
+    updateAppSettings(
+      { toolbarPosition },
+      { actionLabel: "set-toolbar-position" },
+    );
   }
 
   function setToolbarOrientation(toolbarOrientation) {
-    updateAppSettings({ toolbarOrientation }, { actionLabel: 'set-toolbar-orientation' });
+    updateAppSettings(
+      { toolbarOrientation },
+      { actionLabel: "set-toolbar-orientation" },
+    );
   }
 
   function setToastPosition(toastPosition) {
-    updateAppSettings({ toastPosition }, { actionLabel: 'set-toast-position' });
+    updateAppSettings({ toastPosition }, { actionLabel: "set-toast-position" });
   }
 
   function setMetaPosition(metaPosition) {
-    updateAppSettings({ metaPosition }, { actionLabel: 'set-meta-position' });
+    updateAppSettings({ metaPosition }, { actionLabel: "set-meta-position" });
   }
 
   function setAnchorsMode(anchorsMode) {
-    return updateAppSettings({ anchorsMode }, { actionLabel: 'set-anchors-mode', syncAnchors: true });
+    return updateAppSettings(
+      { anchorsMode },
+      { actionLabel: "set-anchors-mode", syncAnchors: true },
+    );
   }
 
   function setArrowheads(arrowheads) {
-    updateAppSettings({ arrowheads }, { actionLabel: 'set-arrowheads' });
+    updateAppSettings({ arrowheads }, { actionLabel: "set-arrowheads" });
   }
 
   function setArrowheadSizeStep(arrowheadSizeStep) {
-    updateAppSettings({ arrowheadSizeStep }, { actionLabel: 'set-arrowhead-size-step' });
+    updateAppSettings(
+      { arrowheadSizeStep },
+      { actionLabel: "set-arrowhead-size-step" },
+    );
+  }
+
+  function updateEdge(id, patch) {
+    const edge = state.edges.find((entry) => entry.id === id);
+    if (!edge) return;
+    pushHistory("update-edge");
+    if (patch.strokeWidth !== undefined) {
+      const numeric = Math.round(Number(patch.strokeWidth));
+      if (Number.isFinite(numeric)) {
+        edge.strokeWidth = Math.min(
+          EDGE_DEFAULTS.strokeWidthMax,
+          Math.max(EDGE_DEFAULTS.strokeWidthMin, numeric),
+        );
+      }
+    }
+    if (
+      typeof patch.strokeStyle === "string" &&
+      EDGE_STROKE_STYLES.includes(patch.strokeStyle)
+    ) {
+      edge.strokeStyle = patch.strokeStyle;
+    }
+    if (
+      typeof patch.edgeType === "string" &&
+      EDGE_TYPES.includes(patch.edgeType)
+    ) {
+      edge.edgeType = patch.edgeType;
+    }
+    if (patch.colorKey !== undefined) {
+      if (NODE_COLOR_KEYS.includes(patch.colorKey)) {
+        edge.colorKey = patch.colorKey;
+      } else {
+        delete edge.colorKey;
+      }
+    }
+    notify();
   }
 
   function deleteEdge(id) {
     const index = state.edges.findIndex((edge) => edge.id === id);
     if (index === -1) return;
-    pushHistory('delete-edge');
+    pushHistory("delete-edge");
     state.edges.splice(index, 1);
     if (state.selection?.id === id) {
       state.selection = null;
@@ -1009,10 +1227,12 @@ export function createStore(initialGraph = null, initialSettings = null) {
     notify();
   }
   function replaceGraph(graph) {
-    pushHistory('import-graph');
+    pushHistory("import-graph");
     state.name = sanitizeGraphName(graph.name);
     state.settings = getInitialSettings(graph, null);
-    state.frames = (Array.isArray(graph.frames) ? graph.frames : []).map(sanitizeFrame);
+    state.frames = (Array.isArray(graph.frames) ? graph.frames : []).map(
+      sanitizeFrame,
+    );
     const frameIds = new Set(state.frames.map((frame) => frame.id));
     state.nodes = graph.nodes.map((node) => sanitizeNode(node, frameIds));
     state.edges = graph.edges.map(sanitizeEdge);
@@ -1025,15 +1245,25 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function setNodeColorDefault(colorKey) {
     const nextValue = sanitizeColorKey(colorKey);
     if ((state.settings.nodeColorDefault || null) === nextValue) return;
-    updateAppSettings({ nodeColorDefault: nextValue }, { actionLabel: 'set-node-color-default' });
+    updateAppSettings(
+      { nodeColorDefault: nextValue },
+      { actionLabel: "set-node-color-default" },
+    );
   }
 
   function setViewport(next) {
-    state.viewport.panX = Number.isFinite(next.panX) ? next.panX : state.viewport.panX;
-    state.viewport.panY = Number.isFinite(next.panY) ? next.panY : state.viewport.panY;
+    state.viewport.panX = Number.isFinite(next.panX)
+      ? next.panX
+      : state.viewport.panX;
+    state.viewport.panY = Number.isFinite(next.panY)
+      ? next.panY
+      : state.viewport.panY;
     state.viewport.zoom = Math.min(
       VIEWPORT_LIMITS.maxZoom,
-      Math.max(VIEWPORT_LIMITS.minZoom, Number.isFinite(next.zoom) ? next.zoom : state.viewport.zoom),
+      Math.max(
+        VIEWPORT_LIMITS.minZoom,
+        Number.isFinite(next.zoom) ? next.zoom : state.viewport.zoom,
+      ),
     );
     notify();
   }
@@ -1048,7 +1278,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
 
   function recomputeNodeFrameMembership(nodeIds, options = {}) {
     const ids = Array.isArray(nodeIds) ? nodeIds : [nodeIds];
-    const normalizedIds = ids.filter((id) => typeof id === 'string');
+    const normalizedIds = ids.filter((id) => typeof id === "string");
     if (!normalizedIds.length) return false;
 
     const changedNodes = [];
@@ -1063,7 +1293,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
 
     if (!changedNodes.length) return false;
     if (!options.skipHistory) {
-      pushHistory('set-node-frame');
+      pushHistory("set-node-frame");
     }
 
     for (const entry of changedNodes) {
@@ -1081,7 +1311,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function undo() {
     const entry = state.history.past.pop();
     if (!entry) return;
-    state.history.future.push({ label: 'undo', data: snapshot() });
+    state.history.future.push({ label: "undo", data: snapshot() });
     restoreSnapshot(entry.data);
     notify();
   }
@@ -1089,7 +1319,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
   function redo() {
     const entry = state.history.future.pop();
     if (!entry) return;
-    state.history.past.push({ label: 'redo', data: snapshot() });
+    state.history.past.push({ label: "redo", data: snapshot() });
     restoreSnapshot(entry.data);
     notify();
   }
@@ -1109,18 +1339,18 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (!nodeId) return;
     const node = state.nodes.find((item) => item.id === nodeId);
     if (!node) return;
-    const title = String(node.title ?? '').trim();
+    const title = String(node.title ?? "").trim();
     node.title = title || NODE_DEFAULTS.title;
-    node.description = String(node.description ?? '');
+    node.description = String(node.description ?? "");
   }
 
   function finalizeEditingFrameText(frameId) {
     if (!frameId) return;
     const frame = state.frames.find((item) => item.id === frameId);
     if (!frame) return;
-    const title = String(frame.title ?? '').trim();
+    const title = String(frame.title ?? "").trim();
     frame.title = title || FRAME_DEFAULTS.title;
-    frame.description = String(frame.description ?? '');
+    frame.description = String(frame.description ?? "");
   }
 
   function getGraphEntity(id) {
@@ -1131,7 +1361,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const selectedIds = [];
     const seen = new Set();
     for (const id of Array.isArray(ids) ? ids : []) {
-      if (typeof id !== 'string' || seen.has(id)) continue;
+      if (typeof id !== "string" || seen.has(id)) continue;
       seen.add(id);
       if (state.nodes.some((node) => node.id === id)) {
         selectedIds.push(id);
@@ -1144,7 +1374,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const selectedIds = [];
     const seen = new Set();
     for (const id of Array.isArray(ids) ? ids : []) {
-      if (typeof id !== 'string' || seen.has(id)) continue;
+      if (typeof id !== "string" || seen.has(id)) continue;
       seen.add(id);
       if (state.frames.some((frame) => frame.id === id)) {
         selectedIds.push(id);
@@ -1219,6 +1449,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     addEdge,
     connectNodes,
     reconnectEdge,
+    updateEdge,
     deleteEdge,
     setGraphName,
     setUiThemePreset,
@@ -1250,37 +1481,37 @@ function applyColor(entity, colorKey) {
 }
 
 function sanitizeColorKey(colorKey) {
-  if (colorKey === null || colorKey === undefined || colorKey === '') {
+  if (colorKey === null || colorKey === undefined || colorKey === "") {
     return null;
   }
-  if (typeof colorKey !== 'string') {
+  if (typeof colorKey !== "string") {
     return null;
   }
   return NODE_COLOR_KEYS.includes(colorKey) ? colorKey : null;
 }
 
 function normalizeImportStatus(message) {
-  if (message && typeof message === 'object') {
-    const title = String(message.title ?? '').trim();
-    const icon = String(message.icon ?? '').trim();
-    const description = String(message.description ?? '').trim();
+  if (message && typeof message === "object") {
+    const title = String(message.title ?? "").trim();
+    const icon = String(message.icon ?? "").trim();
+    const description = String(message.description ?? "").trim();
     if (title || description) {
       return { title, icon, description };
     }
   }
-  return String(message ?? '');
+  return String(message ?? "");
 }
 
 function getImportStatusText(message) {
-  if (typeof message === 'string') {
+  if (typeof message === "string") {
     return message.trim();
   }
-  if (message && typeof message === 'object') {
+  if (message && typeof message === "object") {
     return [message.title, message.description]
-      .map((value) => String(value ?? '').trim())
+      .map((value) => String(value ?? "").trim())
       .filter(Boolean)
-      .join(' ')
+      .join(" ")
       .trim();
   }
-  return '';
+  return "";
 }

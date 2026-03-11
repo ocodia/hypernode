@@ -1147,12 +1147,85 @@ export function bindInteractions(elements, store, options = {}) {
     toolbarPlacementFrame = window.requestAnimationFrame(() => {
       toolbarPlacementFrame = 0;
       applySingleNodeToolbarPlacement();
+      applyEdgeToolbarPlacement();
     });
   }
 
   function applySingleNodeToolbarPlacement() {
     const toolbarEl = selectionControlsLayer?.querySelector('.selection-controls__toolbar--node[data-toolbar-entity="node"]');
     const groupEl = toolbarEl?.closest('.selection-controls__group--node[data-node-id]');
+    if (!(toolbarEl instanceof HTMLElement) || !(groupEl instanceof HTMLElement) || !(workspace instanceof HTMLElement)) {
+      return;
+    }
+
+    toolbarEl.dataset.toolbarPlacement = 'top';
+    toolbarEl.style.setProperty('--toolbar-shift-x', '0px');
+
+    const workspaceRect = workspace.getBoundingClientRect();
+    const groupRect = groupEl.getBoundingClientRect();
+    const toolbarRect = toolbarEl.getBoundingClientRect();
+    if (!workspaceRect.width || !workspaceRect.height || !toolbarRect.width || !toolbarRect.height) {
+      return;
+    }
+
+    const horizontalGutter = 12;
+    const verticalGutter = 12;
+    const gap = 10;
+    const centerX = groupRect.left + (groupRect.width / 2);
+    const viewportZoom = Math.max(0.01, Number.parseFloat(getComputedStyle(selectionControlsLayer).getPropertyValue('--viewport-zoom')) || 1);
+    const rawLeft = centerX - (toolbarRect.width / 2);
+    const clampedLeft = Math.max(
+      workspaceRect.left + horizontalGutter,
+      Math.min(rawLeft, workspaceRect.right - horizontalGutter - toolbarRect.width),
+    );
+    const shiftX = (clampedLeft - rawLeft) / viewportZoom;
+
+    const topRect = {
+      left: clampedLeft,
+      right: clampedLeft + toolbarRect.width,
+      top: groupRect.top - gap - toolbarRect.height,
+      bottom: groupRect.top - gap,
+    };
+    const bottomRect = {
+      left: clampedLeft,
+      right: clampedLeft + toolbarRect.width,
+      top: groupRect.bottom + gap,
+      bottom: groupRect.bottom + gap + toolbarRect.height,
+    };
+
+    const obstructionRects = Array.from(document.querySelectorAll('.toolbar, .workspace-meta, .toast.is-visible, .selection-controls__toolbar, .entity-toolbar__popover:not([hidden])'))
+      .filter((element) => element instanceof HTMLElement && element !== toolbarEl && !toolbarEl.contains(element) && !element.contains(toolbarEl))
+      .map((element) => element.getBoundingClientRect())
+      .filter((rect) => rect.width > 0 && rect.height > 0);
+
+    const intersectsObstruction = (candidateRect) => obstructionRects.some((rect) => {
+      return candidateRect.left < rect.right
+        && candidateRect.right > rect.left
+        && candidateRect.top < rect.bottom
+        && candidateRect.bottom > rect.top;
+    });
+
+    const topFitsViewport = topRect.top >= workspaceRect.top + verticalGutter;
+    const bottomFitsViewport = bottomRect.bottom <= workspaceRect.bottom - verticalGutter;
+    const topBlocked = intersectsObstruction(topRect);
+    const bottomBlocked = intersectsObstruction(bottomRect);
+
+    let placement = 'top';
+    if (!(topFitsViewport && !topBlocked) && (bottomFitsViewport && !bottomBlocked)) {
+      placement = 'bottom';
+    } else if (!(topFitsViewport && !topBlocked) && !(bottomFitsViewport && !bottomBlocked)) {
+      const topSpace = groupRect.top - workspaceRect.top;
+      const bottomSpace = workspaceRect.bottom - groupRect.bottom;
+      placement = bottomSpace > topSpace ? 'bottom' : 'top';
+    }
+
+    toolbarEl.dataset.toolbarPlacement = placement;
+    toolbarEl.style.setProperty('--toolbar-shift-x', `${Math.round(shiftX)}px`);
+  }
+
+  function applyEdgeToolbarPlacement() {
+    const toolbarEl = selectionControlsLayer?.querySelector('.selection-controls__toolbar--edge[data-toolbar-entity="edge"]');
+    const groupEl = toolbarEl?.closest('.selection-controls__group--edge[data-edge-id]');
     if (!(toolbarEl instanceof HTMLElement) || !(groupEl instanceof HTMLElement) || !(workspace instanceof HTMLElement)) {
       return;
     }
@@ -1243,6 +1316,10 @@ export function bindInteractions(elements, store, options = {}) {
       store.setFramesColor(context.ids, colorKey);
       return;
     }
+    if (context.entity === 'edge') {
+      store.updateEdge(context.ids[0], { colorKey });
+      return;
+    }
     store.setNodesColor(context.ids, colorKey);
   }
 
@@ -1251,6 +1328,10 @@ export function bindInteractions(elements, store, options = {}) {
     if (!context) return;
     if (context.entity === 'frame') {
       store.setFramesBorderWidth(context.ids, borderWidth);
+      return;
+    }
+    if (context.entity === 'edge') {
+      store.updateEdge(context.ids[0], { strokeWidth: borderWidth });
       return;
     }
     store.setNodesBorderWidth(context.ids, borderWidth);
@@ -1263,7 +1344,17 @@ export function bindInteractions(elements, store, options = {}) {
       store.setFramesBorderStyle(context.ids, borderStyle);
       return;
     }
+    if (context.entity === 'edge') {
+      store.updateEdge(context.ids[0], { strokeStyle: borderStyle });
+      return;
+    }
     store.setNodesBorderStyle(context.ids, borderStyle);
+  }
+
+  function applyToolbarEdgeType(target, edgeType) {
+    const context = getToolbarContext(target);
+    if (!context || context.entity !== 'edge') return;
+    store.updateEdge(context.ids[0], { edgeType });
   }
 
   function syncToolbarRangeValue(inputEl) {
@@ -1299,6 +1390,15 @@ export function bindInteractions(elements, store, options = {}) {
     const borderStyleEl = event.target.closest('[data-toolbar-border-style-value]');
     if (borderStyleEl instanceof HTMLButtonElement) {
       applyToolbarBorderStyle(borderStyleEl, borderStyleEl.dataset.toolbarBorderStyleValue);
+      closeToolbarPopover();
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
+
+    const edgeTypeEl = event.target.closest('[data-toolbar-edge-type-value]');
+    if (edgeTypeEl instanceof HTMLButtonElement) {
+      applyToolbarEdgeType(edgeTypeEl, edgeTypeEl.dataset.toolbarEdgeTypeValue);
       closeToolbarPopover();
       event.stopPropagation();
       event.preventDefault();
@@ -1942,12 +2042,27 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover]')) {
+    if (event.target.closest('[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete]')) {
       event.stopPropagation();
     }
   }
 
   function onSelectionControlsClick(event) {
+    const edgeGroupEl = event.target.closest('.selection-controls__group--edge[data-edge-id]');
+    if (edgeGroupEl) {
+      const deleteEl = event.target.closest('[data-edge-delete]');
+      if (deleteEl) {
+        store.deleteEdge(deleteEl.dataset.edgeDelete);
+        closeToolbarPopover();
+        event.stopPropagation();
+        return;
+      }
+      if (handleToolbarClick(event)) {
+        return;
+      }
+      event.stopPropagation();
+      return;
+    }
     const nodeGroupEl = event.target.closest('.selection-controls__group--node[data-node-id]');
     const clickedToolbarControl = event.target.closest('[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-resize], [data-node-anchor], [data-toolbar-popover-toggle], [data-toolbar-popover]');
     if (nodeGroupEl && !clickedToolbarControl && event.detail >= 2) {
@@ -2408,6 +2523,12 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function handleEdgeClick(event) {
+    const toolbarEl = event.target.closest('[data-toolbar-entity="edge"]');
+    if (toolbarEl) {
+      handleToolbarClick(event);
+      return;
+    }
+
     const deleteEl = event.target.closest('[data-edge-delete]');
     if (deleteEl) {
       store.deleteEdge(deleteEl.dataset.edgeDelete);

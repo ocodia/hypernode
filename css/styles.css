@@ -30,10 +30,22 @@
   --scrollbar-size: 12px;
   --scrollbar-radius: var(--radius-pill);
   --scrollbar-track: color-mix(in srgb, var(--surface-soft) 76%, transparent);
-  --scrollbar-track-border: color-mix(in srgb, var(--panel-border) 56%, transparent);
+  --scrollbar-track-border: color-mix(
+    in srgb,
+    var(--panel-border) 56%,
+    transparent
+  );
   --scrollbar-thumb: color-mix(in srgb, var(--text) 28%, var(--accent) 72%);
-  --scrollbar-thumb-hover: color-mix(in srgb, var(--text) 18%, var(--accent) 82%);
-  --scrollbar-thumb-active: color-mix(in srgb, var(--text) 12%, var(--accent) 88%);
+  --scrollbar-thumb-hover: color-mix(
+    in srgb,
+    var(--text) 18%,
+    var(--accent) 82%
+  );
+  --scrollbar-thumb-active: color-mix(
+    in srgb,
+    var(--text) 12%,
+    var(--accent) 88%
+  );
   --scrollbar-corner: transparent;
   --radius-xs: 6px;
   --radius-sm: 10px;
@@ -84,15 +96,21 @@
 }
 
 *::-webkit-scrollbar-track {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--scrollbar-track) 78%, var(--surface) 22%), color-mix(in srgb, var(--scrollbar-track) 96%, transparent));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--scrollbar-track) 78%, var(--surface) 22%),
+    color-mix(in srgb, var(--scrollbar-track) 96%, transparent)
+  );
   border: 1px solid var(--scrollbar-track-border);
   border-radius: var(--scrollbar-radius);
 }
 
 *::-webkit-scrollbar-thumb {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--scrollbar-thumb) 92%, white 8%), color-mix(in srgb, var(--scrollbar-thumb) 86%, black 14%));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--scrollbar-thumb) 92%, white 8%),
+    color-mix(in srgb, var(--scrollbar-thumb) 86%, black 14%)
+  );
   border: 2px solid color-mix(in srgb, var(--surface) 78%, transparent);
   border-radius: var(--scrollbar-radius);
   box-shadow:
@@ -101,13 +119,19 @@
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--scrollbar-thumb-hover) 94%, white 6%), color-mix(in srgb, var(--scrollbar-thumb-hover) 88%, black 12%));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--scrollbar-thumb-hover) 94%, white 6%),
+    color-mix(in srgb, var(--scrollbar-thumb-hover) 88%, black 12%)
+  );
 }
 
 *::-webkit-scrollbar-thumb:active {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--scrollbar-thumb-active) 96%, white 4%), color-mix(in srgb, var(--scrollbar-thumb-active) 90%, black 10%));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--scrollbar-thumb-active) 96%, white 4%),
+    color-mix(in srgb, var(--scrollbar-thumb-active) 90%, black 10%)
+  );
 }
 
 *::-webkit-scrollbar-corner {
@@ -208,7 +232,12 @@ select:focus-visible {
   overflow: hidden;
   background-image: radial-gradient(
     circle at var(--bg-dot-origin) var(--bg-dot-origin),
-    color-mix(in srgb, var(--grid-dot) calc(var(--bg-dot-alpha) * 100%), transparent) var(--bg-dot-radius),
+    color-mix(
+        in srgb,
+        var(--grid-dot) calc(var(--bg-dot-alpha) * 100%),
+        transparent
+      )
+      var(--bg-dot-radius),
     transparent calc(var(--bg-dot-radius) + 0.1px)
   );
   background-size: var(--bg-step) var(--bg-step);
@@ -224,9 +253,13 @@ select:focus-visible {
   place-items: center;
   border: 2px dashed color-mix(in srgb, var(--accent) 56%, transparent);
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface) 74%, transparent), color-mix(in srgb, var(--surface-soft) 84%, transparent));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-border) 55%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 74%, transparent),
+    color-mix(in srgb, var(--surface-soft) 84%, transparent)
+  );
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--panel-border) 55%, transparent);
   pointer-events: none;
 }
 
@@ -264,10 +297,46 @@ select:focus-visible {
 
 .canvas[data-background-style="graph-paper"] {
   background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--grid-dot) calc(var(--bg-grid-minor-alpha) * 100%), transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--grid-dot) calc(var(--bg-grid-minor-alpha) * 100%), transparent) 1px, transparent 1px),
-    linear-gradient(to right, color-mix(in srgb, var(--grid-dot) calc(var(--bg-grid-major-alpha) * 100%), transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--grid-dot) calc(var(--bg-grid-major-alpha) * 100%), transparent) 1px, transparent 1px);
+    linear-gradient(
+      to right,
+      color-mix(
+          in srgb,
+          var(--grid-dot) calc(var(--bg-grid-minor-alpha) * 100%),
+          transparent
+        )
+        1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(
+          in srgb,
+          var(--grid-dot) calc(var(--bg-grid-minor-alpha) * 100%),
+          transparent
+        )
+        1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to right,
+      color-mix(
+          in srgb,
+          var(--grid-dot) calc(var(--bg-grid-major-alpha) * 100%),
+          transparent
+        )
+        1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(
+          in srgb,
+          var(--grid-dot) calc(var(--bg-grid-major-alpha) * 100%),
+          transparent
+        )
+        1px,
+      transparent 1px
+    );
   background-size:
     var(--bg-step) var(--bg-step),
     var(--bg-step) var(--bg-step),
@@ -287,7 +356,12 @@ select:focus-visible {
 .canvas[data-background-style="dots"] {
   background-image: radial-gradient(
     circle at var(--bg-dot-origin) var(--bg-dot-origin),
-    color-mix(in srgb, var(--grid-dot) calc(var(--bg-dot-alpha) * 100%), transparent) var(--bg-dot-radius),
+    color-mix(
+        in srgb,
+        var(--grid-dot) calc(var(--bg-dot-alpha) * 100%),
+        transparent
+      )
+      var(--bg-dot-radius),
     transparent calc(var(--bg-dot-radius) + 0.1px)
   );
   background-size: var(--bg-step) var(--bg-step);
@@ -355,7 +429,8 @@ select:focus-visible {
 .edges .edge__line {
   fill: none;
   stroke: var(--edge);
-  stroke-width: 2;
+  stroke-width: var(--edge-sw, 2);
+  stroke-dasharray: var(--edge-da, none);
   pointer-events: none;
   cursor: default;
 }
@@ -368,7 +443,7 @@ select:focus-visible {
 .edges .edge__hit {
   fill: none;
   stroke: rgba(0, 0, 0, 0.001);
-  stroke-width: 12;
+  stroke-width: calc(var(--edge-sw, 2) + 10);
   pointer-events: stroke;
 }
 
@@ -389,7 +464,7 @@ select:focus-visible {
 .edges .edge__line:hover,
 .edges .edge:hover .edge__line {
   stroke: var(--edge-selected);
-  stroke-width: 3;
+  stroke-width: calc(var(--edge-sw, 2) + 1);
 }
 
 .edges .edge:hover .edge__arrowhead {
@@ -398,7 +473,7 @@ select:focus-visible {
 
 .edges .edge.is-selected .edge__line {
   stroke: var(--edge-selected);
-  stroke-width: 3;
+  stroke-width: calc(var(--edge-sw, 2) + 1);
 }
 
 .edges .edge.is-selected .edge__arrowhead {
@@ -422,6 +497,78 @@ select:focus-visible {
 .edges .edge__endpoint:hover {
   fill: #eff6ff;
   stroke: #2563eb;
+}
+
+/* Edge per-colour-key stroke overrides */
+.edges .edge[data-edge-color="sage"] .edge__line {
+  stroke: var(--palette-sage-swatch);
+}
+.edges .edge[data-edge-color="sage"] .edge__arrowhead {
+  stroke: var(--palette-sage-swatch);
+  fill: var(--palette-sage-swatch);
+}
+.edges .edge[data-edge-color="sky"] .edge__line {
+  stroke: var(--palette-sky-swatch);
+}
+.edges .edge[data-edge-color="sky"] .edge__arrowhead {
+  stroke: var(--palette-sky-swatch);
+  fill: var(--palette-sky-swatch);
+}
+.edges .edge[data-edge-color="amber"] .edge__line {
+  stroke: var(--palette-amber-swatch);
+}
+.edges .edge[data-edge-color="amber"] .edge__arrowhead {
+  stroke: var(--palette-amber-swatch);
+  fill: var(--palette-amber-swatch);
+}
+.edges .edge[data-edge-color="rose"] .edge__line {
+  stroke: var(--palette-rose-swatch);
+}
+.edges .edge[data-edge-color="rose"] .edge__arrowhead {
+  stroke: var(--palette-rose-swatch);
+  fill: var(--palette-rose-swatch);
+}
+.edges .edge[data-edge-color="slate"] .edge__line {
+  stroke: var(--palette-slate-swatch);
+}
+.edges .edge[data-edge-color="slate"] .edge__arrowhead {
+  stroke: var(--palette-slate-swatch);
+  fill: var(--palette-slate-swatch);
+}
+.edges .edge[data-edge-color="teal"] .edge__line {
+  stroke: var(--palette-teal-swatch);
+}
+.edges .edge[data-edge-color="teal"] .edge__arrowhead {
+  stroke: var(--palette-teal-swatch);
+  fill: var(--palette-teal-swatch);
+}
+.edges .edge[data-edge-color="violet"] .edge__line {
+  stroke: var(--palette-violet-swatch);
+}
+.edges .edge[data-edge-color="violet"] .edge__arrowhead {
+  stroke: var(--palette-violet-swatch);
+  fill: var(--palette-violet-swatch);
+}
+.edges .edge[data-edge-color="peach"] .edge__line {
+  stroke: var(--palette-peach-swatch);
+}
+.edges .edge[data-edge-color="peach"] .edge__arrowhead {
+  stroke: var(--palette-peach-swatch);
+  fill: var(--palette-peach-swatch);
+}
+.edges .edge[data-edge-color="mint"] .edge__line {
+  stroke: var(--palette-mint-swatch);
+}
+.edges .edge[data-edge-color="mint"] .edge__arrowhead {
+  stroke: var(--palette-mint-swatch);
+  fill: var(--palette-mint-swatch);
+}
+.edges .edge[data-edge-color="indigo"] .edge__line {
+  stroke: var(--palette-indigo-swatch);
+}
+.edges .edge[data-edge-color="indigo"] .edge__arrowhead {
+  stroke: var(--palette-indigo-swatch);
+  fill: var(--palette-indigo-swatch);
 }
 
 .edges .edge__delete {
@@ -504,7 +651,8 @@ select:focus-visible {
 }
 
 .toolbar__group + .toolbar__group {
-  border-left: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
+  border-left: 1px solid
+    color-mix(in srgb, var(--panel-border) 78%, transparent);
   padding-left: 10px;
 }
 
@@ -514,7 +662,9 @@ select:focus-visible {
   padding: 0;
 }
 
-.workspace[data-toolbar-orientation="vertical"] .toolbar__group + .toolbar__group {
+.workspace[data-toolbar-orientation="vertical"]
+  .toolbar__group
+  + .toolbar__group {
   border-left: 0;
   border-top: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
   padding-left: 0;
@@ -729,7 +879,8 @@ select:focus-visible {
   position: absolute;
   width: 210px;
   border-radius: var(--radius-md);
-  border: var(--node-border-width, 1px) var(--node-border-style, solid) var(--node-border);
+  border: var(--node-border-width, 1px) var(--node-border-style, solid)
+    var(--node-border);
   background: var(--node-bg);
   color: var(--node-text);
   box-shadow: var(--node-shadow);
@@ -971,7 +1122,11 @@ select:focus-visible {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 14%, transparent), transparent 36%),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--accent) 14%, transparent),
+      transparent 36%
+    ),
     color-mix(in srgb, var(--surface) 72%, rgba(15, 23, 42, 0.78));
   backdrop-filter: blur(14px);
 }
@@ -993,7 +1148,8 @@ select:focus-visible {
   min-height: 0;
   padding: 28px;
   border-radius: var(--radius-xl);
-  border: var(--node-border-width, 1px) var(--node-border-style, solid) var(--node-border);
+  border: var(--node-border-width, 1px) var(--node-border-style, solid)
+    var(--node-border);
   overflow: hidden;
   box-shadow:
     0 28px 70px rgba(15, 23, 42, 0.28),
@@ -1014,7 +1170,11 @@ select:focus-visible {
   width: fit-content;
   max-width: 100%;
   border: 0;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--node-bg) 96%, transparent), color-mix(in srgb, var(--node-bg) 72%, transparent));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--node-bg) 96%, transparent),
+    color-mix(in srgb, var(--node-bg) 72%, transparent)
+  );
   box-shadow: none;
   border-radius: 0;
   opacity: 1;
@@ -1047,16 +1207,22 @@ select:focus-visible {
 
 .node__tool-btn--primary {
   color: #f8fffb;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, #2f855a 88%, white 12%), color-mix(in srgb, #236746 92%, black 8%));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #2f855a 88%, white 12%),
+    color-mix(in srgb, #236746 92%, black 8%)
+  );
   border-color: color-mix(in srgb, #2f855a 72%, transparent);
   box-shadow: none;
 }
 
 .node__tool-btn--primary:hover,
 .node__tool-btn--primary:focus-visible {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, #2f855a 92%, white 8%), color-mix(in srgb, #236746 94%, black 6%));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #2f855a 92%, white 8%),
+    color-mix(in srgb, #236746 94%, black 6%)
+  );
   border-color: color-mix(in srgb, #2f855a 84%, transparent);
   box-shadow: 0 2px 8px color-mix(in srgb, #2f855a 18%, transparent);
 }
@@ -1249,7 +1415,8 @@ select:focus-visible {
   max-height: none;
   aspect-ratio: var(--node-image-aspect-ratio, 16 / 9);
   border-radius: var(--radius-lg);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--node-border) 65%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--node-border) 65%, transparent);
   position: relative;
   background-size: contain;
 }
@@ -1263,7 +1430,8 @@ select:focus-visible {
   outline-offset: 3px;
 }
 
-.focus-overlay.is-file-drop-active .node__image-pane--focus[data-node-image-pick]::after {
+.focus-overlay.is-file-drop-active
+  .node__image-pane--focus[data-node-image-pick]::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1285,7 +1453,8 @@ select:focus-visible {
   border: 1px solid color-mix(in srgb, var(--danger) 36%, transparent);
   background: color-mix(in srgb, var(--surface) 88%, rgba(15, 23, 42, 0.4));
   color: var(--danger-text);
-  box-shadow: 0 10px 24px color-mix(in srgb, rgba(15, 23, 42, 0.22) 100%, transparent);
+  box-shadow: 0 10px 24px
+    color-mix(in srgb, rgba(15, 23, 42, 0.22) 100%, transparent);
   opacity: 0;
   pointer-events: none;
   transform: translateY(-4px);
@@ -1346,7 +1515,11 @@ select:focus-visible {
 .node__image-dropzone:focus-visible,
 .focus-overlay.is-file-drop-active .node__image-dropzone {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--surface) 90%, color-mix(in srgb, var(--accent) 10%, transparent));
+  background: color-mix(
+    in srgb,
+    var(--surface) 90%,
+    color-mix(in srgb, var(--accent) 10%, transparent)
+  );
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
   transform: translateY(-1px);
 }
@@ -1366,18 +1539,29 @@ select:focus-visible {
   min-width: 104px;
   padding: 10px 16px;
   border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--node-selected-border) 52%, var(--node-border));
-  background: color-mix(in srgb, var(--node-bg) 82%, var(--node-selected-border));
+  border: 1px solid
+    color-mix(in srgb, var(--node-selected-border) 52%, var(--node-border));
+  background: color-mix(
+    in srgb,
+    var(--node-bg) 82%,
+    var(--node-selected-border)
+  );
   color: var(--node-text);
   text-align: center;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--node-selected-border) 16%, transparent);
+  box-shadow: 0 10px 24px
+    color-mix(in srgb, var(--node-selected-border) 16%, transparent);
 }
 
 .node__focus-done-btn:hover,
 .node__focus-done-btn:focus-visible {
-  background: color-mix(in srgb, var(--node-bg) 68%, var(--node-selected-border));
+  background: color-mix(
+    in srgb,
+    var(--node-bg) 68%,
+    var(--node-selected-border)
+  );
   border-color: var(--node-selected-border);
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--node-selected-border) 22%, transparent);
+  box-shadow: 0 12px 28px
+    color-mix(in srgb, var(--node-selected-border) 22%, transparent);
 }
 
 .node__focus-done-btn .bi {
@@ -1394,13 +1578,17 @@ select:focus-visible {
   font-size: 0.8rem;
 }
 
-.node__focus-layout--read .node__focus-text-column--read .node__focus-value--description {
+.node__focus-layout--read
+  .node__focus-text-column--read
+  .node__focus-value--description {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
 }
 
-.node__focus-layout--edit .node__focus-text-column--edit .node__editor-textarea--focus {
+.node__focus-layout--edit
+  .node__focus-text-column--edit
+  .node__editor-textarea--focus {
   flex: 1 1 auto;
   overflow: auto;
 }
@@ -1420,9 +1608,11 @@ select:focus-visible {
   width: 100%;
   height: 100%;
   border-radius: var(--radius-sm);
-  border: var(--frame-border-width, 1px) var(--frame-border-style, solid) var(--frame-border);
+  border: var(--frame-border-width, 1px) var(--frame-border-style, solid)
+    var(--frame-border);
   background: var(--frame-bg);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--frame-border) 28%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--frame-border) 28%, transparent);
 }
 
 .frame__meta {
@@ -1491,7 +1681,8 @@ select:focus-visible {
 
 .frame.is-selected .frame__box {
   border-color: var(--frame-selected-border);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--frame-selected-border) 25%, transparent);
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--frame-selected-border) 25%, transparent);
 }
 
 .frame.is-editing .frame__box {
@@ -1580,7 +1771,8 @@ select:focus-visible {
 .frame.is-editing.is-membership-add-preview .frame__box {
   border-color: var(--frame-selected-border);
   box-shadow:
-    inset 0 0 0 2px color-mix(in srgb, var(--frame-selected-border) 25%, transparent),
+    inset 0 0 0 2px
+      color-mix(in srgb, var(--frame-selected-border) 25%, transparent),
     0 0 0 3px color-mix(in srgb, #2f855a 18%, transparent);
 }
 
@@ -1588,7 +1780,8 @@ select:focus-visible {
 .frame.is-editing.is-membership-remove-preview .frame__box {
   border-color: var(--frame-selected-border);
   box-shadow:
-    inset 0 0 0 2px color-mix(in srgb, var(--frame-selected-border) 25%, transparent),
+    inset 0 0 0 2px
+      color-mix(in srgb, var(--frame-selected-border) 25%, transparent),
     0 0 0 3px color-mix(in srgb, #ef4444 18%, transparent);
 }
 
@@ -2026,7 +2219,9 @@ select:focus-visible {
 }
 
 .node__editor-layout--canvas-image .node__focus-media--empty,
-.node__editor-layout--canvas-image .node__focus-media--empty .node__image-dropzone {
+.node__editor-layout--canvas-image
+  .node__focus-media--empty
+  .node__image-dropzone {
   min-height: 132px;
 }
 
@@ -2054,7 +2249,9 @@ select:focus-visible {
 
   .node__editor-layout--canvas-image .node__focus-media--has-image,
   .node__editor-layout--canvas-image .node__focus-media--empty,
-  .node__editor-layout--canvas-image .node__focus-media--empty .node__image-dropzone {
+  .node__editor-layout--canvas-image
+    .node__focus-media--empty
+    .node__image-dropzone {
     min-height: 100%;
   }
 
@@ -2137,7 +2334,9 @@ select:focus-visible {
     padding-bottom: 0;
   }
 
-  .node__focus-layout--read .node__focus-text-column--read .node__focus-value--description {
+  .node__focus-layout--read
+    .node__focus-text-column--read
+    .node__focus-value--description {
     flex: 0 0 auto;
     overflow: visible;
   }
@@ -2164,7 +2363,9 @@ select:focus-visible {
     padding-bottom: 0;
   }
 
-  .node__focus-layout--edit > .node__focus-text-column .node__focus-field--description {
+  .node__focus-layout--edit
+    > .node__focus-text-column
+    .node__focus-field--description {
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
@@ -2323,61 +2524,101 @@ select:focus-visible {
 
 .frame[data-frame-color="sage"] {
   --frame-bg: color-mix(in srgb, var(--palette-sage-swatch) 20%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-sage-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-sage-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #2f855a;
 }
 
 .frame[data-frame-color="sky"] {
   --frame-bg: color-mix(in srgb, var(--palette-sky-swatch) 20%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-sky-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-sky-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #2b6cb0;
 }
 
 .frame[data-frame-color="amber"] {
   --frame-bg: color-mix(in srgb, var(--palette-amber-swatch) 20%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-amber-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-amber-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #b7791f;
 }
 
 .frame[data-frame-color="rose"] {
   --frame-bg: color-mix(in srgb, var(--palette-rose-swatch) 20%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-rose-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-rose-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #b83280;
 }
 
 .frame[data-frame-color="slate"] {
   --frame-bg: color-mix(in srgb, var(--palette-slate-swatch) 18%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-slate-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-slate-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #475569;
 }
 
 .frame[data-frame-color="teal"] {
   --frame-bg: color-mix(in srgb, var(--palette-teal-swatch) 18%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-teal-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-teal-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #0f766e;
 }
 
 .frame[data-frame-color="violet"] {
   --frame-bg: color-mix(in srgb, var(--palette-violet-swatch) 18%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-violet-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-violet-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #6d28d9;
 }
 
 .frame[data-frame-color="peach"] {
   --frame-bg: color-mix(in srgb, var(--palette-peach-swatch) 18%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-peach-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-peach-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #c05621;
 }
 
 .frame[data-frame-color="mint"] {
   --frame-bg: color-mix(in srgb, var(--palette-mint-swatch) 18%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-mint-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-mint-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #2f855a;
 }
 
 .frame[data-frame-color="indigo"] {
   --frame-bg: color-mix(in srgb, var(--palette-indigo-swatch) 18%, transparent);
-  --frame-border: color-mix(in srgb, var(--palette-indigo-swatch) 72%, var(--panel-border));
+  --frame-border: color-mix(
+    in srgb,
+    var(--palette-indigo-swatch) 72%,
+    var(--panel-border)
+  );
   --frame-selected-border: #4338ca;
 }
 
@@ -2619,30 +2860,97 @@ select:focus-visible {
   right: auto;
   transform-origin: center bottom;
   transform: translate(
-    calc(-50% + var(--toolbar-shift-x, 0px)),
-    calc(-100% - (10px / var(--viewport-zoom, 1)))
-  ) scale(var(--selection-toolbar-scale, 1));
+      calc(-50% + var(--toolbar-shift-x, 0px)),
+      calc(-100% - (10px / var(--viewport-zoom, 1)))
+    )
+    scale(var(--selection-toolbar-scale, 1));
 }
 
 .selection-controls__toolbar--node[data-toolbar-placement="bottom"] {
   top: 100%;
   transform-origin: center top;
   transform: translate(
-    calc(-50% + var(--toolbar-shift-x, 0px)),
-    calc(10px / var(--viewport-zoom, 1))
-  ) scale(var(--selection-toolbar-scale, 1));
+      calc(-50% + var(--toolbar-shift-x, 0px)),
+      calc(10px / var(--viewport-zoom, 1))
+    )
+    scale(var(--selection-toolbar-scale, 1));
 }
 
 .selection-controls__toolbar--frame {
   transform-origin: right bottom;
-  transform: translateY(calc(-100% - (12px / var(--viewport-zoom, 1)))) scale(var(--selection-toolbar-scale, 1));
+  transform: translateY(calc(-100% - (12px / var(--viewport-zoom, 1))))
+    scale(var(--selection-toolbar-scale, 1));
 }
 
 .selection-controls__toolbar--nodes {
   left: 50%;
   right: auto;
   transform-origin: center bottom;
-  transform: translate(-50%, calc(-100% - (10px / var(--viewport-zoom, 1)))) scale(var(--selection-toolbar-scale, 1));
+  transform: translate(-50%, calc(-100% - (10px / var(--viewport-zoom, 1))))
+    scale(var(--selection-toolbar-scale, 1));
+}
+
+/* Edge toolbar */
+.selection-controls__group--edge {
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+
+.edge__toolbar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--toolbar-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  white-space: nowrap;
+  z-index: 20;
+}
+
+.selection-controls__toolbar--edge {
+  left: 0;
+  top: 0;
+  transform-origin: center bottom;
+  transform: translate(
+      calc(-50% + var(--toolbar-shift-x, 0px)),
+      calc(-100% - (10px / var(--viewport-zoom, 1)))
+    )
+    scale(var(--selection-toolbar-scale, 1));
+}
+
+.selection-controls__toolbar--edge[data-toolbar-placement="bottom"] {
+  top: 0;
+  transform-origin: center top;
+  transform: translate(
+      calc(-50% + var(--toolbar-shift-x, 0px)),
+      calc(10px / var(--viewport-zoom, 1))
+    )
+    scale(var(--selection-toolbar-scale, 1));
+}
+
+.entity-toolbar__edge-type-options {
+  gap: 4px;
+}
+
+.entity-toolbar__edge-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  height: 32px;
+  text-align: left;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+}
+
+.entity-toolbar__edge-type-btn[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--panel-border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
 .node.has-overlay-controls .node__toolbar,
@@ -2835,8 +3143,16 @@ kbd {
   min-height: 0;
   padding: clamp(16px, 2vw, 28px);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 97%, transparent), color-mix(in srgb, var(--surface) 96%, transparent)),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 10%, transparent), transparent 28%);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--panel) 97%, transparent),
+      color-mix(in srgb, var(--surface) 96%, transparent)
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--accent) 10%, transparent),
+      transparent 28%
+    );
 }
 
 .app-dialog__body {
@@ -3137,7 +3453,8 @@ kbd {
   align-items: start;
   gap: 10px 14px;
   padding-bottom: 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--panel-border) 72%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--panel-border) 72%, transparent);
 }
 
 .about-dialog__shortcut-list li:last-child {
@@ -3159,7 +3476,8 @@ kbd {
 .about-dialog__repo a {
   color: color-mix(in srgb, var(--text) 70%, var(--accent));
   text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--panel-border) 92%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--panel-border) 92%, transparent);
 }
 
 .about-dialog__repo a:hover,
@@ -3582,8 +3900,16 @@ kbd {
   border-radius: var(--radius-md);
   border: 1px dashed color-mix(in srgb, var(--panel-border) 86%, transparent);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface) 98%, transparent), color-mix(in srgb, var(--surface-soft) 60%, transparent)),
-    radial-gradient(circle at top, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface) 98%, transparent),
+      color-mix(in srgb, var(--surface-soft) 60%, transparent)
+    ),
+    radial-gradient(
+      circle at top,
+      color-mix(in srgb, var(--accent) 6%, transparent),
+      transparent 60%
+    );
 }
 
 .settings-dialog__position-screen::before {
@@ -3735,9 +4061,12 @@ kbd {
     padding: 0 2px;
   }
 
-  .workspace[data-toolbar-orientation="vertical"] .toolbar__group + .toolbar__group {
+  .workspace[data-toolbar-orientation="vertical"]
+    .toolbar__group
+    + .toolbar__group {
     border-top: 0;
-    border-left: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
+    border-left: 1px solid
+      color-mix(in srgb, var(--panel-border) 78%, transparent);
     padding-top: 0;
     padding-left: 6px;
   }
@@ -3862,7 +4191,6 @@ kbd {
   .shortcuts-dialog__item {
     padding: 14px;
   }
-
 }
 
 @keyframes edge-twang {

@@ -1,4 +1,4 @@
-import { THEME_PRESET_IDS } from '../shared/themes.js';
+import { THEME_PRESET_IDS } from "../shared/themes.js";
 
 export const STORAGE_KEY = "hypernode.graph.v2";
 export const SETTINGS_STORAGE_KEY = "hypernode.settings.v1";
@@ -72,6 +72,18 @@ export const APP_SETTINGS_DEFAULTS = {
   arrowheadSizeStep: 0,
   nodeColorDefault: null,
 };
+
+export const EDGE_DEFAULTS = {
+  strokeWidth: 2,
+  strokeWidthMin: 1,
+  strokeWidthMax: 8,
+  strokeStyle: "solid",
+  edgeType: "curved",
+  colorKey: null,
+};
+
+export const EDGE_STROKE_STYLES = ["solid", "dashed", "dotted"];
+export const EDGE_TYPES = ["curved", "straight", "orthogonal"];
 
 export const KEYBOARD_LINKED_NODE = {
   horizontalGap: 56,
