@@ -68,6 +68,7 @@ export function bindInteractions(elements, store, options = {}) {
   let openToolbarPopoverEl = null;
   let toolbarPlacementFrame = 0;
   let lastNodePress = { id: null, at: 0 };
+  let lastFramePress = { id: null, at: 0 };
   let canvasFileDragDepth = 0;
   let focusImageDragDepth = 0;
   let aboutSlideIndex = 0;
@@ -1056,6 +1057,14 @@ export function bindInteractions(elements, store, options = {}) {
     const isRepeat =
       lastNodePress.id === nodeId && now - lastNodePress.at <= 420;
     lastNodePress = isRepeat ? { id: null, at: 0 } : { id: nodeId, at: now };
+    return isRepeat;
+  }
+
+  function consumeFrameDoublePress(frameId) {
+    const now = performance.now();
+    const isRepeat =
+      lastFramePress.id === frameId && now - lastFramePress.at <= 420;
+    lastFramePress = isRepeat ? { id: null, at: 0 } : { id: frameId, at: now };
     return isRepeat;
   }
 
@@ -2548,11 +2557,24 @@ export function bindInteractions(elements, store, options = {}) {
     const nodeGroupEl = event.target.closest(
       ".selection-controls__group--node[data-node-id]",
     );
-    if (!nodeGroupEl) return;
-    const nodeId = nodeGroupEl.dataset.nodeId;
-    if (!nodeId) return;
-    store.setSelection({ type: "node", id: nodeId });
-    openNodeEditor(nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
+    if (nodeGroupEl) {
+      const nodeId = nodeGroupEl.dataset.nodeId;
+      if (!nodeId) return;
+      store.setSelection({ type: "node", id: nodeId });
+      openNodeEditor(nodeId, { stabilizeFrames: 2, lockFocusMs: 1200 });
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
+    const frameGroupEl = event.target.closest(
+      ".selection-controls__group--frame[data-frame-id]",
+    );
+    if (!frameGroupEl) return;
+    const frameId = frameGroupEl.dataset.frameId;
+    if (!frameId) return;
+    store.setSelection({ type: "frame", id: frameId });
+    openFrameEditor(frameId);
     event.stopPropagation();
     event.preventDefault();
   }
@@ -2845,7 +2867,13 @@ export function bindInteractions(elements, store, options = {}) {
     }
     if (!frameDragSession || event.pointerId !== frameDragSession.pointerId)
       return;
+    const sessionFrameId = frameDragSession.frameId;
+    const wasMoved = frameDragSession.moved;
     endFrameDragSession(event.pointerId);
+    if (!wasMoved && sessionFrameId && consumeFrameDoublePress(sessionFrameId)) {
+      store.setSelection({ type: "frame", id: sessionFrameId });
+      openFrameEditor(sessionFrameId);
+    }
   }
 
   function onFramePointerCancel(event) {

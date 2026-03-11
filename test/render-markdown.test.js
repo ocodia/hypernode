@@ -85,6 +85,15 @@ test('renderers use markdown output in view mode and raw text in edit mode', () 
     ui: { editingFrameId: null, edgeDraft: null, frameDraft: null, frameMembershipPreview: {} },
   });
   assert.match(framesLayer.innerHTML, /<div class="frame__description"><h1>Title<\/h1><p>Visit <a href="https:\/\/example.net\/"/);
+
+  renderFrames(framesLayer, {
+    nodes: [],
+    frames: [{ id: 'f1', title: 'Frame', description: markdown, x: 0, y: 0, width: 320, height: 200 }],
+    selection: { type: 'frame', id: 'f1' },
+    ui: { editingFrameId: 'f1', edgeDraft: null, frameDraft: null, frameMembershipPreview: {} },
+  });
+  assert.match(framesLayer.innerHTML, /data-frame-edit-title="f1"/);
+  assert.match(framesLayer.innerHTML, /<textarea class="frame__editor-textarea" data-frame-edit-description="f1"># Title/);
 });
 
 test('single selected node renders focus toolbar action', () => {
@@ -114,6 +123,9 @@ test('canvas inline edit keeps the single-node overlay toolbar visible', () => {
   try {
     const selectionControlsLayer = new MockHTMLElement();
     globalThis.document = {
+      querySelector() {
+        return null;
+      },
       querySelectorAll() {
         return [];
       },
@@ -138,6 +150,50 @@ test('canvas inline edit keeps the single-node overlay toolbar visible', () => {
     assert.match(selectionControlsLayer.innerHTML, /node__tool-btn-label">Read</);
     assert.match(selectionControlsLayer.innerHTML, /bi-eye-fill/);
     assert.equal((selectionControlsLayer.innerHTML.match(/selection-controls__toolbar--node/g) || []).length, 1);
+  } finally {
+    globalThis.HTMLElement = previousHTMLElement;
+    globalThis.document = previousDocument;
+  }
+});
+
+test('frame edit keeps the single-frame overlay toolbar visible with reading icon', () => {
+  const previousHTMLElement = globalThis.HTMLElement;
+  const previousDocument = globalThis.document;
+  class MockHTMLElement {
+    constructor() {
+      this.innerHTML = '';
+    }
+  }
+  globalThis.HTMLElement = MockHTMLElement;
+
+  try {
+    const selectionControlsLayer = new MockHTMLElement();
+    globalThis.document = {
+      querySelector() {
+        return null;
+      },
+      querySelectorAll() {
+        return [];
+      },
+      getElementById() {
+        return null;
+      },
+    };
+
+    renderSelectionControls(selectionControlsLayer, {
+      nodes: [],
+      frames: [{ id: 'f1', title: 'Frame', description: '', x: 0, y: 0, width: 320, height: 200 }],
+      edges: [],
+      selection: { type: 'frame', id: 'f1' },
+      ui: { editingNodeId: null, focusedNodeId: null, editingFrameId: 'f1', edgeDraft: null },
+      viewport: { zoom: 1, panX: 0, panY: 0 },
+      settings: {},
+    });
+
+    assert.match(selectionControlsLayer.innerHTML, /selection-controls__toolbar--frame/);
+    assert.match(selectionControlsLayer.innerHTML, /data-frame-edit-confirm="f1"/);
+    assert.match(selectionControlsLayer.innerHTML, /bi-eye-fill/);
+    assert.equal((selectionControlsLayer.innerHTML.match(/selection-controls__toolbar--frame/g) || []).length, 1);
   } finally {
     globalThis.HTMLElement = previousHTMLElement;
     globalThis.document = previousDocument;

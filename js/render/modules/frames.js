@@ -14,14 +14,13 @@ export function buildFrameToolbarMarkup(frameId, options = {}) {
   const borderStyle = typeof options.borderStyle === 'string' ? options.borderStyle : 'solid';
   const editingActive = Boolean(options.editingActive);
   const editAttr = editingActive ? `data-frame-edit-confirm="${frameId}"` : `data-frame-edit-open="${frameId}"`;
-  const editLabel = editingActive ? 'Confirm frame edit' : 'Edit frame';
-  const editTitle = editingActive ? 'Confirm Frame' : 'Edit Frame';
-  const editIcon = editingActive ? 'bi-check-lg' : 'bi-pencil-fill';
-  const editClass = editingActive ? ' frame__tool-btn--confirm' : '';
+  const editLabel = editingActive ? 'Switch to reading mode' : 'Edit frame';
+  const editTitle = editingActive ? 'Reading Mode' : 'Edit Frame';
+  const editIcon = editingActive ? 'bi-eye-fill' : 'bi-pencil-fill';
 
   return `
     <div class="${toolbarClass}" data-toolbar-entity="frame" data-toolbar-target-ids="${escapeAttr(frameId)}">
-      <button class="frame__tool-btn entity-toolbar__btn${editClass}" type="button" ${editAttr} aria-label="${editLabel}" title="${editTitle}">
+      <button class="frame__tool-btn entity-toolbar__btn" type="button" ${editAttr} aria-label="${editLabel}" title="${editTitle}">
         <i class="bi ${editIcon}"></i>
       </button>
       <div class="entity-toolbar__control">
@@ -121,6 +120,10 @@ export function renderFrames(framesLayer, state) {
   const draftMarkup = frameDraft
     ? `<div class="frame__draft" style="left:${frameDraft.x}px;top:${frameDraft.y}px;width:${frameDraft.width}px;height:${frameDraft.height}px;"></div>`
     : '';
+
+  if (typeof framesLayer?.toggleAttribute === 'function') {
+    framesLayer.toggleAttribute('data-frame-editing-active', Boolean(editingFrameId));
+  }
 
   framesLayer.innerHTML = `${framesMarkup}${draftMarkup}`;
 }
