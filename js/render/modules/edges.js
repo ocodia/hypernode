@@ -95,8 +95,10 @@ export function renderEdges(elements, state) {
           arrowMarkup = `<path class="edge__arrowhead" d="${buildArrowheadFromDirection(end, ux, uy, arrowheadScale)}"></path>`;
         }
       } else if (edgeType === "orthogonal") {
-        d = buildOrthogonalPath(start, end, fromAnchor, toAnchor);
-        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor);
+        const fromRect = { x: fromEntity.x, y: fromEntity.y, width: fromSize.width, height: fromSize.height };
+        const toRect = { x: toEntity.x, y: toEntity.y, width: toSize.width, height: toSize.height };
+        d = buildOrthogonalPath(start, end, fromAnchor, toAnchor, fromRect, toRect);
+        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor, fromRect, toRect);
         if (showArrowheads) {
           // The path arrives at `end` coming FROM the toAnchor's outward direction,
           // so negate it to get the direction of travel toward end.

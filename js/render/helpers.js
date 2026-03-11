@@ -40,15 +40,163 @@ export function straightLineMidpoint(start, end) {
   return { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
 }
 
-export function buildOrthogonalPath(start, end, fromAnchor, toAnchor) {
+// ── Orthogonal routing helpers ──────────────────────────────────────
+const _ORTHO_MARGIN = 4;
+const _ORTHO_GAP = 20;
+
+function _orthoDir(a, b) {
+  return b >= a ? 1 : -1;
+}
+
+/** True when the V→H L-bend's segments would overlap a node rect. */
+function _vhOverlaps(start, end, fromRect, toRect) {
+  if (!fromRect || !toRect) return false;
+  const m = _ORTHO_MARGIN;
+  const minY = Math.min(start.y, end.y);
+  const maxY = Math.max(start.y, end.y);
+  // Vertical segment at x=start.x crossing the target node?
+  if (
+    start.x >= toRect.x - m &&
+    start.x <= toRect.x + toRect.width + m &&
+    maxY >= toRect.y - m &&
+    minY <= toRect.y + toRect.height + m
+  ) {
+    return true;
+  }
+  // Horizontal segment at y=end.y crossing the source node?
+  const minX = Math.min(start.x, end.x);
+  const maxX = Math.max(start.x, end.x);
+  return (
+    end.y >= fromRect.y - m &&
+    end.y <= fromRect.y + fromRect.height + m &&
+    maxX >= fromRect.x - m &&
+    minX <= fromRect.x + fromRect.width + m
+  );
+}
+
+/** True when the H→V L-bend's segments would overlap a node rect. */
+function _hvOverlaps(start, end, fromRect, toRect) {
+  if (!fromRect || !toRect) return false;
+  const m = _ORTHO_MARGIN;
+  const minX = Math.min(start.x, end.x);
+  const maxX = Math.max(start.x, end.x);
+  // Horizontal segment at y=start.y crossing the target node?
+  if (
+    start.y >= toRect.y - m &&
+    start.y <= toRect.y + toRect.height + m &&
+    maxX >= toRect.x - m &&
+    minX <= toRect.x + toRect.width + m
+  ) {
+    return true;
+  }
+  // Vertical segment at x=end.x crossing the source node?
+  const minY = Math.min(start.y, end.y);
+  const maxY = Math.max(start.y, end.y);
+  return (
+    end.x >= fromRect.x - m &&
+    end.x <= fromRect.x + fromRect.width + m &&
+    maxY >= fromRect.y - m &&
+    minY <= fromRect.y + fromRect.height + m
+  );
+}
+
+/** Pick an x-coordinate outside both rects (nearest total distance wins). */
+function _pickClearX(start, end, fromRect, toRect) {
+  const gap = _ORTHO_GAP;
+  const left =
+    Math.min(fromRect.x, toRect.x) - gap;
+  const right =
+    Math.max(fromRect.x + fromRect.width, toRect.x + toRect.width) + gap;
+  const lDist = Math.abs(start.x - left) + Math.abs(left - end.x);
+  const rDist = Math.abs(start.x - right) + Math.abs(right - end.x);
+  return lDist <= rDist ? left : right;
+}
+
+/** Pick a y-coordinate outside both rects (nearest total distance wins). */
+function _pickClearY(start, end, fromRect, toRect) {
+  const gap = _ORTHO_GAP;
+  const top =
+    Math.min(fromRect.y, toRect.y) - gap;
+  const bottom =
+    Math.max(fromRect.y + fromRect.height, toRect.y + toRect.height) + gap;
+  const tDist = Math.abs(start.y - top) + Math.abs(top - end.y);
+  const bDist = Math.abs(start.y - bottom) + Math.abs(bottom - end.y);
+  return tDist <= bDist ? top : bottom;
+}
+
+/**
+ * V→H 4-segment detour:
+ * start → (start.x, ay) → (clearX, ay) → (clearX, end.y) → end
+ */
+function _buildVHDetour(start, end, fromAnchor, fromRect, toRect, r) {
+  const vDir = fromAnchor === "bottom" ? 1 : -1;
+  const ay = start.y + vDir * _ORTHO_GAP;
+  const clearX = _pickClearX(start, end, fromRect, toRect);
+  const hd1 = _orthoDir(start.x, clearX);
+  const vd2 = _orthoDir(ay, end.y);
+  const hd3 = _orthoDir(clearX, end.x);
+  const seg1 = Math.abs(ay - start.y);
+  const seg2 = Math.abs(clearX - start.x);
+  const seg3 = Math.abs(end.y - ay);
+  const seg4 = Math.abs(end.x - clearX);
+  if (seg1 < r || seg2 < r * 2 || seg3 < r * 2 || seg4 < r) {
+    return `M ${start.x} ${start.y} L ${start.x} ${ay} L ${clearX} ${ay} L ${clearX} ${end.y} L ${end.x} ${end.y}`;
+  }
+  return (
+    `M ${start.x} ${start.y}` +
+    ` L ${start.x} ${ay - r * vDir}` +
+    ` Q ${start.x} ${ay} ${start.x + r * hd1} ${ay}` +
+    ` L ${clearX - r * hd1} ${ay}` +
+    ` Q ${clearX} ${ay} ${clearX} ${ay + r * vd2}` +
+    ` L ${clearX} ${end.y - r * vd2}` +
+    ` Q ${clearX} ${end.y} ${clearX + r * hd3} ${end.y}` +
+    ` L ${end.x} ${end.y}`
+  );
+}
+
+/**
+ * H→V 4-segment detour:
+ * start → (ax, start.y) → (ax, clearY) → (end.x, clearY) → end
+ */
+function _buildHVDetour(start, end, fromAnchor, fromRect, toRect, r) {
+  const hDir = fromAnchor === "right" ? 1 : -1;
+  const ax = start.x + hDir * _ORTHO_GAP;
+  const clearY = _pickClearY(start, end, fromRect, toRect);
+  const vd1 = _orthoDir(start.y, clearY);
+  const hd2 = _orthoDir(ax, end.x);
+  const vd3 = _orthoDir(clearY, end.y);
+  const seg1 = Math.abs(ax - start.x);
+  const seg2 = Math.abs(clearY - start.y);
+  const seg3 = Math.abs(end.x - ax);
+  const seg4 = Math.abs(end.y - clearY);
+  if (seg1 < r || seg2 < r * 2 || seg3 < r * 2 || seg4 < r) {
+    return `M ${start.x} ${start.y} L ${ax} ${start.y} L ${ax} ${clearY} L ${end.x} ${clearY} L ${end.x} ${end.y}`;
+  }
+  return (
+    `M ${start.x} ${start.y}` +
+    ` L ${ax - r * hDir} ${start.y}` +
+    ` Q ${ax} ${start.y} ${ax} ${start.y + r * vd1}` +
+    ` L ${ax} ${clearY - r * vd1}` +
+    ` Q ${ax} ${clearY} ${ax + r * hd2} ${clearY}` +
+    ` L ${end.x - r * hd2} ${clearY}` +
+    ` Q ${end.x} ${clearY} ${end.x} ${clearY + r * vd3}` +
+    ` L ${end.x} ${end.y}`
+  );
+}
+
+// ── Public orthogonal API ───────────────────────────────────────────
+
+export function buildOrthogonalPath(
+  start,
+  end,
+  fromAnchor,
+  toAnchor,
+  fromRect,
+  toRect,
+) {
   const isFromHoriz = fromAnchor === "left" || fromAnchor === "right";
   const isToHoriz = toAnchor === "left" || toAnchor === "right";
   const r = 6;
-
-  // Helper: sign of actual travel between two coordinates (never 0)
-  function dir(a, b) {
-    return b >= a ? 1 : -1;
-  }
 
   if (isFromHoriz && isToHoriz) {
     // H → V → H  (3 segments, 2 bends at midX pivot)
@@ -56,9 +204,9 @@ export function buildOrthogonalPath(start, end, fromAnchor, toAnchor) {
     if (Math.abs(end.y - start.y) < r * 2) {
       return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
     }
-    const hd1 = dir(start.x, midX);
-    const vd = dir(start.y, end.y);
-    const hd2 = dir(midX, end.x);
+    const hd1 = _orthoDir(start.x, midX);
+    const vd = _orthoDir(start.y, end.y);
+    const hd2 = _orthoDir(midX, end.x);
     return `M ${start.x} ${start.y} L ${midX - r * hd1} ${start.y} Q ${midX} ${start.y} ${midX} ${start.y + r * vd} L ${midX} ${end.y - r * vd} Q ${midX} ${end.y} ${midX + r * hd2} ${end.y} L ${end.x} ${end.y}`;
   }
 
@@ -68,32 +216,45 @@ export function buildOrthogonalPath(start, end, fromAnchor, toAnchor) {
     if (Math.abs(end.x - start.x) < r * 2) {
       return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
     }
-    const vd1 = dir(start.y, midY);
-    const hd = dir(start.x, end.x);
-    const vd2 = dir(midY, end.y);
+    const vd1 = _orthoDir(start.y, midY);
+    const hd = _orthoDir(start.x, end.x);
+    const vd2 = _orthoDir(midY, end.y);
     return `M ${start.x} ${start.y} L ${start.x} ${midY - r * vd1} Q ${start.x} ${midY} ${start.x + r * hd} ${midY} L ${end.x - r * hd} ${midY} Q ${end.x} ${midY} ${end.x} ${midY + r * vd2} L ${end.x} ${end.y}`;
   }
 
   if (isFromHoriz && !isToHoriz) {
     // H → V  (2 segments, 1 bend at (end.x, start.y))
+    if (_hvOverlaps(start, end, fromRect, toRect)) {
+      return _buildHVDetour(start, end, fromAnchor, fromRect, toRect, r);
+    }
     if (Math.abs(end.x - start.x) < r || Math.abs(end.y - start.y) < r) {
       return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
     }
-    const hd = dir(start.x, end.x);
-    const vd = dir(start.y, end.y);
+    const hd = _orthoDir(start.x, end.x);
+    const vd = _orthoDir(start.y, end.y);
     return `M ${start.x} ${start.y} L ${end.x - r * hd} ${start.y} Q ${end.x} ${start.y} ${end.x} ${start.y + r * vd} L ${end.x} ${end.y}`;
   }
 
   // V → H  (2 segments, 1 bend at (start.x, end.y))
+  if (_vhOverlaps(start, end, fromRect, toRect)) {
+    return _buildVHDetour(start, end, fromAnchor, fromRect, toRect, r);
+  }
   if (Math.abs(end.x - start.x) < r || Math.abs(end.y - start.y) < r) {
     return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
   }
-  const vd = dir(start.y, end.y);
-  const hd = dir(start.x, end.x);
+  const vd = _orthoDir(start.y, end.y);
+  const hd = _orthoDir(start.x, end.x);
   return `M ${start.x} ${start.y} L ${start.x} ${end.y - r * vd} Q ${start.x} ${end.y} ${start.x + r * hd} ${end.y} L ${end.x} ${end.y}`;
 }
 
-export function orthogonalMidpoint(start, end, fromAnchor, toAnchor) {
+export function orthogonalMidpoint(
+  start,
+  end,
+  fromAnchor,
+  toAnchor,
+  fromRect,
+  toRect,
+) {
   const isFromHoriz = fromAnchor === "left" || fromAnchor === "right";
   const isToHoriz = toAnchor === "left" || toAnchor === "right";
   if (isFromHoriz && isToHoriz) {
@@ -103,7 +264,21 @@ export function orthogonalMidpoint(start, end, fromAnchor, toAnchor) {
     return { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
   }
   if (isFromHoriz) {
+    // H → V
+    if (_hvOverlaps(start, end, fromRect, toRect)) {
+      const hDir = fromAnchor === "right" ? 1 : -1;
+      const ax = start.x + hDir * _ORTHO_GAP;
+      const clearY = _pickClearY(start, end, fromRect, toRect);
+      return { x: (ax + end.x) / 2, y: clearY };
+    }
     return { x: end.x, y: start.y };
+  }
+  // V → H
+  if (_vhOverlaps(start, end, fromRect, toRect)) {
+    const vDir = fromAnchor === "bottom" ? 1 : -1;
+    const ay = start.y + vDir * _ORTHO_GAP;
+    const clearX = _pickClearX(start, end, fromRect, toRect);
+    return { x: clearX, y: (ay + end.y) / 2 };
   }
   return { x: start.x, y: end.y };
 }

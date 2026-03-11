@@ -81,7 +81,9 @@ export function renderSelectionControls(selectionControlsLayer, state) {
       if (edgeType === "straight") {
         midpoint = straightLineMidpoint(start, end);
       } else if (edgeType === "orthogonal") {
-        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor);
+        const fromRect = { x: fromEntity.x, y: fromEntity.y, width: fromSize.width, height: fromSize.height };
+        const toRect = { x: toEntity.x, y: toEntity.y, width: toSize.width, height: toSize.height };
+        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor, fromRect, toRect);
       } else {
         const controls = getTautControls(start, end, fromAnchor, toAnchor);
         midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
@@ -147,7 +149,9 @@ export function renderSelectionControls(selectionControlsLayer, state) {
       if (edgeType === "straight") {
         midpoint = straightLineMidpoint(start, end);
       } else if (edgeType === "orthogonal") {
-        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor);
+        const fromRect = { x: fromEntity.x, y: fromEntity.y, width: fromSize.width, height: fromSize.height };
+        const toRect = { x: toEntity.x, y: toEntity.y, width: toSize.width, height: toSize.height };
+        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor, fromRect, toRect);
       } else {
         const controls = getTautControls(start, end, fromAnchor, toAnchor);
         midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);

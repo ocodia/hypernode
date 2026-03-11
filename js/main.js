@@ -50,10 +50,12 @@ store.subscribe((state) => {
 });
 
 bindInteractions(elements, store);
-renderer.render(store.getState());
+// Unhide workspace before first render so DOM measurements (offsetWidth etc.)
+// return real values; both run in the same JS task so there is no FOUC.
 if (elements.workspace instanceof HTMLElement) {
   elements.workspace.hidden = false;
 }
+renderer.render(store.getState());
 registerServiceWorker();
 
 function registerServiceWorker() {
