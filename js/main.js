@@ -44,12 +44,15 @@ store.subscribe((state) => {
       nodes: state.nodes,
       frames: state.frames,
       edges: state.edges,
+      viewport: state.viewport,
     });
     saveAppSettingsToStorage(state.settings);
   }, 120);
 });
 
-bindInteractions(elements, store);
+bindInteractions(elements, store, {
+  hasPersistedViewport: Boolean(initialGraph?.viewport),
+});
 // Unhide workspace before first render so DOM measurements (offsetWidth etc.)
 // return real values; both run in the same JS task so there is no FOUC.
 if (elements.workspace instanceof HTMLElement) {

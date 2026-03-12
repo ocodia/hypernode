@@ -38,7 +38,7 @@ import {
   getThemePresetSequence,
 } from "./theme-presets.js";
 
-export function bindInteractions(elements, store) {
+export function bindInteractions(elements, store, options = {}) {
   const {
     workspace,
     canvas,
@@ -3348,7 +3348,6 @@ export function bindInteractions(elements, store) {
       currentFileHandle = handle;
       store.clearStarterNode();
       store.replaceGraph(graph);
-      resetCanvasView();
       syncSettingsDialogFromState(
         store.getState(),
         settingsDialog,
@@ -3379,6 +3378,7 @@ export function bindInteractions(elements, store) {
           nodes: state.nodes,
           frames: state.frames,
           edges: state.edges,
+          viewport: state.viewport,
         },
         currentFileHandle,
       );
@@ -4204,7 +4204,9 @@ export function bindInteractions(elements, store) {
 
   renderShortcutCatalog();
   filterShortcuts("");
-  resetCanvasView();
+  if (!options.hasPersistedViewport) {
+    resetCanvasView();
+  }
   syncSettingsDialogFromState(
     store.getState(),
     settingsDialog,

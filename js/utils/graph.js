@@ -72,6 +72,26 @@ export function emptyGraphState() {
   };
 }
 
+export function sanitizeViewport(viewport) {
+  return {
+    panX: Number.isFinite(viewport?.panX)
+      ? viewport.panX
+      : VIEWPORT_LIMITS.defaultPanX,
+    panY: Number.isFinite(viewport?.panY)
+      ? viewport.panY
+      : VIEWPORT_LIMITS.defaultPanY,
+    zoom: Math.min(
+      VIEWPORT_LIMITS.maxZoom,
+      Math.max(
+        VIEWPORT_LIMITS.minZoom,
+        Number.isFinite(viewport?.zoom)
+          ? viewport.zoom
+          : VIEWPORT_LIMITS.defaultZoom,
+      ),
+    ),
+  };
+}
+
 export function sanitizeNode(node, frameIds = null) {
   const kind = sanitizeNodeKind(node.kind);
   const width = sanitizeOptionalSize(node.width);
@@ -199,6 +219,9 @@ export function validateGraphPayload(payload) {
   if (payload.frames !== undefined && !Array.isArray(payload.frames)) {
     return false;
   }
+  if (payload.viewport !== undefined && !validateViewportPayload(payload.viewport)) {
+    return false;
+  }
 
   const settings = payload.settings ?? {};
   const hasValidUiThemePreset =
@@ -296,6 +319,15 @@ export function validateGraphPayload(payload) {
       (edge.toAnchor === null || isValidAnchor(edge.toAnchor))
     );
   });
+}
+
+function validateViewportPayload(viewport) {
+  return (
+    viewport &&
+    Number.isFinite(viewport.panX) &&
+    Number.isFinite(viewport.panY) &&
+    Number.isFinite(viewport.zoom)
+  );
 }
 
 export function sanitizeGraphName(name) {

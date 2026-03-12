@@ -38,6 +38,7 @@ export async function saveGraphFile(graph, handle = null) {
     nodes: graph.nodes,
     frames: graph.frames,
     edges: graph.edges,
+    viewport: graph.viewport,
   }, null, 2);
   const writable = await targetHandle.createWritable();
   await writable.write(payload);

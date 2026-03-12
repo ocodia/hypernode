@@ -5,6 +5,7 @@ import {
   sanitizeFrame,
   sanitizeGraphName,
   sanitizeNode,
+  sanitizeViewport,
 } from "../utils/graph.js";
 import {
   EDGE_DEFAULTS,
@@ -54,6 +55,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
       sanitizeNode(node, frameIds),
     );
     state.edges = initialGraph.edges.map(sanitizeEdge);
+    state.viewport = sanitizeViewport(initialGraph.viewport);
     syncAutoAnchorsForAllEdges();
   }
 
@@ -1333,6 +1335,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const frameIds = new Set(state.frames.map((frame) => frame.id));
     state.nodes = graph.nodes.map((node) => sanitizeNode(node, frameIds));
     state.edges = graph.edges.map(sanitizeEdge);
+    state.viewport = sanitizeViewport(graph.viewport);
     syncAutoAnchorsForAllEdges();
     state.selection = null;
     clearTransientUiState(state);
