@@ -193,6 +193,12 @@ Entity context menus must select the target entity before showing.
 The context menu must dismiss on outside click, Escape, scroll, or any menu-item action.
 The context menu must use the shared design system tokens and radius presets.
 
+FR-43
+The blank-canvas context menu must include a "Snap to Grid" toggle that enables or disables grid snapping.
+When snap-to-grid is enabled, dragging nodes and frames must snap their position to the nearest grid line (24 px step).
+When snap-to-grid is enabled, resizing nodes and frames must snap the moved edge(s) to the nearest grid line while respecting minimum size constraints.
+The snap-to-grid preference must be persisted as an app setting.
+
 ## Non Functional Requirements
 
 ### Performance

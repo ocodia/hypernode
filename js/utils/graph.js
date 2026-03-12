@@ -379,6 +379,9 @@ export function sanitizeAppSettings(settings) {
     edgeTypeDefault: isValidEdgeType(settings?.edgeTypeDefault)
       ? settings.edgeTypeDefault
       : APP_SETTINGS_DEFAULTS.edgeTypeDefault,
+    snapToGrid: typeof settings?.snapToGrid === "boolean"
+      ? settings.snapToGrid
+      : APP_SETTINGS_DEFAULTS.snapToGrid,
   };
   const resolvedPlacement = getAnchoredUiPlacement(sanitized);
   return {

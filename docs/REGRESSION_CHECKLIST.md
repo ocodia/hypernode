@@ -143,3 +143,14 @@ Use this checklist before shipping interaction changes.
 - [ ] Click Delete in the edge context menu and verify the edge is removed.
 - [ ] Right-click on an entity and verify that entity becomes selected before the menu opens.
 - [ ] Verify entity context menus dismiss correctly via outside click, Escape, and scroll.
+
+### Snap to grid
+
+- [ ] Right-click on blank canvas and verify the context menu includes a "Snap to Grid" toggle.
+- [ ] Click "Snap to Grid" to enable; right-click again and verify the item shows a checkmark prefix.
+- [ ] With snap enabled, drag a node and verify its position aligns to 24 px grid lines.
+- [ ] With snap enabled, drag a frame (with embedded nodes) and verify its position aligns to 24 px grid lines.
+- [ ] With snap enabled, resize a node from each corner and verify the moved edge(s) snap to grid lines while minimum size is respected.
+- [ ] With snap enabled, resize a frame from each corner and verify the moved edge(s) snap to grid lines while minimum size is respected.
+- [ ] Disable snap-to-grid via the context menu; drag and resize should return to free movement.
+- [ ] Reload page and verify the snap-to-grid preference persists.

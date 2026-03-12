@@ -24,6 +24,7 @@ import {
   getUnavailableCornerPositions,
   resolvePlacementChange,
 } from "../utils/ui-placement.js";
+import { snapPositionToGrid, snapResizeToGrid } from "../shared/math.js";
 import { createContextMenu } from "../utils/context-menu.js";
 import { bindCanvasInteractions } from "./binders/canvas.js";
 import { bindEdgeInteractions } from "./binders/edges.js";
@@ -1962,6 +1963,12 @@ export function bindInteractions(elements, store, options = {}) {
           shortcut: "F",
           action: () => setFrameDrawMode(true),
         },
+        { separator: true },
+        {
+          label: state.settings.snapToGrid ? "\u2713 Snap to Grid" : "Snap to Grid",
+          icon: "bi-grid-3x3",
+          action: () => store.setSnapToGrid(!state.settings.snapToGrid),
+        },
       ],
     });
   }
@@ -2309,7 +2316,10 @@ export function bindInteractions(elements, store, options = {}) {
         resizeSession.moved = true;
       }
 
-      const next = computeResizedRect(resizeSession, dx, dy);
+      let next = computeResizedRect(resizeSession, dx, dy);
+      if (store.getState().settings.snapToGrid) {
+        next = snapResizeToGrid(next, resizeSession.corner, NODE_DEFAULTS);
+      }
       store.resizeNode(resizeSession.nodeId, next, { skipHistory: true });
       return;
     }
@@ -2324,12 +2334,20 @@ export function bindInteractions(elements, store, options = {}) {
       dragSession.moved = true;
     }
 
+    const useSnap = store.getState().settings.snapToGrid;
     if (dragSession.nodes.length === 1) {
       const single = dragSession.nodes[0];
+      let nx = single.nodeStartX + dx;
+      let ny = single.nodeStartY + dy;
+      if (useSnap) {
+        const snapped = snapPositionToGrid(nx, ny);
+        nx = snapped.x;
+        ny = snapped.y;
+      }
       store.moveNode(
         single.id,
-        single.nodeStartX + dx,
-        single.nodeStartY + dy,
+        nx,
+        ny,
         { skipHistory: true },
       );
       if (dragSession.moved) {
@@ -2337,11 +2355,16 @@ export function bindInteractions(elements, store, options = {}) {
       }
       return;
     }
-    const batch = dragSession.nodes.map((entry) => ({
-      id: entry.id,
-      x: entry.nodeStartX + dx,
-      y: entry.nodeStartY + dy,
-    }));
+    const batch = dragSession.nodes.map((entry) => {
+      let nx = entry.nodeStartX + dx;
+      let ny = entry.nodeStartY + dy;
+      if (useSnap) {
+        const snapped = snapPositionToGrid(nx, ny);
+        nx = snapped.x;
+        ny = snapped.y;
+      }
+      return { id: entry.id, x: nx, y: ny };
+    });
     store.moveNodes(batch, { skipHistory: true });
     if (dragSession.moved) {
       updateFrameMembershipPreview(dragSession.nodes, dx, dy);
@@ -3023,7 +3046,10 @@ export function bindInteractions(elements, store, options = {}) {
         frameResizeSession.moved = true;
       }
 
-      const next = computeFrameResizedRect(frameResizeSession, dx, dy);
+      let next = computeFrameResizedRect(frameResizeSession, dx, dy);
+      if (store.getState().settings.snapToGrid) {
+        next = snapResizeToGrid(next, frameResizeSession.corner, FRAME_DEFAULTS);
+      }
       store.resizeFrame(frameResizeSession.frameId, next, {
         skipHistory: true,
       });
@@ -3051,10 +3077,17 @@ export function bindInteractions(elements, store, options = {}) {
       frameDragSession.moved = true;
     }
 
+    let fx = frameDragSession.frameStartX + dx;
+    let fy = frameDragSession.frameStartY + dy;
+    if (store.getState().settings.snapToGrid) {
+      const snapped = snapPositionToGrid(fx, fy);
+      fx = snapped.x;
+      fy = snapped.y;
+    }
     store.moveFrame(
       frameDragSession.frameId,
-      frameDragSession.frameStartX + dx,
-      frameDragSession.frameStartY + dy,
+      fx,
+      fy,
       { skipHistory: true, moveMembers: true },
     );
   }

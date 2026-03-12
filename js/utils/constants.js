@@ -72,6 +72,7 @@ export const APP_SETTINGS_DEFAULTS = {
   arrowheadSizeStep: 0,
   nodeColorDefault: null,
   edgeTypeDefault: "curved",
+  snapToGrid: false,
 };
 
 export const EDGE_DEFAULTS = {

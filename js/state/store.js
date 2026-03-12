@@ -1229,6 +1229,13 @@ export function createStore(initialGraph = null, initialSettings = null) {
     );
   }
 
+  function setSnapToGrid(enabled) {
+    updateAppSettings(
+      { snapToGrid: !!enabled },
+      { actionLabel: "set-snap-to-grid", skipHistory: true },
+    );
+  }
+
   function updateEdge(id, patch) {
     const edge = state.edges.find((entry) => entry.id === id);
     if (!edge) return;
@@ -1567,6 +1574,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     setArrowheadSizeStep,
     setEdgeTypeDefault,
     setNodeColorDefault,
+    setSnapToGrid,
     replaceGraph,
     setViewport,
     resetView,
