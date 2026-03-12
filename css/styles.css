@@ -3785,26 +3785,7 @@ kbd {
   min-height: 116px;
   border-radius: var(--radius-md);
   border: 1px dashed color-mix(in srgb, var(--panel-border) 86%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface) 98%, transparent),
-      color-mix(in srgb, var(--surface-soft) 60%, transparent)
-    ),
-    radial-gradient(
-      circle at top,
-      color-mix(in srgb, var(--accent) 6%, transparent),
-      transparent 60%
-    );
-}
-
-.settings-dialog__position-screen::before {
-  content: "";
-  position: absolute;
-  inset: 10px;
-  border-radius: calc(var(--radius-md) - 2px);
-  border: 1px solid color-mix(in srgb, var(--panel-border) 56%, transparent);
-  pointer-events: none;
+  background: var(--surface-raised);
 }
 
 .settings-dialog__position-btn {
