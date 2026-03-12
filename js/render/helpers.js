@@ -43,6 +43,7 @@ export function straightLineMidpoint(start, end) {
 // ── Orthogonal routing helpers ──────────────────────────────────────
 const _ORTHO_MARGIN = 4;
 const _ORTHO_GAP = 20;
+const _MIN_STUB = 20;
 
 function _orthoDir(a, b) {
   return b >= a ? 1 : -1;
@@ -200,7 +201,14 @@ export function buildOrthogonalPath(
 
   if (isFromHoriz && isToHoriz) {
     // H → V → H  (3 segments, 2 bends at midX pivot)
-    const midX = (start.x + end.x) / 2;
+    let midX = (start.x + end.x) / 2;
+    const bothRight = fromAnchor === 'right' && toAnchor === 'right';
+    const bothLeft = fromAnchor === 'left' && toAnchor === 'left';
+    if (bothRight) {
+      midX = Math.max(midX, Math.max(start.x, end.x) + _MIN_STUB);
+    } else if (bothLeft) {
+      midX = Math.min(midX, Math.min(start.x, end.x) - _MIN_STUB);
+    }
     if (Math.abs(end.y - start.y) < r * 2) {
       return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
     }
@@ -212,7 +220,14 @@ export function buildOrthogonalPath(
 
   if (!isFromHoriz && !isToHoriz) {
     // V → H → V  (3 segments, 2 bends at midY pivot)
-    const midY = (start.y + end.y) / 2;
+    let midY = (start.y + end.y) / 2;
+    const bothDown = fromAnchor === 'bottom' && toAnchor === 'bottom';
+    const bothUp = fromAnchor === 'top' && toAnchor === 'top';
+    if (bothDown) {
+      midY = Math.max(midY, Math.max(start.y, end.y) + _MIN_STUB);
+    } else if (bothUp) {
+      midY = Math.min(midY, Math.min(start.y, end.y) - _MIN_STUB);
+    }
     if (Math.abs(end.x - start.x) < r * 2) {
       return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
     }
@@ -258,10 +273,26 @@ export function orthogonalMidpoint(
   const isFromHoriz = fromAnchor === "left" || fromAnchor === "right";
   const isToHoriz = toAnchor === "left" || toAnchor === "right";
   if (isFromHoriz && isToHoriz) {
-    return { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+    let midX = (start.x + end.x) / 2;
+    const bothRight = fromAnchor === 'right' && toAnchor === 'right';
+    const bothLeft = fromAnchor === 'left' && toAnchor === 'left';
+    if (bothRight) {
+      midX = Math.max(midX, Math.max(start.x, end.x) + _MIN_STUB);
+    } else if (bothLeft) {
+      midX = Math.min(midX, Math.min(start.x, end.x) - _MIN_STUB);
+    }
+    return { x: midX, y: (start.y + end.y) / 2 };
   }
   if (!isFromHoriz && !isToHoriz) {
-    return { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+    let midY = (start.y + end.y) / 2;
+    const bothDown = fromAnchor === 'bottom' && toAnchor === 'bottom';
+    const bothUp = fromAnchor === 'top' && toAnchor === 'top';
+    if (bothDown) {
+      midY = Math.max(midY, Math.max(start.y, end.y) + _MIN_STUB);
+    } else if (bothUp) {
+      midY = Math.min(midY, Math.min(start.y, end.y) - _MIN_STUB);
+    }
+    return { x: (start.x + end.x) / 2, y: midY };
   }
   if (isFromHoriz) {
     // H → V
