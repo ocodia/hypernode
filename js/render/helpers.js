@@ -104,8 +104,7 @@ function _hvOverlaps(start, end, fromRect, toRect) {
 /** Pick an x-coordinate outside both rects (nearest total distance wins). */
 function _pickClearX(start, end, fromRect, toRect) {
   const gap = _ORTHO_GAP;
-  const left =
-    Math.min(fromRect.x, toRect.x) - gap;
+  const left = Math.min(fromRect.x, toRect.x) - gap;
   const right =
     Math.max(fromRect.x + fromRect.width, toRect.x + toRect.width) + gap;
   const lDist = Math.abs(start.x - left) + Math.abs(left - end.x);
@@ -116,8 +115,7 @@ function _pickClearX(start, end, fromRect, toRect) {
 /** Pick a y-coordinate outside both rects (nearest total distance wins). */
 function _pickClearY(start, end, fromRect, toRect) {
   const gap = _ORTHO_GAP;
-  const top =
-    Math.min(fromRect.y, toRect.y) - gap;
+  const top = Math.min(fromRect.y, toRect.y) - gap;
   const bottom =
     Math.max(fromRect.y + fromRect.height, toRect.y + toRect.height) + gap;
   const tDist = Math.abs(start.y - top) + Math.abs(top - end.y);
@@ -202,8 +200,8 @@ export function buildOrthogonalPath(
   if (isFromHoriz && isToHoriz) {
     // H → V → H  (3 segments, 2 bends at midX pivot)
     let midX = (start.x + end.x) / 2;
-    const bothRight = fromAnchor === 'right' && toAnchor === 'right';
-    const bothLeft = fromAnchor === 'left' && toAnchor === 'left';
+    const bothRight = fromAnchor === "right" && toAnchor === "right";
+    const bothLeft = fromAnchor === "left" && toAnchor === "left";
     if (bothRight) {
       midX = Math.max(midX, Math.max(start.x, end.x) + _MIN_STUB);
     } else if (bothLeft) {
@@ -221,8 +219,8 @@ export function buildOrthogonalPath(
   if (!isFromHoriz && !isToHoriz) {
     // V → H → V  (3 segments, 2 bends at midY pivot)
     let midY = (start.y + end.y) / 2;
-    const bothDown = fromAnchor === 'bottom' && toAnchor === 'bottom';
-    const bothUp = fromAnchor === 'top' && toAnchor === 'top';
+    const bothDown = fromAnchor === "bottom" && toAnchor === "bottom";
+    const bothUp = fromAnchor === "top" && toAnchor === "top";
     if (bothDown) {
       midY = Math.max(midY, Math.max(start.y, end.y) + _MIN_STUB);
     } else if (bothUp) {
@@ -274,8 +272,8 @@ export function orthogonalMidpoint(
   const isToHoriz = toAnchor === "left" || toAnchor === "right";
   if (isFromHoriz && isToHoriz) {
     let midX = (start.x + end.x) / 2;
-    const bothRight = fromAnchor === 'right' && toAnchor === 'right';
-    const bothLeft = fromAnchor === 'left' && toAnchor === 'left';
+    const bothRight = fromAnchor === "right" && toAnchor === "right";
+    const bothLeft = fromAnchor === "left" && toAnchor === "left";
     if (bothRight) {
       midX = Math.max(midX, Math.max(start.x, end.x) + _MIN_STUB);
     } else if (bothLeft) {
@@ -285,8 +283,8 @@ export function orthogonalMidpoint(
   }
   if (!isFromHoriz && !isToHoriz) {
     let midY = (start.y + end.y) / 2;
-    const bothDown = fromAnchor === 'bottom' && toAnchor === 'bottom';
-    const bothUp = fromAnchor === 'top' && toAnchor === 'top';
+    const bothDown = fromAnchor === "bottom" && toAnchor === "bottom";
+    const bothUp = fromAnchor === "top" && toAnchor === "top";
     if (bothDown) {
       midY = Math.max(midY, Math.max(start.y, end.y) + _MIN_STUB);
     } else if (bothUp) {
