@@ -1624,6 +1624,7 @@ select:focus-visible {
   font-size: 2rem;
   font-weight: 600;
   line-height: 1.3;
+  user-select: none;
 }
 
 .frame__description {
