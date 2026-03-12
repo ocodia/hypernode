@@ -63,6 +63,8 @@ export function bindInteractions(elements, store, options = {}) {
   let isFrameDrawMode = false;
   let edgeSession = null;
   let edgeTwangTimer = null;
+  let viewportAnimationFrame = 0;
+  let viewportAnimationToken = 0;
   let activeLiveEditNodeId = null;
   let activeLiveEditFrameId = null;
   let editorFocusLock = null;
@@ -431,7 +433,16 @@ export function bindInteractions(elements, store, options = {}) {
     };
   }
 
+  function cancelViewportAnimation() {
+    viewportAnimationToken += 1;
+    if (viewportAnimationFrame) {
+      window.cancelAnimationFrame(viewportAnimationFrame);
+      viewportAnimationFrame = 0;
+    }
+  }
+
   function resetCanvasView() {
+    cancelViewportAnimation();
     const rect =
       typeof canvas?.getBoundingClientRect === "function"
         ? canvas.getBoundingClientRect()
@@ -441,6 +452,80 @@ export function bindInteractions(elements, store, options = {}) {
       panY: Math.round(rect.height / 2),
       zoom: VIEWPORT_LIMITS.defaultZoom,
     });
+  }
+
+  function animateViewportTo(nextViewport, options = {}) {
+    cancelViewportAnimation();
+
+    const duration = Math.max(0, Number(options.durationMs) || 220);
+    if (
+      duration === 0 ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+    ) {
+      store.setViewport(nextViewport);
+      return;
+    }
+
+    const token = viewportAnimationToken;
+    const startViewport = { ...store.getState().viewport };
+    const targetViewport = {
+      panX: Number.isFinite(nextViewport.panX)
+        ? nextViewport.panX
+        : startViewport.panX,
+      panY: Number.isFinite(nextViewport.panY)
+        ? nextViewport.panY
+        : startViewport.panY,
+      zoom: Number.isFinite(nextViewport.zoom)
+        ? nextViewport.zoom
+        : startViewport.zoom,
+    };
+    const startedAt = performance.now();
+    const easeInOutCubic = (t) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const step = (now) => {
+      if (token !== viewportAnimationToken) return;
+      const progress = Math.min(1, (now - startedAt) / duration);
+      const eased = easeInOutCubic(progress);
+      store.setViewport({
+        panX:
+          startViewport.panX +
+          (targetViewport.panX - startViewport.panX) * eased,
+        panY:
+          startViewport.panY +
+          (targetViewport.panY - startViewport.panY) * eased,
+        zoom:
+          startViewport.zoom +
+          (targetViewport.zoom - startViewport.zoom) * eased,
+      });
+      if (progress < 1) {
+        viewportAnimationFrame = window.requestAnimationFrame(step);
+        return;
+      }
+      viewportAnimationFrame = 0;
+    };
+
+    viewportAnimationFrame = window.requestAnimationFrame(step);
+  }
+
+  function animateViewportToNodeCenter(nodeId, options = {}) {
+    const state = store.getState();
+    const node = getNode(nodeId, state);
+    if (!node) return false;
+    const rect =
+      typeof canvas?.getBoundingClientRect === "function"
+        ? canvas.getBoundingClientRect()
+        : null;
+    if (!rect) return false;
+    const center = getNodeCenter(node);
+    animateViewportTo(
+      {
+        panX: rect.width / 2 - center.x * state.viewport.zoom,
+        panY: rect.height / 2 - center.y * state.viewport.zoom,
+      },
+      options,
+    );
+    return true;
   }
 
   function getLastPointerGraphPoint(viewport = store.getState().viewport) {
@@ -837,13 +922,13 @@ export function bindInteractions(elements, store, options = {}) {
 
     if (!selection || selection.type !== "node") {
       if (!state.nodes.length) return false;
-      return selectNodeById(state.nodes[0].id);
+      return selectNodeById(state.nodes[0].id, { animateIntoView: true });
     }
 
     const currentNode = getNode(selection.id, state);
     if (!currentNode) {
       if (!state.nodes.length) return false;
-      return selectNodeById(state.nodes[0].id);
+      return selectNodeById(state.nodes[0].id, { animateIntoView: true });
     }
 
     const edgeFollowNodeId = resolveDirectionalEdgeFollowCandidate(
@@ -852,7 +937,7 @@ export function bindInteractions(elements, store, options = {}) {
       state,
     );
     if (edgeFollowNodeId) {
-      return selectNodeById(edgeFollowNodeId);
+      return selectNodeById(edgeFollowNodeId, { animateIntoView: true });
     }
 
     const nearestNodeId = resolveNearestDirectionalNodeCandidate(
@@ -861,11 +946,12 @@ export function bindInteractions(elements, store, options = {}) {
       state.nodes,
     );
     if (!nearestNodeId) return false;
-    return selectNodeById(nearestNodeId);
+    return selectNodeById(nearestNodeId, { animateIntoView: true });
   }
 
-  function selectNodeById(nodeId) {
+  function selectNodeById(nodeId, options = {}) {
     if (!nodeId) return false;
+    cancelViewportAnimation();
     if (editorFocusLock && editorFocusLock.nodeId !== nodeId) {
       clearEditorFocusLock();
     }
@@ -878,6 +964,9 @@ export function bindInteractions(elements, store, options = {}) {
     }
 
     store.setSelection({ type: "node", id: nodeId });
+    if (options.animateIntoView) {
+      animateViewportToNodeCenter(nodeId, options.viewportAnimation);
+    }
     return true;
   }
 
@@ -1940,6 +2029,7 @@ export function bindInteractions(elements, store, options = {}) {
       startPanX: state.viewport.panX,
       startPanY: state.viewport.panY,
     };
+    cancelViewportAnimation();
     store.setPanning(true);
     canvas.setPointerCapture(event.pointerId);
   }
@@ -2044,6 +2134,7 @@ export function bindInteractions(elements, store, options = {}) {
     if (!event.ctrlKey && Math.abs(event.deltaY) < Math.abs(event.deltaX))
       return;
     event.preventDefault();
+    cancelViewportAnimation();
 
     const state = store.getState();
     const oldZoom = state.viewport.zoom;
