@@ -22,7 +22,7 @@ import {
   findEntityById,
   getNodeFrameOverlapArea,
 } from "../shared/entities.js";
-import { resolveAutoAnchor } from "../shared/anchors.js";
+import { resolveAutoAnchor, resolveAutoAnchors } from "../shared/anchors.js";
 import {
   areSelectionsEqual,
   cloneSelection,
@@ -80,8 +80,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const toEntity = getGraphEntity(edge.to);
     if (!fromEntity || !toEntity) return false;
 
-    const fromAnchor = resolveAutoAnchor(fromEntity, toEntity);
-    const toAnchor = resolveAutoAnchor(toEntity, fromEntity);
+    const { fromAnchor, toAnchor } = resolveAutoAnchors(fromEntity, toEntity);
     const changed =
       edge.fromAnchor !== fromAnchor || edge.toAnchor !== toAnchor;
     if (!changed) return false;
@@ -1039,8 +1038,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
       id: createId("edge"),
       from,
       to,
-      fromAnchor: resolveAutoAnchor(fromEntity, toEntity),
-      toAnchor: resolveAutoAnchor(toEntity, fromEntity),
+      ...resolveAutoAnchors(fromEntity, toEntity),
       edgeType: state.settings.edgeTypeDefault,
     });
     state.edges.push(edge);

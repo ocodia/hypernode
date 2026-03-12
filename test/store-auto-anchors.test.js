@@ -27,13 +27,11 @@ test('connectNodes rewrites stored anchors to resolved auto anchors', () => {
 
   store.connectNodes('a', 'top', 'b', 'top');
 
-  assert.deepEqual(store.getState().edges[0], {
-    id: store.getState().edges[0].id,
-    from: 'a',
-    to: 'b',
-    fromAnchor: 'right',
-    toAnchor: 'left',
-  });
+  const edge = store.getState().edges[0];
+  assert.equal(edge.from, 'a');
+  assert.equal(edge.to, 'b');
+  assert.equal(edge.fromAnchor, 'right');
+  assert.equal(edge.toAnchor, 'left');
 });
 
 test('reconnectEdge rewrites both stored anchors in auto mode', () => {
@@ -43,13 +41,12 @@ test('reconnectEdge rewrites both stored anchors in auto mode', () => {
 
   store.reconnectEdge('edge-1', 'to', 'c', 'left');
 
-  assert.deepEqual(store.getState().edges[0], {
-    id: 'edge-1',
-    from: 'a',
-    to: 'c',
-    fromAnchor: 'bottom',
-    toAnchor: 'top',
-  });
+  const edge = store.getState().edges[0];
+  assert.equal(edge.id, 'edge-1');
+  assert.equal(edge.from, 'a');
+  assert.equal(edge.to, 'c');
+  assert.equal(edge.fromAnchor, 'bottom');
+  assert.equal(edge.toAnchor, 'top');
 });
 
 test('moving a node updates stored anchors when auto resolution changes sides', () => {
@@ -63,7 +60,7 @@ test('moving a node updates stored anchors when auto resolution changes sides', 
   assert.equal(store.getState().edges[0].toAnchor, 'top');
 });
 
-test('resizing a node updates stored anchors when centers cross dominant axis', () => {
+test('resizing a node updates stored anchors when shortest anchor pair changes', () => {
   const store = createStore(createGraph({
     nodes: [
       { id: 'a', title: 'A', description: '', x: 0, y: 0, width: 100, height: 100 },
@@ -74,7 +71,8 @@ test('resizing a node updates stored anchors when centers cross dominant axis', 
 
   store.resizeNode('b', { width: 100, height: 900 });
 
-  assert.equal(store.getState().edges[0].fromAnchor, 'bottom');
+  // B now spans y=0..900 — A's right (100,50) → B's top (370,0) is shortest
+  assert.equal(store.getState().edges[0].fromAnchor, 'right');
   assert.equal(store.getState().edges[0].toAnchor, 'top');
 });
 

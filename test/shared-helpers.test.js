@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolveAutoAnchor } from '../js/shared/anchors.js';
+import { resolveAutoAnchor, resolveAutoAnchors } from '../js/shared/anchors.js';
 import { findBestFrameIdForNode, getNodeFrameOverlapArea } from '../js/shared/entities.js';
 import { normalizeNodeSelection, areSelectionsEqual } from '../js/shared/selection.js';
 import { createHistoryManager } from '../js/state/history.js';
@@ -10,6 +10,29 @@ import { clearTransientUiState } from '../js/state/ui.js';
 test('resolveAutoAnchor chooses dominant horizontal direction', () => {
   assert.equal(resolveAutoAnchor({ x: 0, y: 0, width: 100, height: 80 }, { x: 300, y: 20, width: 100, height: 80 }), 'right');
   assert.equal(resolveAutoAnchor({ x: 300, y: 20, width: 100, height: 80 }, { x: 0, y: 0, width: 100, height: 80 }), 'left');
+});
+
+test('resolveAutoAnchors picks shortest-distance anchor pair for diagonal layout', () => {
+  // Top-left node to bottom-right node: bottom→top is shorter than right→left
+  const a = { x: 0, y: 0, width: 100, height: 50 };
+  const b = { x: 80, y: 200, width: 100, height: 50 };
+  const result = resolveAutoAnchors(a, b);
+  assert.equal(result.fromAnchor, 'bottom');
+  assert.equal(result.toAnchor, 'top');
+});
+
+test('resolveAutoAnchors picks cross-axis anchors when that is shorter', () => {
+  // A above-left, B below-right with moderate diagonal offset
+  const a = { x: 0, y: 0, width: 200, height: 50 };
+  const b = { x: 180, y: 200, width: 200, height: 50 };
+  // A bottom anchor: (100, 50), B top anchor: (280, 200) → dist² = 180²+150² = 54900
+  // A bottom anchor: (100, 50), B left anchor: (180, 225) → dist² = 80²+175² = 37025
+  // A right anchor: (200, 25), B top anchor: (280, 200) → dist² = 80²+175² = 37025
+  // A right anchor: (200, 25), B left anchor: (180, 225) → dist² = 20²+200² = 40400
+  // Both right→top and bottom→left tie — algorithm picks right→top first
+  const result = resolveAutoAnchors(a, b);
+  assert.equal(result.fromAnchor, 'right');
+  assert.equal(result.toAnchor, 'top');
 });
 
 test('findBestFrameIdForNode prefers greatest overlap and later tie', () => {
