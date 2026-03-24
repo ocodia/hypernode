@@ -1996,6 +1996,23 @@ select:focus-visible {
   gap: 10px;
 }
 
+.node--image:not(.focus-overlay__panel) {
+  padding: 0;
+  overflow: hidden;
+}
+
+.node--image:not(.focus-overlay__panel) .node__content,
+.node--image:not(.focus-overlay__panel) .node__editor,
+.node--image:not(.focus-overlay__panel) .node__editor-layout--canvas-image {
+  gap: 0;
+}
+
+.node--image:not(.focus-overlay__panel) .node__meta,
+.node--image:not(.focus-overlay__panel) .node__editor-fields,
+.node--image:not(.focus-overlay__panel) .node__editor-fields--canvas-image {
+  padding: 12px;
+}
+
 .focus-overlay__panel.node--image .node__content--focus {
   min-height: 0;
 }
@@ -2009,6 +2026,12 @@ select:focus-visible {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+}
+
+.node--image:not(.focus-overlay__panel) .node__image-pane {
+  border: 0;
+  border-bottom: 1px solid var(--panel-border);
+  border-radius: 0;
 }
 
 .node.is-selected {
