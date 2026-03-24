@@ -875,7 +875,7 @@ select:focus-visible {
   --node-selected-border: var(--accent);
   position: absolute;
   width: 216px;
-  min-height: 144px;
+  height: 144px;
   border-radius: var(--radius-md);
   border: var(--node-border-width, 1px) var(--node-border-style, solid)
     var(--node-border);
