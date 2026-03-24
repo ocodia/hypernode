@@ -93,7 +93,7 @@ test('renderers use markdown output in view mode and raw text in edit mode', () 
     ui: { editingFrameId: 'f1', edgeDraft: null, frameDraft: null, frameMembershipPreview: {} },
   });
   assert.match(framesLayer.innerHTML, /data-frame-edit-title="f1"/);
-  assert.match(framesLayer.innerHTML, /<textarea class="frame__editor-textarea" data-frame-edit-description="f1"># Title/);
+  assert.match(framesLayer.innerHTML, /<textarea class="frame__editor-textarea" data-frame-edit-description="f1" placeholder="Description" aria-label="Description"># Title/);
 });
 
 test('single selected node renders focus toolbar action', () => {
@@ -393,7 +393,7 @@ test('image nodes without explicit height no longer derive height from image asp
     width: 320,
     imageAspectRatio: 1.5,
     imageData: 'data:image/png;base64,abc',
-  }), 80);
+  }), 96);
 });
 
 test('renderHypernodeMetadata updates name, viewport center coordinates, and document title', () => {

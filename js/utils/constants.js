@@ -11,10 +11,10 @@ export const VIEWPORT_LIMITS = {
 };
 
 export const NODE_DEFAULTS = {
-  width: 210,
-  height: 80,
-  minWidth: 160,
-  minHeight: 40,
+  width: 216,
+  height: 96,
+  minWidth: 168,
+  minHeight: 48,
   title: "Untitled Node",
   borderWidth: 1,
   borderWidthMin: 1,
@@ -23,10 +23,10 @@ export const NODE_DEFAULTS = {
 };
 
 export const FRAME_DEFAULTS = {
-  width: 320,
-  height: 200,
-  minWidth: 200,
-  minHeight: 140,
+  width: 336,
+  height: 216,
+  minWidth: 216,
+  minHeight: 144,
   title: "Untitled Frame",
   borderWidth: 3,
   borderWidthMin: 1,

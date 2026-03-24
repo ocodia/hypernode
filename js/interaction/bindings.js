@@ -1984,12 +1984,15 @@ export function bindInteractions(elements, store, options = {}) {
 
     if (isFrameDrawMode) {
       const state = store.getState();
-      const start = toGraphPoint(
+      let start = toGraphPoint(
         event.clientX,
         event.clientY,
         canvas,
         state.viewport,
       );
+      if (state.settings.snapToGrid) {
+        start = snapPositionToGrid(start.x, start.y);
+      }
       frameDrawSession = {
         pointerId: event.pointerId,
         startX: start.x,
@@ -2044,12 +2047,15 @@ export function bindInteractions(elements, store, options = {}) {
   function onCanvasPointerMove(event) {
     if (frameDrawSession && event.pointerId === frameDrawSession.pointerId) {
       const state = store.getState();
-      const current = toGraphPoint(
+      let current = toGraphPoint(
         event.clientX,
         event.clientY,
         canvas,
         state.viewport,
       );
+      if (state.settings.snapToGrid) {
+        current = snapPositionToGrid(current.x, current.y);
+      }
       const rect = toRectFromPoints(
         frameDrawSession.startX,
         frameDrawSession.startY,
@@ -2081,12 +2087,15 @@ export function bindInteractions(elements, store, options = {}) {
   function onCanvasPointerUp(event) {
     if (frameDrawSession && event.pointerId === frameDrawSession.pointerId) {
       const state = store.getState();
-      const current = toGraphPoint(
+      let current = toGraphPoint(
         event.clientX,
         event.clientY,
         canvas,
         state.viewport,
       );
+      if (state.settings.snapToGrid) {
+        current = snapPositionToGrid(current.x, current.y);
+      }
       const rect = toRectFromPoints(
         frameDrawSession.startX,
         frameDrawSession.startY,

@@ -17,6 +17,7 @@ import {
   NODE_DEFAULTS,
   VIEWPORT_LIMITS,
 } from "../utils/constants.js";
+import { snapPositionToGrid, snapToGrid } from "../shared/math.js";
 import {
   findBestFrameIdForNode as findBestFrameIdForNodeInFrames,
   findEntityById,
@@ -455,6 +456,19 @@ export function createStore(initialGraph = null, initialSettings = null) {
     },
     options = {},
   ) {
+    const resolvedGeometry = getSnappedNodeGeometry(
+      {
+        x,
+        y,
+        width:
+          width === null || width === undefined ? NODE_DEFAULTS.width : width,
+        height:
+          height === null || height === undefined
+            ? NODE_DEFAULTS.height
+            : height,
+      },
+      state.settings.snapToGrid,
+    );
     const resolvedColorKey =
       options.colorKey !== undefined
         ? sanitizeColorKey(options.colorKey)
@@ -468,10 +482,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
         ...(kind === IMAGE_NODE_DEFAULTS.kind
           ? { imageData, imageAspectRatio }
           : {}),
-        x,
-        y,
-        ...(width === null ? {} : { width }),
-        ...(height === null ? {} : { height }),
+        x: resolvedGeometry.x,
+        y: resolvedGeometry.y,
+        width: resolvedGeometry.width,
+        height: resolvedGeometry.height,
         ...(frameId ? { frameId } : {}),
         colorKey: resolvedColorKey,
       },
@@ -508,14 +522,18 @@ export function createStore(initialGraph = null, initialSettings = null) {
     },
     options = {},
   ) {
+    const resolvedGeometry = getSnappedFrameGeometry(
+      { x, y, width, height },
+      state.settings.snapToGrid,
+    );
     const frame = sanitizeFrame({
       id: createId("frame"),
       title,
       description,
-      x,
-      y,
-      width,
-      height,
+      x: resolvedGeometry.x,
+      y: resolvedGeometry.y,
+      width: resolvedGeometry.width,
+      height: resolvedGeometry.height,
       colorKey,
     });
 
@@ -694,8 +712,9 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
     if (!options.skipHistory) pushHistory("move-node");
-    node.x = x;
-    node.y = y;
+    const position = getSnappedPosition({ x, y }, state.settings.snapToGrid);
+    node.x = position.x;
+    node.y = position.y;
     syncAutoAnchorsForAllEdges();
     notify();
   }
@@ -707,8 +726,15 @@ export function createStore(initialGraph = null, initialSettings = null) {
       if (!entry || typeof entry.id !== "string") continue;
       const node = state.nodes.find((item) => item.id === entry.id);
       if (!node) continue;
-      if (typeof entry.x === "number") node.x = entry.x;
-      if (typeof entry.y === "number") node.y = entry.y;
+      const position = getSnappedPosition(
+        {
+          x: typeof entry.x === "number" ? entry.x : node.x,
+          y: typeof entry.y === "number" ? entry.y : node.y,
+        },
+        state.settings.snapToGrid,
+      );
+      if (typeof entry.x === "number") node.x = position.x;
+      if (typeof entry.y === "number") node.y = position.y;
     }
     syncAutoAnchorsForAllEdges();
     notify();
@@ -718,10 +744,11 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const frame = state.frames.find((item) => item.id === id);
     if (!frame) return;
     if (!options.skipHistory) pushHistory("move-frame");
-    const dx = x - frame.x;
-    const dy = y - frame.y;
-    frame.x = x;
-    frame.y = y;
+    const position = getSnappedPosition({ x, y }, state.settings.snapToGrid);
+    const dx = position.x - frame.x;
+    const dy = position.y - frame.y;
+    frame.x = position.x;
+    frame.y = position.y;
 
     if (options.moveMembers !== false && (dx !== 0 || dy !== 0)) {
       for (const node of state.nodes) {
@@ -740,17 +767,18 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
     if (!options.skipHistory) pushHistory("resize-node");
-    if (typeof patch.x === "number") {
-      node.x = patch.x;
+    const snappedPatch = getSnappedNodePatch(patch, state.settings.snapToGrid);
+    if (typeof snappedPatch.x === "number") {
+      node.x = snappedPatch.x;
     }
-    if (typeof patch.y === "number") {
-      node.y = patch.y;
+    if (typeof snappedPatch.y === "number") {
+      node.y = snappedPatch.y;
     }
-    if (typeof patch.width === "number") {
-      node.width = patch.width;
+    if (typeof snappedPatch.width === "number") {
+      node.width = snappedPatch.width;
     }
-    if (typeof patch.height === "number") {
-      node.height = patch.height;
+    if (typeof snappedPatch.height === "number") {
+      node.height = snappedPatch.height;
     }
     syncAutoAnchorsForAllEdges();
     notify();
@@ -760,17 +788,18 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const frame = state.frames.find((item) => item.id === id);
     if (!frame) return;
     if (!options.skipHistory) pushHistory("resize-frame");
-    if (typeof patch.x === "number") {
-      frame.x = patch.x;
+    const snappedPatch = getSnappedFramePatch(patch, state.settings.snapToGrid);
+    if (typeof snappedPatch.x === "number") {
+      frame.x = snappedPatch.x;
     }
-    if (typeof patch.y === "number") {
-      frame.y = patch.y;
+    if (typeof snappedPatch.y === "number") {
+      frame.y = snappedPatch.y;
     }
-    if (typeof patch.width === "number") {
-      frame.width = Math.max(FRAME_DEFAULTS.minWidth, patch.width);
+    if (typeof snappedPatch.width === "number") {
+      frame.width = Math.max(FRAME_DEFAULTS.minWidth, snappedPatch.width);
     }
-    if (typeof patch.height === "number") {
-      frame.height = Math.max(FRAME_DEFAULTS.minHeight, patch.height);
+    if (typeof snappedPatch.height === "number") {
+      frame.height = Math.max(FRAME_DEFAULTS.minHeight, snappedPatch.height);
     }
     syncAutoAnchorsForAllEdges();
     notify();
@@ -861,12 +890,23 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const source = state.nodes.find((node) => node.id === id);
     if (!source) return null;
     const OFFSET = 30;
+    const resolvedGeometry = getSnappedNodeGeometry(
+      {
+        x: source.x + OFFSET,
+        y: source.y + OFFSET,
+        width: Number(source.width) || NODE_DEFAULTS.width,
+        height: Number(source.height) || NODE_DEFAULTS.height,
+      },
+      state.settings.snapToGrid,
+    );
     const clone = sanitizeNode(
       {
         ...structuredClone(source),
         id: createId("node"),
-        x: source.x + OFFSET,
-        y: source.y + OFFSET,
+        x: resolvedGeometry.x,
+        y: resolvedGeometry.y,
+        width: resolvedGeometry.width,
+        height: resolvedGeometry.height,
       },
       new Set(state.frames.map((frame) => frame.id)),
     );
@@ -1625,4 +1665,103 @@ function getImportStatusText(message) {
       .trim();
   }
   return "";
+}
+
+function getSnappedPosition(position, snapEnabled) {
+  if (!snapEnabled) {
+    return {
+      x: Number(position?.x) || 0,
+      y: Number(position?.y) || 0,
+    };
+  }
+  return snapPositionToGrid(Number(position?.x) || 0, Number(position?.y) || 0);
+}
+
+function snapDimension(value, minimum, snapEnabled) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return numeric;
+  if (!snapEnabled) return Math.max(minimum, numeric);
+  return Math.max(minimum, snapToGrid(numeric));
+}
+
+function getSnappedNodeGeometry(geometry, snapEnabled) {
+  const position = getSnappedPosition(geometry, snapEnabled);
+  return {
+    x: position.x,
+    y: position.y,
+    width: snapDimension(geometry.width, NODE_DEFAULTS.minWidth, snapEnabled),
+    height: snapDimension(
+      geometry.height,
+      NODE_DEFAULTS.minHeight,
+      snapEnabled,
+    ),
+  };
+}
+
+function getSnappedFrameGeometry(geometry, snapEnabled) {
+  const position = getSnappedPosition(geometry, snapEnabled);
+  return {
+    x: position.x,
+    y: position.y,
+    width: snapDimension(geometry.width, FRAME_DEFAULTS.minWidth, snapEnabled),
+    height: snapDimension(
+      geometry.height,
+      FRAME_DEFAULTS.minHeight,
+      snapEnabled,
+    ),
+  };
+}
+
+function getSnappedNodePatch(patch, snapEnabled) {
+  const nextPatch = { ...patch };
+  if (patch.x !== undefined || patch.y !== undefined) {
+    const position = getSnappedPosition(
+      { x: patch.x, y: patch.y },
+      snapEnabled,
+    );
+    if (patch.x !== undefined) nextPatch.x = position.x;
+    if (patch.y !== undefined) nextPatch.y = position.y;
+  }
+  if (patch.width !== undefined) {
+    nextPatch.width = snapDimension(
+      patch.width,
+      NODE_DEFAULTS.minWidth,
+      snapEnabled,
+    );
+  }
+  if (patch.height !== undefined) {
+    nextPatch.height = snapDimension(
+      patch.height,
+      NODE_DEFAULTS.minHeight,
+      snapEnabled,
+    );
+  }
+  return nextPatch;
+}
+
+function getSnappedFramePatch(patch, snapEnabled) {
+  const nextPatch = { ...patch };
+  if (patch.x !== undefined || patch.y !== undefined) {
+    const position = getSnappedPosition(
+      { x: patch.x, y: patch.y },
+      snapEnabled,
+    );
+    if (patch.x !== undefined) nextPatch.x = position.x;
+    if (patch.y !== undefined) nextPatch.y = position.y;
+  }
+  if (patch.width !== undefined) {
+    nextPatch.width = snapDimension(
+      patch.width,
+      FRAME_DEFAULTS.minWidth,
+      snapEnabled,
+    );
+  }
+  if (patch.height !== undefined) {
+    nextPatch.height = snapDimension(
+      patch.height,
+      FRAME_DEFAULTS.minHeight,
+      snapEnabled,
+    );
+  }
+  return nextPatch;
 }

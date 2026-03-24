@@ -10,6 +10,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 
 - Fresh hypernodes open on a blank canvas named `Untitled`.
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
+- Snap to Grid is enabled by default, and node/frame creation, movement, and resizing align to the canvas grid.
 - Edit node title/description inline from the selected-node mini toolbar, with description display supporting basic markdown (headers, paragraphs, lists, links, emphasis, inline code).
 - Color selected node and frame backgrounds from local selection toolbars (10 curated colors + reset) with legible text and complementary selected highlights.
 - Delete selected nodes with `Delete`/`Backspace`, or with `Ctrl/Cmd + Delete` plus confirmation while in Focus mode.
