@@ -41,6 +41,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Reconnect existing edge endpoints by dragging selected edge endpoints.
 - Delete selected edges via inline edge overlay control or keyboard delete.
 - Multi-select edges with `Ctrl/Cmd + click` (additive); multi-edge toolbar shows selection count with batch colour, thickness, style, type, and delete controls.
+- Add and edit edge labels by double-clicking an edge or using the single-edge toolbar edit control; labels render centered on edges with a masked background so the line does not show through the text.
 - Pan canvas with pointer drag on empty space.
 - Zoom with mouse wheel/trackpad (bounded: `0.35` to `2.5`).
 - Reset view to default pan/zoom.

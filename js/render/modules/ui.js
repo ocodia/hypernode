@@ -1,20 +1,38 @@
 import {
   buildFrameOverlayControls,
   buildNodeOverlayControls,
-  cubicPointAt,
   defaultEntitySize,
-  getAnchorPoint,
   getSelectedNodeIds,
   getSingleSelectedNodeId,
-  getTautControls,
   measureEntitySizes,
-  orthogonalMidpoint,
-  resolveEdgeAnchor,
-  straightLineMidpoint,
+  escapeAttr,
 } from "../helpers.js";
 import { buildFrameMetaMarkup, buildFrameToolbarMarkup } from "./frames.js";
 import { buildNodeContentMarkup, buildNodeToolbarMarkup } from "./nodes.js";
-import { buildEdgeToolbarMarkup, buildMultiEdgeToolbarMarkup } from "./edges.js";
+import {
+  buildEdgeToolbarMarkup,
+  buildMultiEdgeToolbarMarkup,
+  getEdgeLabelMetrics,
+  getEdgeRenderState,
+} from "./edges.js";
+
+function buildEdgeLabelEditorMarkup(edge) {
+  const metrics = getEdgeLabelMetrics(edge.label || "");
+  return `
+    <div class="edge-label-editor" data-edge-editor="${edge.id}" style="--edge-label-width: ${metrics.width}px; --edge-label-height: ${metrics.height}px;">
+      <input
+        class="edge-label-editor__input"
+        data-edge-edit-label="${edge.id}"
+        value="${escapeAttr(edge.label || "")}"
+        maxlength="120"
+        placeholder="Label"
+        aria-label="Edge label"
+        autocomplete="off"
+        data-1p-ignore="true"
+      />
+    </div>
+  `;
+}
 
 export function renderSelectionControls(selectionControlsLayer, state) {
   if (!(selectionControlsLayer instanceof HTMLElement)) {
@@ -27,6 +45,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
   const selectedEdgeId =
     state.selection?.type === "edge" ? state.selection.id : null;
   const editingNodeId = state.ui.editingNodeId;
+  const editingEdgeId = state.ui.editingEdgeId;
   const focusedNodeId = state.ui.focusedNodeId;
   const editingFrameId = state.ui.editingFrameId;
   const draft = state.ui.edgeDraft;
@@ -51,43 +70,9 @@ export function renderSelectionControls(selectionControlsLayer, state) {
   let markup = "";
 
   if (selectedEdge && !focusedNodeId) {
-    const byId = new Map([
-      ...state.nodes.map((n) => [n.id, n]),
-      ...state.frames.map((f) => [f.id, f]),
-    ]);
-    const fromEntity = byId.get(selectedEdge.from);
-    const toEntity = byId.get(selectedEdge.to);
-    if (fromEntity && toEntity) {
-      const useExactAnchors = state.settings.anchorsMode === "exact";
-      const fromSize =
-        bySize.get(fromEntity.id) || defaultEntitySize(fromEntity);
-      const toSize = bySize.get(toEntity.id) || defaultEntitySize(toEntity);
-      const fromAnchor = resolveEdgeAnchor(
-        selectedEdge.fromAnchor,
-        fromEntity,
-        toEntity,
-        useExactAnchors,
-      );
-      const toAnchor = resolveEdgeAnchor(
-        selectedEdge.toAnchor,
-        toEntity,
-        fromEntity,
-        useExactAnchors,
-      );
-      const start = getAnchorPoint(fromEntity, fromSize, fromAnchor);
-      const end = getAnchorPoint(toEntity, toSize, toAnchor);
-      const edgeType = selectedEdge.edgeType || "curved";
-      let midpoint;
-      if (edgeType === "straight") {
-        midpoint = straightLineMidpoint(start, end);
-      } else if (edgeType === "orthogonal") {
-        const fromRect = { x: fromEntity.x, y: fromEntity.y, width: fromSize.width, height: fromSize.height };
-        const toRect = { x: toEntity.x, y: toEntity.y, width: toSize.width, height: toSize.height };
-        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor, fromRect, toRect);
-      } else {
-        const controls = getTautControls(start, end, fromAnchor, toAnchor);
-        midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
-      }
+    const renderState = getEdgeRenderState(selectedEdge, state, bySize);
+    if (renderState) {
+      const { midpoint } = renderState;
       markup += `
         <div
           class="selection-controls__group selection-controls__group--edge"
@@ -99,7 +84,9 @@ export function renderSelectionControls(selectionControlsLayer, state) {
             strokeWidth: selectedEdge.strokeWidth ?? 2,
             strokeStyle: selectedEdge.strokeStyle || "solid",
             edgeType: selectedEdge.edgeType || "curved",
+            editingActive: editingEdgeId === selectedEdge.id,
           })}
+          ${editingEdgeId === selectedEdge.id ? buildEdgeLabelEditorMarkup(selectedEdge) : ""}
         </div>
       `;
     }
@@ -108,11 +95,6 @@ export function renderSelectionControls(selectionControlsLayer, state) {
   const selectedEdgeIds =
     state.selection?.type === "edges" ? state.selection.ids : [];
   if (selectedEdgeIds.length > 1 && !focusedNodeId) {
-    const byId = new Map([
-      ...state.nodes.map((n) => [n.id, n]),
-      ...state.frames.map((f) => [f.id, f]),
-    ]);
-    const useExactAnchors = state.settings.anchorsMode === "exact";
     let sumX = 0;
     let sumY = 0;
     let count = 0;
@@ -124,38 +106,9 @@ export function renderSelectionControls(selectionControlsLayer, state) {
       selectedEdgeIds.includes(e.id),
     );
     for (const edge of selectedEdges) {
-      const fromEntity = byId.get(edge.from);
-      const toEntity = byId.get(edge.to);
-      if (!fromEntity || !toEntity) continue;
-      const fromSize =
-        bySize.get(fromEntity.id) || defaultEntitySize(fromEntity);
-      const toSize = bySize.get(toEntity.id) || defaultEntitySize(toEntity);
-      const fromAnchor = resolveEdgeAnchor(
-        edge.fromAnchor,
-        fromEntity,
-        toEntity,
-        useExactAnchors,
-      );
-      const toAnchor = resolveEdgeAnchor(
-        edge.toAnchor,
-        toEntity,
-        fromEntity,
-        useExactAnchors,
-      );
-      const start = getAnchorPoint(fromEntity, fromSize, fromAnchor);
-      const end = getAnchorPoint(toEntity, toSize, toAnchor);
-      const edgeType = edge.edgeType || "curved";
-      let midpoint;
-      if (edgeType === "straight") {
-        midpoint = straightLineMidpoint(start, end);
-      } else if (edgeType === "orthogonal") {
-        const fromRect = { x: fromEntity.x, y: fromEntity.y, width: fromSize.width, height: fromSize.height };
-        const toRect = { x: toEntity.x, y: toEntity.y, width: toSize.width, height: toSize.height };
-        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor, fromRect, toRect);
-      } else {
-        const controls = getTautControls(start, end, fromAnchor, toAnchor);
-        midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
-      }
+      const renderState = getEdgeRenderState(edge, state, bySize);
+      if (!renderState) continue;
+      const { midpoint } = renderState;
       sumX += midpoint.x;
       sumY += midpoint.y;
       count += 1;

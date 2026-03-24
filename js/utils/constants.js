@@ -82,6 +82,7 @@ export const EDGE_DEFAULTS = {
   strokeStyle: "solid",
   edgeType: "curved",
   colorKey: null,
+  label: "",
 };
 
 export const EDGE_STROKE_STYLES = ["solid", "dashed", "dotted"];

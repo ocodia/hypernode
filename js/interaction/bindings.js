@@ -67,6 +67,7 @@ export function bindInteractions(elements, store, options = {}) {
   let viewportAnimationFrame = 0;
   let viewportAnimationToken = 0;
   let activeLiveEditNodeId = null;
+  let activeLiveEditEdgeId = null;
   let activeLiveEditFrameId = null;
   let editorFocusLock = null;
   let openToolbarPopoverEl = null;
@@ -1085,6 +1086,39 @@ export function bindInteractions(elements, store, options = {}) {
     store.clearEditingNode();
   }
 
+  function focusEdgeLabelInput(edgeId, retries = 2) {
+    const input =
+      selectionControlsLayer?.querySelector?.(
+        `[data-edge-edit-label="${edgeId}"]`,
+      ) || null;
+    if (!(input instanceof HTMLInputElement)) {
+      if (retries > 0) {
+        window.requestAnimationFrame(() =>
+          focusEdgeLabelInput(edgeId, retries - 1),
+        );
+      }
+      return;
+    }
+    input.focus({ preventScroll: true });
+    input.select();
+  }
+
+  function openEdgeEditor(edgeId) {
+    if (!edgeId) return false;
+    activeLiveEditEdgeId = null;
+    store.setEditingEdge(edgeId);
+    focusEdgeLabelInput(edgeId);
+    return true;
+  }
+
+  function closeEdgeEditor(edgeId = null) {
+    const resolvedEdgeId = edgeId || store.getState().ui.editingEdgeId;
+    if (resolvedEdgeId && activeLiveEditEdgeId === resolvedEdgeId) {
+      activeLiveEditEdgeId = null;
+    }
+    store.clearEditingEdge();
+  }
+
   function openNodeFocus(nodeId, options = {}) {
     if (!nodeId) return false;
     store.setSelection({ type: "node", id: nodeId });
@@ -1208,6 +1242,18 @@ export function bindInteractions(elements, store, options = {}) {
     }
     if (typeof patch.description === "string") {
       node.description = patch.description;
+    }
+  }
+
+  function applyLiveEdgeEditorInput(edgeId, patch) {
+    const edge = store.getState().edges.find((item) => item.id === edgeId);
+    if (!edge) return;
+    if (activeLiveEditEdgeId !== edgeId) {
+      store.beginEdgeEdit();
+      activeLiveEditEdgeId = edgeId;
+    }
+    if (typeof patch.label === "string") {
+      edge.label = patch.label.slice(0, 120);
     }
   }
 
@@ -1789,6 +1835,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     const edgesDeleteEl = event.target.closest("[data-edges-delete]");
     if (edgesDeleteEl instanceof HTMLButtonElement) {
+      activeLiveEditEdgeId = null;
       store.deleteSelectedEdges();
       closeToolbarPopover();
       event.stopPropagation();
@@ -1799,6 +1846,21 @@ export function bindInteractions(elements, store, options = {}) {
     const frameConfirmEl = event.target.closest("[data-frame-edit-confirm]");
     if (frameConfirmEl instanceof HTMLButtonElement) {
       closeFrameEditor(frameConfirmEl.dataset.frameEditConfirm);
+      closeToolbarPopover();
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
+
+    const edgeEditEl = event.target.closest("[data-edge-edit-open]");
+    if (edgeEditEl instanceof HTMLButtonElement) {
+      const edgeId = edgeEditEl.dataset.edgeEditOpen;
+      if (store.getState().ui.editingEdgeId === edgeId) {
+        closeEdgeEditor(edgeId);
+      } else {
+        store.setSelection({ type: "edge", id: edgeId });
+        openEdgeEditor(edgeId);
+      }
       closeToolbarPopover();
       event.stopPropagation();
       event.preventDefault();
@@ -2692,7 +2754,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     if (
       event.target.closest(
-        "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-node-image-toolbar-remove], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete], [data-edges-delete]",
+        "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-node-image-toolbar-remove], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete], [data-edges-delete], [data-edge-edit-open], [data-edge-editor], [data-edge-edit-label]",
       )
     ) {
       event.stopPropagation();
@@ -2713,6 +2775,7 @@ export function bindInteractions(elements, store, options = {}) {
       }
       const edgesDeleteEl = event.target.closest("[data-edges-delete]");
       if (edgesDeleteEl) {
+        activeLiveEditEdgeId = null;
         store.deleteSelectedEdges();
         closeToolbarPopover();
         event.stopPropagation();
@@ -2840,6 +2903,19 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function onSelectionControlsDoubleClick(event) {
+    const edgeGroupEl = event.target.closest(
+      ".selection-controls__group--edge[data-edge-id]",
+    );
+    if (edgeGroupEl) {
+      const edgeId = edgeGroupEl.dataset.edgeId;
+      if (!edgeId) return;
+      store.setSelection({ type: "edge", id: edgeId });
+      openEdgeEditor(edgeId);
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
     const nodeGroupEl = event.target.closest(
       ".selection-controls__group--node[data-node-id]",
     );
@@ -2866,16 +2942,56 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function onSelectionControlsKeyDown(event) {
+    const target = event.target;
+    if (
+      target instanceof HTMLInputElement &&
+      target.matches("[data-edge-edit-label]")
+    ) {
+      const edgeId = target.dataset.edgeEditLabel;
+      if (!edgeId) return;
+      if (event.key === "Escape" || event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeEdgeEditor(edgeId);
+        return;
+      }
+    }
     onFrameKeyDown(event);
   }
 
   function onSelectionControlsInput(event) {
+    const target = event.target;
+    if (
+      target instanceof HTMLInputElement &&
+      target.matches("[data-edge-edit-label]")
+    ) {
+      const edgeId = target.dataset.edgeEditLabel;
+      if (edgeId) {
+        applyLiveEdgeEditorInput(edgeId, { label: target.value });
+      }
+      event.stopPropagation();
+      return;
+    }
     onFrameInput(event);
     handleToolbarInput(event);
   }
 
   function onSelectionControlsChange(event) {
     handleToolbarChange(event);
+  }
+
+  function onSelectionControlsFocusOut(event) {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    if (!target.matches("[data-edge-edit-label]")) return;
+    const nextTarget = event.relatedTarget;
+    if (
+      nextTarget instanceof HTMLElement &&
+      target.closest("[data-edge-editor]")?.contains(nextTarget)
+    ) {
+      return;
+    }
+    closeEdgeEditor(target.dataset.edgeEditLabel);
   }
 
   bindNodeInteractions(
@@ -2896,6 +3012,7 @@ export function bindInteractions(elements, store, options = {}) {
       onSelectionControlsKeyDown,
       onSelectionControlsInput,
       onSelectionControlsChange,
+      onSelectionControlsFocusOut,
     },
   );
 
@@ -3323,6 +3440,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     const deleteEl = event.target.closest("[data-edge-delete]");
     if (deleteEl) {
+      activeLiveEditEdgeId = null;
       store.deleteEdge(deleteEl.dataset.edgeDelete);
       event.stopPropagation();
       return;
@@ -3330,6 +3448,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     const edgesDeleteEl = event.target.closest("[data-edges-delete]");
     if (edgesDeleteEl) {
+      activeLiveEditEdgeId = null;
       store.deleteSelectedEdges();
       closeToolbarPopover();
       event.stopPropagation();
@@ -3345,6 +3464,17 @@ export function bindInteractions(elements, store, options = {}) {
       store.setSelection({ type: "edge", id: edgeEl.dataset.edgeId });
     }
     event.stopPropagation();
+  }
+
+  function handleEdgeDoubleClick(event) {
+    const edgeEl = event.target.closest("[data-edge-id]");
+    if (!edgeEl) return;
+    const edgeId = edgeEl.dataset.edgeId;
+    if (!edgeId) return;
+    store.setSelection({ type: "edge", id: edgeId });
+    openEdgeEditor(edgeId);
+    event.stopPropagation();
+    event.preventDefault();
   }
 
   function onEdgePointerDown(event) {
@@ -3374,6 +3504,7 @@ export function bindInteractions(elements, store, options = {}) {
     { edgeOverlayGroup, edgesGroup },
     {
       onEdgeClick: handleEdgeClick,
+      onEdgeDoubleClick: handleEdgeDoubleClick,
       onEdgePointerDown,
     },
   );

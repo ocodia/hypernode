@@ -15,6 +15,7 @@ export function bindNodeInteractions({ nodesLayer, selectionControlsLayer, focus
   selectionControlsLayer?.addEventListener('keydown', handlers.onSelectionControlsKeyDown);
   selectionControlsLayer?.addEventListener('input', handlers.onSelectionControlsInput);
   selectionControlsLayer?.addEventListener('change', handlers.onSelectionControlsChange);
+  selectionControlsLayer?.addEventListener('focusout', handlers.onSelectionControlsFocusOut);
 
   focusLayer?.addEventListener('click', handlers.onNodeClick);
   focusLayer?.addEventListener('keydown', handlers.onNodeKeyDown);

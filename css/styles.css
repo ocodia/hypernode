@@ -444,6 +444,25 @@ select:focus-visible {
   pointer-events: stroke;
 }
 
+.edges .edge__label {
+  pointer-events: all;
+  cursor: text;
+}
+
+.edges .edge__label-bg {
+  fill: var(--bg);
+}
+
+.edges .edge__label-text {
+  fill: var(--text);
+  font-size: var(--edge-label-font-size, 16px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  dominant-baseline: middle;
+  pointer-events: none;
+  user-select: none;
+}
+
 .edges path.is-draft {
   fill: none;
   stroke: var(--draft-stroke);
@@ -475,6 +494,11 @@ select:focus-visible {
 
 .edges .edge.is-selected .edge__arrowhead {
   fill: var(--edge-selected);
+}
+
+.edges .edge.is-selected .edge__label-text,
+.edges .edge:hover .edge__label-text {
+  fill: var(--text);
 }
 
 .edges .edge.is-twang .edge__line {
@@ -2992,7 +3016,7 @@ select:focus-visible {
   transform-origin: center bottom;
   transform: translate(
       calc(-50% + var(--toolbar-shift-x, 0px)),
-      calc(-100% - (10px / var(--viewport-zoom, 1)))
+      calc(-100% - (22px / var(--viewport-zoom, 1)))
     )
     scale(var(--selection-toolbar-scale, 1));
 }
@@ -3003,9 +3027,40 @@ select:focus-visible {
   transform-origin: center top;
   transform: translate(
       calc(-50% + var(--toolbar-shift-x, 0px)),
-      calc(10px / var(--viewport-zoom, 1))
+      calc(22px / var(--viewport-zoom, 1))
     )
     scale(var(--selection-toolbar-scale, 1));
+}
+
+.edge-label-editor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%) scale(var(--selection-toolbar-scale, 1));
+  transform-origin: center;
+  z-index: 19;
+}
+
+.edge-label-editor__input {
+  width: var(--edge-label-width, 120px);
+  height: var(--edge-label-height, 26px);
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--edge-label-font-size, 16px);
+  font-family: inherit;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1;
+  box-shadow: none;
+  outline: none;
+}
+
+.edge-label-editor__input::placeholder {
+  color: var(--text-muted);
 }
 
 .entity-toolbar__edge-type-options {

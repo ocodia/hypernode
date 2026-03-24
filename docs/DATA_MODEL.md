@@ -178,6 +178,7 @@ Rules:
   "to": "frame_123",
   "fromAnchor": "right",
   "toAnchor": "left",
+  "label": "depends on",
   "strokeWidth": 2,
   "strokeStyle": "solid",
   "edgeType": "curved",
@@ -191,6 +192,7 @@ Rules:
 - self-loops are invalid at payload level
 - anchors may be `top`, `right`, `bottom`, `left`, or `null`
 - when `anchorsMode` is `auto`, the store rewrites stale anchors to the currently resolved sides
+- `label`: optional single-line string, defaults to `""`
 - `strokeWidth`: integer 1–8, defaults to `2`
 - `strokeStyle`: `"solid" | "dashed" | "dotted"`, defaults to `"solid"`
 - `edgeType`: `"curved" | "straight" | "orthogonal"`, defaults to `"curved"`

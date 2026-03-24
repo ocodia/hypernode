@@ -82,6 +82,12 @@ Use this checklist before shipping interaction changes.
 ### Edge multi-select
 
 - [ ] Click an edge to select it; verify single-edge toolbar appears at edge midpoint.
+- [ ] Double-click an edge and verify the inline label editor opens at the edge midpoint with text selected.
+- [ ] Use the single-edge toolbar Edit control to open/close the edge label editor.
+- [ ] Type a label, press `Enter`, and verify it renders centered on the edge with the stroke masked behind it.
+- [ ] Clear an existing label and confirm the edge returns to having no visible label.
+- [ ] Move or reconnect a labeled edge and verify the label stays centered on the updated path for curved, straight, and orthogonal edges.
+- [ ] At zoom levels `0.35`, `1.0`, and `2.5`, verify edge labels remain readable and the inline editor remains clickable.
 - [ ] Ctrl-click (Cmd-click on macOS) a second edge; verify both edges highlight and a multi-edge toolbar appears at the average midpoint.
 - [ ] Verify multi-edge toolbar displays the selection count (e.g. "2 selected").
 - [ ] Use multi-edge toolbar to change colour, line thickness, line style, and edge type for all selected edges.

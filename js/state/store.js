@@ -23,7 +23,7 @@ import {
   findEntityById,
   getNodeFrameOverlapArea,
 } from "../shared/entities.js";
-import { resolveAutoAnchor, resolveAutoAnchors } from "../shared/anchors.js";
+import { resolveAutoAnchors } from "../shared/anchors.js";
 import {
   areSelectionsEqual,
   cloneSelection,
@@ -157,6 +157,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
       finalizeEditingFrameText(state.ui.editingFrameId);
       state.ui.editingFrameId = null;
     }
+    if (state.ui.editingEdgeId) {
+      finalizeEditingEdgeLabel(state.ui.editingEdgeId);
+      state.ui.editingEdgeId = null;
+    }
     if (state.ui.editingNodeId && state.ui.editingNodeId !== nextId) {
       finalizeEditingNodeText(state.ui.editingNodeId);
     }
@@ -178,6 +182,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (state.ui.editingFrameId) {
       finalizeEditingFrameText(state.ui.editingFrameId);
       state.ui.editingFrameId = null;
+    }
+    if (state.ui.editingEdgeId) {
+      finalizeEditingEdgeLabel(state.ui.editingEdgeId);
+      state.ui.editingEdgeId = null;
     }
     state.ui.focusedNodeId = nextId;
     notify();
@@ -212,6 +220,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
       finalizeEditingNodeText(state.ui.editingNodeId);
       state.ui.editingNodeId = null;
     }
+    if (state.ui.editingEdgeId) {
+      finalizeEditingEdgeLabel(state.ui.editingEdgeId);
+      state.ui.editingEdgeId = null;
+    }
     if (nextId) {
       state.ui.focusedNodeId = null;
     }
@@ -226,6 +238,31 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (!state.ui.editingFrameId) return;
     finalizeEditingFrameText(state.ui.editingFrameId);
     state.ui.editingFrameId = null;
+    notify();
+  }
+
+  function setEditingEdge(id) {
+    const nextId = id || null;
+    if (state.ui.editingNodeId) {
+      finalizeEditingNodeText(state.ui.editingNodeId);
+      state.ui.editingNodeId = null;
+    }
+    if (state.ui.editingFrameId) {
+      finalizeEditingFrameText(state.ui.editingFrameId);
+      state.ui.editingFrameId = null;
+    }
+    if (state.ui.editingEdgeId && state.ui.editingEdgeId !== nextId) {
+      finalizeEditingEdgeLabel(state.ui.editingEdgeId);
+    }
+    state.ui.focusedNodeId = null;
+    state.ui.editingEdgeId = nextId;
+    notify();
+  }
+
+  function clearEditingEdge() {
+    if (!state.ui.editingEdgeId) return;
+    finalizeEditingEdgeLabel(state.ui.editingEdgeId);
+    state.ui.editingEdgeId = null;
     notify();
   }
 
@@ -377,6 +414,15 @@ export function createStore(initialGraph = null, initialSettings = null) {
         state.ui.editingFrameId = null;
       }
     }
+    if (state.ui.editingEdgeId) {
+      const keepEditing =
+        state.selection?.type === "edge" &&
+        state.selection.id === state.ui.editingEdgeId;
+      if (!keepEditing) {
+        finalizeEditingEdgeLabel(state.ui.editingEdgeId);
+        state.ui.editingEdgeId = null;
+      }
+    }
     notify();
   }
 
@@ -431,11 +477,15 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (state.ui.editingNodeId) {
       finalizeEditingNodeText(state.ui.editingNodeId);
     }
+    if (state.ui.editingEdgeId) {
+      finalizeEditingEdgeLabel(state.ui.editingEdgeId);
+    }
     if (state.ui.editingFrameId) {
       finalizeEditingFrameText(state.ui.editingFrameId);
     }
     state.selection = null;
     state.ui.editingNodeId = null;
+    state.ui.editingEdgeId = null;
     state.ui.focusedNodeId = null;
     state.ui.editingFrameId = null;
     notify();
@@ -825,6 +875,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
     pushHistory("update-frame");
   }
 
+  function beginEdgeEdit() {
+    pushHistory("update-edge");
+  }
+
   function beginFrameResize() {
     pushHistory("resize-frame");
   }
@@ -837,6 +891,12 @@ export function createStore(initialGraph = null, initialSettings = null) {
     state.edges = state.edges.filter(
       (edge) => edge.from !== id && edge.to !== id,
     );
+    if (
+      state.ui.editingEdgeId &&
+      !state.edges.some((edge) => edge.id === state.ui.editingEdgeId)
+    ) {
+      state.ui.editingEdgeId = null;
+    }
     if (state.selection?.type === "nodes") {
       const ids = state.selection.ids.filter((selectedId) => selectedId !== id);
       state.selection = normalizeNodeSelection(
@@ -874,6 +934,12 @@ export function createStore(initialGraph = null, initialSettings = null) {
     state.edges = state.edges.filter(
       (edge) => edge.from !== id && edge.to !== id,
     );
+    if (
+      state.ui.editingEdgeId &&
+      !state.edges.some((edge) => edge.id === state.ui.editingEdgeId)
+    ) {
+      state.ui.editingEdgeId = null;
+    }
 
     if (state.selection?.type === "frame" && state.selection.id === id) {
       state.selection = null;
@@ -1308,6 +1374,9 @@ export function createStore(initialGraph = null, initialSettings = null) {
         delete edge.colorKey;
       }
     }
+    if (typeof patch.label === "string") {
+      edge.label = patch.label.slice(0, 120);
+    }
     notify();
   }
 
@@ -1316,6 +1385,9 @@ export function createStore(initialGraph = null, initialSettings = null) {
     if (index === -1) return;
     pushHistory("delete-edge");
     state.edges.splice(index, 1);
+    if (state.ui.editingEdgeId === id) {
+      state.ui.editingEdgeId = null;
+    }
     if (state.selection?.id === id) {
       state.selection = null;
     }
@@ -1367,6 +1439,9 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const selected = new Set(selectedEdgeIds);
     pushHistory("delete-edges");
     state.edges = state.edges.filter((edge) => !selected.has(edge.id));
+    if (state.ui.editingEdgeId && selected.has(state.ui.editingEdgeId)) {
+      state.ui.editingEdgeId = null;
+    }
     state.selection = null;
     notify();
   }
@@ -1498,6 +1573,13 @@ export function createStore(initialGraph = null, initialSettings = null) {
     frame.description = String(frame.description ?? "");
   }
 
+  function finalizeEditingEdgeLabel(edgeId) {
+    if (!edgeId) return;
+    const edge = state.edges.find((item) => item.id === edgeId);
+    if (!edge) return;
+    edge.label = String(edge.label ?? "").trim().slice(0, 120);
+  }
+
   function getGraphEntity(id) {
     return findEntityById(state, id);
   }
@@ -1542,6 +1624,8 @@ export function createStore(initialGraph = null, initialSettings = null) {
     clearEdgeTwang,
     setEditingNode,
     clearEditingNode,
+    setEditingEdge,
+    clearEditingEdge,
     setFocusedNode,
     clearFocusedNode,
     setStarterNode,
@@ -1578,6 +1662,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     resizeFrame,
     beginNodeMove,
     beginNodeEdit,
+    beginEdgeEdit,
     beginNodeResize,
     beginFrameMove,
     beginFrameEdit,

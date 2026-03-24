@@ -12,6 +12,7 @@ import {
   cubicPointAt,
   defaultEntitySize,
   escapeAttr,
+  escapeHTML,
   findEntityById,
   getAnchorPoint,
   getArrowheadSizeScale,
@@ -25,14 +26,127 @@ import {
 } from "../helpers.js";
 import { unitVectorByAnchor } from "../../shared/anchors.js";
 
-export function renderEdges(elements, state) {
-  const { edgeOverlayGroup, edgesGroup } = elements;
+export function getEdgeLabelMetrics(label) {
+  const text = String(label || "");
+  const length = Math.min(text.length, 120);
+  const width = Math.max(32, Math.min(320, 16 + length * 7.2));
+  const height = 26;
+  return {
+    width,
+    height,
+    x: -width / 2,
+    y: -height / 2,
+    textY: 0,
+  };
+}
+
+export function getEdgeRenderState(edge, state, bySize = null) {
   const byId = new Map([
     ...state.nodes.map((node) => [node.id, node]),
     ...state.frames.map((frame) => [frame.id, frame]),
   ]);
-  const bySize = measureEntitySizes(state);
+  const measuredSizes = bySize || measureEntitySizes(state);
   const useExactAnchors = state.settings.anchorsMode === "exact";
+  const fromEntity = byId.get(edge.from);
+  const toEntity = byId.get(edge.to);
+  if (!fromEntity || !toEntity) {
+    return null;
+  }
+
+  const fromSize = measuredSizes.get(fromEntity.id) || defaultEntitySize(fromEntity);
+  const toSize = measuredSizes.get(toEntity.id) || defaultEntitySize(toEntity);
+  const fromAnchor = resolveEdgeAnchor(
+    edge.fromAnchor,
+    fromEntity,
+    toEntity,
+    useExactAnchors,
+  );
+  const toAnchor = resolveEdgeAnchor(
+    edge.toAnchor,
+    toEntity,
+    fromEntity,
+    useExactAnchors,
+  );
+  const start = getAnchorPoint(fromEntity, fromSize, fromAnchor);
+  const end = getAnchorPoint(toEntity, toSize, toAnchor);
+  const edgeType = edge.edgeType || "curved";
+  let d;
+  let midpoint;
+  let arrowVector = null;
+
+  if (edgeType === "straight") {
+    d = buildStraightPath(start, end);
+    midpoint = straightLineMidpoint(start, end);
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const mag = Math.hypot(dx, dy);
+    arrowVector =
+      mag > 0.0001 ? { x: dx / mag, y: dy / mag } : unitVectorByAnchor(toAnchor);
+  } else if (edgeType === "orthogonal") {
+    const fromRect = {
+      x: fromEntity.x,
+      y: fromEntity.y,
+      width: fromSize.width,
+      height: fromSize.height,
+    };
+    const toRect = {
+      x: toEntity.x,
+      y: toEntity.y,
+      width: toSize.width,
+      height: toSize.height,
+    };
+    d = buildOrthogonalPath(start, end, fromAnchor, toAnchor, fromRect, toRect);
+    midpoint = orthogonalMidpoint(
+      start,
+      end,
+      fromAnchor,
+      toAnchor,
+      fromRect,
+      toRect,
+    );
+    const uv = unitVectorByAnchor(toAnchor);
+    arrowVector = { x: -uv.x, y: -uv.y };
+  } else {
+    const controls = getTautControls(start, end, fromAnchor, toAnchor);
+    d = buildTautPath(start, end, fromAnchor, toAnchor);
+    midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
+    return {
+      fromEntity,
+      toEntity,
+      fromSize,
+      toSize,
+      fromAnchor,
+      toAnchor,
+      start,
+      end,
+      edgeType,
+      d,
+      midpoint,
+      controls,
+      arrowVector: null,
+    };
+  }
+
+  return {
+    fromEntity,
+    toEntity,
+    fromSize,
+    toSize,
+    fromAnchor,
+    toAnchor,
+    start,
+    end,
+    edgeType,
+    d,
+    midpoint,
+    controls: null,
+    arrowVector,
+  };
+}
+
+export function renderEdges(elements, state) {
+  const { edgeOverlayGroup, edgesGroup } = elements;
+  const bySize = measureEntitySizes(state);
   const showArrowheads = state.settings.arrowheads === "shown";
   const globalArrowheadScale = getArrowheadSizeScale(
     state.settings.arrowheadSizeStep,
@@ -50,65 +164,30 @@ export function renderEdges(elements, state) {
 
   edgesGroup.innerHTML = state.edges
     .map((edge) => {
-      const fromEntity = byId.get(edge.from);
-      const toEntity = byId.get(edge.to);
-      if (!fromEntity || !toEntity) {
+      const renderState = getEdgeRenderState(edge, state, bySize);
+      if (!renderState) {
         return "";
       }
+      const { start, end, toAnchor, edgeType, d, midpoint, controls } =
+        renderState;
 
-      const fromSize =
-        bySize.get(fromEntity.id) || defaultEntitySize(fromEntity);
-      const toSize = bySize.get(toEntity.id) || defaultEntitySize(toEntity);
-      const fromAnchor = resolveEdgeAnchor(
-        edge.fromAnchor,
-        fromEntity,
-        toEntity,
-        useExactAnchors,
-      );
-      const toAnchor = resolveEdgeAnchor(
-        edge.toAnchor,
-        toEntity,
-        fromEntity,
-        useExactAnchors,
-      );
-      const start = getAnchorPoint(fromEntity, fromSize, fromAnchor);
-      const end = getAnchorPoint(toEntity, toSize, toAnchor);
-      const edgeType = edge.edgeType || "curved";
       const strokeWidth = edge.strokeWidth ?? 2;
       const strokeStyle = edge.strokeStyle || "solid";
       const colorKey = edge.colorKey || null;
       const arrowheadScale = globalArrowheadScale * (strokeWidth / 2);
-
-      let d;
-      let midpoint;
       let arrowMarkup = "";
 
       if (edgeType === "straight") {
-        d = buildStraightPath(start, end);
-        midpoint = straightLineMidpoint(start, end);
         if (showArrowheads) {
-          const dx = end.x - start.x;
-          const dy = end.y - start.y;
-          const mag = Math.hypot(dx, dy);
-          const ux = mag > 0.0001 ? dx / mag : unitVectorByAnchor(toAnchor).x;
-          const uy = mag > 0.0001 ? dy / mag : unitVectorByAnchor(toAnchor).y;
+          const { x: ux, y: uy } = renderState.arrowVector;
           arrowMarkup = `<path class="edge__arrowhead" d="${buildArrowheadFromDirection(end, ux, uy, arrowheadScale)}"></path>`;
         }
       } else if (edgeType === "orthogonal") {
-        const fromRect = { x: fromEntity.x, y: fromEntity.y, width: fromSize.width, height: fromSize.height };
-        const toRect = { x: toEntity.x, y: toEntity.y, width: toSize.width, height: toSize.height };
-        d = buildOrthogonalPath(start, end, fromAnchor, toAnchor, fromRect, toRect);
-        midpoint = orthogonalMidpoint(start, end, fromAnchor, toAnchor, fromRect, toRect);
         if (showArrowheads) {
-          // The path arrives at `end` coming FROM the toAnchor's outward direction,
-          // so negate it to get the direction of travel toward end.
-          const uv = unitVectorByAnchor(toAnchor);
-          arrowMarkup = `<path class="edge__arrowhead" d="${buildArrowheadFromDirection(end, -uv.x, -uv.y, arrowheadScale)}"></path>`;
+          const { x: ux, y: uy } = renderState.arrowVector;
+          arrowMarkup = `<path class="edge__arrowhead" d="${buildArrowheadFromDirection(end, ux, uy, arrowheadScale)}"></path>`;
         }
       } else {
-        const controls = getTautControls(start, end, fromAnchor, toAnchor);
-        d = buildTautPath(start, end, fromAnchor, toAnchor);
-        midpoint = cubicPointAt(start, controls.start, controls.end, end, 0.5);
         if (showArrowheads) {
           arrowMarkup = `<path class="edge__arrowhead" d="${buildArrowheadPath(start, controls.start, controls.end, end, toAnchor, arrowheadScale)}"></path>`;
         }
@@ -127,7 +206,19 @@ export function renderEdges(elements, state) {
           : strokeStyle === "dotted"
             ? `--edge-da:${strokeWidth} ${strokeWidth * 2.5};`
             : "";
+      const editingClass = state.ui.editingEdgeId === edge.id ? "is-editing" : "";
       const styleAttr = swAttr || daAttr ? ` style="${swAttr}${daAttr}"` : "";
+      const labelText = String(edge.label || "");
+      let labelMarkup = "";
+      if (labelText && state.ui.editingEdgeId !== edge.id) {
+        const metrics = getEdgeLabelMetrics(labelText);
+        labelMarkup = `
+          <g class="edge__label" transform="translate(${midpoint.x} ${midpoint.y})">
+            <rect class="edge__label-bg" x="${metrics.x}" y="${metrics.y}" rx="12" ry="12" width="${metrics.width}" height="${metrics.height}"></rect>
+            <text class="edge__label-text" x="0" y="${metrics.textY}" text-anchor="middle">${escapeHTML(labelText)}</text>
+          </g>
+        `;
+      }
 
       if (selectedEdgeId === edge.id) {
         selectedOverlayMarkup = `
@@ -139,10 +230,11 @@ export function renderEdges(elements, state) {
       }
 
       return `
-        <g class="edge ${selected} ${twang}"${colorAttr} data-edge-id="${edge.id}"${styleAttr}>
+        <g class="edge ${selected} ${twang} ${editingClass}"${colorAttr} data-edge-id="${edge.id}"${styleAttr}>
           <path class="edge__hit" d="${d}"></path>
           <path class="edge__line" d="${d}"></path>
           ${arrowMarkup}
+          ${labelMarkup}
         </g>
       `;
     })
@@ -151,6 +243,7 @@ export function renderEdges(elements, state) {
 }
 
 export function buildEdgeToolbarMarkup(edgeId, options = {}) {
+  const editingActive = Boolean(options.editingActive);
   const colorKey = typeof options.colorKey === "string" ? options.colorKey : "";
   const strokeWidth = Number.isFinite(Number(options.strokeWidth))
     ? Math.round(Number(options.strokeWidth))
@@ -188,6 +281,9 @@ export function buildEdgeToolbarMarkup(edgeId, options = {}) {
         </button>
         ${buildToolbarEdgeTypePopoverMarkup(edgeType)}
       </div>
+      <button class="node__tool-btn entity-toolbar__btn" type="button" data-edge-edit-open="${escapeAttr(edgeId)}" aria-label="${editingActive ? "Finish editing edge label" : "Edit edge label"}" title="${editingActive ? "Done" : "Edit Label"}" aria-pressed="${editingActive ? "true" : "false"}">
+        <i class="bi ${editingActive ? "bi-check-lg" : "bi-pencil-fill"}"></i>
+      </button>
       <button class="node__tool-btn entity-toolbar__btn node__tool-btn--danger" type="button" data-edge-delete="${escapeAttr(edgeId)}" aria-label="Delete edge" title="Delete Edge">
         <i class="bi bi-trash"></i>
       </button>

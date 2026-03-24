@@ -59,6 +59,10 @@ Users must be able to select and delete edges.
 FR-14  
 Users must be able to reconnect edge endpoints to a different node.
 
+FR-14a
+Users must be able to add and edit single-line edge labels inline.
+Edge labels must persist with the graph, render centered on their edge path, and use a visual mask/background so the edge stroke does not show through the label text.
+
 FR-15  
 Invalid edge states must be prevented (missing nodes, self-edges, duplicate directed edges).
 

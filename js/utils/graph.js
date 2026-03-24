@@ -51,6 +51,7 @@ export function emptyGraphState() {
       edgeDraft: null,
       edgeTwangId: null,
       editingNodeId: null,
+      editingEdgeId: null,
       focusedNodeId: null,
       starterNodeId: null,
       editingFrameId: null,
@@ -193,6 +194,8 @@ export function sanitizeEdge(edge) {
   const resolvedColorKey = NODE_COLOR_KEYS.includes(edge.colorKey)
     ? edge.colorKey
     : null;
+  const resolvedLabel =
+    typeof edge.label === "string" ? edge.label.slice(0, 120) : "";
   return {
     id: String(edge.id),
     from: String(edge.from),
@@ -202,6 +205,7 @@ export function sanitizeEdge(edge) {
     strokeWidth: resolvedStrokeWidth,
     strokeStyle: resolvedStrokeStyle,
     edgeType: resolvedEdgeType,
+    label: resolvedLabel,
     ...(resolvedColorKey !== null ? { colorKey: resolvedColorKey } : {}),
   };
 }
@@ -315,6 +319,7 @@ export function validateGraphPayload(payload) {
       endpointIds.has(edge.from) &&
       endpointIds.has(edge.to) &&
       edge.from !== edge.to &&
+      (edge.label === undefined || typeof edge.label === "string") &&
       (edge.fromAnchor === null || isValidAnchor(edge.fromAnchor)) &&
       (edge.toAnchor === null || isValidAnchor(edge.toAnchor))
     );
