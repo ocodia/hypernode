@@ -1609,7 +1609,10 @@ export function bindInteractions(elements, store, options = {}) {
 
     const horizontalGutter = 12;
     const verticalGutter = 12;
-    const gap = 10;
+    const configuredGap = Number.parseFloat(
+      getComputedStyle(groupEl).getPropertyValue("--edge-label-toolbar-offset"),
+    );
+    const gap = Number.isFinite(configuredGap) ? configuredGap : 10;
     const centerX = groupRect.left + groupRect.width / 2;
     const viewportZoom = Math.max(
       0.01,

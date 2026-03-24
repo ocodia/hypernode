@@ -73,11 +73,17 @@ export function renderSelectionControls(selectionControlsLayer, state) {
     const renderState = getEdgeRenderState(selectedEdge, state, bySize);
     if (renderState) {
       const { midpoint } = renderState;
+      const labelMetrics = getEdgeLabelMetrics(
+        editingEdgeId === selectedEdge.id
+          ? selectedEdge.label || "Label"
+          : selectedEdge.label || "",
+      );
+      const toolbarOffset = Math.round(labelMetrics.height + 14);
       markup += `
         <div
           class="selection-controls__group selection-controls__group--edge"
           data-edge-id="${selectedEdge.id}"
-          style="transform: translate(${midpoint.x}px, ${midpoint.y}px); --selection-toolbar-scale: ${toolbarScale};"
+          style="transform: translate(${midpoint.x}px, ${midpoint.y}px); --selection-toolbar-scale: ${toolbarScale}; --edge-label-toolbar-offset: ${toolbarOffset}px;"
         >
           ${buildEdgeToolbarMarkup(selectedEdge.id, {
             colorKey: selectedEdge.colorKey || "",

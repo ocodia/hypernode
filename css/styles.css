@@ -3027,7 +3027,7 @@ select:focus-visible {
   transform-origin: center bottom;
   transform: translate(
       calc(-50% + var(--toolbar-shift-x, 0px)),
-      calc(-100% - (22px / var(--viewport-zoom, 1)))
+      calc(-100% - (var(--edge-label-toolbar-offset, 22px) / var(--viewport-zoom, 1)))
     )
     scale(var(--selection-toolbar-scale, 1));
 }
@@ -3038,7 +3038,7 @@ select:focus-visible {
   transform-origin: center top;
   transform: translate(
       calc(-50% + var(--toolbar-shift-x, 0px)),
-      calc(22px / var(--viewport-zoom, 1))
+      calc(var(--edge-label-toolbar-offset, 22px) / var(--viewport-zoom, 1))
     )
     scale(var(--selection-toolbar-scale, 1));
 }
@@ -3061,7 +3061,7 @@ select:focus-visible {
   width: var(--edge-label-width, 120px);
   height: var(--edge-label-height, 26px);
   box-sizing: border-box;
-  padding: 0;
+  padding: 5px 0;
   border: 0;
   border-radius: 999px;
   background: var(--bg);
@@ -3078,6 +3078,7 @@ select:focus-visible {
   resize: none;
   overflow: hidden;
   white-space: pre-wrap;
+  display: block;
 }
 
 .edge-label-editor__input::placeholder {
