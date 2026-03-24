@@ -1925,6 +1925,10 @@ export function bindInteractions(elements, store, options = {}) {
     const nodeEl = target.closest("[data-node-id]");
     if (nodeEl) {
       const nodeId = nodeEl.dataset.nodeId;
+      const node = getNode(nodeId, store.getState());
+      const hasImage =
+        typeof node?.imageData === "string" &&
+        node.imageData.startsWith("data:image/");
       store.setSelection({ type: "node", id: nodeId });
       contextMenu.show({
         clientX: event.clientX,
@@ -1943,6 +1947,28 @@ export function bindInteractions(elements, store, options = {}) {
             action: () => openNodeFocus(nodeId),
           },
           { separator: true },
+          {
+            label: hasImage ? "Replace image" : "Add image",
+            icon: "bi-image",
+            action: () => {
+              void pickImageFile().then((file) => {
+                if (!file) return;
+                return handleFocusedImageReplace(nodeId, file);
+              });
+            },
+          },
+          ...(hasImage
+            ? [
+                {
+                  label: "Remove image",
+                  icon: "bi-image-alt",
+                  action: () => {
+                    store.updateNode(nodeId, { kind: "text" });
+                  },
+                },
+                { separator: true },
+              ]
+            : []),
           {
             label: "Duplicate",
             icon: "bi-copy",
@@ -2312,7 +2338,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     if (
       event.target.closest(
-        "[data-node-editor], [data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-node-image-toolbar-remove], [data-toolbar-popover-toggle], [data-toolbar-popover]",
+        "[data-node-editor], [data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-toolbar-popover-toggle], [data-toolbar-popover]",
       )
     ) {
       event.stopPropagation();
@@ -2606,18 +2632,6 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const toolbarImageRemoveEl = event.target.closest(
-      "[data-node-image-toolbar-remove]",
-    );
-    if (toolbarImageRemoveEl) {
-      const nodeId = toolbarImageRemoveEl.dataset.nodeImageToolbarRemove;
-      if (nodeId) {
-        store.updateNode(nodeId, { kind: "text" });
-      }
-      event.stopPropagation();
-      return;
-    }
-
     const nodeEl = event.target.closest("[data-node-id]");
     if (nodeEl && event.detail >= 2 && !isTypingTarget(event.target)) {
       store.setSelection({ type: "node", id: nodeEl.dataset.nodeId });
@@ -2773,7 +2787,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     if (
       event.target.closest(
-        "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-node-image-toolbar-remove], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete], [data-edges-delete], [data-edge-edit-open], [data-edge-editor], [data-edge-edit-label]",
+        "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete], [data-edges-delete], [data-edge-edit-open], [data-edge-editor], [data-edge-edit-label]",
       )
     ) {
       event.stopPropagation();
@@ -2810,7 +2824,7 @@ export function bindInteractions(elements, store, options = {}) {
       ".selection-controls__group--node[data-node-id]",
     );
     const clickedToolbarControl = event.target.closest(
-      "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-node-image-toolbar-remove], [data-node-resize], [data-node-anchor], [data-toolbar-popover-toggle], [data-toolbar-popover]",
+      "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-node-resize], [data-node-anchor], [data-toolbar-popover-toggle], [data-toolbar-popover]",
     );
     if (nodeGroupEl && !clickedToolbarControl && event.detail >= 2) {
       store.setSelection({ type: "node", id: nodeGroupEl.dataset.nodeId });
@@ -2891,17 +2905,6 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
-    const nodeImageRemoveEl = event.target.closest(
-      "[data-node-image-toolbar-remove]",
-    );
-    if (nodeImageRemoveEl) {
-      const nodeId = nodeImageRemoveEl.dataset.nodeImageToolbarRemove;
-      if (nodeId) {
-        store.updateNode(nodeId, { kind: "text" });
-      }
-      event.stopPropagation();
-      return;
-    }
 
     const frameOpenEl = event.target.closest("[data-frame-edit-open]");
     if (frameOpenEl) {

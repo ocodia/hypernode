@@ -111,7 +111,7 @@ test('single selected node renders focus toolbar action', () => {
   assert.match(nodesLayer.innerHTML, /data-node-image-toolbar-pick="n1"/);
 });
 
-test('image nodes render toolbar remove-image action', () => {
+test('image nodes keep toolbar image add-replace action without toolbar remove action', () => {
   const nodesLayer = { innerHTML: '' };
 
   renderNodes(nodesLayer, {
@@ -123,7 +123,7 @@ test('image nodes render toolbar remove-image action', () => {
   });
 
   assert.match(nodesLayer.innerHTML, /data-node-image-toolbar-pick="n1"/);
-  assert.match(nodesLayer.innerHTML, /data-node-image-toolbar-remove="n1"/);
+  assert.doesNotMatch(nodesLayer.innerHTML, /data-node-image-toolbar-remove="n1"/);
 });
 
 test('canvas inline edit keeps the single-node overlay toolbar visible', () => {

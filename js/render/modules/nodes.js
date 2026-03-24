@@ -73,11 +73,6 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
           <i class="bi ${hasImage ? 'bi-image-fill' : 'bi-image'}"></i>
         </button>
       ` : ''}
-      ${includeImageControls && targetEntity === 'node' && hasImage ? `
-        <button class="node__tool-btn entity-toolbar__btn node__tool-btn--danger" type="button" data-node-image-toolbar-remove="${nodeId}" aria-label="Remove image" title="Remove Image">
-          <i class="bi bi-image-alt"></i>
-        </button>
-      ` : ''}
       ${includeStyleControls ? `
         <div class="entity-toolbar__control">
           <button class="node__tool-btn entity-toolbar__btn${colorKey ? ' entity-toolbar__trigger--has-swatch' : ''}" type="button" data-toolbar-popover-toggle="color" aria-label="Node colors" title="Node colors" aria-expanded="false"${colorKey ? ` data-toolbar-color-current="${escapeAttr(colorKey)}"` : ''}>
