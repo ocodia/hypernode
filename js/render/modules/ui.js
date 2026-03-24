@@ -17,7 +17,7 @@ import {
 } from "./edges.js";
 
 function buildEdgeLabelEditorMarkup(edge) {
-  const metrics = getEdgeLabelMetrics(edge.label || "");
+  const metrics = getEdgeLabelMetrics(edge.label || "Label");
   return `
     <div class="edge-label-editor" data-edge-editor="${edge.id}" style="--edge-label-width: ${metrics.width}px; --edge-label-height: ${metrics.height}px;">
       <input

@@ -1099,6 +1099,7 @@ export function bindInteractions(elements, store, options = {}) {
       }
       return;
     }
+    syncEdgeLabelEditorWidth(input);
     input.focus({ preventScroll: true });
     input.select();
   }
@@ -1255,6 +1256,24 @@ export function bindInteractions(elements, store, options = {}) {
     if (typeof patch.label === "string") {
       edge.label = patch.label.slice(0, 120);
     }
+  }
+
+  function measureEdgeLabelWidth(text) {
+    const value = String(text || "");
+    const length = Math.min(value.length, 120);
+    return Math.max(32, Math.min(320, 16 + length * 7.2));
+  }
+
+  function syncEdgeLabelEditorWidth(inputEl) {
+    if (!(inputEl instanceof HTMLInputElement)) return;
+    const editorEl = inputEl.closest("[data-edge-editor]");
+    if (!(editorEl instanceof HTMLElement)) return;
+    const basis = inputEl.value || inputEl.placeholder || "Label";
+    editorEl.style.setProperty(
+      "--edge-label-width",
+      `${measureEdgeLabelWidth(basis)}px`,
+    );
+    editorEl.style.setProperty("--edge-label-height", "26px");
   }
 
   function updateFrameMembershipPreview(dragNodes, dx, dy) {
@@ -2965,6 +2984,7 @@ export function bindInteractions(elements, store, options = {}) {
       target instanceof HTMLInputElement &&
       target.matches("[data-edge-edit-label]")
     ) {
+      syncEdgeLabelEditorWidth(target);
       const edgeId = target.dataset.edgeEditLabel;
       if (edgeId) {
         applyLiveEdgeEditorInput(edgeId, { label: target.value });
