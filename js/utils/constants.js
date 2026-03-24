@@ -13,7 +13,7 @@ export const VIEWPORT_LIMITS = {
 export const NODE_DEFAULTS = {
   width: 216,
   height: 144,
-  minWidth: 144,
+  minWidth: 48,
   minHeight: 48,
   title: "Untitled Node",
   borderWidth: 1,
