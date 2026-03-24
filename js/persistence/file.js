@@ -1,4 +1,5 @@
 import { validateGraphPayload } from '../utils/graph.js';
+import { stringifyGraphDocument } from './document.js';
 
 const GRAPH_FILE_PICKER_TYPES = [{
   description: 'hypernode file (JSON)',
@@ -33,13 +34,7 @@ export async function saveGraphFile(graph, handle = null) {
     types: GRAPH_FILE_PICKER_TYPES,
   });
 
-  const payload = JSON.stringify({
-    name: graph.name,
-    nodes: graph.nodes,
-    frames: graph.frames,
-    edges: graph.edges,
-    viewport: graph.viewport,
-  }, null, 2);
+  const payload = stringifyGraphDocument(graph, 2);
   const writable = await targetHandle.createWritable();
   await writable.write(payload);
   await writable.close();

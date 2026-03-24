@@ -1,5 +1,6 @@
 import { SETTINGS_STORAGE_KEY, STORAGE_KEY } from '../utils/constants.js';
 import { sanitizeAppSettings, validateGraphPayload } from '../utils/graph.js';
+import { stringifyGraphDocument } from './document.js';
 
 export function loadGraphFromStorage() {
   try {
@@ -14,13 +15,7 @@ export function loadGraphFromStorage() {
 }
 
 export function saveGraphToStorage(graph) {
-  const payload = JSON.stringify({
-    name: graph.name,
-    nodes: graph.nodes,
-    frames: graph.frames,
-    edges: graph.edges,
-    viewport: graph.viewport,
-  });
+  const payload = stringifyGraphDocument(graph);
   localStorage.setItem(STORAGE_KEY, payload);
 }
 

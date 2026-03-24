@@ -13,38 +13,20 @@ The persisted graph shape is:
 ```json
 {
   "name": "Untitled",
-  "settings": {
-    "uiThemePreset": "tidepool",
-    "enabledThemePresets": [
-      "blueprint",
-      "fjord",
-      "slate",
-      "paper",
-      "ember",
-      "chalkboard",
-      "citrine",
-      "canopy",
-      "tidepool",
-      "dusk"
-    ],
-    "uiRadiusPreset": "soft",
-    "toolbarPosition": "top-left",
-    "toolbarOrientation": "horizontal",
-    "toastPosition": "bottom-right",
-    "metaPosition": "bottom-left",
-    "backgroundStyle": "dots",
-    "anchorsMode": "exact",
-    "arrowheads": "shown",
-    "arrowheadSizeStep": 0,
-    "nodeColorDefault": null
-  },
   "nodes": [],
   "frames": [],
-  "edges": []
+  "edges": [],
+  "viewport": {
+    "panX": 0,
+    "panY": 0,
+    "zoom": 1
+  },
 }
 ```
 
 ## Settings
+
+App settings are persisted separately in browser storage and are not serialized into graph JSON files.
 
 Current valid values:
 
@@ -200,7 +182,7 @@ Rules:
 
 ## Persistence Boundaries
 
-- Autosave stores `{ name, settings, nodes, frames, edges }`
+- Autosave stores `{ name, nodes, frames, edges, viewport }`
 - File save/export writes the same shape as JSON
 - Import/open accepts only payloads that pass validation for that same shape
-- Appearance settings are document-level state and round-trip with the graph
+- App settings persist separately in browser storage and do not round-trip through graph files
