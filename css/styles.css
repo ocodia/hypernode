@@ -2148,11 +2148,13 @@ select:focus-visible {
 
 .node__editor-layout--canvas-image .node__focus-media {
   order: 1;
+  flex: 0 0 auto;
   min-height: 0;
 }
 
 .node__editor-layout--canvas-image .node__editor-fields--canvas-image {
   order: 2;
+  flex: 1 1 auto;
 }
 
 .node__editor-fields {
@@ -2248,13 +2250,13 @@ select:focus-visible {
 
 .node__editor-layout--canvas-image .node__image-pane {
   width: 100%;
-  min-height: 120px;
-  height: 100%;
-  background-size: contain;
+  min-height: 0;
+  height: auto;
+  background-size: cover;
 }
 
 .node__editor-layout--canvas-image .node__focus-media--has-image {
-  min-height: 120px;
+  min-height: 0;
 }
 
 .node__editor-layout--canvas-image .node__focus-media--empty,
@@ -2283,7 +2285,8 @@ select:focus-visible {
 
   .node__editor-layout--canvas-image .node__focus-media {
     order: 2;
-    height: 100%;
+    align-self: start;
+    height: auto;
   }
 
   .node__editor-layout--canvas-image .node__focus-media--has-image,
@@ -2291,12 +2294,11 @@ select:focus-visible {
   .node__editor-layout--canvas-image
     .node__focus-media--empty
     .node__image-dropzone {
-    min-height: 100%;
+    min-height: 0;
   }
 
   .node__editor-layout--canvas-image .node__image-pane {
-    min-height: 100%;
-    background-size: cover;
+    min-height: 0;
   }
 }
 
