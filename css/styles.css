@@ -449,16 +449,16 @@ select:focus-visible {
   cursor: text;
 }
 
-.edges .edge__label-bg {
-  fill: var(--bg);
-}
-
 .edges .edge__label-text {
   fill: var(--text);
   font-size: var(--edge-label-font-size, 16px);
   font-weight: 600;
   letter-spacing: 0.01em;
   dominant-baseline: middle;
+  stroke: var(--bg);
+  stroke-width: 8px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
   pointer-events: none;
   user-select: none;
 }

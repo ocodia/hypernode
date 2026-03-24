@@ -228,7 +228,6 @@ export function renderEdges(elements, state) {
           -((metrics.lineCount - 1) * metrics.lineHeight) / 2;
         labelMarkup = `
           <g class="edge__label" transform="translate(${midpoint.x} ${midpoint.y})">
-            <rect class="edge__label-bg" x="${metrics.x}" y="${metrics.y}" rx="12" ry="12" width="${metrics.width}" height="${metrics.height}"></rect>
             <text class="edge__label-text" x="0" y="${firstLineY}" text-anchor="middle">
               ${metrics.lines
                 .map((line, index) => `<tspan x="0" dy="${index === 0 ? 0 : metrics.lineHeight}">${line ? escapeHTML(line) : "&#160;"}</tspan>`)
