@@ -2231,7 +2231,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     if (
       event.target.closest(
-        "[data-node-editor], [data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-toolbar-popover-toggle], [data-toolbar-popover]",
+        "[data-node-editor], [data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-node-image-toolbar-remove], [data-toolbar-popover-toggle], [data-toolbar-popover]",
       )
     ) {
       event.stopPropagation();
@@ -2502,9 +2502,34 @@ export function bindInteractions(elements, store, options = {}) {
       return;
     }
 
+    const toolbarImagePickEl = event.target.closest(
+      "[data-node-image-toolbar-pick]",
+    );
+    if (toolbarImagePickEl) {
+      const nodeId = toolbarImagePickEl.dataset.nodeImageToolbarPick;
+      void pickImageFile().then((file) => {
+        if (!file || !nodeId) return;
+        return handleFocusedImageReplace(nodeId, file);
+      });
+      event.stopPropagation();
+      return;
+    }
+
     const imageRemoveEl = event.target.closest("[data-node-image-remove]");
     if (imageRemoveEl && clickedFocusLayer) {
       const nodeId = imageRemoveEl.dataset.nodeImageRemove;
+      if (nodeId) {
+        store.updateNode(nodeId, { kind: "text" });
+      }
+      event.stopPropagation();
+      return;
+    }
+
+    const toolbarImageRemoveEl = event.target.closest(
+      "[data-node-image-toolbar-remove]",
+    );
+    if (toolbarImageRemoveEl) {
+      const nodeId = toolbarImageRemoveEl.dataset.nodeImageToolbarRemove;
       if (nodeId) {
         store.updateNode(nodeId, { kind: "text" });
       }
@@ -2667,7 +2692,7 @@ export function bindInteractions(elements, store, options = {}) {
 
     if (
       event.target.closest(
-        "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete], [data-edges-delete]",
+        "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-node-image-toolbar-remove], [data-frame-edit-open], [data-frame-edit-confirm], [data-frame-delete], [data-toolbar-popover-toggle], [data-toolbar-popover], [data-edge-delete], [data-edges-delete]",
       )
     ) {
       event.stopPropagation();
@@ -2703,7 +2728,7 @@ export function bindInteractions(elements, store, options = {}) {
       ".selection-controls__group--node[data-node-id]",
     );
     const clickedToolbarControl = event.target.closest(
-      "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-resize], [data-node-anchor], [data-toolbar-popover-toggle], [data-toolbar-popover]",
+      "[data-node-edit-open], [data-node-delete], [data-nodes-delete], [data-node-focus-toggle], [data-node-start], [data-node-image-toolbar-pick], [data-node-image-toolbar-remove], [data-node-resize], [data-node-anchor], [data-toolbar-popover-toggle], [data-toolbar-popover]",
     );
     if (nodeGroupEl && !clickedToolbarControl && event.detail >= 2) {
       store.setSelection({ type: "node", id: nodeGroupEl.dataset.nodeId });
@@ -2768,6 +2793,29 @@ export function bindInteractions(elements, store, options = {}) {
       const nodeId = nodeStartEl.dataset.nodeStart;
       if (nodeId) {
         commitStarterHypernode(nodeId);
+      }
+      event.stopPropagation();
+      return;
+    }
+
+    const nodeImagePickEl = event.target.closest("[data-node-image-toolbar-pick]");
+    if (nodeImagePickEl) {
+      const nodeId = nodeImagePickEl.dataset.nodeImageToolbarPick;
+      void pickImageFile().then((file) => {
+        if (!file || !nodeId) return;
+        return handleFocusedImageReplace(nodeId, file);
+      });
+      event.stopPropagation();
+      return;
+    }
+
+    const nodeImageRemoveEl = event.target.closest(
+      "[data-node-image-toolbar-remove]",
+    );
+    if (nodeImageRemoveEl) {
+      const nodeId = nodeImageRemoveEl.dataset.nodeImageToolbarRemove;
+      if (nodeId) {
+        store.updateNode(nodeId, { kind: "text" });
       }
       event.stopPropagation();
       return;

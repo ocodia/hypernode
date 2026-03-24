@@ -21,6 +21,8 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const includeFocus = options.includeFocus !== false;
   const includeDelete = options.includeDelete !== false;
   const includeStyleControls = options.includeStyleControls !== false;
+  const includeImageControls = options.includeImageControls !== false;
+  const hasImage = Boolean(options.hasImage);
   const focusActive = Boolean(options.focusActive);
   const toolbarClass = options.toolbarClass || 'node__toolbar';
   const targetIds = Array.isArray(options.targetIds) && options.targetIds.length ? options.targetIds : [nodeId];
@@ -42,6 +44,8 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
   const editShortcut = formatShortcutLabel('Ctrl/Cmd + Enter', { compact: true });
   const focusShortcut = focusActive ? 'Esc' : formatShortcutLabel('Ctrl/Cmd + Alt + Enter', { compact: true });
   const deleteShortcut = focusActive ? formatShortcutLabel('Ctrl/Cmd + Delete', { compact: true }) : 'Del';
+  const imageActionLabel = hasImage ? 'Replace image' : 'Add image';
+  const imageActionTitle = hasImage ? 'Replace Image' : 'Add Image';
 
   return `
     <div class="${toolbarClass}" data-toolbar-entity="${targetEntity}" data-toolbar-target-ids="${escapeAttr(targetIds.join(','))}" data-toolbar-placement="${toolbarPlacement}"${toolbarStyle}>
@@ -62,6 +66,16 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
             <span class="node__tool-btn-label">${focusActive ? 'Exit' : 'Focus'}</span>
             ${showShortcuts ? `<span class="node__tool-btn-shortcut">${focusShortcut}</span>` : ''}
           </span>
+        </button>
+      ` : ''}
+      ${includeImageControls && targetEntity === 'node' ? `
+        <button class="node__tool-btn entity-toolbar__btn" type="button" data-node-image-toolbar-pick="${nodeId}" aria-label="${imageActionLabel}" title="${imageActionTitle}">
+          <i class="bi ${hasImage ? 'bi-image-fill' : 'bi-image'}"></i>
+        </button>
+      ` : ''}
+      ${includeImageControls && targetEntity === 'node' && hasImage ? `
+        <button class="node__tool-btn entity-toolbar__btn node__tool-btn--danger" type="button" data-node-image-toolbar-remove="${nodeId}" aria-label="Remove image" title="Remove Image">
+          <i class="bi bi-image-alt"></i>
         </button>
       ` : ''}
       ${includeStyleControls ? `
@@ -314,6 +328,7 @@ export function renderNodes(nodesLayer, state) {
               : 'is-connect-candidate'
             : '';
       const fixedSizeClass = hasExplicitNodeSize(node) ? 'has-fixed-size' : '';
+      const hasImageData = typeof node.imageData === 'string' && node.imageData.startsWith('data:image/');
       const inlineSizeStyle = buildNodeInlineSizeStyle(node);
       const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}--node-border-width: ${node.borderWidth || 1}px;--node-border-style: ${escapeAttr(node.borderStyle || 'solid')};`;
       const nodeColorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
@@ -321,6 +336,7 @@ export function renderNodes(nodesLayer, state) {
         <article class="node ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
           ${buildNodeToolbarMarkup(node.id, {
             showShortcuts: true,
+            hasImage: hasImageData,
             colorKey: node.colorKey || '',
             borderWidth: node.borderWidth || 1,
             borderStyle: node.borderStyle || 'solid',

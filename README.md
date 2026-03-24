@@ -22,6 +22,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Draw Frames from toolbar drag mode. Frames act as background super-nodes with anchors, resize handles, and title/description, including the same basic markdown support in descriptions.
 - Frame mini toolbar renders above selected frames and includes color, border width, border style, edit/confirm, and delete controls.
 - Node mini toolbars include color, border width, border style, and delete controls; single-node toolbars also include `Edit` and `Focus`.
+- Single-node toolbars also include image add/replace and remove actions.
 - Multi-selected nodes show one shared toolbar centered above the selection bounds for batch color, border, and delete actions.
 - Frame inline editor keeps title and description fields while frame border controls live in the frame toolbar.
 - Drag nodes into Frames to embed them; embedded nodes move with their Frame and can be dragged out to ungroup.

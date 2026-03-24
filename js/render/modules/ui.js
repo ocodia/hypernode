@@ -318,6 +318,9 @@ export function renderSelectionControls(selectionControlsLayer, state) {
           toolbarPlacement: "top",
           editingActive: editingNodeId === node.id,
           showShortcuts: true,
+          hasImage:
+            typeof node.imageData === "string" &&
+            node.imageData.startsWith("data:image/"),
           colorKey: node.colorKey || "",
           borderWidth: node.borderWidth || 1,
           borderStyle: node.borderStyle || "solid",
@@ -368,6 +371,10 @@ export function renderFocusOverlay(focusLayer, state) {
         includeFocus: false,
         includeDelete: !starterActive,
         includeStyleControls: !starterActive,
+        includeImageControls: !starterActive,
+        hasImage:
+          typeof node.imageData === "string" &&
+          node.imageData.startsWith("data:image/"),
         colorKey: node.colorKey || "",
         borderWidth: node.borderWidth || 1,
         borderStyle: node.borderStyle || "solid",
