@@ -3047,15 +3047,21 @@ select:focus-visible {
   position: absolute;
   left: 0;
   top: 0;
-  transform: translate(-50%, -50%) scale(var(--selection-toolbar-scale, 1));
+  transform: translate(-50%, -50%);
   transform-origin: center;
   z-index: 19;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .edge-label-editor__input {
   width: var(--edge-label-width, 120px);
   height: var(--edge-label-height, 26px);
-  padding: 0 8px;
+  box-sizing: border-box;
+  padding: 0;
   border: 0;
   border-radius: 999px;
   background: var(--bg);
@@ -3068,10 +3074,21 @@ select:focus-visible {
   line-height: 1;
   box-shadow: none;
   outline: none;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .edge-label-editor__input::placeholder {
   color: var(--text-muted);
+}
+
+.edge-label-editor__input:focus,
+.edge-label-editor__input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+  border: 0;
+  box-shadow: none;
 }
 
 .entity-toolbar__edge-type-options {
