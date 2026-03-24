@@ -393,7 +393,7 @@ test('image nodes without explicit height no longer derive height from image asp
     width: 320,
     imageAspectRatio: 1.5,
     imageData: 'data:image/png;base64,abc',
-  }), 96);
+  }), 144);
 });
 
 test('renderHypernodeMetadata updates name, viewport center coordinates, and document title', () => {

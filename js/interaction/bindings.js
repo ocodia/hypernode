@@ -4198,7 +4198,7 @@ export function bindInteractions(elements, store, options = {}) {
         event.key.toLowerCase() === "n"
       ) {
         event.preventDefault();
-        handleAddNode();
+        handleAddNodeAtPointer();
         return;
       }
 
