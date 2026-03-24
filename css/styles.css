@@ -1998,13 +1998,18 @@ select:focus-visible {
 
 .node--image:not(.focus-overlay__panel) {
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .node--image:not(.focus-overlay__panel) .node__content,
 .node--image:not(.focus-overlay__panel) .node__editor,
 .node--image:not(.focus-overlay__panel) .node__editor-layout--canvas-image {
   gap: 0;
+}
+
+.node--image:not(.focus-overlay__panel) .node__content {
+  overflow: hidden;
+  border-radius: calc(var(--radius-md) - 1px);
 }
 
 .node--image:not(.focus-overlay__panel) .node__meta,
@@ -2030,7 +2035,6 @@ select:focus-visible {
 
 .node--image:not(.focus-overlay__panel) .node__image-pane {
   border: 0;
-  border-bottom: 1px solid var(--panel-border);
   border-radius: 0;
 }
 
