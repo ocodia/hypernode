@@ -2925,6 +2925,11 @@ export function bindInteractions(elements, store, options = {}) {
   }
 
   function onSelectionControlsDoubleClick(event) {
+    if (event.target.closest("[data-edge-editor], [data-edge-edit-label]")) {
+      event.stopPropagation();
+      return;
+    }
+
     const edgeGroupEl = event.target.closest(
       ".selection-controls__group--edge[data-edge-id]",
     );
