@@ -26,17 +26,29 @@ import {
 } from "../helpers.js";
 import { unitVectorByAnchor } from "../../shared/anchors.js";
 
+export function getEdgeLabelLines(label) {
+  const normalized = String(label ?? "").replaceAll("\r\n", "\n").replaceAll("\r", "\n");
+  return normalized.split("\n");
+}
+
 export function getEdgeLabelMetrics(label) {
-  const text = String(label || "");
-  const length = Math.min(text.length, 120);
-  const width = Math.max(32, Math.min(320, 16 + length * 7.2));
-  const height = 26;
+  const lines = getEdgeLabelLines(label);
+  const longestLineLength = lines.reduce(
+    (max, line) => Math.max(max, Math.min(line.length, 120)),
+    0,
+  );
+  const lineCount = Math.max(1, lines.length);
+  const lineHeight = 18;
+  const width = Math.max(64, Math.min(360, 20 + longestLineLength * 9));
+  const height = Math.max(26, 10 + lineCount * lineHeight);
   return {
+    lineHeight,
+    lineCount,
+    lines,
     width,
     height,
     x: -width / 2,
     y: -height / 2,
-    textY: 0,
   };
 }
 
@@ -212,10 +224,16 @@ export function renderEdges(elements, state) {
       let labelMarkup = "";
       if (labelText && state.ui.editingEdgeId !== edge.id) {
         const metrics = getEdgeLabelMetrics(labelText);
+        const firstLineY =
+          -((metrics.lineCount - 1) * metrics.lineHeight) / 2;
         labelMarkup = `
           <g class="edge__label" transform="translate(${midpoint.x} ${midpoint.y})">
             <rect class="edge__label-bg" x="${metrics.x}" y="${metrics.y}" rx="12" ry="12" width="${metrics.width}" height="${metrics.height}"></rect>
-            <text class="edge__label-text" x="0" y="${metrics.textY}" text-anchor="middle">${escapeHTML(labelText)}</text>
+            <text class="edge__label-text" x="0" y="${firstLineY}" text-anchor="middle">
+              ${metrics.lines
+                .map((line, index) => `<tspan x="0" dy="${index === 0 ? 0 : metrics.lineHeight}">${line ? escapeHTML(line) : "&#160;"}</tspan>`)
+                .join("")}
+            </text>
           </g>
         `;
       }

@@ -38,6 +38,7 @@ import {
   getThemePresetPresentation,
   getThemePresetSequence,
 } from "./theme-presets.js";
+import { getEdgeLabelMetrics } from "../render/modules/edges.js";
 
 export function bindInteractions(elements, store, options = {}) {
   const {
@@ -1091,7 +1092,7 @@ export function bindInteractions(elements, store, options = {}) {
       selectionControlsLayer?.querySelector?.(
         `[data-edge-edit-label="${edgeId}"]`,
       ) || null;
-    if (!(input instanceof HTMLInputElement)) {
+    if (!(input instanceof HTMLTextAreaElement)) {
       if (retries > 0) {
         window.requestAnimationFrame(() =>
           focusEdgeLabelInput(edgeId, retries - 1),
@@ -1258,22 +1259,15 @@ export function bindInteractions(elements, store, options = {}) {
     }
   }
 
-  function measureEdgeLabelWidth(text) {
-    const value = String(text || "");
-    const length = Math.min(value.length, 120);
-    return Math.max(32, Math.min(320, 16 + length * 7.2));
-  }
-
   function syncEdgeLabelEditorWidth(inputEl) {
-    if (!(inputEl instanceof HTMLInputElement)) return;
+    if (!(inputEl instanceof HTMLTextAreaElement)) return;
     const editorEl = inputEl.closest("[data-edge-editor]");
     if (!(editorEl instanceof HTMLElement)) return;
     const basis = inputEl.value || inputEl.placeholder || "Label";
-    editorEl.style.setProperty(
-      "--edge-label-width",
-      `${measureEdgeLabelWidth(basis)}px`,
-    );
-    editorEl.style.setProperty("--edge-label-height", "26px");
+    const metrics = getEdgeLabelMetrics(basis);
+    editorEl.style.setProperty("--edge-label-width", `${metrics.width}px`);
+    editorEl.style.setProperty("--edge-label-height", `${metrics.height}px`);
+    inputEl.rows = Math.max(1, metrics.lineCount);
   }
 
   function updateFrameMembershipPreview(dragNodes, dx, dy) {
@@ -2971,12 +2965,18 @@ export function bindInteractions(elements, store, options = {}) {
   function onSelectionControlsKeyDown(event) {
     const target = event.target;
     if (
-      target instanceof HTMLInputElement &&
+      target instanceof HTMLTextAreaElement &&
       target.matches("[data-edge-edit-label]")
     ) {
       const edgeId = target.dataset.edgeEditLabel;
       if (!edgeId) return;
-      if (event.key === "Escape" || event.key === "Enter") {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeEdgeEditor(edgeId);
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
         event.preventDefault();
         event.stopPropagation();
         closeEdgeEditor(edgeId);
@@ -2989,7 +2989,7 @@ export function bindInteractions(elements, store, options = {}) {
   function onSelectionControlsInput(event) {
     const target = event.target;
     if (
-      target instanceof HTMLInputElement &&
+      target instanceof HTMLTextAreaElement &&
       target.matches("[data-edge-edit-label]")
     ) {
       syncEdgeLabelEditorWidth(target);
@@ -3010,7 +3010,7 @@ export function bindInteractions(elements, store, options = {}) {
 
   function onSelectionControlsFocusOut(event) {
     const target = event.target;
-    if (!(target instanceof HTMLInputElement)) return;
+    if (!(target instanceof HTMLTextAreaElement)) return;
     if (!target.matches("[data-edge-edit-label]")) return;
     const nextTarget = event.relatedTarget;
     if (

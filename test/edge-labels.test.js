@@ -34,6 +34,16 @@ test("sanitizeEdge defaults label to an empty string and clamps long labels", ()
     }).label.length,
     120,
   );
+
+  assert.equal(
+    sanitizeEdge({
+      id: "edge-1",
+      from: "a",
+      to: "b",
+      label: "line 1\nline 2",
+    }).label,
+    "line 1\nline 2",
+  );
 });
 
 test("validateGraphPayload accepts string edge labels and rejects non-string labels", () => {

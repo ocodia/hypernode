@@ -3071,12 +3071,13 @@ select:focus-visible {
   font-family: inherit;
   font-weight: 600;
   text-align: center;
-  line-height: 1;
+  line-height: 18px;
   box-shadow: none;
   outline: none;
   margin: 0;
-  -webkit-appearance: none;
-  appearance: none;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
 }
 
 .edge-label-editor__input::placeholder {

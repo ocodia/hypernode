@@ -20,16 +20,16 @@ function buildEdgeLabelEditorMarkup(edge) {
   const metrics = getEdgeLabelMetrics(edge.label || "Label");
   return `
     <div class="edge-label-editor" data-edge-editor="${edge.id}" style="--edge-label-width: ${metrics.width}px; --edge-label-height: ${metrics.height}px;">
-      <input
+      <textarea
         class="edge-label-editor__input"
         data-edge-edit-label="${edge.id}"
-        value="${escapeAttr(edge.label || "")}"
         maxlength="120"
         placeholder="Label"
         aria-label="Edge label"
         autocomplete="off"
+        rows="${Math.max(1, metrics.lineCount)}"
         data-1p-ignore="true"
-      />
+      >${escapeAttr(edge.label || "")}</textarea>
     </div>
   `;
 }
