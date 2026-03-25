@@ -39,7 +39,7 @@ export function getEdgeLabelMetrics(label) {
   );
   const lineCount = Math.max(1, lines.length);
   const lineHeight = 18;
-  const width = Math.max(48, Math.min(360, 8 + longestLineLength * 8.2));
+  const width = Math.max(44, Math.min(360, 10 + longestLineLength * 7.4));
   const height = Math.max(26, 10 + lineCount * lineHeight);
   return {
     lineHeight,
