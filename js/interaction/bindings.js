@@ -3645,6 +3645,12 @@ export function bindInteractions(elements, store, options = {}) {
     settingsDialog?.querySelectorAll("[data-toolbar-orientation]") ?? [];
   const arrowheadSizeRange = document.getElementById("arrowhead-size-range");
   const arrowheadSizeValue = document.getElementById("arrowhead-size-value");
+  const edgeLabelKnockoutSizeRange = document.getElementById(
+    "edge-label-knockout-size-range",
+  );
+  const edgeLabelKnockoutSizeValue = document.getElementById(
+    "edge-label-knockout-size-value",
+  );
   const newGraphBtn = document.getElementById("new-graph-btn");
   const openGraphBtn = document.getElementById("open-graph-btn");
   const saveGraphBtn = document.getElementById("save-graph-btn");
@@ -4170,6 +4176,12 @@ export function bindInteractions(elements, store, options = {}) {
       const nextStep = Number(arrowheadSizeRange.value);
       updateArrowheadSizeLabel(arrowheadSizeValue, nextStep);
       store.setArrowheadSizeStep(nextStep);
+    });
+
+    edgeLabelKnockoutSizeRange?.addEventListener("input", () => {
+      const nextStep = Number(edgeLabelKnockoutSizeRange.value);
+      updateEdgeLabelKnockoutSizeLabel(edgeLabelKnockoutSizeValue, nextStep);
+      store.setEdgeLabelKnockoutSizeStep(nextStep);
     });
 
     settingsDialog
@@ -5434,6 +5446,19 @@ function syncSettingsDialogFromState(
     arrowheadSizeRange.value = String(step);
     updateArrowheadSizeLabel(arrowheadSizeValue, step);
   }
+  const edgeLabelKnockoutSizeRange = document.getElementById(
+    "edge-label-knockout-size-range",
+  );
+  const edgeLabelKnockoutSizeValue = document.getElementById(
+    "edge-label-knockout-size-value",
+  );
+  if (edgeLabelKnockoutSizeRange instanceof HTMLInputElement) {
+    const step = Number.isFinite(state.settings.edgeLabelKnockoutSizeStep)
+      ? state.settings.edgeLabelKnockoutSizeStep
+      : 4;
+    edgeLabelKnockoutSizeRange.value = String(step);
+    updateEdgeLabelKnockoutSizeLabel(edgeLabelKnockoutSizeValue, step);
+  }
 }
 
 function syncPositionPickers(
@@ -5545,4 +5570,11 @@ function updateArrowheadSizeLabel(labelEl, step) {
   const level = Math.max(1, Math.min(10, Math.round(Number(step)) + 1));
   const percent = level === 1 ? 100 : 100 + (level - 1) * 20;
   labelEl.textContent = `Level ${level} (${percent}%)`;
+}
+
+function updateEdgeLabelKnockoutSizeLabel(labelEl, step) {
+  if (!(labelEl instanceof HTMLElement)) return;
+  const numeric = Number.isFinite(Number(step)) ? Math.round(Number(step)) : 4;
+  const mainPx = (5 + numeric).toFixed(2);
+  labelEl.textContent = `Level ${numeric + 1} (${mainPx}px)`;
 }

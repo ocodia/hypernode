@@ -226,12 +226,16 @@ export function renderEdges(elements, state) {
         const metrics = getEdgeLabelMetrics(labelText);
         const firstLineY =
           -((metrics.lineCount - 1) * metrics.lineHeight) / 2;
+        const tspans = metrics.lines
+          .map((line, index) => `<tspan x="0" dy="${index === 0 ? 0 : metrics.lineHeight}">${line ? escapeHTML(line) : "&#160;"}</tspan>`)
+          .join("");
         labelMarkup = `
           <g class="edge__label" transform="translate(${midpoint.x} ${midpoint.y})">
+            <text class="edge__label-knockout" x="0" y="${firstLineY}" text-anchor="middle" aria-hidden="true">
+              ${tspans}
+            </text>
             <text class="edge__label-text" x="0" y="${firstLineY}" text-anchor="middle">
-              ${metrics.lines
-                .map((line, index) => `<tspan x="0" dy="${index === 0 ? 0 : metrics.lineHeight}">${line ? escapeHTML(line) : "&#160;"}</tspan>`)
-                .join("")}
+              ${tspans}
             </text>
           </g>
         `;

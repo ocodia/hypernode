@@ -107,6 +107,12 @@ Use this checklist before shipping interaction changes.
 - [ ] Verify `Arrowheads` and `Arrowhead size` persist across open/save/new graph flows.
 - [ ] Verify undo/redo restores `Arrowheads` visibility and `Arrowhead size` changes.
 
+### Edge label knockout settings
+
+- [ ] Move `Knockout size` from level `1` to level `16` and confirm the edge label halo visibly increases from `5px` to `20px` without shifting label layout.
+- [ ] Verify display mode and edit mode both reflect the chosen knockout size.
+- [ ] Reload page and verify `Knockout size` persists.
+
 ## UI/Polish Checks
 
 - [ ] Toggle keyboard hints on/off.

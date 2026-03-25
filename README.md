@@ -41,7 +41,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Reconnect existing edge endpoints by dragging selected edge endpoints.
 - Delete selected edges via inline edge overlay control or keyboard delete.
 - Multi-select edges with `Ctrl/Cmd + click` (additive); multi-edge toolbar shows selection count with batch colour, thickness, style, type, and delete controls.
-- Add and edit edge labels by double-clicking an edge or using the single-edge toolbar edit control; labels render centered on edges with a masked background so the line does not show through the text.
+- Add and edit edge labels by double-clicking an edge or using the single-edge toolbar edit control; labels render centered on edges with a knockout outline so the line does not show through the text.
 - Pan canvas with pointer drag on empty space.
 - Zoom with mouse wheel/trackpad (bounded: `0.35` to `2.5`).
 - Reset view to default pan/zoom.
@@ -62,6 +62,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
   - anchors mode (`auto` or `exact`) where `auto` keeps each edge's stored anchor points synced to the currently resolved connection sides as nodes and frames move
   - arrowheads visibility (`show` or `hide`)
   - arrowhead size (`10` levels, from `100%` to `280%` in `20%` increments)
+  - edge label knockout size (`16` levels, from `5px` to `20px`)
   - toolbar position (`top left`, `top right`, `bottom left`, or `bottom right`)
   - toolbar orientation (`horizontal` or `vertical`)
   - toast position (`top left`, `top right`, `bottom left`, or `bottom right`)

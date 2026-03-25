@@ -22,6 +22,18 @@ test('sanitizeAppSettings defaults to Tidepool with soft radius', () => {
 
   assert.equal(settings.uiThemePreset, 'tidepool');
   assert.equal(settings.uiRadiusPreset, 'soft');
+  assert.equal(settings.edgeLabelKnockoutSizeStep, 4);
+});
+
+test('sanitizeAppSettings clamps edge label knockout size step', () => {
+  assert.equal(
+    sanitizeAppSettings({ edgeLabelKnockoutSizeStep: -10 }).edgeLabelKnockoutSizeStep,
+    0,
+  );
+  assert.equal(
+    sanitizeAppSettings({ edgeLabelKnockoutSizeStep: 99 }).edgeLabelKnockoutSizeStep,
+    15,
+  );
 });
 
 test('sanitizeAppSettings accepts all current curated ui theme presets', () => {
@@ -57,6 +69,7 @@ test('validateGraphPayload accepts the current curated ui theme preset list', ()
       anchorsMode: 'auto',
       arrowheads: 'shown',
       arrowheadSizeStep: 0,
+      edgeLabelKnockoutSizeStep: 4,
       toolbarPosition: 'top-right',
       toolbarOrientation: 'vertical',
       toastPosition: 'bottom-right',
@@ -87,6 +100,7 @@ test('validateGraphPayload rejects invalid current ui settings', () => {
       anchorsMode: 'auto',
       arrowheads: 'shown',
       arrowheadSizeStep: 0,
+      edgeLabelKnockoutSizeStep: 99,
       toastPosition: 'top-left',
       metaPosition: 'bottom-right',
       nodeColorDefault: null,

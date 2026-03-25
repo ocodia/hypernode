@@ -449,23 +449,27 @@ select:focus-visible {
   cursor: text;
 }
 
+.edges .edge__label-knockout,
 .edges .edge__label-text {
-  fill: var(--text);
   font-size: var(--edge-label-font-size, 16px);
   font-weight: 600;
   letter-spacing: 0.01em;
   dominant-baseline: middle;
-  filter:
-    drop-shadow(0 var(--edge-label-knockout-main, 2px) 0 var(--bg))
-    drop-shadow(0 calc(var(--edge-label-knockout-main, 2px) * -1) 0 var(--bg))
-    drop-shadow(var(--edge-label-knockout-main, 2px) 0 0 var(--bg))
-    drop-shadow(calc(var(--edge-label-knockout-main, 2px) * -1) 0 0 var(--bg))
-    drop-shadow(var(--edge-label-knockout-diagonal, 1.5px) var(--edge-label-knockout-diagonal, 1.5px) 0 var(--bg))
-    drop-shadow(calc(var(--edge-label-knockout-diagonal, 1.5px) * -1) var(--edge-label-knockout-diagonal, 1.5px) 0 var(--bg))
-    drop-shadow(var(--edge-label-knockout-diagonal, 1.5px) calc(var(--edge-label-knockout-diagonal, 1.5px) * -1) 0 var(--bg))
-    drop-shadow(calc(var(--edge-label-knockout-diagonal, 1.5px) * -1) calc(var(--edge-label-knockout-diagonal, 1.5px) * -1) 0 var(--bg));
   pointer-events: none;
   user-select: none;
+}
+
+.edges .edge__label-knockout {
+  fill: var(--bg);
+  stroke: var(--bg);
+  stroke-width: var(--edge-label-knockout-main, 5px);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  paint-order: stroke;
+}
+
+.edges .edge__label-text {
+  fill: var(--text);
 }
 
 .edges path.is-draft {
@@ -3084,15 +3088,12 @@ select:focus-visible {
   overflow: hidden;
   white-space: pre;
   display: block;
-  filter:
-    drop-shadow(0 var(--edge-label-knockout-main, 2px) 0 var(--bg))
-    drop-shadow(0 calc(var(--edge-label-knockout-main, 2px) * -1) 0 var(--bg))
-    drop-shadow(var(--edge-label-knockout-main, 2px) 0 0 var(--bg))
-    drop-shadow(calc(var(--edge-label-knockout-main, 2px) * -1) 0 0 var(--bg))
-    drop-shadow(var(--edge-label-knockout-diagonal, 1.5px) var(--edge-label-knockout-diagonal, 1.5px) 0 var(--bg))
-    drop-shadow(calc(var(--edge-label-knockout-diagonal, 1.5px) * -1) var(--edge-label-knockout-diagonal, 1.5px) 0 var(--bg))
-    drop-shadow(var(--edge-label-knockout-diagonal, 1.5px) calc(var(--edge-label-knockout-diagonal, 1.5px) * -1) 0 var(--bg))
-    drop-shadow(calc(var(--edge-label-knockout-diagonal, 1.5px) * -1) calc(var(--edge-label-knockout-diagonal, 1.5px) * -1) 0 var(--bg));
+  background: transparent;
+  color: var(--text);
+  text-shadow: none;
+  -webkit-text-fill-color: var(--text);
+  -webkit-text-stroke: var(--edge-label-knockout-main, 5px) var(--bg);
+  paint-order: stroke fill;
 }
 
 .edge-label-editor__input::placeholder {

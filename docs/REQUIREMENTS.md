@@ -119,7 +119,7 @@ FR-28a
 Canvas selection toolbars must remain usable across the supported zoom range by keeping their click targets effectively screen-space sized while staying attached to the selected node/frame bounds.
 
 FR-29
-App settings must include UI theme preset, enabled theme presets, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, arrowhead size, and default node colour. App settings must persist in browser storage independently of graph documents and must not be serialized into graph JSON files.
+App settings must include UI theme preset, enabled theme presets, UI radius preset, toolbar position, toolbar orientation, toast position, metadata position, background style, anchors mode, arrowhead visibility, arrowhead size, edge label knockout size, and default node colour. App settings must persist in browser storage independently of graph documents and must not be serialized into graph JSON files.
 
 FR-29a
 The shortcuts dialog must support search by shortcut keys and action text.

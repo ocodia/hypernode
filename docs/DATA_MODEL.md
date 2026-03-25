@@ -43,6 +43,7 @@ Current valid values:
   "anchorsMode": "auto | exact",
   "arrowheads": "shown | hidden",
   "arrowheadSizeStep": "0..9",
+  "edgeLabelKnockoutSizeStep": "0..15",
   "nodeColorDefault": "sage | sky | amber | rose | slate | teal | violet | peach | mint | indigo | null"
 }
 ```
@@ -60,6 +61,7 @@ Defaults:
 - `anchorsMode`: `exact`
 - `arrowheads`: `shown`
 - `arrowheadSizeStep`: `0`
+- `edgeLabelKnockoutSizeStep`: `4`
 - `nodeColorDefault`: `null`
 
 Validation rules:

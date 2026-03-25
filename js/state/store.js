@@ -1327,6 +1327,13 @@ export function createStore(initialGraph = null, initialSettings = null) {
     );
   }
 
+  function setEdgeLabelKnockoutSizeStep(edgeLabelKnockoutSizeStep) {
+    updateAppSettings(
+      { edgeLabelKnockoutSizeStep },
+      { actionLabel: "set-edge-label-knockout-size-step" },
+    );
+  }
+
   function setEdgeTypeDefault(edgeType) {
     if (typeof edgeType !== "string" || !EDGE_TYPES.includes(edgeType)) return;
     updateAppSettings(
@@ -1697,6 +1704,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     setAnchorsMode,
     setArrowheads,
     setArrowheadSizeStep,
+    setEdgeLabelKnockoutSizeStep,
     setEdgeTypeDefault,
     setNodeColorDefault,
     setSnapToGrid,

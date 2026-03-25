@@ -30,6 +30,8 @@ const ARROWHEADS_MODES = new Set(["shown", "hidden"]);
 const UI_RADIUS_PRESETS = new Set(["sharp", "soft", "rounded"]);
 const ARROWHEAD_SIZE_STEP_MIN = 0;
 const ARROWHEAD_SIZE_STEP_MAX = 9;
+const EDGE_LABEL_KNOCKOUT_SIZE_STEP_MIN = 0;
+const EDGE_LABEL_KNOCKOUT_SIZE_STEP_MAX = 15;
 const NODE_KINDS = new Set(["text", "image"]);
 const FRAME_BORDER_STYLES = new Set(["solid", "dashed", "dotted"]);
 
@@ -261,6 +263,9 @@ export function validateGraphPayload(payload) {
   const hasValidArrowheadSizeStep =
     settings.arrowheadSizeStep === undefined ||
     isValidArrowheadSizeStep(settings.arrowheadSizeStep);
+  const hasValidEdgeLabelKnockoutSizeStep =
+    settings.edgeLabelKnockoutSizeStep === undefined ||
+    isValidEdgeLabelKnockoutSizeStep(settings.edgeLabelKnockoutSizeStep);
   const hasValidNodeColorDefault =
     settings.nodeColorDefault === undefined ||
     settings.nodeColorDefault === null ||
@@ -280,6 +285,7 @@ export function validateGraphPayload(payload) {
     !hasValidAnchorsMode ||
     !hasValidArrowheadsMode ||
     !hasValidArrowheadSizeStep ||
+    !hasValidEdgeLabelKnockoutSizeStep ||
     !hasValidNodeColorDefault ||
     !hasValidEdgeTypeDefault
   ) {
@@ -380,6 +386,9 @@ export function sanitizeAppSettings(settings) {
       ? settings.arrowheads
       : APP_SETTINGS_DEFAULTS.arrowheads,
     arrowheadSizeStep: sanitizeArrowheadSizeStep(settings?.arrowheadSizeStep),
+    edgeLabelKnockoutSizeStep: sanitizeEdgeLabelKnockoutSizeStep(
+      settings?.edgeLabelKnockoutSizeStep,
+    ),
     nodeColorDefault: sanitizeNodeColorKey(settings?.nodeColorDefault),
     edgeTypeDefault: isValidEdgeType(settings?.edgeTypeDefault)
       ? settings.edgeTypeDefault
@@ -453,6 +462,29 @@ function sanitizeArrowheadSizeStep(value) {
   const rounded = Math.round(numeric);
   if (rounded < ARROWHEAD_SIZE_STEP_MIN) return ARROWHEAD_SIZE_STEP_MIN;
   if (rounded > ARROWHEAD_SIZE_STEP_MAX) return ARROWHEAD_SIZE_STEP_MAX;
+  return rounded;
+}
+
+function isValidEdgeLabelKnockoutSizeStep(value) {
+  return (
+    Number.isInteger(value) &&
+    value >= EDGE_LABEL_KNOCKOUT_SIZE_STEP_MIN &&
+    value <= EDGE_LABEL_KNOCKOUT_SIZE_STEP_MAX
+  );
+}
+
+function sanitizeEdgeLabelKnockoutSizeStep(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return APP_SETTINGS_DEFAULTS.edgeLabelKnockoutSizeStep;
+  }
+  const rounded = Math.round(numeric);
+  if (rounded < EDGE_LABEL_KNOCKOUT_SIZE_STEP_MIN) {
+    return EDGE_LABEL_KNOCKOUT_SIZE_STEP_MIN;
+  }
+  if (rounded > EDGE_LABEL_KNOCKOUT_SIZE_STEP_MAX) {
+    return EDGE_LABEL_KNOCKOUT_SIZE_STEP_MAX;
+  }
   return rounded;
 }
 

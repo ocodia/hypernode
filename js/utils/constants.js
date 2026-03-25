@@ -70,6 +70,7 @@ export const APP_SETTINGS_DEFAULTS = {
   anchorsMode: "exact",
   arrowheads: "shown",
   arrowheadSizeStep: 0,
+  edgeLabelKnockoutSizeStep: 4,
   nodeColorDefault: null,
   edgeTypeDefault: "curved",
   snapToGrid: true,

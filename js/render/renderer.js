@@ -41,6 +41,16 @@ export function createRenderer(elements, _store) {
   };
   let activeThemePreset = null;
 
+  function getEdgeLabelKnockoutValues(step) {
+    const normalizedStep = Number.isFinite(step) ? step : 4;
+    const main = 5 + normalizedStep;
+    const diagonal = Number((main * 0.75).toFixed(3));
+    return {
+      main: `${main.toFixed(2)}px`,
+      diagonal: `${diagonal.toFixed(2)}px`,
+    };
+  }
+
   function applyThemePreset(themeId) {
     if (activeThemePreset === themeId) return;
     activeThemePreset = themeId;
@@ -66,6 +76,17 @@ export function createRenderer(elements, _store) {
     if (themeMeta instanceof HTMLMetaElement) {
       themeMeta.content = themeMetaConfig.color;
     }
+    const knockout = getEdgeLabelKnockoutValues(
+      state.settings.edgeLabelKnockoutSizeStep,
+    );
+    document.documentElement.style.setProperty(
+      "--edge-label-knockout-main",
+      knockout.main,
+    );
+    document.documentElement.style.setProperty(
+      "--edge-label-knockout-diagonal",
+      knockout.diagonal,
+    );
     renderFrames(framesLayer, state);
     renderNodes(nodesLayer, state);
     renderEdges(edgeElements, state);
