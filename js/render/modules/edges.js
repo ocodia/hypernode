@@ -248,6 +248,15 @@ export function renderEdges(elements, state) {
           .join("");
         labelMarkup = `
           <g class="edge__label" transform="translate(${midpoint.x} ${midpoint.y})">
+            <rect
+              class="edge__label-hit"
+              x="${metrics.x - 6}"
+              y="${metrics.y - 4}"
+              width="${metrics.width + 12}"
+              height="${metrics.height + 8}"
+              rx="6"
+              ry="6"
+            ></rect>
             <text class="edge__label-knockout" x="0" y="${firstLineY}" text-anchor="middle" aria-hidden="true">
               ${tspans}
             </text>

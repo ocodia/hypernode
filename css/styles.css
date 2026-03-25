@@ -446,7 +446,11 @@ select:focus-visible {
 
 .edges .edge__label {
   pointer-events: all;
-  cursor: text;
+}
+
+.edges .edge__label-hit {
+  fill: transparent;
+  pointer-events: all;
 }
 
 .edges .edge__label-knockout,
