@@ -450,7 +450,9 @@ select:focus-visible {
 }
 
 .edges .edge__label-knockout,
-.edges .edge__label-text {
+.edges .edge__label-text,
+.edge-label-editor__display .edge__label-knockout,
+.edge-label-editor__display .edge__label-text {
   font-size: var(--edge-label-font-size, 16px);
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -459,7 +461,8 @@ select:focus-visible {
   user-select: none;
 }
 
-.edges .edge__label-knockout {
+.edges .edge__label-knockout,
+.edge-label-editor__display .edge__label-knockout {
   fill: var(--bg);
   stroke: var(--bg);
   stroke-width: var(--edge-label-knockout-main, 5px);
@@ -468,7 +471,8 @@ select:focus-visible {
   paint-order: stroke;
 }
 
-.edges .edge__label-text {
+.edges .edge__label-text,
+.edge-label-editor__display .edge__label-text {
   fill: var(--text);
 }
 
@@ -3068,6 +3072,26 @@ select:focus-visible {
   box-shadow: none;
 }
 
+.edge-label-editor__display {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--edge-label-content-width, 120px);
+  height: var(--edge-label-content-height, 26px);
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.edge-label-editor__display .edge__label-knockout,
+.edge-label-editor__display .edge__label-text {
+  dominant-baseline: middle;
+}
+
+.edge-label-editor__display.is-placeholder .edge__label-text {
+  fill: var(--text-muted);
+}
+
 .edge-label-editor__input {
   position: absolute;
   left: 50%;
@@ -3080,7 +3104,7 @@ select:focus-visible {
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: var(--text);
+  color: transparent;
   font: inherit;
   font-size: var(--edge-label-font-size, 16px);
   font-family: inherit;
@@ -3091,24 +3115,23 @@ select:focus-visible {
   outline: none;
   margin: 0;
   resize: none;
-  overflow: visible;
+  overflow: hidden;
   white-space: pre;
   display: block;
-  background: transparent;
-  color: var(--text);
   text-shadow: none;
-  -webkit-text-fill-color: var(--text);
+  -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 0 transparent;
+  caret-color: var(--text);
 }
 
 .edge-label-editor__input::placeholder {
-  color: var(--text-muted);
+  color: transparent;
 }
 
 .edge-label-editor__input::selection {
-  background: var(--accent);
-  color: var(--accent-contrast);
-  -webkit-text-fill-color: var(--accent-contrast);
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+  color: transparent;
+  -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 0 transparent;
   text-shadow: none;
 }

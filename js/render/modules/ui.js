@@ -2,6 +2,7 @@ import {
   buildFrameOverlayControls,
   buildNodeOverlayControls,
   defaultEntitySize,
+  escapeHTML,
   getSelectedNodeIds,
   getSingleSelectedNodeId,
   measureEntitySizes,
@@ -18,13 +19,27 @@ import {
 } from "./edges.js";
 
 function buildEdgeLabelEditorMarkup(edge, knockoutStep) {
-  const displayMetrics = getEdgeLabelMetrics(edge.label || "Label");
+  const editorText = edge.label || "";
+  const displayText = editorText || "Label";
+  const displayMetrics = getEdgeLabelMetrics(displayText);
   const metrics = getEdgeLabelEditorMetrics(
-    edge.label || "Label",
+    displayText,
     knockoutStep,
   );
+  const firstLineY = -((displayMetrics.lineCount - 1) * displayMetrics.lineHeight) / 2;
+  const tspans = displayMetrics.lines
+    .map((line, index) => `<tspan x="0" dy="${index === 0 ? 0 : displayMetrics.lineHeight}">${line ? escapeHTML(line) : "&#160;"}</tspan>`)
+    .join("");
   return `
     <div class="edge-label-editor" data-edge-editor="${edge.id}" style="--edge-label-width: ${metrics.width}px; --edge-label-height: ${metrics.height}px; --edge-label-content-width: ${displayMetrics.width}px; --edge-label-content-height: ${displayMetrics.height}px;">
+      <svg class="edge-label-editor__display${editorText ? "" : " is-placeholder"}" aria-hidden="true" viewBox="${displayMetrics.x} ${displayMetrics.y} ${displayMetrics.width} ${displayMetrics.height}">
+        <text class="edge__label-knockout" x="0" y="${firstLineY}" text-anchor="middle">
+          ${tspans}
+        </text>
+        <text class="edge__label-text" x="0" y="${firstLineY}" text-anchor="middle">
+          ${tspans}
+        </text>
+      </svg>
       <textarea
         class="edge-label-editor__input"
         data-edge-edit-label="${edge.id}"
@@ -34,7 +49,7 @@ function buildEdgeLabelEditorMarkup(edge, knockoutStep) {
         autocomplete="off"
         rows="${Math.max(1, displayMetrics.lineCount)}"
         data-1p-ignore="true"
-      >${escapeAttr(edge.label || "")}</textarea>
+      >${escapeAttr(editorText)}</textarea>
     </div>
   `;
 }

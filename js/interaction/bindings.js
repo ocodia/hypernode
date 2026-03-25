@@ -1285,6 +1285,40 @@ export function bindInteractions(elements, store, options = {}) {
     inputEl.rows = Math.max(1, displayMetrics.lineCount);
   }
 
+  function syncEdgeLabelEditorDisplay(inputEl) {
+    if (!(inputEl instanceof HTMLTextAreaElement)) return;
+    const editorEl = inputEl.closest("[data-edge-editor]");
+    if (!(editorEl instanceof HTMLElement)) return;
+    const displayEl = editorEl.querySelector(".edge-label-editor__display");
+    if (!(displayEl instanceof Element)) return;
+    const text = inputEl.value || "";
+    const displayText = text || inputEl.placeholder || "Label";
+    const metrics = getEdgeLabelMetrics(displayText);
+    const firstLineY =
+      -((metrics.lineCount - 1) * metrics.lineHeight) / 2;
+    const tspans = metrics.lines
+      .map(
+        (line, index) =>
+          `<tspan x="0" dy="${index === 0 ? 0 : metrics.lineHeight}">${
+            line ? escapeHtmlForMarkup(line) : "&#160;"
+          }</tspan>`,
+      )
+      .join("");
+    displayEl.setAttribute(
+      "viewBox",
+      `${metrics.x} ${metrics.y} ${metrics.width} ${metrics.height}`,
+    );
+    displayEl.classList.toggle("is-placeholder", !text);
+    displayEl.innerHTML = `
+      <text class="edge__label-knockout" x="0" y="${firstLineY}" text-anchor="middle">
+        ${tspans}
+      </text>
+      <text class="edge__label-text" x="0" y="${firstLineY}" text-anchor="middle">
+        ${tspans}
+      </text>
+    `;
+  }
+
   function updateFrameMembershipPreview(dragNodes, dx, dy) {
     const state = store.getState();
     if (!Array.isArray(state.frames) || state.frames.length === 0) {
@@ -3011,6 +3045,7 @@ export function bindInteractions(elements, store, options = {}) {
       target.matches("[data-edge-edit-label]")
     ) {
       syncEdgeLabelEditorWidth(target);
+      syncEdgeLabelEditorDisplay(target);
       const edgeId = target.dataset.edgeEditLabel;
       if (edgeId) {
         applyLiveEdgeEditorInput(edgeId, { label: target.value });
@@ -5474,6 +5509,15 @@ function syncSettingsDialogFromState(
     edgeLabelKnockoutSizeRange.value = String(step);
     updateEdgeLabelKnockoutSizeLabel(edgeLabelKnockoutSizeValue, step);
   }
+}
+
+function escapeHtmlForMarkup(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function syncPositionPickers(
