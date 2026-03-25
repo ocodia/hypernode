@@ -52,6 +52,23 @@ export function getEdgeLabelMetrics(label) {
   };
 }
 
+export function getEdgeLabelKnockoutSizePx(step) {
+  const normalizedStep = Number.isFinite(Number(step))
+    ? Math.round(Number(step))
+    : 4;
+  return 5 + normalizedStep;
+}
+
+export function getEdgeLabelEditorMetrics(label, knockoutStep) {
+  const metrics = getEdgeLabelMetrics(label);
+  const padding = Math.ceil(getEdgeLabelKnockoutSizePx(knockoutStep)) + 8;
+  return {
+    ...metrics,
+    width: Math.min(420, metrics.width + padding * 2),
+    height: Math.min(240, metrics.height + padding * 2),
+  };
+}
+
 export function getEdgeRenderState(edge, state, bySize = null) {
   const byId = new Map([
     ...state.nodes.map((node) => [node.id, node]),

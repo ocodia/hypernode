@@ -38,7 +38,10 @@ import {
   getThemePresetPresentation,
   getThemePresetSequence,
 } from "./theme-presets.js";
-import { getEdgeLabelMetrics } from "../render/modules/edges.js";
+import {
+  getEdgeLabelEditorMetrics,
+  getEdgeLabelMetrics,
+} from "../render/modules/edges.js";
 
 export function bindInteractions(elements, store, options = {}) {
   const {
@@ -1264,10 +1267,22 @@ export function bindInteractions(elements, store, options = {}) {
     const editorEl = inputEl.closest("[data-edge-editor]");
     if (!(editorEl instanceof HTMLElement)) return;
     const basis = inputEl.value || inputEl.placeholder || "Label";
-    const metrics = getEdgeLabelMetrics(basis);
+    const displayMetrics = getEdgeLabelMetrics(basis);
+    const metrics = getEdgeLabelEditorMetrics(
+      basis,
+      store.getState().settings.edgeLabelKnockoutSizeStep,
+    );
     editorEl.style.setProperty("--edge-label-width", `${metrics.width}px`);
     editorEl.style.setProperty("--edge-label-height", `${metrics.height}px`);
-    inputEl.rows = Math.max(1, metrics.lineCount);
+    editorEl.style.setProperty(
+      "--edge-label-content-width",
+      `${displayMetrics.width}px`,
+    );
+    editorEl.style.setProperty(
+      "--edge-label-content-height",
+      `${displayMetrics.height}px`,
+    );
+    inputEl.rows = Math.max(1, displayMetrics.lineCount);
   }
 
   function updateFrameMembershipPreview(dragNodes, dx, dy) {

@@ -3059,6 +3059,8 @@ select:focus-visible {
   transform: translate(-50%, -50%);
   transform-origin: center;
   z-index: 19;
+  width: var(--edge-label-width, 120px);
+  height: var(--edge-label-height, 26px);
   padding: 0;
   margin: 0;
   border: 0;
@@ -3067,8 +3069,12 @@ select:focus-visible {
 }
 
 .edge-label-editor__input {
-  width: var(--edge-label-width, 120px);
-  height: var(--edge-label-height, 26px);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--edge-label-content-width, 120px);
+  height: var(--edge-label-content-height, 26px);
+  transform: translate(-50%, -50%);
   box-sizing: border-box;
   padding: 5px 0;
   border: 0;
@@ -3085,19 +3091,26 @@ select:focus-visible {
   outline: none;
   margin: 0;
   resize: none;
-  overflow: hidden;
+  overflow: visible;
   white-space: pre;
   display: block;
   background: transparent;
   color: var(--text);
   text-shadow: none;
   -webkit-text-fill-color: var(--text);
-  -webkit-text-stroke: var(--edge-label-knockout-main, 5px) var(--bg);
-  paint-order: stroke fill;
+  -webkit-text-stroke: 0 transparent;
 }
 
 .edge-label-editor__input::placeholder {
   color: var(--text-muted);
+}
+
+.edge-label-editor__input::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  -webkit-text-fill-color: var(--accent-contrast);
+  -webkit-text-stroke: 0 transparent;
+  text-shadow: none;
 }
 
 .edge-label-editor__input:focus,

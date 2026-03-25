@@ -12,14 +12,19 @@ import { buildNodeContentMarkup, buildNodeToolbarMarkup } from "./nodes.js";
 import {
   buildEdgeToolbarMarkup,
   buildMultiEdgeToolbarMarkup,
+  getEdgeLabelEditorMetrics,
   getEdgeLabelMetrics,
   getEdgeRenderState,
 } from "./edges.js";
 
-function buildEdgeLabelEditorMarkup(edge) {
-  const metrics = getEdgeLabelMetrics(edge.label || "Label");
+function buildEdgeLabelEditorMarkup(edge, knockoutStep) {
+  const displayMetrics = getEdgeLabelMetrics(edge.label || "Label");
+  const metrics = getEdgeLabelEditorMetrics(
+    edge.label || "Label",
+    knockoutStep,
+  );
   return `
-    <div class="edge-label-editor" data-edge-editor="${edge.id}" style="--edge-label-width: ${metrics.width}px; --edge-label-height: ${metrics.height}px;">
+    <div class="edge-label-editor" data-edge-editor="${edge.id}" style="--edge-label-width: ${metrics.width}px; --edge-label-height: ${metrics.height}px; --edge-label-content-width: ${displayMetrics.width}px; --edge-label-content-height: ${displayMetrics.height}px;">
       <textarea
         class="edge-label-editor__input"
         data-edge-edit-label="${edge.id}"
@@ -27,7 +32,7 @@ function buildEdgeLabelEditorMarkup(edge) {
         placeholder="Label"
         aria-label="Edge label"
         autocomplete="off"
-        rows="${Math.max(1, metrics.lineCount)}"
+        rows="${Math.max(1, displayMetrics.lineCount)}"
         data-1p-ignore="true"
       >${escapeAttr(edge.label || "")}</textarea>
     </div>
@@ -92,7 +97,7 @@ export function renderSelectionControls(selectionControlsLayer, state) {
             edgeType: selectedEdge.edgeType || "curved",
             editingActive: editingEdgeId === selectedEdge.id,
           })}
-          ${editingEdgeId === selectedEdge.id ? buildEdgeLabelEditorMarkup(selectedEdge) : ""}
+          ${editingEdgeId === selectedEdge.id ? buildEdgeLabelEditorMarkup(selectedEdge, state.settings.edgeLabelKnockoutSizeStep) : ""}
         </div>
       `;
     }
