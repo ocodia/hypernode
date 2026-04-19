@@ -2,7 +2,7 @@
 
 hypernode is a lightweight browser-based editor for building connected thinking spaces fast.
 
-It runs fully client-side with no backend and no account system. Hypernode data autosaves in `localStorage`, and can be opened or saved as hypernode files backed by JSON.
+It runs fully client-side with no backend and no account system. Hypernode graph data autosaves in IndexedDB, app settings live in `localStorage`, and hypernodes can be opened or saved as JSON files.
 
 Hypernode includes a lightweight built-in design system for surfaces, buttons, dialogs, inputs, and canvas objects. Appearance is preset-driven, stored with the document, and includes a shared radius scale that applies across controls, nodes, and frames.
 
@@ -111,7 +111,8 @@ Use the shortcuts dialog to search by key combo or action name.
 - CSS
 - JavaScript (ES modules)
 - SVG (edge rendering + edge overlay controls)
-- `localStorage` (persistence)
+- IndexedDB (graph autosave)
+- `localStorage` (app settings)
 
 No frameworks or backend services are used.
 

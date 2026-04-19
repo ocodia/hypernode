@@ -16,7 +16,7 @@ Last updated: 2026-03-10
 - [x] Canvas pan (robust pointer lifecycle handling)
 - [x] View reset
 - [x] Undo/redo with bounded history
-- [x] Local persistence (`localStorage`)
+- [x] Local persistence (IndexedDB graph autosave + `localStorage` settings)
 - [x] JSON import/export with validation
 - [x] Import status toast feedback
 - [x] `Escape` cancels edge draft mode and exits edit mode
@@ -98,7 +98,7 @@ Last updated: 2026-03-10
 - [x] Add graph naming:
   - editable graph name from canvas metadata
   - show graph name in the app title/header so users can confirm active graph
-  - persist graph name in `localStorage` and graph file payload
+  - persist graph name in browser autosave and graph file payload
 - [x] Add edge arrowheads setting:
   - `Arrowheads` toggle (`show` / `hide`) in Settings
   - renders on committed edges only (not draft preview)

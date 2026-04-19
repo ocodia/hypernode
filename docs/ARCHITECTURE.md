@@ -62,7 +62,7 @@ Hypernode is a single-page, fully client-side canvas app.
 ### Persistence
 
 - `js/persistence/storage.js`
-  - localStorage load/save
+  - IndexedDB graph autosave and `localStorage` settings persistence
 - `js/persistence/file.js`
   - file open/save using the File System Access API when available
 

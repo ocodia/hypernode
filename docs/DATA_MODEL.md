@@ -4,7 +4,6 @@
 
 This document defines the canonical hypernode payload used for:
 
-- autosave in `localStorage`
 - file open/save validation
 - import/export serialization
 
@@ -184,7 +183,8 @@ Rules:
 
 ## Persistence Boundaries
 
-- Autosave stores `{ name, nodes, frames, edges, viewport }`
-- File save/export writes the same shape as JSON
+- Browser autosave stores graph metadata in IndexedDB and image binaries in a separate IndexedDB asset store
+- Browser autosave image nodes persist `imageAssetId` plus `imageAspectRatio`; images are rehydrated back into in-memory `imageData` when the app loads
+- File save/export writes `{ name, nodes, frames, edges, viewport }` as JSON
 - Import/open accepts only payloads that pass validation for that same shape
-- App settings persist separately in browser storage and do not round-trip through graph files
+- App settings persist separately in `localStorage` and do not round-trip through graph files
