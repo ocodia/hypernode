@@ -183,8 +183,9 @@ Rules:
 
 ## Persistence Boundaries
 
-- Browser autosave stores graph metadata in IndexedDB and image binaries in a separate IndexedDB asset store
+- Browser autosave stores multiple hypernode documents in IndexedDB, each with its own graph metadata and scoped image asset records
+- The active hypernode id is stored separately in `localStorage` so the app can reopen the last active document on startup
 - Browser autosave image nodes persist `imageAssetId` plus `imageAspectRatio`; images are rehydrated back into in-memory `imageData` when the app loads
 - File save/export writes `{ name, nodes, frames, edges, viewport }` as JSON
-- Import/open accepts only payloads that pass validation for that same shape
+- Import/open accepts only payloads that pass validation for that same shape and creates a new stored hypernode
 - App settings persist separately in `localStorage` and do not round-trip through graph files

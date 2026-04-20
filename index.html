@@ -27,8 +27,9 @@
         </div>
         <div class="toolbar__group" aria-label="File">
           <button id="new-graph-btn" class="toolbar__icon-btn" type="button" aria-label="New file" title="New file"><i class="bi bi-file-earmark-plus"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
-          <button id="open-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Open file" title="Open file"><i class="bi bi-folder2-open"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
-          <button id="save-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Save file" title="Save file"><i class="bi bi-floppy"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="documents-btn" class="toolbar__icon-btn" type="button" aria-label="Documents" title="Documents"><i class="bi bi-collection"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="open-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Import" title="Import"><i class="bi bi-folder2-open"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
+          <button id="save-graph-btn" class="toolbar__icon-btn" type="button" aria-label="Export" title="Export"><i class="bi bi-floppy"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
         </div>
         <div class="toolbar__group" aria-label="Settings and help">
           <button id="settings-btn" class="toolbar__icon-btn" type="button" aria-label="Settings" title="Settings"><i class="bi bi-sliders2"></i><span class="toolbar__shortcut-hint" hidden aria-hidden="true"></span></button>
@@ -262,6 +263,26 @@
                 <p id="edge-label-knockout-size-value" class="settings-dialog__hint">Level 5 (9.00px)</p>
               </fieldset>
             </section>
+          </div>
+        </div>
+      </article>
+    </dialog>
+    <dialog id="documents-dialog" class="app-dialog documents-dialog">
+      <article class="app-dialog__article documents-dialog__article">
+        <header class="about-dialog__header">
+          <div class="about-dialog__titlebar">
+            <span class="about-dialog__title-icon" aria-hidden="true"><i class="bi bi-collection"></i></span>
+            <h2>Documents</h2>
+          </div>
+          <button id="documents-close-btn" type="button" aria-label="Close documents dialog"><i class="bi bi-x-lg"></i></button>
+        </header>
+        <div class="app-dialog__body documents-dialog__body">
+          <div class="documents-dialog__actions">
+            <button id="documents-create-btn" class="app-dialog__primary-btn" type="button">New hypernode</button>
+          </div>
+          <div class="app-dialog__panel documents-dialog__panel">
+            <div class="documents-dialog__list" id="documents-list" role="list"></div>
+            <p id="documents-empty-state" class="shortcuts-dialog__empty" hidden>No stored hypernodes yet.</p>
           </div>
         </div>
       </article>

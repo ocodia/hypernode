@@ -4,10 +4,15 @@ import assert from "node:assert/strict";
 import { openGraphFile, saveGraphFile } from "../js/persistence/file.js";
 import { serializeGraphDocument } from "../js/persistence/document.js";
 import {
+  createStoredGraph,
+  deleteStoredGraph,
+  getActiveGraphId,
+  listStoredGraphs,
   loadAppSettingsFromStorage,
-  loadGraphFromStorage,
+  loadStoredGraph,
   saveAppSettingsToStorage,
-  saveGraphToStorage,
+  saveStoredGraph,
+  setActiveGraphId,
 } from "../js/persistence/storage.js";
 import { createStore } from "../js/state/store.js";
 import { validateGraphPayload } from "../js/utils/graph.js";
@@ -88,7 +93,7 @@ test("serializeGraphDocument preserves full node payloads", () => {
   assert.deepEqual(serializeGraphDocument(graph), graph);
 });
 
-test("saveGraphToStorage and loadGraphFromStorage round-trip text graphs through IndexedDB", async () => {
+test("createStoredGraph and loadStoredGraph round-trip text graphs through IndexedDB", async () => {
   const graph = createGraph();
   graph.nodes = [graph.nodes[0]];
   graph.edges = [];
@@ -98,15 +103,16 @@ test("saveGraphToStorage and loadGraphFromStorage round-trip text graphs through
   globalThis.indexedDB = fakeIndexedDb;
 
   try {
-    assert.equal(await saveGraphToStorage(graph), true);
-    const loaded = await loadGraphFromStorage();
-    assert.deepEqual(loaded, graph);
+    const created = await createStoredGraph(graph);
+    assert.ok(created?.id);
+    const loaded = await loadStoredGraph(created.id);
+    assert.deepEqual(loaded?.graph, graph);
   } finally {
     globalThis.indexedDB = originalIndexedDb;
   }
 });
 
-test("saveGraphToStorage and loadGraphFromStorage round-trip image graphs through IndexedDB blobs", async () => {
+test("createStoredGraph and loadStoredGraph round-trip image graphs through IndexedDB blobs", async () => {
   const graph = createGraph();
   const fakeIndexedDb = createFakeIndexedDB();
   const originalIndexedDb = globalThis.indexedDB;
@@ -114,19 +120,24 @@ test("saveGraphToStorage and loadGraphFromStorage round-trip image graphs throug
   globalThis.indexedDB = fakeIndexedDb;
 
   try {
-    assert.equal(await saveGraphToStorage(graph), true);
+    const created = await createStoredGraph(graph);
+    assert.ok(created?.id);
 
-    const dbState = fakeIndexedDb.__getDbState("hypernode.graph");
-    assert.ok(dbState.stores.get("assets").records.has("node-image:n-image"));
+    const dbState = fakeIndexedDb.__getDbState("hypernode.documents");
+    assert.ok(
+      dbState.stores
+        .get("assets")
+        .records.has(`${created.id}::node-image:n-image`),
+    );
 
-    const loaded = await loadGraphFromStorage();
-    assert.deepEqual(loaded, graph);
+    const loaded = await loadStoredGraph(created.id);
+    assert.deepEqual(loaded?.graph, graph);
   } finally {
     globalThis.indexedDB = originalIndexedDb;
   }
 });
 
-test("saveGraphToStorage deletes orphaned image assets", async () => {
+test("saveStoredGraph deletes orphaned image assets per document", async () => {
   const graph = createGraph();
   const fakeIndexedDb = createFakeIndexedDB();
   const originalIndexedDb = globalThis.indexedDB;
@@ -134,18 +145,22 @@ test("saveGraphToStorage deletes orphaned image assets", async () => {
   globalThis.indexedDB = fakeIndexedDb;
 
   try {
-    assert.equal(await saveGraphToStorage(graph), true);
+    const created = await createStoredGraph(graph);
+    assert.ok(created?.id);
 
     const graphWithoutImage = {
       ...graph,
       nodes: [graph.nodes[0]],
       edges: [],
     };
-    assert.equal(await saveGraphToStorage(graphWithoutImage), true);
+    const saved = await saveStoredGraph(created.id, graphWithoutImage);
+    assert.equal(saved?.id, created.id);
 
-    const dbState = fakeIndexedDb.__getDbState("hypernode.graph");
+    const dbState = fakeIndexedDb.__getDbState("hypernode.documents");
     assert.equal(
-      dbState.stores.get("assets").records.has("node-image:n-image"),
+      dbState.stores
+        .get("assets")
+        .records.has(`${created.id}::node-image:n-image`),
       false,
     );
   } finally {
@@ -163,6 +178,9 @@ test("saveAppSettingsToStorage and loadAppSettingsFromStorage still use localSto
     },
     setItem(key, value) {
       storage.set(key, value);
+    },
+    removeItem(key) {
+      storage.delete(key);
     },
   };
 
@@ -254,13 +272,112 @@ test("graph validation and store import preserve explicit node geometry and meta
   assert.deepEqual(store.getState().nodes, graph.nodes);
 });
 
-test("loadGraphFromStorage returns null when IndexedDB is unavailable", async () => {
+test("document library tracks active document id in localStorage", () => {
+  const storage = new Map();
+  const originalLocalStorage = globalThis.localStorage;
+
+  globalThis.localStorage = {
+    getItem(key) {
+      return storage.has(key) ? storage.get(key) : null;
+    },
+    setItem(key, value) {
+      storage.set(key, value);
+    },
+    removeItem(key) {
+      storage.delete(key);
+    },
+  };
+
+  try {
+    setActiveGraphId("doc-123");
+    assert.equal(getActiveGraphId(), "doc-123");
+    setActiveGraphId(null);
+    assert.equal(getActiveGraphId(), null);
+  } finally {
+    globalThis.localStorage = originalLocalStorage;
+  }
+});
+
+test("listStoredGraphs returns multiple stored documents ordered by updatedAt", async () => {
+  const fakeIndexedDb = createFakeIndexedDB();
+  const originalIndexedDb = globalThis.indexedDB;
+  const originalDateNow = Date.now;
+  let now = 1_700_000_000_000;
+
+  globalThis.indexedDB = fakeIndexedDb;
+  Date.now = () => {
+    now += 1000;
+    return now;
+  };
+
+  try {
+    const first = await createStoredGraph({ ...createGraph(), name: "First" });
+    const second = await createStoredGraph({ ...createGraph(), name: "Second" });
+    await saveStoredGraph(first.id, { ...createGraph(), name: "Updated first" });
+
+    const listed = await listStoredGraphs();
+    assert.equal(listed.length, 2);
+    assert.equal(
+      listed.some(
+        (entry) => entry.id === first.id && entry.name === "Updated first",
+      ),
+      true,
+    );
+    assert.equal(listed[0].updatedAt >= listed[1].updatedAt, true);
+  } finally {
+    globalThis.indexedDB = originalIndexedDb;
+    Date.now = originalDateNow;
+  }
+});
+
+test("deleteStoredGraph removes only its own assets", async () => {
+  const fakeIndexedDb = createFakeIndexedDB();
+  const originalIndexedDb = globalThis.indexedDB;
+
+  globalThis.indexedDB = fakeIndexedDb;
+
+  try {
+    const first = await createStoredGraph(createGraph());
+    const second = await createStoredGraph({
+      ...createGraph(),
+      nodes: [
+        {
+          ...createGraph().nodes[1],
+          id: "n-image-2",
+          imageData: "data:image/png;base64,d29ybGQ=",
+        },
+      ],
+      edges: [],
+      frames: [],
+    });
+
+    assert.equal(await deleteStoredGraph(first.id), true);
+
+    const dbState = fakeIndexedDb.__getDbState("hypernode.documents");
+    assert.equal(
+      dbState.stores
+        .get("assets")
+        .records.has(`${first.id}::node-image:n-image`),
+      false,
+    );
+    assert.equal(
+      dbState.stores
+        .get("assets")
+        .records.has(`${second.id}::node-image:n-image-2`),
+      true,
+    );
+  } finally {
+    globalThis.indexedDB = originalIndexedDb;
+  }
+});
+
+test("loadStoredGraph returns null when IndexedDB is unavailable", async () => {
   const originalIndexedDb = globalThis.indexedDB;
   globalThis.indexedDB = undefined;
 
   try {
-    assert.equal(await loadGraphFromStorage(), null);
-    assert.equal(await saveGraphToStorage(createGraph()), false);
+    assert.equal(await loadStoredGraph("missing"), null);
+    assert.equal(await createStoredGraph(createGraph()), null);
   } finally {
     globalThis.indexedDB = originalIndexedDb;
   }
@@ -271,12 +388,12 @@ test("IndexedDB open failure and write failure do not throw uncaught errors", as
 
   try {
     globalThis.indexedDB = createFakeIndexedDB({ failOpen: true });
-    assert.equal(await loadGraphFromStorage(), null);
+    assert.equal(await loadStoredGraph("missing"), null);
 
     globalThis.indexedDB = createFakeIndexedDB({
-      failPutInStore: "graphs",
+      failPutInStore: "documents",
     });
-    assert.equal(await saveGraphToStorage(createGraph()), false);
+    assert.equal(await createStoredGraph(createGraph()), null);
   } finally {
     globalThis.indexedDB = originalIndexedDb;
   }
@@ -333,6 +450,7 @@ function createDatabase(name, state, options) {
     createObjectStore(storeName, config = {}) {
       if (!state.stores.has(storeName)) {
         state.stores.set(storeName, {
+          name: storeName,
           keyPath: config.keyPath ?? null,
           records: new Map(),
         });
@@ -416,11 +534,23 @@ function createObjectStoreApi(storeState, transaction, options) {
       });
       return request;
     },
+    getAll() {
+      const request = createRequest();
+      queueMicrotask(() => {
+        request.result = [...storeState.records.values()].map(cloneValue);
+        request.dispatch("success");
+      });
+      return request;
+    },
     put(value, key) {
       const request = createRequest();
       transaction?.__queueOperation();
       queueMicrotask(() => {
-        if (options.failPutInStore && transaction && options.failPutInStore === inferStoreName(storeState)) {
+        if (
+          options.failPutInStore &&
+          transaction &&
+          options.failPutInStore === storeState.name
+        ) {
           const error = new Error("put failed");
           request.error = error;
           request.dispatch("error");
@@ -448,11 +578,6 @@ function createObjectStoreApi(storeState, transaction, options) {
       return request;
     },
   };
-}
-
-function inferStoreName(targetStoreState) {
-  if (targetStoreState.keyPath === "id") return "assets";
-  return "graphs";
 }
 
 function createRequest() {

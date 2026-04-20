@@ -764,6 +764,8 @@ select:focus-visible {
 .frame__tool-btn:focus-visible,
 #about-close-btn:hover,
 #about-close-btn:focus-visible,
+#documents-close-btn:hover,
+#documents-close-btn:focus-visible,
 #settings-close-btn:hover,
 #settings-close-btn:focus-visible {
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
@@ -3542,6 +3544,107 @@ kbd {
   text-align: center;
 }
 
+.documents-dialog {
+  width: min(760px, calc(100vw - 24px));
+  max-width: none;
+}
+
+.documents-dialog__article {
+  display: grid;
+  width: auto;
+  height: min(720px, calc(100vh - 24px));
+  min-height: 0;
+  gap: 16px;
+}
+
+.documents-dialog__body {
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.documents-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.documents-dialog__panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.documents-dialog__list {
+  display: grid;
+  gap: 10px;
+}
+
+.documents-dialog__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+}
+
+.documents-dialog__item.is-active {
+  border-color: color-mix(in srgb, var(--accent) 68%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.documents-dialog__open {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.documents-dialog__open:hover .documents-dialog__title,
+.documents-dialog__open:focus-visible .documents-dialog__title {
+  color: color-mix(in srgb, var(--text) 76%, var(--accent));
+}
+
+.documents-dialog__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.documents-dialog__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 620;
+}
+
+.documents-dialog__badge {
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: color-mix(in srgb, var(--text) 76%, var(--accent));
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.documents-dialog__meta {
+  color: color-mix(in srgb, var(--text) 84%, var(--muted));
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.documents-dialog__delete {
+  min-width: auto;
+  padding: 8px 10px;
+  text-align: center;
+}
+
 .about-dialog__shortcut-list {
   list-style: none;
   margin: 0;
@@ -3594,7 +3697,8 @@ kbd {
 
 #about-close-btn,
 #shortcuts-close-btn,
-#settings-close-btn {
+#settings-close-btn,
+#documents-close-btn {
   width: 32px;
   height: 32px;
   min-width: 32px;

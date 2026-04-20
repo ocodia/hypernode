@@ -2,7 +2,7 @@
 
 hypernode is a lightweight browser-based editor for building connected thinking spaces fast.
 
-It runs fully client-side with no backend and no account system. Hypernode graph data autosaves in IndexedDB, app settings live in `localStorage`, and hypernodes can be opened or saved as JSON files.
+It runs fully client-side with no backend and no account system. Hypernode graph data autosaves to a multi-document IndexedDB library, app settings live in `localStorage`, and hypernodes can be imported from or exported to JSON files.
 
 Hypernode includes a lightweight built-in design system for surfaces, buttons, dialogs, inputs, and canvas objects. Appearance is preset-driven, stored with the document, and includes a shared radius scale that applies across controls, nodes, and frames.
 
@@ -46,10 +46,11 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 - Zoom with mouse wheel/trackpad (bounded: `0.35` to `2.5`).
 - Reset view to default pan/zoom.
 - Undo/redo via toolbar and keyboard shortcuts.
-- Auto-save hypernodes to browser storage.
-- Open/save hypernode JSON files with validation and status toast feedback.
+- Auto-save multiple hypernodes to browser storage with fast document switching.
+- Documents modal for opening, creating, and deleting stored hypernodes.
+- Import/export hypernode JSON files with validation and status toast feedback.
 - Toasts render in any screen corner, use accent-highlighted glass surfaces, and auto-resolve away from occupied toolbar/meta placements.
-- Start a new hypernode from the toolbar (with discard confirmation when existing hypernode data is present).
+- Start a new stored hypernode from the toolbar without disturbing existing saved hypernodes.
 - Built-in semantic design system for surfaces, buttons, inputs, dialogs, toolbar controls, nodes, and frames.
 - Curated hypernode-level UI theme presets (`blueprint`, `fjord`, `slate`, `paper`, `ember`, `chalkboard`, `citrine`, `canopy`, `tidepool`, and `dusk`) saved with the document through a modular theme registry.
 - Shared UI radius presets (`sharp`, `soft`, `rounded`) that affect controls, dialogs, nodes, frames, image wells, and selection chrome.
@@ -69,8 +70,8 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
   - metadata position (`top left`, `top right`, `bottom left`, or `bottom right`)
 - Toolbar color picks affect only the current node or frame selection and do not change the default color for newly created nodes.
 - Hypernode name is shown in a glassy metadata chip with a file icon and live canvas coordinates; its corner position is configurable, the browser tab title stays in sync, and double-clicking the file icon opens a rename modal.
-- First-time Save suggests a filename based on the hypernode name.
-- Open/save toolbar actions use the File System Access API and are disabled in browsers that do not support it.
+- First-time Export suggests a filename based on the hypernode name.
+- Import/export toolbar actions use the File System Access API and are disabled in browsers that do not support it.
 - Installable PWA with offline app-shell caching.
 - Interaction-state cursor feedback for drag/connect workflows.
 - Searchable keyboard shortcuts dialog with key/action matching, including punctuation-light searches such as `comma`, `slash`, `?`, and `delete`.
@@ -83,8 +84,9 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 Use the shortcuts dialog to search by key combo or action name.
 
 - `Delete` / `Backspace`: delete selected node/edge
-- `Ctrl/Cmd + Shift + H`: create a new hypernode
-- `Ctrl/Cmd + O`: open a hypernode file
+- `Ctrl/Cmd + Shift + H`: create a new stored hypernode
+- `Ctrl/Cmd + Shift + O`: open the documents library
+- `Ctrl/Cmd + O`: import a hypernode file
 - `N`: add a text node at the current pointer position
 - `I`: add an image node
 - `F`: toggle frame draw mode
@@ -93,7 +95,7 @@ Use the shortcuts dialog to search by key combo or action name.
 - `Ctrl/Cmd + Arrow` (`Up`/`Down`/`Left`/`Right`): follow connected node in that direction, otherwise nearest
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Y` or `Ctrl/Cmd + Shift + Z`: redo
-- `Ctrl/Cmd + S`: save hypernode file
+- `Ctrl/Cmd + S`: export hypernode file
 - `Ctrl/Cmd + 0`: reset view
 - `Ctrl/Cmd + Enter`: toggle selected node/frame editor
 - `Ctrl/Cmd + Alt + Enter`: toggle Focus mode for the selected node

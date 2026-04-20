@@ -87,10 +87,13 @@ FR-19
 Users must be able to import graph JSON.
 
 FR-20  
-Import must validate payload before replacing current graph.
+Import must validate payload before creating a new stored hypernode.
 
 FR-21  
 Import/export operations should provide visible status feedback.
+
+FR-21a
+The app must provide a document library for listing, switching, creating, and deleting stored hypernodes.
 
 ### Undo/Redo and Keyboard
 
@@ -110,7 +113,7 @@ FR-26
 Users must be able to resize selected nodes from corner handles.
 
 FR-27
-Users must be able to start a new graph from the toolbar, with a confirmation prompt before discarding an existing non-empty graph.
+Users must be able to start a new stored graph from the toolbar without overwriting other stored hypernodes.
 
 FR-28
 Selection toolbars must allow applying palette colors to selected nodes and frames without changing the default color used for newly created nodes.

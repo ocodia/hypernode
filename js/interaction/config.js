@@ -3,15 +3,22 @@ export const SHORTCUT_CATALOG = [
     id: 'new-graph',
     keys: ['Ctrl/Cmd + Shift + H'],
     title: 'New hypernode',
-    description: 'Creates a new hypernode file.',
-    searchTokens: ['new', 'graph', 'file', 'create'],
+    description: 'Creates a new stored hypernode.',
+    searchTokens: ['new', 'graph', 'document', 'create'],
   },
   {
     id: 'open-graph',
     keys: ['Ctrl/Cmd + O'],
-    title: 'Open hypernode',
-    description: 'Opens a hypernode file.',
+    title: 'Import hypernode',
+    description: 'Imports a hypernode JSON file as a new stored hypernode.',
     searchTokens: ['open', 'graph', 'file', 'import'],
+  },
+  {
+    id: 'open-documents',
+    keys: ['Ctrl/Cmd + Shift + O'],
+    title: 'Open documents',
+    description: 'Opens the stored hypernode library.',
+    searchTokens: ['documents', 'library', 'stored', 'switch'],
   },
   {
     id: 'add-node',
@@ -72,8 +79,8 @@ export const SHORTCUT_CATALOG = [
   {
     id: 'save',
     keys: ['Ctrl/Cmd + S'],
-    title: 'Save hypernode file',
-    description: 'Saves the current hypernode file.',
+    title: 'Export hypernode',
+    description: 'Exports the current hypernode as a JSON file.',
     searchTokens: ['save', 'file', 'export'],
   },
   {
@@ -143,11 +150,12 @@ export const SHORTCUT_CATALOG = [
 
 export const TOOLBAR_SHORTCUTS = {
   'new-graph-btn': { label: 'New file', shortcut: 'Ctrl/Cmd+Shift+H' },
+  'documents-btn': { label: 'Documents', shortcut: 'Ctrl/Cmd+Shift+O' },
   'add-node-btn': { label: 'Add node', shortcut: 'N' },
   'add-image-btn': { label: 'Add image node', shortcut: 'I' },
   'add-frame-btn': { label: 'Draw frame', shortcut: 'F' },
-  'open-graph-btn': { label: 'Open file', shortcut: 'Ctrl/Cmd+O' },
-  'save-graph-btn': { label: 'Save file', shortcut: 'Ctrl/Cmd+S' },
+  'open-graph-btn': { label: 'Import', shortcut: 'Ctrl/Cmd+O' },
+  'save-graph-btn': { label: 'Export', shortcut: 'Ctrl/Cmd+S' },
   'undo-btn': { label: 'Undo', shortcut: 'Ctrl/Cmd+Z' },
   'redo-btn': { label: 'Redo', shortcut: 'Ctrl/Cmd+Y' },
   'reset-view-btn': { label: 'Reset view', shortcut: 'Ctrl/Cmd+0' },

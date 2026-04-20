@@ -1,5 +1,14 @@
 import { bindInteractions } from "./interaction/bindings.js";
-import { loadAppSettingsFromStorage, loadGraphFromStorage, saveAppSettingsToStorage, saveGraphToStorage } from "./persistence/storage.js";
+import {
+  createStoredGraph,
+  getActiveGraphId,
+  listStoredGraphs,
+  loadAppSettingsFromStorage,
+  loadStoredGraph,
+  saveAppSettingsToStorage,
+  saveStoredGraph,
+  setActiveGraphId,
+} from "./persistence/storage.js";
 import { createRenderer } from "./render/renderer.js";
 import { createStore } from "./state/store.js";
 
@@ -26,10 +35,9 @@ const elements = {
 void bootstrap();
 
 async function bootstrap() {
-  const initialGraph = await loadGraphFromStorage();
-  const initialSettings =
-    loadAppSettingsFromStorage() ?? initialGraph?.settings ?? null;
-  const store = createStore(initialGraph, initialSettings);
+  const initial = await resolveInitialStoredGraph();
+  const initialSettings = loadAppSettingsFromStorage() ?? null;
+  const store = createStore(initial.graph, initialSettings);
   const renderer = createRenderer(elements, store);
 
   let saveHandle = null;
@@ -39,14 +47,23 @@ async function bootstrap() {
     renderer.render(state);
 
     if (saveHandle) window.clearTimeout(saveHandle);
+    const graphSnapshot = snapshotGraphState(state);
+    const settingsSnapshot = cloneSettingsSnapshot(state.settings);
+    const activeDocumentId = getActiveGraphId();
+
     saveHandle = window.setTimeout(() => {
       const requestToken = ++saveRequestToken;
-      void persistStateSnapshot(state, requestToken);
+      void persistStateSnapshot(
+        activeDocumentId,
+        graphSnapshot,
+        settingsSnapshot,
+        requestToken,
+      );
     }, 120);
   });
 
   bindInteractions(elements, store, {
-    hasPersistedViewport: Boolean(initialGraph?.viewport),
+    hasPersistedViewport: Boolean(initial.graph?.viewport),
   });
 
   if (elements.workspace instanceof HTMLElement) {
@@ -56,19 +73,81 @@ async function bootstrap() {
   renderer.render(store.getState());
   registerServiceWorker();
 
-  async function persistStateSnapshot(state, requestToken) {
-    const graph = {
-      name: state.name,
-      nodes: state.nodes,
-      frames: state.frames,
-      edges: state.edges,
-      viewport: state.viewport,
-    };
-
-    await saveGraphToStorage(graph);
+  async function persistStateSnapshot(
+    activeDocumentId,
+    graphSnapshot,
+    settingsSnapshot,
+    requestToken,
+  ) {
+    if (activeDocumentId) {
+      await saveStoredGraph(activeDocumentId, graphSnapshot);
+    }
     if (requestToken !== saveRequestToken) return;
-    saveAppSettingsToStorage(state.settings);
+    saveAppSettingsToStorage(settingsSnapshot);
   }
+}
+
+async function resolveInitialStoredGraph() {
+  const storedGraphs = await listStoredGraphs();
+  if (!storedGraphs.length) {
+    const graph = createBlankGraph();
+    const created = await createStoredGraph(graph);
+    if (created?.id) {
+      setActiveGraphId(created.id);
+    }
+    return {
+      id: created?.id || null,
+      graph,
+      graphSummary: created?.graphSummary || null,
+    };
+  }
+
+  const activeGraphId = getActiveGraphId();
+  const candidateIds = [
+    activeGraphId,
+    ...storedGraphs.map((graph) => graph.id).filter((id) => id !== activeGraphId),
+  ].filter(Boolean);
+
+  for (const id of candidateIds) {
+    const loaded = await loadStoredGraph(id);
+    if (!loaded?.graph) continue;
+    setActiveGraphId(id);
+    return loaded;
+  }
+
+  const fallbackGraph = createBlankGraph();
+  const created = await createStoredGraph(fallbackGraph);
+  if (created?.id) {
+    setActiveGraphId(created.id);
+  }
+  return {
+    id: created?.id || null,
+    graph: fallbackGraph,
+    graphSummary: created?.graphSummary || null,
+  };
+}
+
+function snapshotGraphState(state) {
+  return {
+    name: state.name,
+    nodes: state.nodes,
+    frames: state.frames,
+    edges: state.edges,
+    viewport: state.viewport,
+  };
+}
+
+function cloneSettingsSnapshot(settings) {
+  return JSON.parse(JSON.stringify(settings || {}));
+}
+
+function createBlankGraph() {
+  return {
+    name: "Untitled",
+    nodes: [],
+    frames: [],
+    edges: [],
+  };
 }
 
 function registerServiceWorker() {

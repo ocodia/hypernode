@@ -1,42 +1,146 @@
 import {
+  ACTIVE_GRAPH_ID_STORAGE_KEY,
   SETTINGS_STORAGE_KEY,
-  STORAGE_KEY,
 } from "../utils/constants.js";
-import { sanitizeAppSettings, validateGraphPayload } from "../utils/graph.js";
 import { serializeGraphDocument } from "./document.js";
+import { sanitizeAppSettings, validateGraphPayload } from "../utils/graph.js";
 
-const GRAPH_DB_NAME = "hypernode.graph";
+const GRAPH_DB_NAME = "hypernode.documents";
 const GRAPH_DB_VERSION = 1;
-const GRAPH_STORE_NAME = "graphs";
+const DOCUMENT_STORE_NAME = "documents";
 const ASSET_STORE_NAME = "assets";
-const CURRENT_GRAPH_KEY = "current";
 
-export async function loadGraphFromStorage() {
+export async function listStoredGraphs() {
+  try {
+    const db = await openGraphDatabase();
+    if (!db) return [];
+
+    const records = await getAllRecords(db, DOCUMENT_STORE_NAME);
+    return records
+      .filter(isPersistedDocumentRecord)
+      .map(toStoredGraphSummary)
+      .sort(compareStoredGraphSummaries);
+  } catch {
+    return [];
+  }
+}
+
+export async function createStoredGraph(initialGraph = null) {
   try {
     const db = await openGraphDatabase();
     if (!db) return null;
 
-    const persisted = await getRecord(db, GRAPH_STORE_NAME, CURRENT_GRAPH_KEY);
-    if (!isPersistedGraphRecord(persisted)) return null;
+    const graph = serializeGraphDocument(initialGraph || createBlankGraph());
+    const documentId = createStoredGraphId();
+    const timestamps = createDocumentTimestamps();
+    const persisted = await createPersistedDocumentRecord(
+      documentId,
+      graph,
+      timestamps,
+    );
 
-    const graph = await hydratePersistedGraphRecord(db, persisted);
-    return validateGraphPayload(graph) ? graph : null;
+    await writePersistedDocumentRecord(db, persisted);
+    return {
+      id: documentId,
+      graphSummary: toStoredGraphSummary(persisted.record),
+    };
   } catch {
     return null;
   }
 }
 
-export async function saveGraphToStorage(graph) {
+export async function loadStoredGraph(id) {
   try {
+    if (typeof id !== "string" || !id) return null;
+
+    const db = await openGraphDatabase();
+    if (!db) return null;
+
+    const record = await getRecord(db, DOCUMENT_STORE_NAME, id);
+    if (!isPersistedDocumentRecord(record)) return null;
+
+    const graph = await hydratePersistedDocumentRecord(db, record);
+    if (!validateGraphPayload(graph)) return null;
+
+    return {
+      id,
+      graph,
+      graphSummary: toStoredGraphSummary(record),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function saveStoredGraph(id, graph) {
+  try {
+    if (typeof id !== "string" || !id) return null;
+
+    const db = await openGraphDatabase();
+    if (!db) return null;
+
+    const existing = await getRecord(db, DOCUMENT_STORE_NAME, id);
+    const timestamps = createDocumentTimestamps(existing);
+    const persisted = await createPersistedDocumentRecord(
+      id,
+      serializeGraphDocument(graph),
+      timestamps,
+    );
+
+    await writePersistedDocumentRecord(db, persisted);
+    return toStoredGraphSummary(persisted.record);
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteStoredGraph(id) {
+  try {
+    if (typeof id !== "string" || !id) return false;
+
     const db = await openGraphDatabase();
     if (!db) return false;
 
-    const document = serializeGraphDocument(graph);
-    const persisted = await createPersistedGraphRecord(document);
-    await writePersistedGraphRecord(db, persisted);
+    const assetRecords = await getAllRecords(db, ASSET_STORE_NAME);
+    const transaction = db.transaction(
+      [DOCUMENT_STORE_NAME, ASSET_STORE_NAME],
+      "readwrite",
+    );
+    const documentStore = transaction.objectStore(DOCUMENT_STORE_NAME);
+    const assetStore = transaction.objectStore(ASSET_STORE_NAME);
+
+    documentStore.delete(id);
+    for (const assetRecord of assetRecords) {
+      if (assetRecord?.documentId === id) {
+        assetStore.delete(assetRecord.id);
+      }
+    }
+
+    await waitForTransaction(transaction);
     return true;
   } catch {
     return false;
+  }
+}
+
+export function getActiveGraphId() {
+  try {
+    const value = localStorage.getItem(ACTIVE_GRAPH_ID_STORAGE_KEY);
+    return typeof value === "string" && value ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setActiveGraphId(id) {
+  try {
+    if (typeof id === "string" && id) {
+      localStorage.setItem(ACTIVE_GRAPH_ID_STORAGE_KEY, id);
+      return;
+    }
+    localStorage.removeItem(ACTIVE_GRAPH_ID_STORAGE_KEY);
+  } catch {
+    // Ignore localStorage failures.
   }
 }
 
@@ -57,63 +161,65 @@ export function saveAppSettingsToStorage(settings) {
   );
 }
 
-function openGraphDatabase() {
-  if (
-    typeof globalThis.indexedDB === "undefined" ||
-    typeof globalThis.indexedDB.open !== "function"
-  ) {
-    return Promise.resolve(null);
-  }
-
-  return new Promise((resolve, reject) => {
-    const request = globalThis.indexedDB.open(GRAPH_DB_NAME, GRAPH_DB_VERSION);
-
-    request.addEventListener("upgradeneeded", () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(GRAPH_STORE_NAME)) {
-        db.createObjectStore(GRAPH_STORE_NAME);
-      }
-      if (!db.objectStoreNames.contains(ASSET_STORE_NAME)) {
-        db.createObjectStore(ASSET_STORE_NAME, { keyPath: "id" });
-      }
-    });
-    request.addEventListener("success", () => resolve(request.result));
-    request.addEventListener("error", () => reject(request.error));
-  });
+export async function loadGraphFromStorage() {
+  const activeId = getActiveGraphId();
+  if (!activeId) return null;
+  const loaded = await loadStoredGraph(activeId);
+  return loaded?.graph ?? null;
 }
 
-async function hydratePersistedGraphRecord(db, persisted) {
-  const nodes = await Promise.all(
-    persisted.nodes.map(async (node) => {
-      if (
-        node?.kind !== "image" ||
-        typeof node?.imageAssetId !== "string" ||
-        !node.imageAssetId
-      ) {
-        return { ...node };
-      }
+export async function saveGraphToStorage(graph) {
+  const activeId = getActiveGraphId();
+  if (!activeId) return false;
+  return Boolean(await saveStoredGraph(activeId, graph));
+}
 
-      const asset = await getRecord(db, ASSET_STORE_NAME, node.imageAssetId);
-      const imageData = asset?.blob ? await blobToDataUrl(asset.blob) : null;
-      const hydratedNode = {
-        ...node,
-        ...(typeof imageData === "string" ? { imageData } : {}),
-      };
-      delete hydratedNode.imageAssetId;
-      return hydratedNode;
-    }),
-  );
-
+function createBlankGraph() {
   return {
-    name: persisted.name,
-    nodes,
-    frames: Array.isArray(persisted.frames) ? persisted.frames : [],
-    edges: Array.isArray(persisted.edges) ? persisted.edges : [],
-    viewport: persisted.viewport,
+    name: "Untitled",
+    nodes: [],
+    frames: [],
+    edges: [],
   };
 }
 
-async function createPersistedGraphRecord(graph) {
+function createStoredGraphId() {
+  if (
+    globalThis.crypto &&
+    typeof globalThis.crypto.randomUUID === "function"
+  ) {
+    return globalThis.crypto.randomUUID();
+  }
+  return `hypernode-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+function createDocumentTimestamps(existing = null) {
+  const updatedAt = Date.now();
+  const createdAt =
+    Number.isFinite(existing?.createdAt) && existing.createdAt > 0
+      ? existing.createdAt
+      : updatedAt;
+  return { createdAt, updatedAt };
+}
+
+function toStoredGraphSummary(record) {
+  return {
+    id: record.id,
+    name: String(record.name || "Untitled"),
+    createdAt: Number(record.createdAt) || 0,
+    updatedAt: Number(record.updatedAt) || 0,
+  };
+}
+
+function compareStoredGraphSummaries(a, b) {
+  return (
+    Number(b?.updatedAt || 0) - Number(a?.updatedAt || 0) ||
+    String(a?.name || "").localeCompare(String(b?.name || "")) ||
+    String(a?.id || "").localeCompare(String(b?.id || ""))
+  );
+}
+
+async function createPersistedDocumentRecord(documentId, graph, timestamps) {
   const assetIds = new Set();
   const nodes = await Promise.all(
     (Array.isArray(graph.nodes) ? graph.nodes : []).map(async (node) => {
@@ -128,14 +234,17 @@ async function createPersistedGraphRecord(graph) {
       }
 
       const imageAssetId = buildNodeImageAssetId(node.id);
+      const storedAssetId = buildStoredAssetId(documentId, imageAssetId);
       const blob = await dataUrlToBlob(node.imageData);
-      assetIds.add(imageAssetId);
+      assetIds.add(storedAssetId);
 
       const nextNode = {
         ...node,
         imageAssetId,
         imageAsset: {
-          id: imageAssetId,
+          id: storedAssetId,
+          documentId,
+          assetId: imageAssetId,
           mimeType: blob.type || inferMimeTypeFromDataUrl(node.imageData),
           blob,
         },
@@ -146,25 +255,67 @@ async function createPersistedGraphRecord(graph) {
   );
 
   return {
-    name: graph?.name,
-    nodes,
-    frames: Array.isArray(graph?.frames) ? graph.frames : [],
-    edges: Array.isArray(graph?.edges) ? graph.edges : [],
-    viewport: graph?.viewport,
+    record: {
+      id: documentId,
+      name: graph.name,
+      createdAt: timestamps.createdAt,
+      updatedAt: timestamps.updatedAt,
+      nodes,
+      frames: Array.isArray(graph.frames) ? graph.frames : [],
+      edges: Array.isArray(graph.edges) ? graph.edges : [],
+      viewport: graph.viewport,
+    },
     assetIds,
   };
 }
 
-async function writePersistedGraphRecord(db, persisted) {
-  const existingAssetIds = new Set(await getAllKeys(db, ASSET_STORE_NAME));
+async function hydratePersistedDocumentRecord(db, record) {
+  const nodes = await Promise.all(
+    record.nodes.map(async (node) => {
+      if (
+        node?.kind !== "image" ||
+        typeof node?.imageAssetId !== "string" ||
+        !node.imageAssetId
+      ) {
+        return { ...node };
+      }
+
+      const assetRecord = await getRecord(
+        db,
+        ASSET_STORE_NAME,
+        buildStoredAssetId(record.id, node.imageAssetId),
+      );
+      const imageData = assetRecord?.blob
+        ? await blobToDataUrl(assetRecord.blob)
+        : null;
+      const hydratedNode = {
+        ...node,
+        ...(typeof imageData === "string" ? { imageData } : {}),
+      };
+      delete hydratedNode.imageAssetId;
+      return hydratedNode;
+    }),
+  );
+
+  return {
+    name: record.name,
+    nodes,
+    frames: Array.isArray(record.frames) ? record.frames : [],
+    edges: Array.isArray(record.edges) ? record.edges : [],
+    viewport: record.viewport,
+  };
+}
+
+async function writePersistedDocumentRecord(db, persisted) {
+  const assetRecords = await getAllRecords(db, ASSET_STORE_NAME);
   const transaction = db.transaction(
-    [GRAPH_STORE_NAME, ASSET_STORE_NAME],
+    [DOCUMENT_STORE_NAME, ASSET_STORE_NAME],
     "readwrite",
   );
-  const graphStore = transaction.objectStore(GRAPH_STORE_NAME);
+  const documentStore = transaction.objectStore(DOCUMENT_STORE_NAME);
   const assetStore = transaction.objectStore(ASSET_STORE_NAME);
 
-  const storedNodes = persisted.nodes.map((node) => {
+  const storedNodes = persisted.record.nodes.map((node) => {
     if (
       node?.kind === "image" &&
       typeof node?.imageAssetId === "string" &&
@@ -178,24 +329,52 @@ async function writePersistedGraphRecord(db, persisted) {
     return { ...node };
   });
 
-  graphStore.put(
-    {
-      name: persisted.name,
-      nodes: storedNodes,
-      frames: persisted.frames,
-      edges: persisted.edges,
-      viewport: persisted.viewport,
-    },
-    CURRENT_GRAPH_KEY,
-  );
+  documentStore.put({
+    id: persisted.record.id,
+    name: persisted.record.name,
+    createdAt: persisted.record.createdAt,
+    updatedAt: persisted.record.updatedAt,
+    nodes: storedNodes,
+    frames: persisted.record.frames,
+    edges: persisted.record.edges,
+    viewport: persisted.record.viewport,
+  });
 
-  for (const assetId of existingAssetIds) {
-    if (!persisted.assetIds.has(assetId)) {
-      assetStore.delete(assetId);
+  for (const assetRecord of assetRecords) {
+    if (
+      assetRecord?.documentId === persisted.record.id &&
+      !persisted.assetIds.has(assetRecord.id)
+    ) {
+      assetStore.delete(assetRecord.id);
     }
   }
 
   await waitForTransaction(transaction);
+}
+
+function openGraphDatabase() {
+  if (
+    typeof globalThis.indexedDB === "undefined" ||
+    typeof globalThis.indexedDB.open !== "function"
+  ) {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve, reject) => {
+    const request = globalThis.indexedDB.open(GRAPH_DB_NAME, GRAPH_DB_VERSION);
+
+    request.addEventListener("upgradeneeded", () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(DOCUMENT_STORE_NAME)) {
+        db.createObjectStore(DOCUMENT_STORE_NAME, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(ASSET_STORE_NAME)) {
+        db.createObjectStore(ASSET_STORE_NAME, { keyPath: "id" });
+      }
+    });
+    request.addEventListener("success", () => resolve(request.result));
+    request.addEventListener("error", () => reject(request.error));
+  });
 }
 
 function getRecord(db, storeName, key) {
@@ -208,11 +387,11 @@ function getRecord(db, storeName, key) {
   });
 }
 
-function getAllKeys(db, storeName) {
+function getAllRecords(db, storeName) {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(storeName, "readonly");
     const store = transaction.objectStore(storeName);
-    const request = store.getAllKeys();
+    const request = store.getAll();
     request.addEventListener("success", () =>
       resolve(Array.isArray(request.result) ? request.result : []),
     );
@@ -232,10 +411,13 @@ function waitForTransaction(transaction) {
   });
 }
 
-function isPersistedGraphRecord(value) {
+function isPersistedDocumentRecord(value) {
   return (
     value &&
+    typeof value.id === "string" &&
     typeof value.name === "string" &&
+    Number.isFinite(value.createdAt) &&
+    Number.isFinite(value.updatedAt) &&
     Array.isArray(value.nodes) &&
     Array.isArray(value.edges) &&
     (value.frames === undefined || Array.isArray(value.frames))
@@ -244,6 +426,10 @@ function isPersistedGraphRecord(value) {
 
 function buildNodeImageAssetId(nodeId) {
   return `node-image:${String(nodeId || "")}`;
+}
+
+function buildStoredAssetId(documentId, assetId) {
+  return `${documentId}::${assetId}`;
 }
 
 async function dataUrlToBlob(dataUrl) {
@@ -319,5 +505,3 @@ function encodeUint8ArrayToBase64(bytes) {
 
   throw new Error("Base64 encoding is unavailable");
 }
-
-export { STORAGE_KEY };

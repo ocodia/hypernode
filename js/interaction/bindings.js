@@ -9,6 +9,16 @@ import {
   VIEWPORT_LIMITS,
 } from "../utils/constants.js";
 import {
+  createStoredGraph,
+  deleteStoredGraph,
+  getActiveGraphId,
+  listStoredGraphs,
+  loadStoredGraph,
+  saveStoredGraph,
+  setActiveGraphId,
+  saveAppSettingsToStorage,
+} from "../persistence/storage.js";
+import {
   openGraphFile,
   saveGraphFile,
   supportsFileSystemAccess,
@@ -56,7 +66,10 @@ export function bindInteractions(elements, store, options = {}) {
     selectionControlsLayer,
   } = elements;
   const canUseFileSystemAccess = supportsFileSystemAccess();
+  const exportFileHandles = new Map();
+  let activeDocumentId = getActiveGraphId();
   let currentFileHandle = null;
+  let documentsCache = [];
 
   let panSession = null;
   let dragSession = null;
@@ -82,6 +95,10 @@ export function bindInteractions(elements, store, options = {}) {
   let focusImageDragDepth = 0;
   let lastCanvasPointerClient = null;
   const contextMenu = createContextMenu();
+  const documentDateFormatter = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
   function endPanSession(pointerId = null) {
     if (!panSession) return;
@@ -3670,6 +3687,12 @@ export function bindInteractions(elements, store, options = {}) {
   const settingsDialog = document.getElementById("settings-dialog");
   const settingsBtn = document.getElementById("settings-btn");
   const settingsCloseBtn = document.getElementById("settings-close-btn");
+  const documentsDialog = document.getElementById("documents-dialog");
+  const documentsBtn = document.getElementById("documents-btn");
+  const documentsCloseBtn = document.getElementById("documents-close-btn");
+  const documentsCreateBtn = document.getElementById("documents-create-btn");
+  const documentsList = document.getElementById("documents-list");
+  const documentsEmptyState = document.getElementById("documents-empty-state");
   const settingsTabSelect = document.getElementById("settings-tab-select");
   const settingsThemeOptions = document.getElementById(
     "settings-theme-options",
@@ -3718,54 +3741,189 @@ export function bindInteractions(elements, store, options = {}) {
 
   renderThemeSettingsOptions(settingsThemeOptions);
 
-  function hasGraphData() {
+  function snapshotCurrentGraph() {
     const state = store.getState();
+    return {
+      name: state.name,
+      nodes: state.nodes,
+      frames: state.frames,
+      edges: state.edges,
+      viewport: state.viewport,
+    };
+  }
+
+  async function flushCurrentDocument() {
+    if (!activeDocumentId) return null;
+    saveAppSettingsToStorage(store.getState().settings);
+    const summary = await saveStoredGraph(activeDocumentId, snapshotCurrentGraph());
+    if (summary) {
+      upsertDocumentSummary(summary);
+    }
+    return summary;
+  }
+
+  function setActiveDocument(id) {
+    activeDocumentId = typeof id === "string" && id ? id : null;
+    setActiveGraphId(activeDocumentId);
+    currentFileHandle = activeDocumentId
+      ? exportFileHandles.get(activeDocumentId) || null
+      : null;
+  }
+
+  function upsertDocumentSummary(summary) {
+    if (!summary?.id) return;
+    documentsCache = [
+      summary,
+      ...documentsCache.filter((entry) => entry.id !== summary.id),
+    ].sort(compareDocumentSummaries);
+  }
+
+  function compareDocumentSummaries(a, b) {
     return (
-      state.nodes.length > 0 ||
-      state.frames.length > 0 ||
-      state.edges.length > 0
+      Number(b?.updatedAt || 0) - Number(a?.updatedAt || 0) ||
+      String(a?.name || "").localeCompare(String(b?.name || "")) ||
+      String(a?.id || "").localeCompare(String(b?.id || ""))
     );
   }
 
-  function confirmDiscardIfNeeded(action) {
-    if (!hasGraphData()) return true;
-    return window.confirm(`Discard the current hypernode and ${action}?`);
+  async function refreshDocumentsCache() {
+    documentsCache = await listStoredGraphs();
+    renderDocumentsList();
+    return documentsCache;
+  }
+
+  function formatDocumentTimestamp(value) {
+    if (!Number.isFinite(value) || value <= 0) return "Saved just now";
+    try {
+      return `Updated ${documentDateFormatter.format(value)}`;
+    } catch {
+      return "Updated recently";
+    }
+  }
+
+  function renderDocumentsList() {
+    if (!(documentsList instanceof HTMLElement)) return;
+    const activeName = store.getState().name;
+    const items = [...documentsCache].sort(compareDocumentSummaries);
+    documentsList.innerHTML = items
+      .map((summary) => {
+        const isActive = summary.id === activeDocumentId;
+        const displayName = isActive ? activeName : summary.name;
+        return `
+          <article class="documents-dialog__item${isActive ? " is-active" : ""}" role="listitem" data-document-id="${escapeHtmlForMarkup(summary.id)}">
+            <button class="documents-dialog__open" type="button" data-document-open="${escapeHtmlForMarkup(summary.id)}" aria-label="Open ${escapeHtmlForMarkup(displayName)}">
+              <span class="documents-dialog__title-row">
+                <span class="documents-dialog__title">${escapeHtmlForMarkup(displayName)}</span>
+                ${isActive ? '<span class="documents-dialog__badge">Current</span>' : ""}
+              </span>
+              <span class="documents-dialog__meta">${escapeHtmlForMarkup(formatDocumentTimestamp(summary.updatedAt))}</span>
+            </button>
+            <button class="documents-dialog__delete node__tool-btn--danger" type="button" data-document-delete="${escapeHtmlForMarkup(summary.id)}" aria-label="Delete ${escapeHtmlForMarkup(displayName)}" title="Delete hypernode">
+              <i class="bi bi-trash"></i>
+            </button>
+          </article>
+        `;
+      })
+      .join("");
+
+    if (documentsEmptyState instanceof HTMLElement) {
+      documentsEmptyState.hidden = items.length > 0;
+    }
+  }
+
+  async function openDocumentsDialog() {
+    if (!(documentsDialog instanceof HTMLDialogElement)) return;
+    await flushCurrentDocument();
+    await refreshDocumentsCache();
+    documentsDialog.showModal();
+  }
+
+  async function switchToStoredGraph(id) {
+    if (typeof id !== "string" || !id || id === activeDocumentId) {
+      if (documentsDialog?.open) {
+        renderDocumentsList();
+      }
+      return;
+    }
+
+    await flushCurrentDocument();
+    const loaded = await loadStoredGraph(id);
+    if (!loaded?.graph) {
+      store.setImportStatus("Switch failed. That hypernode is unavailable.");
+      await refreshDocumentsCache();
+      return;
+    }
+
+    setActiveDocument(id);
+    store.clearStarterNode();
+    store.replaceGraph(loaded.graph);
+    if (!loaded.graph.viewport) {
+      resetCanvasView();
+    }
+    upsertDocumentSummary(loaded.graphSummary);
+    renderDocumentsList();
+    documentsDialog?.close();
+    syncSettingsDialogFromState(
+      store.getState(),
+      settingsDialog,
+      positionButtons,
+      toolbarOrientationButtons,
+      settingsTabSelect,
+      settingsTabButtons,
+      settingsPanels,
+    );
+    store.setImportStatus("Switched hypernode.");
+  }
+
+  async function createAndOpenStoredGraph(graph, statusMessage, options = {}) {
+    await flushCurrentDocument();
+    const created = await createStoredGraph(graph);
+    if (!created?.id) {
+      store.setImportStatus("New hypernode failed. Try again.");
+      return;
+    }
+
+    setActiveDocument(created.id);
+    upsertDocumentSummary(created.graphSummary);
+    store.clearStarterNode();
+    store.replaceGraph(graph);
+    if (options.resetView !== false) {
+      resetCanvasView();
+    }
+    renderDocumentsList();
+    documentsDialog?.close();
+    store.setImportStatus(statusMessage);
   }
 
   async function handleOpenGraph() {
     if (!canUseFileSystemAccess) {
-      store.setImportStatus("Open hypernode is unavailable in this browser.");
-      return;
-    }
-
-    if (!confirmDiscardIfNeeded("open another hypernode")) {
+      store.setImportStatus("Import hypernode is unavailable in this browser.");
       return;
     }
 
     try {
-      const { handle, graph } = await openGraphFile();
-      currentFileHandle = handle;
-      store.clearStarterNode();
-      store.replaceGraph(graph);
-      syncSettingsDialogFromState(
-        store.getState(),
-        settingsDialog,
-        positionButtons,
-        toolbarOrientationButtons,
-        settingsTabSelect,
-        settingsTabButtons,
-        settingsPanels,
+      const { graph } = await openGraphFile();
+      const importedGraph = {
+        ...graph,
+        name:
+          typeof graph?.name === "string" && graph.name.trim()
+            ? graph.name
+            : GRAPH_DEFAULTS.name,
+      };
+      await createAndOpenStoredGraph(
+        importedGraph,
+        "Imported as new hypernode.",
+        { resetView: !importedGraph.viewport },
       );
-      store.setImportStatus("Hypernode opened.");
     } catch (error) {
       if (isAbortError(error)) return;
-      store.setImportStatus("Open failed: invalid hypernode JSON file.");
+      store.setImportStatus("Import failed: invalid hypernode JSON file.");
     }
   }
 
   async function handleSaveGraph() {
     if (!canUseFileSystemAccess) {
-      store.setImportStatus("Save hypernode is unavailable in this browser.");
+      store.setImportStatus("Export hypernode is unavailable in this browser.");
       return;
     }
 
@@ -3781,38 +3939,68 @@ export function bindInteractions(elements, store, options = {}) {
         },
         currentFileHandle,
       );
-      store.setImportStatus("Saved");
+      if (activeDocumentId) {
+        exportFileHandles.set(activeDocumentId, currentFileHandle);
+      }
+      store.setImportStatus("Exported.");
     } catch (error) {
       if (isAbortError(error)) return;
       store.setImportStatus(
-        "Save failed. Check file permissions and try again.",
+        "Export failed. Check file permissions and try again.",
       );
     }
   }
 
-  function handleNewGraph() {
-    if (!confirmDiscardIfNeeded("create a new one")) {
-      return;
-    }
-
-    currentFileHandle = null;
-    store.clearStarterNode();
-    store.replaceGraph({
+  async function handleNewGraph() {
+    const blankGraph = {
       name: GRAPH_DEFAULTS.name,
       nodes: [],
       frames: [],
       edges: [],
-    });
-    resetCanvasView();
-    syncSettingsDialogFromState(
-      store.getState(),
-      settingsDialog,
-      positionButtons,
-      toolbarOrientationButtons,
-      settingsTabSelect,
-      settingsTabButtons,
-      settingsPanels,
-    );
+    };
+    await createAndOpenStoredGraph(blankGraph, "New hypernode ready.");
+  }
+
+  async function handleDeleteStoredGraph(id) {
+    const summary =
+      documentsCache.find((entry) => entry.id === id) ||
+      documentsCache.find((entry) => entry.id === activeDocumentId);
+    const documentName =
+      id === activeDocumentId ? store.getState().name : summary?.name || "this hypernode";
+    if (!window.confirm(`Delete "${documentName}"?`)) {
+      return;
+    }
+
+    const wasActive = id === activeDocumentId;
+    if (wasActive) {
+      await flushCurrentDocument();
+    }
+    const deleted = await deleteStoredGraph(id);
+    if (!deleted) {
+      store.setImportStatus("Delete failed. Try again.");
+      return;
+    }
+
+    exportFileHandles.delete(id);
+    documentsCache = documentsCache.filter((entry) => entry.id !== id);
+
+    if (!wasActive) {
+      renderDocumentsList();
+      store.setImportStatus("Deleted hypernode.");
+      return;
+    }
+
+    const remaining = await refreshDocumentsCache();
+    if (remaining.length > 0) {
+      setActiveDocument(null);
+      await switchToStoredGraph(remaining[0].id);
+      store.setImportStatus("Deleted hypernode.");
+      return;
+    }
+
+    setActiveDocument(null);
+    await handleNewGraph();
+    store.setImportStatus("Deleted hypernode.");
   }
 
   async function handleAddImageNode() {
@@ -3903,6 +4091,7 @@ export function bindInteractions(elements, store, options = {}) {
     if (!(renameGraphInput instanceof HTMLInputElement)) return;
     store.clearStarterNode();
     store.setGraphName(renameGraphInput.value);
+    renderDocumentsList();
     renameGraphDialog?.close();
   }
 
@@ -4052,6 +4241,7 @@ export function bindInteractions(elements, store, options = {}) {
     bindDialogBackdropClose(aboutDialog);
     bindDialogBackdropClose(shortcutsDialog);
     bindDialogBackdropClose(settingsDialog);
+    bindDialogBackdropClose(documentsDialog);
     bindDialogBackdropClose(renameGraphDialog);
 
     if (aboutBtn && aboutDialog) {
@@ -4071,6 +4261,45 @@ export function bindInteractions(elements, store, options = {}) {
         }
       });
     }
+
+    documentsBtn?.addEventListener("click", () => {
+      if (!documentsDialog) return;
+      if (documentsDialog.open) {
+        documentsDialog.close();
+        return;
+      }
+      void openDocumentsDialog();
+    });
+
+    documentsCloseBtn?.addEventListener("click", () => {
+      if (documentsDialog?.open) {
+        documentsDialog.close();
+      }
+    });
+
+    documentsCreateBtn?.addEventListener("click", () => {
+      void handleNewGraph();
+    });
+
+    documentsList?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+
+      const deleteButton = target.closest("[data-document-delete]");
+      if (deleteButton instanceof HTMLElement) {
+        event.preventDefault();
+        event.stopPropagation();
+        void handleDeleteStoredGraph(deleteButton.dataset.documentDelete);
+        return;
+      }
+
+      const openButton = target.closest("[data-document-open]");
+      if (openButton instanceof HTMLElement) {
+        event.preventDefault();
+        event.stopPropagation();
+        void switchToStoredGraph(openButton.dataset.documentOpen);
+      }
+    });
 
     shortcutsBtn?.addEventListener("click", () => {
       if (!shortcutsDialog) return;
@@ -4313,7 +4542,9 @@ export function bindInteractions(elements, store, options = {}) {
         store.redo();
       });
 
-    newGraphBtn?.addEventListener("click", handleNewGraph);
+    newGraphBtn?.addEventListener("click", () => {
+      void handleNewGraph();
+    });
     openGraphBtn?.addEventListener("click", () => {
       void handleOpenGraph();
     });
@@ -4324,18 +4555,18 @@ export function bindInteractions(elements, store, options = {}) {
     if (!canUseFileSystemAccess) {
       if (openGraphBtn) {
         openGraphBtn.disabled = true;
-        openGraphBtn.title = "Open hypernode is unavailable in this browser";
+        openGraphBtn.title = "Import hypernode is unavailable in this browser";
         openGraphBtn.setAttribute(
           "aria-label",
-          "Open hypernode unavailable in this browser",
+          "Import hypernode unavailable in this browser",
         );
       }
       if (saveGraphBtn) {
         saveGraphBtn.disabled = true;
-        saveGraphBtn.title = "Save hypernode is unavailable in this browser";
+        saveGraphBtn.title = "Export hypernode is unavailable in this browser";
         saveGraphBtn.setAttribute(
           "aria-label",
-          "Save hypernode unavailable in this browser",
+          "Export hypernode unavailable in this browser",
         );
       }
     }
@@ -4347,6 +4578,7 @@ export function bindInteractions(elements, store, options = {}) {
         aboutDialog?.open ||
         shortcutsDialog?.open ||
         settingsDialog?.open ||
+        documentsDialog?.open ||
         renameGraphDialog?.open
       )
         return;
@@ -4386,7 +4618,18 @@ export function bindInteractions(elements, store, options = {}) {
         event.key.toLowerCase() === "h"
       ) {
         event.preventDefault();
-        handleNewGraph();
+        void handleNewGraph();
+        return;
+      }
+
+      if (
+        ctrlOrCmd &&
+        event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === "o"
+      ) {
+        event.preventDefault();
+        void openDocumentsDialog();
         return;
       }
 
@@ -4605,10 +4848,12 @@ export function bindInteractions(elements, store, options = {}) {
       settingsPanels,
     );
     scheduleSingleNodeToolbarPlacement();
+    renderDocumentsList();
   });
 
   renderShortcutCatalog();
   filterShortcuts("");
+  void refreshDocumentsCache();
   if (!options.hasPersistedViewport) {
     resetCanvasView();
   }

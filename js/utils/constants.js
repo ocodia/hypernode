@@ -2,6 +2,7 @@ import { THEME_PRESET_IDS } from "../shared/themes.js";
 
 export const STORAGE_KEY = "hypernode.graph.v2";
 export const SETTINGS_STORAGE_KEY = "hypernode.settings.v1";
+export const ACTIVE_GRAPH_ID_STORAGE_KEY = "hypernode.active-graph-id.v1";
 export const VIEWPORT_LIMITS = {
   minZoom: 0.35,
   maxZoom: 2.5,
