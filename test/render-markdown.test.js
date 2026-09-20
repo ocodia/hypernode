@@ -76,7 +76,7 @@ test('renderers use markdown output in view mode and raw text in edit mode', () 
     selection: { type: 'node', id: 'n1' },
     ui: { editingNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
   });
-  assert.match(nodesLayer.innerHTML, /<textarea class="node__editor-textarea" data-node-edit-description="n1" placeholder="Description" aria-label="Description"># Title/);
+  assert.match(nodesLayer.innerHTML, /<textarea class="node__editor-textarea" rows="1" data-node-edit-description="n1" placeholder="Description" aria-label="Description"># Title/);
 
   renderFrames(framesLayer, {
     nodes: [],
@@ -365,10 +365,10 @@ test('canvas node editing shows image without add or replace controls', () => {
     ui: { editingNodeId: 'n1', edgeDraft: null, nodeMembershipPreview: {} },
   });
 
-  assert.match(nodesLayer.innerHTML, /node__editor-layout node__editor-layout--canvas-image/);
-  assert.match(nodesLayer.innerHTML, /node__editor-fields node__editor-fields--canvas-image/);
-  assert.match(nodesLayer.innerHTML, /node__focus-media node__focus-media--has-image node__focus-media--canvas/);
-  assert.match(nodesLayer.innerHTML, /data-node-edit-title="n1"[^]*data-node-edit-description="n1"[^]*node__image-pane/);
+  assert.match(nodesLayer.innerHTML, /node__text-layout/);
+  assert.match(nodesLayer.innerHTML, /node__caption node__caption--editing/);
+
+  assert.match(nodesLayer.innerHTML, /node__image-pane[^]*data-node-edit-title="n1"[^]*data-node-edit-description="n1"/);
   assert.doesNotMatch(nodesLayer.innerHTML, /data-focus-image-dropzone="n1"/);
   assert.doesNotMatch(nodesLayer.innerHTML, /data-node-image-pick="n1"/);
   assert.doesNotMatch(nodesLayer.innerHTML, /data-node-image-remove="n1"/);

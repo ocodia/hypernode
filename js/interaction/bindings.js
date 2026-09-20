@@ -754,7 +754,7 @@ export function bindInteractions(elements, store, options = {}) {
     const node = store.addNode({
       x: point.x,
       y: point.y,
-      title: imageFileInfo.title || NODE_DEFAULTS.title,
+      title: "",
       description: "",
       kind: IMAGE_NODE_DEFAULTS.kind,
       imageData: imageFileInfo.dataUrl,
@@ -807,7 +807,7 @@ export function bindInteractions(elements, store, options = {}) {
       Math.round(width / imageMeta.aspectRatio),
     );
     return {
-      title: deriveNodeTitleFromFilename(file.name),
+      title: "",
       dataUrl,
       aspectRatio: imageMeta.aspectRatio,
       width,
@@ -1870,6 +1870,15 @@ export function bindInteractions(elements, store, options = {}) {
       return true;
     }
 
+    const layoutEl = event.target.closest("[data-toolbar-text-layout]");
+    if (layoutEl instanceof HTMLButtonElement) {
+      const ids = layoutEl.closest("[data-toolbar-target-ids]").dataset.toolbarTargetIds.split(",");
+      store.setNodesTextLayout(ids, { [layoutEl.dataset.toolbarTextLayout]: layoutEl.dataset.value });
+      closeToolbarPopover();
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
     const shapeEl = event.target.closest("[data-toolbar-shape-value]");
     if (shapeEl instanceof HTMLButtonElement) {
       const ids = shapeEl.closest("[data-toolbar-target-ids]").dataset.toolbarTargetIds.split(",");
@@ -2046,6 +2055,17 @@ export function bindInteractions(elements, store, options = {}) {
                 { separator: true },
               ]
             : []),
+          ...["top", "middle", "bottom", "below"].map(value => ({
+            label: value === "below" ? "Text below node" : `Text inside ${value}`,
+            icon: "bi-text-paragraph",
+            action: () => store.setNodesTextLayout([nodeId], { textPosition: value }),
+          })),
+          ...["left", "center", "right"].map(value => ({
+            label: `Align text ${value}`,
+            icon: `bi-text-${value}`,
+            action: () => store.setNodesTextLayout([nodeId], { textAlign: value }),
+          })),
+          { separator: true },
           ...["rectangle", "circle", "diamond"].map(shape => ({
             label: `Shape: ${shape === "circle" ? "Circular" : shape === "diamond" ? "Diamond" : "Rectangle"}`,
             icon: `bi-${shape === "rectangle" ? "square" : shape}`,
@@ -5645,12 +5665,7 @@ function loadImageMeta(dataUrl) {
   });
 }
 
-function deriveNodeTitleFromFilename(fileName) {
-  const raw = String(fileName || "").trim();
-  if (!raw) return NODE_DEFAULTS.title;
-  const trimmedExtension = raw.replace(/\.[^/.]+$/, "").trim();
-  return trimmedExtension || NODE_DEFAULTS.title;
-}
+
 
 function isAbortError(error) {
   return error instanceof DOMException && error.name === "AbortError";

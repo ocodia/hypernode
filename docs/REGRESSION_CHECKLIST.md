@@ -171,4 +171,6 @@ Use this checklist before shipping interaction changes.
 
 - Clear a node title in canvas and Focus; verify no heading appears after finishing edits, reload, or duplication. Toggle image fill via right-click for rectangles, circles, and diamonds; check cropping without distortion, resize, text legibility, undo/redo, reload, and return to normal image layout.
 
-- Verify rectangular captions sit at the inside bottom with and without image fill. Edit image-fill circles and diamonds: both text fields must be accessible without a duplicate image preview; Focus still shows image controls.
+- Verify captions follow their selected position and alignment with and without image fill. Edit image-fill circles and diamonds: both text fields must be accessible without a duplicate image preview; Focus still shows image controls.
+
+- Exercise Text layout in single/multi-node toolbars and all right-click position/alignment actions. Compare reading/editing positions for top, middle, bottom, and below; verify below captions remain clickable without moving anchors, and layout persists through reload, duplication, and undo/redo. Confirm new text/image nodes start untitled and middle/center aligned.

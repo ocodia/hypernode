@@ -116,6 +116,8 @@ export function sanitizeNode(node, frameIds = null) {
     description: String(node.description || ""),
     kind,
     shape,
+    textPosition: ["top", "middle", "bottom", "below"].includes(node.textPosition) ? node.textPosition : "middle",
+    textAlign: ["left", "center", "right"].includes(node.textAlign) ? node.textAlign : "center",
     ...(node.imageFill === true ? { imageFill: true } : {}),
     x: Number(node.x) || 0,
     y: Number(node.y) || 0,
@@ -538,6 +540,8 @@ function isValidImageDataUrl(value) {
 function validateGraphNodePayload(node, frameIds) {
   if (!node || typeof node !== "object") return false;
   if (typeof node.id !== "string" || !node.id) return false;
+  if (node.textPosition !== undefined && !["top", "middle", "bottom", "below"].includes(node.textPosition)) return false;
+  if (node.textAlign !== undefined && !["left", "center", "right"].includes(node.textAlign)) return false;
   if (node.imageFill !== undefined && typeof node.imageFill !== "boolean") return false;
   if (node.shape !== undefined && !['rectangle', 'circle', 'diamond'].includes(node.shape)) return false;
   if (node.kind !== undefined && !isValidNodeKind(node.kind)) return false;

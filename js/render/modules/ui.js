@@ -263,6 +263,8 @@ export function renderSelectionControls(selectionControlsLayer, state) {
           colorKey: uniformColorKey,
           borderWidth: uniformBorderWidth,
           borderStyle: uniformBorderStyle,
+          textPosition: selectedNodes.every(node => node.textPosition === selectedNodes[0].textPosition) ? selectedNodes[0].textPosition : 'mixed',
+          textAlign: selectedNodes.every(node => node.textAlign === selectedNodes[0].textAlign) ? selectedNodes[0].textAlign : 'mixed',
           shape: selectedNodes.every(node => node.shape === selectedNodes[0].shape) ? selectedNodes[0].shape : "mixed",
           showShortcuts: true,
         })}
@@ -305,6 +307,8 @@ export function renderSelectionControls(selectionControlsLayer, state) {
           borderWidth: node.borderWidth || 1,
           borderStyle: node.borderStyle || "solid",
           shape: node.shape,
+          textPosition: node.textPosition,
+          textAlign: node.textAlign,
         })}
         ${buildNodeOverlayControls(node.id)}
       </div>
@@ -360,6 +364,8 @@ export function renderFocusOverlay(focusLayer, state) {
         borderWidth: node.borderWidth || 1,
         borderStyle: node.borderStyle || "solid",
           shape: node.shape,
+          textPosition: node.textPosition,
+          textAlign: node.textAlign,
         showShortcuts: true,
       })}
       <article class="focus-overlay__panel node ${node.kind === "image" ? "node--image" : ""}${state.ui.editingNodeId === node.id ? " is-editing" : ""}" data-node-id="${node.id}"${colorAttr} style="${focusPanelStyle}">

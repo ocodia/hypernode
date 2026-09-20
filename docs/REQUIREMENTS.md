@@ -216,7 +216,10 @@ FR-46
 Image nodes offer a right-click "Fill node with image" toggle, reversible with "Fit image inside node". Fill covers the whole node, centered and clipped to the rectangle, circle, or diamond, preserving image aspect ratio and cropping excess. Resizing keeps the image covering the shape. Text remains readable above the image and Focus retains its full image reading/editing layout. The preference persists and supports undo/redo.
 
 FR-47
-Rectangular canvas nodes pin their reading title and description to the inside bottom, including when an image fills the background. Inline editing of image-fill nodes shows text fields without a duplicate image preview; Focus retains image editing controls.
+Canvas nodes position their title and description using the saved text layout, including when an image fills the background. Inline editing of image-fill nodes shows text fields without a duplicate image preview; Focus retains image editing controls.
+
+FR-48
+Node toolbars and node context menus offer inside top/middle/bottom text placement and left/center/right alignment. Context menus also offer below-node captions. New and legacy nodes without layout settings default to middle/center. Newly created nodes have empty titles, including image nodes. Inline editors use the same caption area and alignment as reading views. Layout changes preserve content and geometry, support batch toolbar changes, undo/redo, duplication, and persistence. Below captions do not move edge anchors or resize the node body.
 
 ## Non Functional Requirements
 

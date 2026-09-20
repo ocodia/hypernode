@@ -75,6 +75,19 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
       ` : ''}
       ${includeStyleControls ? `
         <div class="entity-toolbar__control">
+          <button class="node__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="text-layout" aria-label="Text layout" title="Text layout" aria-expanded="false"><i class="bi bi-text-paragraph"></i></button>
+          <div class="entity-toolbar__popover" data-toolbar-popover="text-layout" role="dialog" aria-label="Text layout" hidden>
+            <p class="entity-toolbar__popover-title">Text position</p>
+            <div class="entity-toolbar__style-options" role="group" aria-label="Text position">
+              ${['top', 'middle', 'bottom'].map(value => `<button class="entity-toolbar__style-btn" type="button" data-toolbar-text-layout="textPosition" data-value="${value}" aria-pressed="${(options.textPosition || 'middle') === value}">${value[0].toUpperCase() + value.slice(1)}</button>`).join('')}
+            </div>
+            <p class="entity-toolbar__popover-title">Text alignment</p>
+            <div class="entity-toolbar__style-options" role="group" aria-label="Text alignment">
+              ${['left', 'center', 'right'].map(value => `<button class="entity-toolbar__style-btn" type="button" data-toolbar-text-layout="textAlign" data-value="${value}" aria-pressed="${(options.textAlign || 'center') === value}"><i class="bi bi-text-${value}"></i> ${value[0].toUpperCase() + value.slice(1)}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="entity-toolbar__control">
           <button class="node__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="shape" aria-label="Node shape" title="Node shape" aria-expanded="false"><i class="bi bi-diamond"></i></button>
           <div class="entity-toolbar__popover" data-toolbar-popover="shape" role="dialog" aria-label="Node shape" hidden>
             <p class="entity-toolbar__popover-title">Shape</p>
@@ -120,14 +133,12 @@ export function buildNodeContentMarkup(node, options = {}) {
   const editing = Boolean(options.isEditing);
   const focused = Boolean(options.isFocused);
   const starterActive = Boolean(options.starterActive);
-  const imageKind = node.kind === 'image';
   const showInlineImage = focused || !node.imageFill;
   const imageNode = isImageNode(node);
   const hasImageData = typeof node.imageData === 'string' && node.imageData.startsWith('data:image/');
   const contentClass = focused
     ? `node__content node__content--focus${imageNode ? ' node__content--focus-image' : ''}`
     : 'node__content';
-  const metaClass = focused ? 'node__meta node__meta--focus' : 'node__meta';
   const imagePickerAttrs = focused && editing
     ? ` data-node-image-pick="${node.id}" role="button" tabindex="0" aria-label="Replace image" title="Replace image"`
     : '';
@@ -185,6 +196,16 @@ export function buildNodeContentMarkup(node, options = {}) {
     `
     : '';
 
+  if (!focused) {
+    const caption = editing
+      ? `<div class="node__caption node__caption--editing" data-node-editor="${node.id}">
+          <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" data-1p-ignore="true" />
+          <textarea class="node__editor-textarea" rows="1" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
+        </div>`
+      : `<div class="node__caption">${hasTitle ? `<h3 class="node__title">${escapeHTML(node.title)}</h3>` : ''}${node.description ? `<div class="node__description">${renderDescriptionMarkdown(node.description)}</div>` : ''}</div>`;
+    return `<div class="node__content node__content--canvas">${imageNode && !node.imageFill ? imageMarkup : ''}<div class="node__text-layout">${caption}</div></div>`;
+  }
+
   if (editing && focused) {
     return `
       <div class="${contentClass} node__content--focus-shell node__content--focus-shell--edit">
@@ -239,65 +260,6 @@ export function buildNodeContentMarkup(node, options = {}) {
     `;
   }
 
-  const content =
-    editing
-      ? `
-      <div class="node__editor${focused ? ' node__editor--focus' : ''}" data-node-editor="${node.id}">
-        ${imageKind && hasImageData && showInlineImage
-          ? `
-            <div class="node__editor-layout node__editor-layout--canvas-image">
-              <div class="node__editor-fields node__editor-fields--canvas-image">
-                <div class="node__editor-field node__editor-field--title">
-                  <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" data-1p-ignore="true" />
-                </div>
-                <div class="node__editor-field node__editor-field--description">
-                  <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
-                </div>
-              </div>
-              ${mediaMarkup}
-            </div>
-          `
-          : `
-            ${mediaMarkup}
-            <div class="node__editor-fields">
-              <div class="node__editor-field node__editor-field--title">
-                <input class="node__editor-input" data-node-edit-title="${node.id}" value="${escapeAttr(node.title)}" maxlength="80" placeholder="Name" aria-label="Name" autocomplete="off" data-1p-ignore="true" />
-              </div>
-              <div class="node__editor-field node__editor-field--description">
-                <textarea class="node__editor-textarea${focused ? ' node__editor-textarea--focus' : ''}" data-node-edit-description="${node.id}" placeholder="Description" aria-label="Description">${escapeHTML(node.description)}</textarea>
-              </div>
-            </div>
-          `}
-      </div>
-    `
-      : `
-      ${!focused && imageNode && !node.imageFill ? imageMarkup : ''}
-      ${focused
-        ? `
-          <div class="node__focus-fields">
-            ${hasTitle ? `<section class="node__focus-field">
-              <div class="node__focus-value node__focus-value--title">
-                <h3 class="node__title node__title--focus">${escapeHTML(node.title)}</h3>
-              </div>
-            </section>` : ''}
-            <section class="node__focus-field node__focus-field--description">
-              <div class="node__focus-value node__focus-value--description">
-                ${node.description ? `<div class="node__description node__description--focus">${renderDescriptionMarkdown(node.description)}</div>` : '<div class="node__description node__description--focus node__description--empty">No description</div>'}
-              </div>
-            </section>
-          </div>
-        `
-        : `
-          <div class="${metaClass}">
-            ${hasTitle ? `<div class="node__head">
-              <h3 class="node__title">${escapeHTML(node.title)}</h3>
-            </div>` : ''}
-            ${node.description ? `<div class="node__description">${renderDescriptionMarkdown(node.description)}</div>` : ''}
-          </div>
-        `}
-    `;
-
-  return `<div class="${contentClass}">${content}</div>`;
 }
 
 export function renderNodes(nodesLayer, state) {
@@ -339,9 +301,11 @@ export function renderNodes(nodesLayer, state) {
       const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}--node-border-width: ${node.borderWidth || 1}px;--node-border-style: ${escapeAttr(node.borderStyle || 'solid')};`;
       const nodeColorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
       return `
-        <article class="node node--${node.shape || 'rectangle'} ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
+        <article class="node node--${node.shape || 'rectangle'} ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-text-position="${escapeAttr(node.textPosition || 'middle')}" data-text-align="${escapeAttr(node.textAlign || 'center')}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
           ${buildNodeToolbarMarkup(node.id, {
             shape: node.shape,
+            textPosition: node.textPosition,
+            textAlign: node.textAlign,
             showShortcuts: true,
             hasImage: hasImageData,
             colorKey: node.colorKey || '',

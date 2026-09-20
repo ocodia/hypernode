@@ -4568,3 +4568,61 @@ kbd {
   min-height: 0;
   flex-shrink: 1;
 }
+
+/* Reading and editing share the same caption geometry. */
+.node > .node__content.node__content--canvas,
+.node.has-fixed-size > .node__content.node__content--canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  background: transparent;
+}
+.node__text-layout {
+  position: absolute;
+  inset: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  pointer-events: none;
+}
+.node--circle .node__text-layout { inset: 16%; }
+.node--diamond .node__text-layout { inset: 26%; }
+.node[data-text-position="top"] .node__text-layout { justify-content: safe flex-start; }
+.node[data-text-position="bottom"] .node__text-layout { justify-content: safe flex-end; }
+.node[data-text-position="below"] .node__text-layout {
+  inset: auto 0 auto 0;
+  top: calc(100% + 12px);
+  height: auto;
+}
+.node__caption {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow: auto;
+  pointer-events: auto;
+  text-align: center;
+}
+.node[data-text-align="left"] .node__caption { text-align: left; }
+.node[data-text-align="right"] .node__caption { text-align: right; }
+.node__caption .node__title { white-space: normal; overflow-wrap: anywhere; }
+.node__caption .node__description, .node__caption .node__editor-textarea { margin-top: 8px; }
+.node__caption--editing .node__editor-input,
+.node__caption--editing .node__editor-textarea {
+  display: block;
+  text-align: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  font-family: inherit;
+}
+.node__caption--editing .node__editor-input { font-size: 0.95rem; font-weight: 600; line-height: 1.2; }
+.node__caption--editing .node__editor-textarea { field-sizing: content; font-size: 0.85rem; line-height: 1.4; color: var(--node-muted); }
+.node--image .node__caption:not(:empty) { background: color-mix(in srgb, var(--node-bg) 85%, transparent); border-radius: var(--radius-xs); }
+.node > .node__content--canvas > .node__image-pane { max-height: 100%; border-radius: inherit; }

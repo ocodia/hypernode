@@ -817,6 +817,17 @@ export function createStore(initialGraph = null, initialSettings = null) {
     notify();
   }
 
+  function setNodesTextLayout(ids, patch) {
+    const layout = {};
+    if (["top", "middle", "bottom", "below"].includes(patch.textPosition)) layout.textPosition = patch.textPosition;
+    if (["left", "center", "right"].includes(patch.textAlign)) layout.textAlign = patch.textAlign;
+    const targets = state.nodes.filter(node => ids.includes(node.id) && Object.entries(layout).some(([key, value]) => node[key] !== value));
+    if (!targets.length) return;
+    pushHistory("node-text-layout");
+    for (const node of targets) Object.assign(node, layout);
+    notify();
+  }
+
   function setNodesShape(ids, shape) {
     if (!["rectangle", "circle", "diamond"].includes(shape)) return;
     const targets = state.nodes.filter(node => ids.includes(node.id) && node.shape !== shape);
@@ -1695,6 +1706,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     moveFrame,
     resizeNode,
     setNodesShape,
+    setNodesTextLayout,
     resizeFrame,
     beginNodeMove,
     beginNodeEdit,
