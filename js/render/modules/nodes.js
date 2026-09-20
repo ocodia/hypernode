@@ -75,6 +75,15 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
       ` : ''}
       ${includeStyleControls ? `
         <div class="entity-toolbar__control">
+          <button class="node__tool-btn entity-toolbar__btn" type="button" data-toolbar-popover-toggle="shape" aria-label="Node shape" title="Node shape" aria-expanded="false"><i class="bi bi-diamond"></i></button>
+          <div class="entity-toolbar__popover" data-toolbar-popover="shape" role="dialog" aria-label="Node shape" hidden>
+            <p class="entity-toolbar__popover-title">Shape</p>
+            <div class="entity-toolbar__style-options" role="group" aria-label="Node shape">
+              ${['rectangle', 'circle', 'diamond'].map(shape => `<button class="entity-toolbar__style-btn" type="button" data-toolbar-shape-value="${shape}" aria-pressed="${(options.shape || 'rectangle') === shape}"><i class="bi bi-${shape === 'rectangle' ? 'square' : shape}"></i> ${shape === 'circle' ? 'Circular' : shape === 'diamond' ? 'Diamond' : 'Rectangle'}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="entity-toolbar__control">
           <button class="node__tool-btn entity-toolbar__btn${colorKey ? ' entity-toolbar__trigger--has-swatch' : ''}" type="button" data-toolbar-popover-toggle="color" aria-label="Node colors" title="Node colors" aria-expanded="false"${colorKey ? ` data-toolbar-color-current="${escapeAttr(colorKey)}"` : ''}>
             <i class="bi bi-palette"></i>
           </button>
@@ -328,14 +337,16 @@ export function renderNodes(nodesLayer, state) {
       const nodeStyle = `transform: translate(${node.x}px, ${node.y}px);${inlineSizeStyle}--node-border-width: ${node.borderWidth || 1}px;--node-border-style: ${escapeAttr(node.borderStyle || 'solid')};`;
       const nodeColorAttr = typeof node.colorKey === 'string' ? ` data-node-color="${node.colorKey}"` : '';
       return `
-        <article class="node ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
+        <article class="node node--${node.shape || 'rectangle'} ${selectedClass} ${singleSelectedClass} ${overlayControlsClass} ${editingClass} ${imageClass} ${connectClass} ${fixedSizeClass} ${membershipPreviewClass}" data-node-id="${node.id}"${nodeColorAttr} style="${nodeStyle}">
           ${buildNodeToolbarMarkup(node.id, {
+            shape: node.shape,
             showShortcuts: true,
             hasImage: hasImageData,
             colorKey: node.colorKey || '',
             borderWidth: node.borderWidth || 1,
             borderStyle: node.borderStyle || 'solid',
           })}
+          ${node.shape === 'circle' || node.shape === 'diamond' ? `<svg class="node__shape" stroke-dasharray="${node.borderStyle === 'dashed' ? '8 5' : node.borderStyle === 'dotted' ? '1 4' : 'none'}" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${node.shape === 'circle' ? '<ellipse cx="50" cy="50" rx="50" ry="50" />' : '<polygon points="50,0 100,50 50,100 0,50" />'}</svg>` : ''}
           ${buildNodeContentMarkup(node, { isEditing: editingNodeId === node.id })}
           <button class="node__resize node__resize--top-left" type="button" data-node-resize="${node.id}:top-left" aria-label="Resize from top left corner"></button>
           <button class="node__resize node__resize--top-right" type="button" data-node-resize="${node.id}:top-right" aria-label="Resize from top right corner"></button>

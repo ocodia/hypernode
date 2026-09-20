@@ -166,3 +166,5 @@ Use this checklist before shipping interaction changes.
 - [ ] With snap enabled, resize a frame from each corner and verify the moved edge(s) snap to grid lines while minimum size is respected.
 - [ ] Disable snap-to-grid via the context menu; drag and resize should return to free movement.
 - [ ] Reload page and verify the snap-to-grid preference persists.
+
+- Create all three node shapes from the toolbar; change single/multiple nodes via Shape and single nodes via right-click. Verify undo/redo, duplicate, reload/export/import, image content, border styles/colors, and cardinal edge anchors. Resize circles from every corner with snapping on/off and confirm equal dimensions.

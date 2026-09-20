@@ -498,6 +498,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
       title = NODE_DEFAULTS.title,
       description = "",
       kind = "text",
+      shape = "rectangle",
       imageData = null,
       imageAspectRatio = null,
       width = null,
@@ -514,7 +515,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
           width === null || width === undefined ? NODE_DEFAULTS.width : width,
         height:
           height === null || height === undefined
-            ? NODE_DEFAULTS.height
+            ? (shape === "rectangle" ? NODE_DEFAULTS.height : NODE_DEFAULTS.width)
             : height,
       },
       state.settings.snapToGrid,
@@ -529,6 +530,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
         title,
         description,
         kind,
+        shape,
         ...(kind === IMAGE_NODE_DEFAULTS.kind
           ? { imageData, imageAspectRatio }
           : {}),
@@ -662,6 +664,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     ) {
       node.height = patch.height;
     }
+    if (node.shape === "circle") node.width = node.height = Math.max(node.width, node.height);
     if (patch.borderWidth !== undefined) {
       const numeric = Math.round(Number(patch.borderWidth));
       if (Number.isFinite(numeric)) {
@@ -813,11 +816,35 @@ export function createStore(initialGraph = null, initialSettings = null) {
     notify();
   }
 
+  function setNodesShape(ids, shape) {
+    if (!["rectangle", "circle", "diamond"].includes(shape)) return;
+    const targets = state.nodes.filter(node => ids.includes(node.id) && node.shape !== shape);
+    if (!targets.length) return;
+    pushHistory("change-node-shape");
+    for (const node of targets) {
+      node.shape = shape;
+      if (shape === "circle") {
+        const size = Math.max(node.width || NODE_DEFAULTS.width, node.height || NODE_DEFAULTS.height);
+        node.x -= (size - (node.width || NODE_DEFAULTS.width)) / 2;
+        node.y -= (size - (node.height || NODE_DEFAULTS.height)) / 2;
+        node.width = node.height = size;
+      }
+    }
+    syncAutoAnchorsForAllEdges();
+    notify();
+  }
+
   function resizeNode(id, patch, options = {}) {
     const node = state.nodes.find((item) => item.id === id);
     if (!node) return;
     if (!options.skipHistory) pushHistory("resize-node");
     const snappedPatch = getSnappedNodePatch(patch, state.settings.snapToGrid);
+    if (node.shape === "circle") {
+      const size = Math.max(snappedPatch.width || node.width, snappedPatch.height || node.height);
+      if (snappedPatch.x !== undefined && snappedPatch.x !== node.x) snappedPatch.x = node.x + node.width - size;
+      if (snappedPatch.y !== undefined && snappedPatch.y !== node.y) snappedPatch.y = node.y + node.height - size;
+      snappedPatch.width = snappedPatch.height = size;
+    }
     if (typeof snappedPatch.x === "number") {
       node.x = snappedPatch.x;
     }
@@ -1666,6 +1693,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     moveNodes,
     moveFrame,
     resizeNode,
+    setNodesShape,
     resizeFrame,
     beginNodeMove,
     beginNodeEdit,

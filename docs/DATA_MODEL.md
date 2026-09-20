@@ -118,6 +118,7 @@ Rules:
 - `id` must be a non-empty string
 - `title` and `description` are stored as plain strings
 - `kind` is `text` or `image`
+- `shape` is `rectangle`, `circle`, or `diamond`, independent of kind. Missing shape defaults to `rectangle`; invalid values fail import validation. Shape is included in autosave and export. Circular dimensions normalize to the larger width/height on load and remain equal during resize; changing to circle expands around the node center.
 - `x` and `y` are numbers
 - `width` and `height` are optional positive finite numbers
 - `frameId`, when present, must reference an existing frame

@@ -9,6 +9,7 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 ## Current Features
 
 - Fresh hypernodes open on a blank canvas named `Untitled`.
+- Create rectangular, perfectly circular, or diamond nodes using the main toolbar. Change shapes through the node toolbar Shape picker (including multiple selected nodes) or right-click Shape options. Circles stay round when resized; shapes persist through save/load, export/import, duplication, and undo/redo.
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
 - Snap to Grid is enabled by default, and node/frame creation, movement, and resizing align to the canvas grid.
 - Edit node title/description inline from the selected-node mini toolbar, with description display supporting basic markdown (headers, paragraphs, lists, links, emphasis, inline code).

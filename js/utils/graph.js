@@ -97,8 +97,14 @@ export function sanitizeViewport(viewport) {
 
 export function sanitizeNode(node, frameIds = null) {
   const kind = sanitizeNodeKind(node.kind);
-  const width = sanitizeOptionalSize(node.width);
-  const height = sanitizeOptionalSize(node.height);
+  const shape = ['rectangle', 'circle', 'diamond'].includes(node.shape) ? node.shape : 'rectangle';
+  let width = sanitizeOptionalSize(node.width);
+  let height = sanitizeOptionalSize(node.height);
+  if (shape === 'circle') width = height = Math.max(width || NODE_DEFAULTS.width, height || NODE_DEFAULTS.height);
+  if (shape === 'diamond') {
+    width ??= NODE_DEFAULTS.width;
+    height ??= NODE_DEFAULTS.width;
+  }
   const borderWidth = sanitizeNodeBorderWidth(node.borderWidth);
   const borderStyle = sanitizeNodeBorderStyle(node.borderStyle);
   const colorKey = sanitizeNodeColorKey(node.colorKey);
@@ -109,6 +115,7 @@ export function sanitizeNode(node, frameIds = null) {
       String(node.title || NODE_DEFAULTS.title).trim() || NODE_DEFAULTS.title,
     description: String(node.description || ""),
     kind,
+    shape,
     x: Number(node.x) || 0,
     y: Number(node.y) || 0,
     borderWidth,
@@ -530,6 +537,7 @@ function isValidImageDataUrl(value) {
 function validateGraphNodePayload(node, frameIds) {
   if (!node || typeof node !== "object") return false;
   if (typeof node.id !== "string" || !node.id) return false;
+  if (node.shape !== undefined && !['rectangle', 'circle', 'diamond'].includes(node.shape)) return false;
   if (node.kind !== undefined && !isValidNodeKind(node.kind)) return false;
   if (node.width !== undefined && sanitizeOptionalSize(node.width) === null)
     return false;

@@ -266,10 +266,10 @@ test("graph validation and store import preserve explicit node geometry and meta
   assert.equal(validateGraphPayload(graph), true);
 
   const store = createStore(graph, null);
-  assert.deepEqual(store.getState().nodes, graph.nodes);
+  assert.deepEqual(store.getState().nodes, graph.nodes.map(node => ({ ...node, shape: "rectangle" })));
 
   store.replaceGraph(graph);
-  assert.deepEqual(store.getState().nodes, graph.nodes);
+  assert.deepEqual(store.getState().nodes, graph.nodes.map(node => ({ ...node, shape: "rectangle" })));
 });
 
 test("document library tracks active document id in localStorage", () => {

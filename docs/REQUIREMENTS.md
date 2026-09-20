@@ -206,6 +206,9 @@ When snap-to-grid is enabled, dragging nodes and frames must snap their position
 When snap-to-grid is enabled, resizing nodes and frames must snap the moved edge(s) to the nearest grid line while respecting minimum size constraints.
 The snap-to-grid preference must be persisted as an app setting.
 
+FR-44
+Users must be able to create rectangular, circular, and diamond nodes from the main toolbar and change existing node shapes from the node toolbar and right-click menu. Shape changes preserve identity, content, styling, membership, and connections and support undo/redo and persistence. Circles must retain equal width and height during creation, editing, import, and resizing. Shape outlines must retain color and border controls; anchors connect at the four cardinal points. Legacy nodes without a shape remain rectangular.
+
 ## Non Functional Requirements
 
 ### Performance

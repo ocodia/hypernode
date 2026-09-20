@@ -744,8 +744,8 @@ export function bindInteractions(elements, store, options = {}) {
     window.requestAnimationFrame(run);
   }
 
-  function createNodeInEditMode(point) {
-    const node = store.addNode(point);
+  function createNodeInEditMode(point, shape = "rectangle") {
+    const node = store.addNode({ ...point, shape });
     if (!node) return;
     openNodeEditor(node.id);
   }
@@ -1870,6 +1870,15 @@ export function bindInteractions(elements, store, options = {}) {
       return true;
     }
 
+    const shapeEl = event.target.closest("[data-toolbar-shape-value]");
+    if (shapeEl instanceof HTMLButtonElement) {
+      const ids = shapeEl.closest("[data-toolbar-target-ids]").dataset.toolbarTargetIds.split(",");
+      store.setNodesShape(ids, shapeEl.dataset.toolbarShapeValue);
+      closeToolbarPopover();
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
     const colorEl = event.target.closest("[data-toolbar-color-value]");
     if (colorEl instanceof HTMLButtonElement) {
       applyToolbarColor(
@@ -2032,6 +2041,13 @@ export function bindInteractions(elements, store, options = {}) {
                 { separator: true },
               ]
             : []),
+          ...["rectangle", "circle", "diamond"].map(shape => ({
+            label: `Shape: ${shape === "circle" ? "Circular" : shape === "diamond" ? "Diamond" : "Rectangle"}`,
+            icon: `bi-${shape === "rectangle" ? "square" : shape}`,
+            disabled: (node.shape || "rectangle") === shape,
+            action: () => store.setNodesShape([nodeId], shape),
+          })),
+          { separator: true },
           {
             label: "Duplicate",
             icon: "bi-copy",
@@ -4518,6 +4534,11 @@ export function bindInteractions(elements, store, options = {}) {
       .getElementById("add-node-btn")
       ?.addEventListener("click", handleAddNode);
 
+    for (const shape of ["circle", "diamond"]) {
+      document.getElementById(`add-${shape}-node-btn`)?.addEventListener("click", () => {
+        createNodeInEditMode(getCanvasCenterNodePoint(store.getState().viewport), shape);
+      });
+    }
     document.getElementById("add-image-btn")?.addEventListener("click", () => {
       void handleAddImageNode();
     });

@@ -4490,3 +4490,45 @@ kbd {
   margin: 5px 8px;
   background: color-mix(in srgb, var(--panel-border) 60%, transparent);
 }
+
+/* Shape surfaces leave selection controls outside the outline unclipped. */
+.node.node--circle, .node.node--diamond {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+.node__shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: var(--node-bg);
+  stroke: var(--node-border);
+  stroke-width: var(--node-border-width, 1px);
+  pointer-events: none;
+}
+.node__shape > * { vector-effect: non-scaling-stroke; }
+.node--circle .node__shape { border-radius: 50%; }
+.node:is(.is-selected, .is-connect-source, .is-connect-target) .node__shape { stroke: var(--node-selected-border); filter: drop-shadow(0 0 2px var(--node-selected-border)); }
+.node.is-frame-membership-add-preview .node__shape { stroke: #2f855a; }
+.node.is-frame-membership-remove-preview .node__shape { stroke: #ef4444; }
+.node.node--circle > .node__content, .node.node--diamond > .node__content {
+  position: absolute;
+  inset: 16%;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  overflow: auto;
+  text-align: center;
+}
+.node.node--diamond > .node__content { inset: 26%; }
+.node.node--circle .node__editor, .node.node--diamond .node__editor { min-height: 0; width: 100%; }
+.node.node--circle .node__editor-fields, .node.node--diamond .node__editor-fields { min-width: 0; }
+.node.node--circle:not(.is-editing) > .node__content,
+.node.node--diamond:not(.is-editing) > .node__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+}
