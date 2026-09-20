@@ -9,6 +9,9 @@ Hypernode includes a lightweight built-in design system for surfaces, buttons, d
 ## Current Features
 
 - Fresh hypernodes open on a blank canvas named `Untitled`.
+- Rectangular nodes keep their title and description at the inside bottom. Image-fill nodes show only text fields in the inline editor, without duplicating the background image; Focus retains its image controls.
+- Node titles can be cleared; empty titles display no heading or placeholder.
+- Right-click an image node and choose **Fill node with image** to cover its rectangle, circle, or diamond with a centered image, preserving proportions and cropping excess. Choose **Fit image inside node** to restore the normal layout. The preference is saved and supports undo/redo.
 - Create rectangular, perfectly circular, or diamond nodes using the main toolbar. Change shapes through the node toolbar Shape picker (including multiple selected nodes) or right-click Shape options. Circles stay round when resized; shapes persist through save/load, export/import, duplication, and undo/redo.
 - Create nodes by double-clicking the canvas or using the toolbar button, opening immediately in edit mode with title text selected.
 - Snap to Grid is enabled by default, and node/frame creation, movement, and resizing align to the canvas grid.

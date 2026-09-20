@@ -2032,6 +2032,11 @@ export function bindInteractions(elements, store, options = {}) {
           ...(hasImage
             ? [
                 {
+                  label: node.imageFill ? "Fit image inside node" : "Fill node with image",
+                  icon: "bi-arrows-fullscreen",
+                  action: () => store.updateNode(nodeId, { imageFill: !node.imageFill, frameId: node.frameId }),
+                },
+                {
                   label: "Remove image",
                   icon: "bi-image-alt",
                   action: () => {
@@ -4051,9 +4056,9 @@ export function bindInteractions(elements, store, options = {}) {
     if (state.ui.starterNodeId !== nodeId) return false;
     const node = getNode(nodeId, state);
     if (!node) return false;
-    const title = String(node.title ?? "").trim() || NODE_DEFAULTS.title;
+    const title = String(node.title ?? "").trim();
     node.title = title;
-    store.setGraphName(title);
+    store.setGraphName(title || "Untitled");
     store.clearStarterNode();
     closeNodeFocus();
     store.setImportStatus("New hypernode started.");

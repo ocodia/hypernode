@@ -624,9 +624,10 @@ export function createStore(initialGraph = null, initialSettings = null) {
         delete node.imageAspectRatio;
       }
     }
+    if (typeof patch.imageFill === "boolean") node.imageFill = patch.imageFill;
     if (typeof patch.title === "string") {
       const title = patch.title.trim();
-      node.title = title || NODE_DEFAULTS.title;
+      node.title = title;
     }
     if (typeof patch.description === "string") {
       node.description = patch.description;
@@ -1594,7 +1595,7 @@ export function createStore(initialGraph = null, initialSettings = null) {
     const node = state.nodes.find((item) => item.id === nodeId);
     if (!node) return;
     const title = String(node.title ?? "").trim();
-    node.title = title || NODE_DEFAULTS.title;
+    node.title = title;
     node.description = String(node.description ?? "");
   }
 

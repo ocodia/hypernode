@@ -168,3 +168,7 @@ Use this checklist before shipping interaction changes.
 - [ ] Reload page and verify the snap-to-grid preference persists.
 
 - Create all three node shapes from the toolbar; change single/multiple nodes via Shape and single nodes via right-click. Verify undo/redo, duplicate, reload/export/import, image content, border styles/colors, and cardinal edge anchors. Resize circles from every corner with snapping on/off and confirm equal dimensions.
+
+- Clear a node title in canvas and Focus; verify no heading appears after finishing edits, reload, or duplication. Toggle image fill via right-click for rectangles, circles, and diamonds; check cropping without distortion, resize, text legibility, undo/redo, reload, and return to normal image layout.
+
+- Verify rectangular captions sit at the inside bottom with and without image fill. Edit image-fill circles and diamonds: both text fields must be accessible without a duplicate image preview; Focus still shows image controls.

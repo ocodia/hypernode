@@ -4532,3 +4532,39 @@ kbd {
   flex-direction: column;
   justify-content: safe center;
 }
+
+/* Fill images are clipped independently so toolbars and anchors stay usable. */
+.node__image-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+.node--circle > .node__image-fill { border-radius: 50%; }
+.node--diamond > .node__image-fill { border-radius: 0; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.node--image-fill > .node__shape { fill: none; }
+.node--image-fill > .node__content { position: relative; }
+.node--image-fill .node__meta:has(.node__title, .node__description) {
+  background: color-mix(in srgb, var(--node-bg) 85%, transparent);
+  border-radius: var(--radius-sm);
+}
+.node--image-fill.is-editing > .node__content { background: var(--node-bg); }
+
+/* Keep rectangular captions at the bottom without affecting Focus or editors. */
+.node.node--rectangle:not(.is-editing) > .node__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: safe flex-end;
+}
+.node.node--rectangle:not(.is-editing) > .node__content > .node__meta {
+  flex: 0 0 auto;
+  max-height: 100%;
+  overflow: auto;
+}
+.node.node--rectangle:not(.is-editing) > .node__content > .node__image-pane {
+  min-height: 0;
+  flex-shrink: 1;
+}

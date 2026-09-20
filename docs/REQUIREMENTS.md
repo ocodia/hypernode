@@ -209,6 +209,15 @@ The snap-to-grid preference must be persisted as an app setting.
 FR-44
 Users must be able to create rectangular, circular, and diamond nodes from the main toolbar and change existing node shapes from the node toolbar and right-click menu. Shape changes preserve identity, content, styling, membership, and connections and support undo/redo and persistence. Circles must retain equal width and height during creation, editing, import, and resizing. Shape outlines must retain color and border controls; anchors connect at the four cardinal points. Legacy nodes without a shape remain rectangular.
 
+FR-45
+Node titles may be empty or missing. Reading views omit empty titles without placeholder text; editing still exposes the title field. Empty titles survive editing, save/load, duplication, and undo/redo.
+
+FR-46
+Image nodes offer a right-click "Fill node with image" toggle, reversible with "Fit image inside node". Fill covers the whole node, centered and clipped to the rectangle, circle, or diamond, preserving image aspect ratio and cropping excess. Resizing keeps the image covering the shape. Text remains readable above the image and Focus retains its full image reading/editing layout. The preference persists and supports undo/redo.
+
+FR-47
+Rectangular canvas nodes pin their reading title and description to the inside bottom, including when an image fills the background. Inline editing of image-fill nodes shows text fields without a duplicate image preview; Focus retains image editing controls.
+
 ## Non Functional Requirements
 
 ### Performance

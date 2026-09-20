@@ -116,10 +116,12 @@ export function buildNodeToolbarMarkup(nodeId, options = {}) {
 }
 
 export function buildNodeContentMarkup(node, options = {}) {
+  const hasTitle = Boolean(String(node.title ?? "").trim());
   const editing = Boolean(options.isEditing);
   const focused = Boolean(options.isFocused);
   const starterActive = Boolean(options.starterActive);
   const imageKind = node.kind === 'image';
+  const showInlineImage = focused || !node.imageFill;
   const imageNode = isImageNode(node);
   const hasImageData = typeof node.imageData === 'string' && node.imageData.startsWith('data:image/');
   const contentClass = focused
@@ -163,7 +165,7 @@ export function buildNodeContentMarkup(node, options = {}) {
       </button>
     `
     : '';
-  const mediaMarkup = ((focused && editing) || hasImageData)
+  const mediaMarkup = ((focused && editing) || (hasImageData && showInlineImage))
     ? `
       <div class="node__focus-media${imageNode ? ' node__focus-media--has-image' : ' node__focus-media--empty'}${editing && !focused ? ' node__focus-media--canvas' : ''}">
         ${hasImageData ? imageMarkup : ''}
@@ -212,11 +214,11 @@ export function buildNodeContentMarkup(node, options = {}) {
         <div class="node__focus-body">
           <div class="node__focus-layout node__focus-layout--read">
             <div class="node__focus-text-column node__focus-text-column--read">
-              <section class="node__focus-field node__focus-field--title">
+              ${hasTitle ? `<section class="node__focus-field node__focus-field--title">
                 <div class="node__focus-value node__focus-value--title">
                   <h3 class="node__title node__title--focus">${escapeHTML(node.title)}</h3>
                 </div>
-              </section>
+              </section>` : ''}
               <section class="node__focus-field node__focus-field--description">
                 <div class="node__focus-value node__focus-value--description">
                   ${node.description ? `<div class="node__description node__description--focus">${renderDescriptionMarkdown(node.description)}</div>` : '<div class="node__description node__description--focus node__description--empty">No description</div>'}
@@ -241,7 +243,7 @@ export function buildNodeContentMarkup(node, options = {}) {
     editing
       ? `
       <div class="node__editor${focused ? ' node__editor--focus' : ''}" data-node-editor="${node.id}">
-        ${imageKind && hasImageData
+        ${imageKind && hasImageData && showInlineImage
           ? `
             <div class="node__editor-layout node__editor-layout--canvas-image">
               <div class="node__editor-fields node__editor-fields--canvas-image">
@@ -269,15 +271,15 @@ export function buildNodeContentMarkup(node, options = {}) {
       </div>
     `
       : `
-      ${!focused && imageNode ? imageMarkup : ''}
+      ${!focused && imageNode && !node.imageFill ? imageMarkup : ''}
       ${focused
         ? `
           <div class="node__focus-fields">
-            <section class="node__focus-field">
+            ${hasTitle ? `<section class="node__focus-field">
               <div class="node__focus-value node__focus-value--title">
                 <h3 class="node__title node__title--focus">${escapeHTML(node.title)}</h3>
               </div>
-            </section>
+            </section>` : ''}
             <section class="node__focus-field node__focus-field--description">
               <div class="node__focus-value node__focus-value--description">
                 ${node.description ? `<div class="node__description node__description--focus">${renderDescriptionMarkdown(node.description)}</div>` : '<div class="node__description node__description--focus node__description--empty">No description</div>'}
@@ -287,9 +289,9 @@ export function buildNodeContentMarkup(node, options = {}) {
         `
         : `
           <div class="${metaClass}">
-            <div class="node__head">
+            ${hasTitle ? `<div class="node__head">
               <h3 class="node__title">${escapeHTML(node.title)}</h3>
-            </div>
+            </div>` : ''}
             ${node.description ? `<div class="node__description">${renderDescriptionMarkdown(node.description)}</div>` : ''}
           </div>
         `}
@@ -317,7 +319,7 @@ export function renderNodes(nodesLayer, state) {
       const singleSelectedClass = singleSelectedNodeId === node.id ? 'is-single-selected' : '';
       const overlayControlsClass = singleSelectedNodeId === node.id ? 'has-overlay-controls' : '';
       const editingClass = editingNodeId === node.id ? 'is-editing' : '';
-      const imageClass = imageNode ? 'node--image' : '';
+      const imageClass = imageNode ? `node--image${node.imageFill ? ' node--image-fill' : ''}` : '';
       const membershipPreviewClass = previewNodeMap[node.id] === 'add'
         ? 'is-frame-membership-add-preview'
         : previewNodeMap[node.id] === 'remove'
@@ -346,6 +348,7 @@ export function renderNodes(nodesLayer, state) {
             borderWidth: node.borderWidth || 1,
             borderStyle: node.borderStyle || 'solid',
           })}
+          ${imageNode && node.imageFill ? `<div class="node__image-fill" style="background-image: url('${escapeCssUrl(node.imageData)}');" aria-hidden="true"></div>` : ''}
           ${node.shape === 'circle' || node.shape === 'diamond' ? `<svg class="node__shape" stroke-dasharray="${node.borderStyle === 'dashed' ? '8 5' : node.borderStyle === 'dotted' ? '1 4' : 'none'}" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${node.shape === 'circle' ? '<ellipse cx="50" cy="50" rx="50" ry="50" />' : '<polygon points="50,0 100,50 50,100 0,50" />'}</svg>` : ''}
           ${buildNodeContentMarkup(node, { isEditing: editingNodeId === node.id })}
           <button class="node__resize node__resize--top-left" type="button" data-node-resize="${node.id}:top-left" aria-label="Resize from top left corner"></button>

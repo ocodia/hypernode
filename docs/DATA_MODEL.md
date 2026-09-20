@@ -116,7 +116,8 @@ Image nodes:
 Rules:
 
 - `id` must be a non-empty string
-- `title` and `description` are stored as plain strings
+- `title` and `description` are stored as plain strings. Empty or missing node titles normalize to an empty string and render no heading.
+- Optional `imageFill` boolean defaults to false. True covers the canvas node with a centered, aspect-preserving image cropped to its shape. It persists through autosave/export, duplication, and undo/redo; Focus keeps the normal image layout.
 - `kind` is `text` or `image`
 - `shape` is `rectangle`, `circle`, or `diamond`, independent of kind. Missing shape defaults to `rectangle`; invalid values fail import validation. Shape is included in autosave and export. Circular dimensions normalize to the larger width/height on load and remain equal during resize; changing to circle expands around the node center.
 - `x` and `y` are numbers
